@@ -10,6 +10,12 @@
 // whose checks all fail charges no rest, the rest rides the save while a
 // pre-§207 save owes none, pace 0 kills the rest but never the one-a-month
 // rule, and a hand-moved missionIdx keeps its old meaning even mid-rest.
+//
+// §227 moved the PLAYER off this drum — a player's chain is claimed by hand
+// now, and smoke152 pins that half. What is left here is the AI's half, which
+// is §102's symmetry and is unchanged: a court with no panel to click still
+// banks one a month at exactly this cadence. So the suite plays Rome and
+// watches Judaea, and every beat below is a beat the AI is keeping.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -35,8 +41,9 @@ const geom = {
   areas: new Int32Array(N + 1),
   bbox: [],
 };
+// Rome plays; Judaea is the AI whose drum this suite counts (SPEC §227).
 function boot(bookmark, seed) {
-  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark, events: EVENTS_66, playerTag: 'JUD', rngSeed: seed });
+  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark, events: EVENTS_66, playerTag: 'ROM', rngSeed: seed });
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events: EVENTS_66 });
   return { game, ctx, actions: gameActions(ctx) };
 }
@@ -51,6 +58,8 @@ ok(PACE >= 1, 'MISSION_PACE_MONTHS is at least a month: ' + PACE);
 // the wave rule this exact world banked all three in ONE pass — the volley
 // §207 exists to break up.
 function forceBranches(w) {
+  // §227 raised the root's muster to 28,000 over the 26,000 the chapter deals.
+  for (const a of Object.values(w.game.armies)) if (a && a.tag === 'JUD') a.men += 4000;
   w.ctx.helpers.changeOwner(w.ctx, 'Caesarea Maritima', 'JUD');
   w.game.tags.PAR.opinion = { ...(w.game.tags.PAR.opinion || {}), JUD: 90 };
 }
@@ -65,8 +74,7 @@ const { game, ctx, actions } = boot(BOOKMARK_66, 42);
   ok((game.tags.JUD.missionRest | 0) === PACE,
     'and the chain rests the full pace: ' + game.tags.JUD.missionRest);
   const p = actions.getMissionPace();
-  ok(p && p.rest === PACE && p.pace === PACE,
-    'getMissionPace tells the panel: rest ' + (p && p.rest) + ' of ' + (p && p.pace));
+  ok(p && p.pace === PACE, 'getMissionPace reports the chapter pace: ' + (p && p.pace));
 }
 
 console.log('== the rest holds, then the drum strikes — cadence pace+1 ==');
@@ -102,6 +110,7 @@ console.log('== a month whose checks fail charges no rest ==');
 {
   const w = boot(BOOKMARK_66, 7);
   const mine = Object.values(w.game.armies).filter((a) => a && a.tag === 'JUD');
+  for (const a of mine) a.men += 4000; // over §227's muster
   const kept = mine.map((a) => a.men);
   for (const a of mine) a.men = 100; // under 20k: the root cannot complete
   for (let i = 0; i < 5; i++) realm.checkMissions(w.ctx);
@@ -129,6 +138,7 @@ console.log('== a chapter can retune the drum; one-a-month holds even at pace 0 
 console.log('== a hand-moved missionIdx keeps its meaning even mid-rest ==');
 {
   const w = boot(BOOKMARK_66, 9);
+  for (const a of Object.values(w.game.armies)) if (a && a.tag === 'JUD') a.men += 4000;
   realm.checkMissions(w.ctx); // the root completes; the chain rests
   ok((w.game.tags.JUD.missionRest | 0) === PACE, 'mid-rest fixture stands');
   w.game.tags.JUD.missionIdx = 5; // an old save or a forcing test moves the cursor

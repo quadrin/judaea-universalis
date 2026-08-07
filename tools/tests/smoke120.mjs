@@ -86,7 +86,19 @@ const stand = (ctx, name, v) => {
 };
 // The §207 drumbeat: one completion a pass, then the chain rests — a forced
 // world is paid off over a run of pumped months, not a pair of passes.
-const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
+// §227: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// what is ready. Where this suite means "let the months go by until everything
+// satisfiable has paid", the hand on the panel is the suite's own: one claim a
+// month, which is exactly the drum's own pace.
+const pump = (ctx, n) => {
+  for (let i = 0; i < n; i++) {
+    realm.checkMissions(ctx);
+    const t = ctx.game.tags[ctx.game.playerTag];
+    for (const id of ((t && t.missionReady) || []).slice()) {
+      if (realm.claimMission(ctx, id).ok) break;
+    }
+  }
+};
 
 // ---------------------------------------------------------------- static
 console.log('== §189 static: one spine, six branches, nothing crossing ==');
@@ -245,8 +257,8 @@ function expectAllPaid(w, id) {
   w.game.tags.MLI.allies = ['PAR'];
   stand(w.ctx, 'Seleucia-Ctesiphon', 74);
   expectAllPaid(w, '40bce');
-  // 900 banked, +120 from the groves, −250 sunk in the moles.
-  ok(Math.round(w.game.tags.MLI.treasury) === 770, '  and the harbour was actually paid for ('
+  // 900 banked, +240 from the groves (§227 doubled the silver), −250 sunk in the moles.
+  ok(Math.round(w.game.tags.MLI.treasury) === 890, '  and the harbour was actually paid for ('
     + Math.round(w.game.tags.MLI.treasury) + ' talents left of 900)');
 }
 { // 66 CE — the procurators' coast, the House unburned, the tetrarchy taken in.

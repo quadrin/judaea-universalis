@@ -827,57 +827,57 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_arm_the_nation', name: 'Arm the Nation',
         icon: 'spears', col: 1,
-        desc: 'Put twenty thousand men under arms — the revolt must become an army.',
-        rewardText: '"Levies of Zion": +10% manpower for 24 months.',
-        check: (ctx) => totalMen(ctx, 'JUD') >= 20000,
+        desc: 'Put 28,000 men under arms — the revolt must become an army.',
+        rewardText: '"Levies of Zion": +10% manpower permanently.',
+        check: (ctx) => totalMen(ctx, 'JUD') >= 28000,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
-          id: 'levies_of_zion', name: 'Levies of Zion', months: 24, effects: { manpowerMult: 1.1 },
+          id: 'levies_of_zion', name: 'Levies of Zion', months: -1, effects: { manpowerMult: 1.1 },
         }),
       },
       {
         id: 'jm_throw_back', name: 'Throw Back the Governor',
         icon: 'swords', col: 0, requires: ['jm_arm_the_nation'],
-        desc: 'Bloody the legions: reach +10 war score against Rome.',
-        rewardText: '+25 martial points.',
-        check: (ctx) => judWarscore(ctx) >= 10,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25 }),
+        desc: 'Bloody the legions: reach +20 war score against Rome.',
+        rewardText: '+60 martial points.',
+        check: (ctx) => judWarscore(ctx) >= 20,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 60 }),
       },
       {
         id: 'jm_coastal_road', name: 'The Coastal Road',
         icon: 'ship', col: 1, requires: ['jm_arm_the_nation'],
         desc: 'Take Caesarea Maritima, seat of the procurators and gate of the sea.',
-        rewardText: 'The procurator\'s treasury: +100 talents.',
+        rewardText: 'The procurator\'s treasury: +200 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 200 }),
       },
       {
         id: 'jm_diaspora', name: 'Brothers of the Diaspora',
         icon: 'diaspora', col: 2, requires: ['jm_arm_the_nation'],
         desc: 'Win the East: gain Parthian sympathy, or raise their opinion of us to +80.',
-        rewardText: 'Silver and volunteers: +100 talents, +2,000 manpower.',
+        rewardText: 'Silver and volunteers: +200 talents, +4,000 manpower.',
         check: (ctx) => !!ctx.helpers.getFlag(ctx, 'parthianSympathy')
           || ((ctx.game.tags.PAR && ctx.game.tags.PAR.opinion && ctx.game.tags.PAR.opinion.JUD) || 0) >= 80,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, manpower: 2000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 200, manpower: 4000 }),
       },
       {
         id: 'jm_samaria', name: 'Cleanse Samaria',
         icon: 'mountain', col: 1, requires: ['jm_coastal_road'],
         desc: 'Take Shechem and Sebaste, and hold the spine of the hill country.',
-        rewardText: '+10 legitimacy, +25 governance points.',
+        rewardText: '+15 legitimacy, +60 governance points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Neapolis') && ctx.helpers.controls(ctx, 'JUD', 'Sebaste'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 10, gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15, gov: 60 }),
       },
       {
         id: 'jm_freedom_of_zion', name: 'The Freedom of Zion',
         icon: 'laurel', col: 0, requires: ['jm_throw_back'],
-        desc: 'Reach +25 war score against Rome — make the revolt a fact of empire.',
-        rewardText: '"Year One" coinage: +15% income permanently, +15 legitimacy.',
-        check: (ctx) => judWarscore(ctx) >= 25,
+        desc: 'Reach +40 war score against Rome — make the revolt a fact of empire.',
+        rewardText: '"Year One" coinage: +15% income permanently, +25 legitimacy.',
+        check: (ctx) => judWarscore(ctx) >= 40,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'year_one_coinage', name: 'Year One Coinage', months: -1, effects: { incomeMult: 1.15 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 25 });
         },
       },
       // The age's curriculum (SPEC §179): the ladders and the era ideas are
@@ -886,42 +886,43 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_roman_manner', name: 'The Roman Manner',
         icon: 'helmet', col: 3, requires: ['jm_coastal_road'],
-        desc: 'Learn the enemy\'s art: reach Military 7 — The Roman Manner — as Josephus drilled Galilee.',
-        rewardText: '"Drilled in the Roman Manner": +5% discipline for 24 months.',
+        desc: 'Learn the enemy\'s art: reach Military 7 — The Roman Manner — as Josephus '
+          + 'drilled Galilee.',
+        rewardText: '"Drilled in the Roman Manner": +5% discipline permanently.',
         check: (ctx) => (((ctx.game.tags.JUD || {}).tech || {}).mar | 0) >= 7,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
-          id: 'roman_manner_drill', name: 'Drilled in the Roman Manner', months: 24, effects: { disciplineMult: 1.05 },
+          id: 'roman_manner_drill', name: 'Drilled in the Roman Manner', months: -1, effects: { disciplineMult: 1.05 },
         }),
       },
       {
         id: 'jm_mind_of_the_nation', name: 'The Mind of the Nation',
         icon: 'lamp', col: 2, requires: ['jm_diaspora'],
         desc: 'Take up three ideas of the age — a revolt that thinks is a state.',
-        rewardText: '+25 governance points, +15 legitimacy.',
+        rewardText: '+60 governance points, +25 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 60, legitimacy: 25 }),
       },
       // The war carried outward (SPEC §192): the cities that killed their
       // Jews, and the client kingdom whose towns came over one by one.
       {
         id: 'jm_decapolis', name: 'Answer the Cities',
         icon: 'amphora', col: 0, row: 3, requires: ['jm_samaria'],
-        desc: 'Take Scythopolis, Gadara and Pella — the Greek cities that slaughtered '
-          + 'their Jewish neighbors in the first month of the war.',
-        rewardText: '+100 talents, +15 martial points.',
+        desc: 'Take Scythopolis, Gadara and Pella — the Greek cities that slaughtered their '
+          + 'Jewish neighbors in the first month of the war.',
+        rewardText: '+200 talents, +35 martial points.',
         check: (ctx) => ['Scythopolis', 'Gadara', 'Pella']
           .every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, mar: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 200, mar: 35 }),
       },
       {
         id: 'jm_kings_country', name: 'The King\'s Country Rises',
         icon: 'mountain', col: 2, row: 3, requires: ['jm_coastal_road'],
-        desc: 'Take Gamala and Caesarea Philippi — the client king\'s own towns, where '
-          + 'Gamala has already chosen the revolt over its king.',
-        rewardText: '+2,000 manpower — the Golan villages enlist.',
+        desc: 'Take Gamala and Caesarea Philippi — the client king\'s own towns, where Gamala '
+          + 'has already chosen the revolt over its king.',
+        rewardText: '+4,000 manpower — the Golan villages enlist.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Gamala')
           && ctx.helpers.controls(ctx, 'JUD', 'Caesarea Philippi'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { manpower: 2000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { manpower: 4000 }),
       },
       // ── The state the revolt has to become (SPEC §197) ──────────────────
       // The chapter runs to 130 CE. Winning the Revolt is the first half;
@@ -930,10 +931,8 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_the_third_wall', name: 'The Third Wall',
         icon: 'walls', col: 1, row: 4, requires: ['jm_samaria'],
-        desc: 'Agrippa began a wall around the northern suburb and Rome made him stop. '
-          + 'Finish it: hold Jerusalem and reach Government 8 — The Third Wall — and the '
-          + 'city that Titus took in five months becomes a city that cannot be taken in one '
-          + 'campaigning season.',
+        desc: 'Finish it: hold Jerusalem and reach Government 8 — The Third Wall — and the '
+          + 'city that Titus took in five months becomes a city that cannot be taken.',
         rewardText: '"The Third Wall": −1 unrest in Jerusalem and +10% morale, permanent.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
           && (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).gov | 0) >= 8,
@@ -949,41 +948,38 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_the_desert_forts', name: 'The Desert Forts',
         icon: 'tower', col: 0, row: 4, requires: ['jm_decapolis'],
-        desc: 'Masada, Machaerus and the rocks above the salt sea are where this war ends if '
-          + 'it is lost. Hold them while it is being won, and they are where the state keeps '
-          + 'its treasury instead.',
-        rewardText: '"The Rocks Held": +1 stability, +75 talents.',
+        desc: 'Hold Masada and Machaerus — where this war ends if it is lost, and where the '
+          + 'state banks its treasury if it is won.',
+        rewardText: '"The Rocks Held": +1 stability, +150 talents.',
         check: (ctx) => ['Masada', 'Machaerus'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'the_rocks_held', name: 'The Rocks Held', months: -1, effects: { moraleMult: 1.05 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { stability: 1, treasury: 75 });
+          ctx.helpers.adjust(ctx, 'JUD', { stability: 1, treasury: 150 });
         },
       },
       {
         id: 'jm_the_harbour', name: 'The Governor\'s Own Harbour',
         icon: 'shipyard', col: 2, row: 4, requires: ['jm_kings_country'],
-        desc: 'Caesarea is where the war began, in a synagogue doorway and a Greek\'s '
-          + 'workshop, and it is the only deep-water port on this coast. Take it, and Dora '
-          + 'with it.',
-        rewardText: '"The Coast Is Ours": +15% trade permanently, +100 talents.',
+        desc: 'Caesarea is where the war began, in a synagogue doorway and a Greek\'s workshop, '
+          + 'and it is the only deep-water port on this coast. Take it, and Dora with it.',
+        rewardText: '"The Coast Is Ours": +15% trade permanently, +200 talents.',
         check: (ctx) => ['Caesarea Maritima', 'Dora'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'the_coast_is_ours', name: 'The Coast Is Ours', months: -1, effects: { tradeMult: 1.15 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 200 });
         },
       },
       {
         id: 'jm_the_treasury_of_the_house', name: 'The Treasury of the House',
         icon: 'coins', col: 1, row: 5, requires: ['jm_the_third_wall'],
-        desc: 'Every adult Jewish male in the world sends a half-shekel here every year, and '
-          + 'Rome understood what that was — which is why Vespasian did not abolish the levy '
-          + 'but redirected it. Bank 500 talents of it.',
+        desc: 'Bank 750 talents of the half-shekel every adult Jew in the world sends here '
+          + 'each year.',
         rewardText: '"The Half-Shekel of the World": +12% income permanently.',
-        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 500,
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 750,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
           id: 'half_shekel_of_the_world', name: 'The Half-Shekel of the World', months: -1,
           effects: { incomeMult: 1.12 },
@@ -992,12 +988,11 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_a_navy_at_joppa', name: 'The Ships at Joppa',
         icon: 'ship', col: 2, row: 5, requires: ['jm_the_harbour'],
-        desc: 'The rebels put out from Joppa and Vespasian burned the fleet in a storm off '
-          + 'the harbour mouth. Hold Joppa and Ascalon with 400 talents banked, and this time '
-          + 'the ships have somewhere to shelter.',
+        desc: 'Hold Joppa and Ascalon with 600 talents banked, and this time the ships have '
+          + 'somewhere to shelter.',
         rewardText: '"The Judaean Squadron": +10% trade, +5% morale, permanent.',
         check: (ctx) => ['Joppa', 'Ascalon'].every((n) => ctx.helpers.controls(ctx, 'JUD', n))
-          && ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 400,
+          && ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 600,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
           id: 'the_judaean_squadron', name: 'The Judaean Squadron', months: -1,
           effects: { tradeMult: 1.1, moraleMult: 1.05 },
@@ -1006,8 +1001,7 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_the_commonwealth', name: 'A Commonwealth That Governs',
         icon: 'scales', col: 0, row: 5, requires: ['jm_the_desert_forts'],
-        desc: 'A revolt is a coalition of parties that agree about Rome and nothing else. '
-          + 'Reach +3 stability and 85 legitimacy — the war has to produce a government that '
+        desc: 'Reach +3 stability and 85 legitimacy — the war has to produce a government that '
           + 'the zealots, the priests and the notables all answer to.',
         rewardText: '"The Second Commonwealth": −1 unrest everywhere and +0.25 legitimacy a month, permanent.',
         check: (ctx) => {
@@ -1029,33 +1023,24 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_the_generals_of_the_districts', name: 'The Generals of the Districts',
         icon: 'quill', col: 0, row: 6, civil: 'govt',
-        desc: 'When Cestius\' column broke on the descent from Beth Horon the assembly met in the '
-          + 'Temple court and did the thing no rising before it had done: it appointed governors. '
-          + 'Josephus took the two Galilees and Gamala, Joseph ben Gorion and Ananus the high priest '
-          + 'the city, John the Essene had Thamna with Lydda, Joppa and Emmaus, Eleazar ben Ananias '
-          + 'Idumaea, Manasseh the Peraea. Take two rungs of The Art of Rule — a revolt that '
-          + 'commissions district commanders and expects their accounts has stopped being a riot.',
-        rewardText: '"The Commissions of the Assembly": −0.5 unrest everywhere permanently, +25 governance points.',
+        desc: 'Take two rungs of The Art of Rule — a revolt that commissions district '
+          + 'commanders and expects their accounts has stopped being a riot.',
+        rewardText: '"The Commissions of the Assembly": −0.5 unrest everywhere permanently, +60 governance points.',
         check: (ctx) => (((crown(ctx, 'JUD').reforms || {}).civ | 0) >= 2),
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'commissions_of_the_assembly', name: 'The Commissions of the Assembly',
             months: -1, effects: { unrestAll: -0.5 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { gov: 25 });
+          ctx.helpers.adjust(ctx, 'JUD', { gov: 60 });
         },
       },
       {
         id: 'jm_the_nineteen_towns', name: 'The Nineteen Towns',
         icon: 'bricks', col: 0, row: 7, civil: 'govt', requires: ['jm_the_generals_of_the_districts'],
-        desc: 'In one winter Josephus walled Jotapata, Bersabe, Selamin, Caphareccho, Japha and '
-          + 'Sigoph, Mount Tabor, Tarichaeae and Tiberias and Gischala and the caves above Arbela, '
-          + 'and in the Gaulanitis Seleucia, Sogane and Gamala — nineteen places, paid for out of '
-          + 'the district\'s own revenues and not from Jerusalem. Carry the realm to 145 development '
-          + 'with the country steady at +2 stability: this war is fought out of the country\'s '
-          + 'surplus, or it is fought out of the Temple\'s strongbox until there is none.',
+        desc: 'Carry the realm to 180 development with the country steady at +2 stability.',
         rewardText: '"The Walled Country": +10% income and +5% force limit, permanent.',
-        check: (ctx) => ownedDev(ctx, 'JUD') >= 145 && (crown(ctx, 'JUD').stability || 0) >= 2,
+        check: (ctx) => ownedDev(ctx, 'JUD') >= 180 && (crown(ctx, 'JUD').stability || 0) >= 2,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
           id: 'the_walled_country', name: 'The Walled Country', months: -1,
           effects: { incomeMult: 1.1, forceLimitMult: 1.05 },
@@ -1064,32 +1049,24 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_the_third_power', name: 'The Third Power of the East',
         icon: 'flag', col: 1, row: 6, civil: 'region',
-        desc: 'The shekel of Year One is struck to the Tyrian weight, fourteen grams of silver with '
-          + '"Jerusalem the Holy" on the reverse, because a state that mints is a state other states '
-          + 'have to price. The courts that keep ledgers begin filing Judaea where they file Nabataea '
-          + 'and Armenia — a power, not a province in arrears. Stand among the first three courts of '
-          + 'the world in the standing of the powers, behind nobody but the empires themselves.',
-        rewardText: '"A Power, Not a Province": +1 diplomatic seat permanently, +20 influence points.',
+        desc: 'Stand among the first three courts of the world in the standing of the powers, '
+          + 'behind nobody but the empires themselves.',
+        rewardText: '"A Power, Not a Province": +1 diplomatic seat permanently, +50 influence points.',
         check: (ctx) => { const i = standingRank(ctx, 'JUD'); return i >= 0 && i < 3; },
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'a_power_not_a_province', name: 'A Power, Not a Province',
             months: -1, effects: { diploSeats: 1 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { infl: 20 });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 50 });
         },
       },
       {
         id: 'jm_the_letters_beyond_the_euphrates', name: 'The Letters Beyond the Euphrates',
         icon: 'scroll', col: 1, row: 7, civil: 'region', requires: ['jm_the_third_power'],
-        desc: 'Nero had crowned Tiridates in Rome that same year and the Euphrates was quiet, which is '
-          + 'the one thing the revolt could not afford. The great communities sat '
-          + 'inside Parthia at Nehardea and Nisibis, Adiabene\'s princes had already ridden west to '
-          + 'Beth Horon, and Josephus wrote his first account of the war in Aramaic for precisely '
-          + 'that audience. Hold the first three seats of the standing while the King of Kings\' '
-          + 'regard for us stands at +60: this war is winnable only while the eastern frontier is a '
-          + 'question Rome has to keep answering.',
-        rewardText: '"The Ear of Ctesiphon": +10% trade permanently, +1,500 manpower.',
+        desc: 'Hold the first three seats of the standing while the King of Kings\' regard for '
+          + 'us stands at +60.',
+        rewardText: '"The Ear of Ctesiphon": +10% trade permanently, +3,000 manpower.',
         check: (ctx) => {
           const i = standingRank(ctx, 'JUD');
           return i >= 0 && i < 3 && regard(ctx, 'PAR', 'JUD') >= 60;
@@ -1099,18 +1076,13 @@ export const BOOKMARK_66 = {
             id: 'the_ear_of_ctesiphon', name: 'The Ear of Ctesiphon',
             months: -1, effects: { tradeMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { manpower: 1500 });
+          ctx.helpers.adjust(ctx, 'JUD', { manpower: 3000 });
         },
       },
       {
         id: 'jm_the_altar_and_the_knives', name: 'The Altar and the Knives',
         icon: 'altar', col: 2, row: 6, civil: 'court',
-        desc: 'Eleazar the Temple captain stopped the offering made for Caesar and the war began '
-          + 'inside the priestly courses; in the same season the sicarii took Masada, burned the '
-          + 'debt archive, and murdered Ananias the high priest where he was hiding in the aqueduct '
-          + 'of Herod\'s palace. Bring the Zealots and the Temple Priesthood both to 65 approval at '
-          + 'once — the two parties whose quarrel with each other, and not Rome\'s ramps, is what '
-          + 'finally burned the city.',
+        desc: 'Bring the Zealots and the Temple Priesthood both to 65 approval at once.',
         rewardText: '"The Courses and the Bands": +0.2 legitimacy a month and −0.5 unrest everywhere, permanent.',
         check: (ctx) => {
           const f = crown(ctx, 'JUD').factions || {};
@@ -1124,13 +1096,9 @@ export const BOOKMARK_66 = {
       {
         id: 'jm_the_council_of_the_nation', name: 'The Council of the Nation',
         icon: 'speaker', col: 2, row: 7, civil: 'court', requires: ['jm_the_altar_and_the_knives'],
-        desc: 'By the winter of 68 there were three governments inside one wall — Ananus and the '
-          + 'notables in the upper city, Eleazar ben Simon on the Temple mount, John of Gischala in '
-          + 'between — and each burned the others\' granaries rather than serve under a command it '
-          + 'had not chosen. The war party wants the war and the men of property want the door left '
-          + 'open, so nobody can have everything: hold all three at 65 approval in the same month, '
-          + 'with thirty of the priesthood\'s favor banked and unspent. One council, one treasury, '
-          + 'and an order that arrives where it is sent as an order.',
+        desc: 'Bring the war party, the notables and the priesthood all to 65 approval, with '
+          + '30 favour banked from the priests — three governments inside one wall, made '
+          + 'one.',
         rewardText: '"One Voice in the City": +0.3 legitimacy a month and +8% income, permanent.',
         check: (ctx) => {
           const t = crown(ctx, 'JUD');
@@ -1150,57 +1118,56 @@ export const BOOKMARK_66 = {
       {
         id: 'hy_house_stands', name: 'The House That Stood', hypothetical: true,
         fork: '66ce/how_the_revolt_ends',
+        road: 'second_kingdom',
         icon: 'temple', col: 4, row: 0,
         desc: 'Free Judaea of Rome — the war ended, no overlord, Jerusalem yours — and reach '
-          + 'June of 70 with the Temple unburned. Where Josephus recorded ash, a Second '
-          + 'Kingdom begins.',
-        rewardText: '+1 stability, +20 legitimacy.',
+          + 'June of 70 with the Temple unburned.',
+        rewardText: '+1 stability, +30 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'secondKingdom'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 30 }),
       },
       {
         id: 'hy_what_kind', name: 'What Kind of Kingdom', hypothetical: true,
         fork: '66ce/what_kind_of_kingdom',
+        roads: ['altar', 'chamber', 'useful'],
         icon: 'scales', col: 4, row: 1, requires: ['hy_house_stands'],
         desc: 'Let the doctrine axes decide what the House that stood is FOR — the Kingdom of '
-          + 'the Altar, the Commonwealth of the Chamber, or the state worth more standing. '
-          + 'The question arrives once the kingdom has lived to 78.',
-        rewardText: '+25 governance points.',
+          + 'the Altar, the Commonwealth of the Chamber.',
+        rewardText: '+60 governance points.',
         check: (ctx) => anyFlag(ctx, 'kingdomOfTheAltar', 'commonwealthOfTheChamber', 'worthMoreStanding'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 60 }),
       },
       {
         id: 'hy_trajan_flank', name: 'The Flank of Trajan\'s War', hypothetical: true,
         fork: '66ce/the_flank_of_trajans_war',
+        roads: ['road_held_open', 'road_shut', 'rose_with_the_east'],
         icon: 'horseshoe', col: 4, row: 2, requires: ['hy_house_stands'],
         desc: 'Keep the Second Kingdom alive to 116, when Trajan is at the Gulf and the East '
-          + 'rises behind him — and a Jewish kingdom sits on the road home, with the whole '
-          + 'war\'s weight in its answer.',
-        rewardText: '+25 martial points, +1,500 manpower.',
+          + 'rises behind him.',
+        rewardText: '+60 martial points, +3,000 manpower.',
         check: (ctx) => anyFlag(ctx, 'roadHeldOpen', 'roadShut', 'roseWithTheEast'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25, manpower: 1500 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 60, manpower: 3000 }),
       },
       {
         id: 'hy_royal_robes', name: 'A King in Royal Robes', hypothetical: true,
         fork: '66ce/the_royal_robes',
+        road: 'the_king_of_the_knives',
         icon: 'star4', col: 4, row: 3,
-        desc: 'When Menahem enters the Temple courts in royal dress (July 66), spare the '
-          + 'pretender history struck down on the Ophel: arm the Sicarii and let the '
-          + 'revolt keep its king of the knives — and, eventually, answer for him.',
-        rewardText: '+20 martial points.',
+        desc: 'Spare the pretender history struck down on the Ophel: when Menahem enters the '
+          + 'Temple courts in royal dress in July 66, arm the Sicarii instead.',
+        rewardText: '+50 martial points.',
         check: (ctx) => anyFlag(ctx, 'menahemLives'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 50 }),
       },
       {
         id: 'hy_granaries', name: 'The Sealed Granaries', hypothetical: true,
         fork: '66ce/the_granaries_of_the_city',
+        road: 'the_sealed_stores',
         icon: 'granary', col: 4, row: 4,
-        desc: 'Hold Jerusalem in the faction winter (68) and do what no faction did: seal '
-          + 'the stores of the city under one guard with a published ledger, so the siege, '
-          + 'if it comes, besieges a city that can wait.',
-        rewardText: '+1 stability, +10 legitimacy.',
+        desc: 'Hold Jerusalem in the faction winter (68) and do what no faction did.',
+        rewardText: '+1 stability, +15 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'storesSealed'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 15 }),
       },
     ],
     ROM: [
@@ -1208,38 +1175,39 @@ export const BOOKMARK_66 = {
         id: 'rm_secure_coast', name: 'Secure the Coast',
         icon: 'ship',
         desc: 'Hold Caesarea Maritima and Ptolemais, and take Joppa: the sea must be Roman.',
-        rewardText: '+25 martial points.',
+        rewardText: '+60 martial points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Caesarea Maritima')
           && ctx.helpers.controls(ctx, 'ROM', 'Ptolemais')
           && ctx.helpers.controls(ctx, 'ROM', 'Joppa'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { mar: 60 }),
       },
       {
         id: 'rm_reduce_galilee', name: 'Reduce Galilee',
         icon: 'flame',
-        desc: 'Take all five fortified towns of Galilee — Vespasian\'s method: the countryside first.',
-        rewardText: '"Methodical Reduction": +1 siege bonus for 24 months.',
+        desc: 'Take all five fortified towns of Galilee — Vespasian\'s method: the countryside '
+          + 'first.',
+        rewardText: '"Methodical Reduction": +1 siege bonus permanently.',
         check: (ctx) => ['Sepphoris', 'Jotapata', 'Tiberias', 'Tarichaea', 'Gischala']
           .every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
-          id: 'methodical_reduction', name: 'Methodical Reduction', months: 24, effects: { siegeBonus: 1 },
+          id: 'methodical_reduction', name: 'Methodical Reduction', months: -1, effects: { siegeBonus: 1 },
         }),
       },
       {
         id: 'rm_ring_closes', name: 'The Ring Closes',
         icon: 'tower',
         desc: 'Take Emmaus, Jericho and Lydda; no supply or sally must reach Jerusalem.',
-        rewardText: 'Plunder of the approaches: +100 talents.',
+        rewardText: 'Plunder of the approaches: +200 talents.',
         check: (ctx) => ['Emmaus', 'Jericho', 'Lydda'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { treasury: 100 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { treasury: 200 }),
       },
       {
         id: 'rm_jerusalem', name: 'Jerusalem Must Fall',
         icon: 'temple',
         desc: 'Take the city itself.',
-        rewardText: '+15 legitimacy, +25 of every monarch point: a triumph in all but name.',
+        rewardText: '+25 legitimacy, +25 of every monarch point: a triumph in all but name.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Jerusalem'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 15, gov: 25, infl: 25, mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 25, gov: 60, infl: 60, mar: 60 }),
       },
       {
         id: 'rm_desert_forts', name: 'No Stone Upon Stone',
@@ -1257,23 +1225,23 @@ export const BOOKMARK_66 = {
         id: 'rm_army_that_eats', name: 'An Army That Eats',
         icon: 'grain',
         desc: 'The method runs on corn: reach Government 7 — The Provisioned City.',
-        rewardText: '"The Corn of Egypt": +10% manpower for 24 months.',
+        rewardText: '"The Corn of Egypt": +10% manpower permanently.',
         check: (ctx) => (((ctx.game.tags.ROM || {}).tech || {}).gov | 0) >= 7,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
-          id: 'corn_of_egypt', name: 'The Corn of Egypt', months: 24, effects: { manpowerMult: 1.1 },
+          id: 'corn_of_egypt', name: 'The Corn of Egypt', months: -1, effects: { manpowerMult: 1.1 },
         }),
       },
       {
         id: 'rm_iudaea_capta', name: 'Iudaea Capta',
         icon: 'coins',
         desc: 'Strike the victory into the world\'s hand: take up three ideas of the age.',
-        rewardText: '"Iudaea Capta" coinage: +10% income permanently, +10 legitimacy.',
+        rewardText: '"Iudaea Capta" coinage: +10% income permanently, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ROM) >= 3,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'ROM', {
             id: 'iudaea_capta_coinage', name: 'Iudaea Capta Coinage', months: -1, effects: { incomeMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 10 });
+          ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 15 });
         },
       },
     ],
@@ -1284,33 +1252,37 @@ export const BOOKMARK_66 = {
       {
         id: 'am_kings_speech', name: 'The Words in the Xystus',
         icon: 'scroll', col: 1,
-        desc: 'You told Jerusalem what sixty thousand men mean. Master the arts of being heard: reach Influence 6 — The Diaspora\'s Silver.',
-        rewardText: '+25 influence points, +10 legitimacy.',
+        desc: 'You told Jerusalem what sixty thousand men mean. Master the arts of being '
+          + 'heard: reach Influence 6 — The Diaspora\'s Silver.',
+        rewardText: '+60 influence points, +15 legitimacy.',
         check: (ctx) => (((ctx.game.tags.AGR || {}).tech || {}).infl | 0) >= 6,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 60, legitimacy: 15 }),
       },
       {
         id: 'am_babylonian_horse', name: 'The Babylonian Horse',
         icon: 'horseshoe', col: 0, requires: ['am_kings_speech'],
-        desc: 'Zamaris\' colony holds the road for the House of Herod. Put five thousand men under the royal standards.',
-        rewardText: '"Zamaris\' Colonists": +5% discipline for 24 months.',
-        check: (ctx) => totalMen(ctx, 'AGR') >= 5000,
+        desc: 'Zamaris\' colony holds the road for the House of Herod. Put 7,000 men under the '
+          + 'royal standards.',
+        rewardText: '"Zamaris\' Colonists": +5% discipline permanently.',
+        check: (ctx) => totalMen(ctx, 'AGR') >= 7000,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
-          id: 'zamaris_colonists', name: 'Zamaris\' Colonists', months: 24, effects: { disciplineMult: 1.05 },
+          id: 'zamaris_colonists', name: 'Zamaris\' Colonists', months: -1, effects: { disciplineMult: 1.05 },
         }),
       },
       {
         id: 'am_cities_nero_gave', name: 'The Cities Nero Gave',
         icon: 'ship', col: 2, requires: ['am_kings_speech'],
-        desc: 'Tiberias and Tarichaea are yours by the emperor\'s own grant, and the rebels hold both. Take back the lake.',
-        rewardText: 'The lake\'s revenues: +75 talents, +10 legitimacy.',
+        desc: 'Tiberias and Tarichaea are yours by the emperor\'s own grant, and the rebels '
+          + 'hold both. Take back the lake.',
+        rewardText: 'The lake\'s revenues: +150 talents, +15 legitimacy.',
         check: (ctx) => ctx.helpers.controls(ctx, 'AGR', 'Tiberias') && ctx.helpers.controls(ctx, 'AGR', 'Tarichaea'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 75, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 150, legitimacy: 15 }),
       },
       {
         id: 'am_kings_country', name: 'Hold the King\'s Country',
         icon: 'mountain', col: 0, requires: ['am_babylonian_horse'],
-        desc: 'Gamala watches for its moment and the Golan villages count the war\'s dead. Keep every home province under the royal standard.',
+        desc: 'Gamala watches for its moment and the Golan villages count the war\'s dead. Keep '
+          + 'every home province under the royal standard.',
         rewardText: '+1 stability — the north answers to the king.',
         check: (ctx) => ['Caesarea Philippi', 'Batanea', 'Gamala']
           .every((n) => ctx.helpers.controls(ctx, 'AGR', n)),
@@ -1319,32 +1291,33 @@ export const BOOKMARK_66 = {
       {
         id: 'am_provisioned_kingdom', name: 'The Provisioned Kingdom',
         icon: 'grain', col: 1, requires: ['am_kings_country'],
-        desc: 'A client is kept for what it delivers. Reach Government 7 — The Provisioned City — and deliver.',
-        rewardText: '"The Granaries of Batanea": +10% manpower for 24 months.',
+        desc: 'A client is kept for what it delivers. Reach Government 7 — The Provisioned '
+          + 'City — and deliver.',
+        rewardText: '"The Granaries of Batanea": +10% manpower permanently.',
         check: (ctx) => (((ctx.game.tags.AGR || {}).tech || {}).gov | 0) >= 7,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
-          id: 'granaries_of_batanea', name: 'The Granaries of Batanea', months: 24, effects: { manpowerMult: 1.1 },
+          id: 'granaries_of_batanea', name: 'The Granaries of Batanea', months: -1, effects: { manpowerMult: 1.1 },
         }),
       },
       {
         id: 'am_clients_curriculum', name: 'The Client\'s Curriculum',
         icon: 'lamp', col: 2, requires: ['am_cities_nero_gave'],
         desc: 'A king who survives empires studies them. Take up three ideas of the age.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.AGR) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { gov: 60, legitimacy: 15 }),
       },
       {
         id: 'am_outlives_the_war', name: 'A Kingdom That Outlives the War',
         icon: 'laurel', col: 1, requires: ['am_provisioned_kingdom', 'am_clients_curriculum'],
         desc: 'End the Great Revolt still seated at Caesarea Philippi — whoever won it.',
-        rewardText: '"The Loyal Client": +10% income permanently, +15 legitimacy.',
+        rewardText: '"The Loyal Client": +10% income permanently, +25 legitimacy.',
         check: (ctx) => !findJudRomWar(ctx.game) && ctx.helpers.controls(ctx, 'AGR', 'Caesarea Philippi'),
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'AGR', {
             id: 'loyal_client', name: 'The Loyal Client', months: -1, effects: { incomeMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 15 });
+          ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 25 });
         },
       },
       // ── The chair's own reach (SPEC §196): the reign's documented arts —
@@ -1353,61 +1326,55 @@ export const BOOKMARK_66 = {
       {
         id: 'am_queens_estates', name: 'The Queen\'s Grain Contracts',
         icon: 'amphora', col: 2, row: 3, requires: ['am_kings_speech'],
-        desc: 'Berenice\'s grain sits at Besara on the Great Plain\'s edge, and Rome\'s '
-          + 'quartermasters buy at the price they name. Bank 300 talents — a treasury that '
-          + 'can carry the difference keeps the stewards\' machinery loyal.',
-        rewardText: '"The Stewards\' Ledgers": +5% income permanently, +10 governance points.',
-        check: (ctx) => ((ctx.game.tags.AGR || {}).treasury || 0) >= 300,
+        desc: 'Bank 450 talents — a treasury that can carry the difference keeps the stewards\' '
+          + 'machinery loyal.',
+        rewardText: '"The Stewards\' Ledgers": +5% income permanently, +25 governance points.',
+        check: (ctx) => ((ctx.game.tags.AGR || {}).treasury || 0) >= 450,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'AGR', {
             id: 'stewards_ledgers', name: 'The Stewards\' Ledgers', months: -1, effects: { incomeMult: 1.05 },
           });
-          ctx.helpers.adjust(ctx, 'AGR', { gov: 10 });
+          ctx.helpers.adjust(ctx, 'AGR', { gov: 25 });
         },
       },
       {
         id: 'am_first_crown', name: 'The First Crown',
         icon: 'star4', col: 0, row: 3, requires: ['am_babylonian_horse'],
-        desc: 'Chalcis under Lebanon was yours at twenty-one — the crown Claudius gave and the '
-          + 'one you traded up from. The cousin\'s line has lapsed and the valley remembers '
-          + 'Herodian rule. Take it back.',
-        rewardText: '+75 talents, +15 influence points.',
+        desc: 'Take Chalcis back — the crown Claudius gave you at twenty-one, and the one you '
+          + 'traded up from.',
+        rewardText: '+150 talents, +35 influence points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'AGR', 'Chalcis'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 75, infl: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 150, infl: 35 }),
       },
       {
         id: 'am_emperors_ear', name: 'The Emperor\'s Ear',
         icon: 'speaker', col: 1, row: 1, requires: ['am_kings_speech'],
-        desc: 'The vestments won back under Claudius, the Levites\' linen argued under Nero: '
-          + 'the advocate king wins in chambers what no army takes in the field. Raise Rome\'s '
-          + 'regard for the house past devotion — its opinion at +180.',
-        rewardText: '+25 influence points, +10 legitimacy.',
+        desc: 'Raise Rome\'s regard for the house past devotion — its opinion at +180.',
+        rewardText: '+60 influence points, +15 legitimacy.',
         check: (ctx) => {
           const rom = ctx.game.tags.ROM;
           return ((rom && rom.opinion && rom.opinion.AGR) || 0) >= 180;
         },
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 60, legitimacy: 15 }),
       },
       // ── The kingdom that has to choose (SPEC §197) ──────────────────────
       {
         id: 'am_the_northern_march', name: 'The Northern March',
         icon: 'mountain', col: 0, row: 4, requires: ['am_first_crown'],
-        desc: 'Chalcis under Lebanon and the Ituraean hills behind it were Herodian country '
-          + 'before Rome parcelled them out. Hold Chalcis and Emesa — a client that polices '
-          + 'its own march is a client Rome does not garrison.',
-        rewardText: '+100 talents, +15 martial points.',
+        desc: 'Hold Chalcis and Emesa — a client that polices its own march is a client Rome '
+          + 'does not garrison.',
+        rewardText: '+200 talents, +35 martial points.',
         check: (ctx) => ['Chalcis', 'Emesa'].every((n) => ctx.helpers.controls(ctx, 'AGR', n)),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 100, mar: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 200, mar: 35 }),
       },
       {
         id: 'am_a_royal_capital', name: 'A Royal Capital',
         icon: 'bricks', col: 2, row: 4, requires: ['am_queens_estates'],
-        desc: 'Caesarea Philippi was renamed Neronias for an emperor who lasted four years, '
-          + 'which is what happens when a capital is somebody else\'s compliment. Reach '
-          + 'Government 8 with 400 talents banked and build one that is the kingdom\'s own.',
+        desc: 'Reach Government 8 with 600 talents banked and build one that is the kingdom\'s '
+          + 'own.',
         rewardText: '"The Royal City": +8% income and +0.15 legitimacy a month, permanent.',
         check: (ctx) => (((ctx.game.tags.AGR || {}).tech || {}).gov | 0) >= 8
-          && ((ctx.game.tags.AGR || {}).treasury || 0) >= 400,
+          && ((ctx.game.tags.AGR || {}).treasury || 0) >= 600,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
           id: 'the_royal_city', name: 'The Royal City', months: -1,
           effects: { incomeMult: 1.08, legitimacyAdd: 0.15 },
@@ -1416,11 +1383,9 @@ export const BOOKMARK_66 = {
       {
         id: 'am_the_kings_own_army', name: 'The King\'s Own Army',
         icon: 'spears', col: 1, row: 5, requires: ['am_outlives_the_war'],
-        desc: 'Every soldier this kingdom has ever fielded has fought beside a legion. Put '
-          + 'twelve thousand men under the royal standards and reach Military 7 — an army '
-          + 'that could stand alone, whether or not it ever has to.',
+        desc: 'Put 17,000 men under the royal standards and reach Military 7.',
         rewardText: '"An Army of Its Own": +8% discipline and +10% manpower, permanent.',
-        check: (ctx) => totalMen(ctx, 'AGR') >= 12000
+        check: (ctx) => totalMen(ctx, 'AGR') >= 17000
           && (((ctx.game.tags.AGR || {}).tech || {}).mar | 0) >= 7,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
           id: 'an_army_of_its_own', name: 'An Army of Its Own', months: -1,
@@ -1430,9 +1395,8 @@ export const BOOKMARK_66 = {
       {
         id: 'am_the_dynasty_continues', name: 'The Dynasty Continues',
         icon: 'star8', col: 0, row: 5, requires: ['am_the_northern_march'],
-        desc: 'Agrippa II died childless in Rome and the house of Herod ended with him. Reach '
-          + '85 legitimacy and +3 stability: a kingdom that has an heir worth confirming is a '
-          + 'kingdom with a next century.',
+        desc: 'Reach 85 legitimacy and +3 stability: a kingdom that has an heir worth '
+          + 'confirming is a kingdom with a next century.',
         rewardText: '"The House Continues": +0.3 legitimacy a month, −0.5 unrest everywhere, permanent.',
         check: (ctx) => {
           const t = ctx.game.tags.AGR || {};
@@ -1452,29 +1416,21 @@ export const BOOKMARK_66 = {
       {
         id: 'am_the_kings_building', name: 'The King\'s Building',
         icon: 'bricks', col: 0, row: 6, civil: 'govt',
-        desc: 'Agrippa spent where a client could be seen spending: a theatre and an amphitheatre '
-          + 'at Berytus, with baths and colonnades and games he paid for out of his own revenues — '
-          + 'a Roman colony, not a Jewish town, and Josephus says his own subjects hated him for '
-          + 'stripping his kingdom to adorn a foreign city. At home the same money enlarged '
-          + 'Caesarea Philippi. Carry the kingdom to 33 development and hold it at +1 stability: '
-          + 'a client is worth keeping in proportion to what there is of it.',
-        rewardText: '"The King Builds": +8% income permanently, +15 governance points.',
-        check: (ctx) => ownedDev(ctx, 'AGR') >= 33 && (crown(ctx, 'AGR').stability || 0) >= 1,
+        desc: 'Carry the kingdom to 40 development and hold +1 stability: a client is worth '
+          + 'keeping in proportion to what there is of it.',
+        rewardText: '"The King Builds": +8% income permanently, +35 governance points.',
+        check: (ctx) => ownedDev(ctx, 'AGR') >= 40 && (crown(ctx, 'AGR').stability || 0) >= 1,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'AGR', {
             id: 'the_king_builds', name: 'The King Builds', months: -1, effects: { incomeMult: 1.08 },
           });
-          ctx.helpers.adjust(ctx, 'AGR', { gov: 15 });
+          ctx.helpers.adjust(ctx, 'AGR', { gov: 35 });
         },
       },
       {
         id: 'am_a_chancery_of_its_own', name: 'A Chancery of Its Own',
         icon: 'quill', col: 0, row: 7, civil: 'govt', requires: ['am_the_kings_building'],
-        desc: 'A client kingdom is a set of revenues Rome has agreed not to collect itself, and it '
-          + 'lasts exactly as long as it stays cheaper than a procurator — Judaea learned in 6 CE '
-          + 'what the other answer costs. Take two rungs of The Art of Rule and carry the house to '
-          + '95 legitimacy: a kingdom that keeps its own registers, judges its own cases and can '
-          + 'name its own heir gives the Palatine nothing that needs fixing.',
+        desc: 'Take two rungs of The Art of Rule and carry the house to 95 legitimacy.',
         rewardText: '"Cheaper Than a Procurator": −8% administration and +0.2 legitimacy a month, permanent.',
         check: (ctx) => (((crown(ctx, 'AGR').reforms || {}).civ | 0) >= 2)
           && (crown(ctx, 'AGR').legitimacy || 0) >= 95,
@@ -1486,30 +1442,23 @@ export const BOOKMARK_66 = {
       {
         id: 'am_the_client_among_the_powers', name: 'The Client Among the Powers',
         icon: 'flag', col: 1, row: 6, civil: 'region',
-        desc: 'Chalcis at twenty-one, then Philip\'s tetrarchy with Abila and Arca, then Tiberias, '
-          + 'Tarichaeae, Julias and fourteen villages from Nero: every grant a promotion in a '
-          + 'hierarchy nobody ever wrote down. Write it down. Stand among the first five courts of '
-          + 'the world in the standing of the powers — ahead of Armenia, ahead of Osroene, ahead of '
-          + 'every other crown Rome and Ctesiphon keep in the space between them.',
-        rewardText: '"The Ranked Crown": +1 diplomatic seat permanently, +20 influence points.',
+        desc: 'Write it down. Stand among the first five courts of the world in the standing '
+          + 'of the powers.',
+        rewardText: '"The Ranked Crown": +1 diplomatic seat permanently, +50 influence points.',
         check: (ctx) => { const i = standingRank(ctx, 'AGR'); return i >= 0 && i < 5; },
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'AGR', {
             id: 'the_ranked_crown', name: 'The Ranked Crown', months: -1, effects: { diploSeats: 1 },
           });
-          ctx.helpers.adjust(ctx, 'AGR', { infl: 20 });
+          ctx.helpers.adjust(ctx, 'AGR', { infl: 50 });
         },
       },
       {
         id: 'am_the_nations_verdict', name: 'The Nation\'s Own Verdict',
         icon: 'dove', col: 1, row: 7, civil: 'region', requires: ['am_the_client_among_the_powers'],
-        desc: 'You stood on the roof of the Hasmonean palace above the Xystus and told them what '
-          + 'sixty thousand men mean, and Jerusalem answered with stones and burned your sister\'s '
-          + 'house. Your cavalry rode with Vespasian afterwards. Keep the first five seats of the '
-          + 'standing until the Jewish court across the border no longer files this house among its '
-          + 'enemies — regard at nought or better. A king of the Jews whom the Jews merely tolerate '
-          + 'has done what no other Herodian managed.',
-        rewardText: '"The Verdict Withheld": −0.75 unrest everywhere permanently, +15 legitimacy.',
+        desc: 'Keep the first five seats of the standing until the Jewish court across the '
+          + 'border no longer files this house among its enemies.',
+        rewardText: '"The Verdict Withheld": −0.75 unrest everywhere permanently, +25 legitimacy.',
         check: (ctx) => {
           const i = standingRank(ctx, 'AGR');
           return i >= 0 && i < 5 && regard(ctx, 'JUD', 'AGR') >= 0;
@@ -1519,18 +1468,14 @@ export const BOOKMARK_66 = {
             id: 'the_verdict_withheld', name: 'The Verdict Withheld', months: -1,
             effects: { unrestAll: -0.75 },
           });
-          ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 15 });
+          ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 25 });
         },
       },
       {
         id: 'am_the_queens_standing', name: 'The Queen\'s Standing',
         icon: 'coins', col: 2, row: 6, civil: 'court',
-        desc: 'Berenice was the richer half of the house — the estates at Besara on the edge of the '
-          + 'Great Plain, the grain contracts, the Nazirite vow she walked barefoot to discharge '
-          + 'while Florus\' tribunal sat in front of the palace — and within a decade she was on the '
-          + 'Palatine with Titus until Rome made him send her away. Bring the Stewards of the House '
-          + 'to 70 approval with thirty of their favor banked: the machinery that makes a small '
-          + 'kingdom rich has to owe the crown something, not merely draw wages from it.',
+        desc: 'Bring the Stewards of the House to 70 approval with thirty of their favor '
+          + 'banked.',
         rewardText: '"The Queen\'s Ledgers": +10% income and +1 diplomatic seat, permanent.',
         check: (ctx) => {
           const t = crown(ctx, 'AGR');
@@ -1545,14 +1490,8 @@ export const BOOKMARK_66 = {
       {
         id: 'am_the_gift_of_the_high_priesthood', name: 'The Gift of the High Priesthood',
         icon: 'altar', col: 2, row: 7, civil: 'court', requires: ['am_the_queens_standing'],
-        desc: 'Claudius left the house the custody of the vestments and the right to name the high '
-          + 'priest, and Agrippa used it six times: Ishmael ben Phabi, Joseph Kabi, Ananus ben '
-          + 'Ananus — deposed after three months for the stoning of James — Jesus ben Damnaeus, '
-          + 'Jesus ben Gamaliel, Matthias ben Theophilus. It is the only Jewish thing about this '
-          + 'kingship Jerusalem could not ignore, and it buys nothing from the villages while the '
-          + 'king\'s squadrons are in the siege lines. Bring the Pious of the Land to 60 approval — '
-          + 'which no amount of endowment will do until this house has stopped making war on its '
-          + 'own nation.',
+        desc: 'Bring the Pious of the Land to 60 approval — which no amount of endowment will '
+          + 'do until this house has stopped making war on its own nation.',
         rewardText: '"The King\'s Own Nomination": +0.25 legitimacy a month and −0.5 unrest everywhere, permanent.',
         check: (ctx) => ((crown(ctx, 'AGR').factions || {}).pious || 0) >= 60,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
@@ -1564,62 +1503,60 @@ export const BOOKMARK_66 = {
       {
         id: 'hy_two_crowns', name: 'Two Crowns of Israel', hypothetical: true,
         fork: '66ce/how_the_revolt_ends',
+        road: 'second_kingdom',
         icon: 'temple', col: 4, row: 0,
-        desc: 'If the Second Kingdom stands while you still reign in the north, the land Josephus '
-          + 'buried holds two Jewish crowns at once — the free one at Jerusalem and yours, the '
-          + 'one that chose the empire and lived.',
-        rewardText: '+1 stability, +20 legitimacy.',
+        desc: 'If the Second Kingdom stands while you still reign in the north, the land '
+          + 'Josephus buried holds two Jewish crowns at once.',
+        rewardText: '+1 stability, +30 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'secondKingdom')
           && !!(ctx.game.tags.AGR && ctx.game.tags.AGR.alive !== false)
           && ctx.helpers.controls(ctx, 'AGR', 'Caesarea Philippi'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { stability: 1, legitimacy: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { stability: 1, legitimacy: 30 }),
       },
       {
         id: 'hy_worth_more_standing', name: 'The Kingdom Worth Keeping', hypothetical: true,
         fork: '66ce/what_kind_of_kingdom',
+        roads: ['altar', 'chamber', 'useful'],
         icon: 'scales', col: 4, row: 1, requires: ['hy_two_crowns'],
-        desc: 'Every clause of your reign argues that a client is cheaper than a province. If the '
-          + 'House that stood must decide what kind of kingdom it is, you already know the '
-          + 'answer you would give — wait to hear the one Jerusalem gives.',
-        rewardText: '+25 governance points.',
+        desc: 'Have the age decide that a client is cheaper than a province — every clause of '
+          + 'your reign is the argument.',
+        rewardText: '+60 governance points.',
         check: (ctx) => anyFlag(ctx, 'kingdomOfTheAltar', 'commonwealthOfTheChamber', 'worthMoreStanding'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { gov: 60 }),
       },
       {
         id: 'hy_other_royal_robes', name: 'The Other Man in Royal Robes', hypothetical: true,
         fork: '66ce/the_royal_robes',
+        road: 'the_king_of_the_knives',
         icon: 'swords', col: 3, row: 0,
-        desc: 'Your cavalry was driven from the palace by the man who now walks the Temple '
-          + 'courts in royal dress. If Menahem keeps his crown and his knives, the age holds '
-          + 'two men calling themselves king of the Jews — and only one of them was ever '
-          + 'crowned by anyone.',
-        rewardText: '+15 legitimacy, +10 martial points.',
+        desc: 'Let Menahem live: the man who drove your cavalry from the palace walks the '
+          + 'Temple courts in royal dress, and answers for it later.',
+        rewardText: '+25 legitimacy, +25 martial points.',
         check: (ctx) => anyFlag(ctx, 'menahemLives'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 15, mar: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 25, mar: 25 }),
       },
       {
         id: 'hy_king_of_which_jews', name: 'A King of Which Jews?', hypothetical: true,
         fork: '66ce/a_state_or_a_nation',
+        roads: ['speaker_for_the_nation', 'state_not_nation'],
         icon: 'flag', col: 4, row: 2, requires: ['hy_two_crowns'],
-        desc: 'Four Jews in five live under other kings — most of them under yours and the '
-          + 'King of Kings\'. If the House that stood claims to speak for the whole nation, '
-          + 'your own synagogues hear it; if it settles for being a state, the nation beyond '
-          + 'its borders remains yours to speak for. Either answer redraws your reign.',
-        rewardText: '+20 influence points, +10 governance points.',
+        desc: 'Answer whether the House that stood speaks for the whole nation or settles for '
+          + 'being a state. Four Jews in five live under other kings — most of them under '
+          + 'yours.',
+        rewardText: '+50 influence points, +25 governance points.',
         check: (ctx) => anyFlag(ctx, 'speakerForTheNation', 'stateNotNation'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 20, gov: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 50, gov: 25 }),
       },
           {
         id: 'hy_clients_war', name: 'The Client\'s War', hypothetical: true,
         fork: '66ce/the_clients_war',
+        road: 'agrippa_rose',
         icon: 'swords', col: 3, row: 1,
-        desc: 'Rome is eating its own emperors and every cohort that could garrison this '
-          + 'kingdom is besieging Jerusalem or marching on Italy. Take the year: sever the '
-          + 'bond, declare, and be a crown held from nobody in Italy — the war the last '
-          + 'Herodian never fought, in the only year he could have won it.',
-        rewardText: '+25 legitimacy, +30 martial points.',
+        desc: 'Take the year: sever the bond, declare, and be a crown held from nobody in '
+          + 'Italy.',
+        rewardText: '+40 legitimacy, +70 martial points.',
         check: (ctx) => anyFlag(ctx, 'agrippaRose'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 25, mar: 30 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 40, mar: 70 }),
       },
 ],
     // The house beyond the Tigris (SPEC §185): a convert kingdom's chapter —
@@ -1628,21 +1565,24 @@ export const BOOKMARK_66 = {
       {
         id: 'dm_queens_granaries', name: 'The Queen\'s Granaries',
         icon: 'grain', col: 1,
-        desc: 'Helena bought Egyptian grain for a starving Jerusalem within living memory. Fill the treasury to 150 talents — the house must be able to feed the west again.',
-        rewardText: '"Helena\'s Charity": +10% growth for 24 months, +10 legitimacy.',
-        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 150,
+        desc: 'Helena bought Egyptian grain for a starving Jerusalem within living memory. '
+          + 'Fill the treasury to 400 talents — the house must be able to feed the west '
+          + 'again.',
+        rewardText: '"Helena\'s Charity": +10% growth permanently, +15 legitimacy.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 400,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'ADI', {
-            id: 'helenas_charity', name: 'Helena\'s Charity', months: 24, effects: { growthMult: 1.1 },
+            id: 'helenas_charity', name: 'Helena\'s Charity', months: -1, effects: { growthMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 10 });
+          ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 15 });
         },
       },
       {
         id: 'dm_princes_ride', name: 'The Princes Ride West',
         icon: 'horseshoe', col: 0, requires: ['dm_queens_granaries'],
-        desc: 'Kinsmen of Monobazus fought at the ascent of Beth Horon. Stand openly with Jerusalem — at war with Rome, or its court\'s devoted friend.',
-        rewardText: '"The Princes at the Ascent": +10% morale for 24 months, +25 martial points.',
+        desc: 'Kinsmen of Monobazus fought at the ascent of Beth Horon. Stand openly with '
+          + 'Jerusalem — at war with Rome, or its court\'s devoted friend.',
+        rewardText: '"The Princes at the Ascent": +10% morale permanently, +60 martial points.',
         check: (ctx) => {
           const g = ctx.game;
           const adi = g.tags.ADI || {};
@@ -1652,17 +1592,18 @@ export const BOOKMARK_66 = {
         },
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'ADI', {
-            id: 'princes_at_the_ascent', name: 'The Princes at the Ascent', months: 24, effects: { moraleMult: 1.1 },
+            id: 'princes_at_the_ascent', name: 'The Princes at the Ascent', months: -1, effects: { moraleMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'ADI', { mar: 25 });
+          ctx.helpers.adjust(ctx, 'ADI', { mar: 60 });
         },
       },
       {
         id: 'dm_northern_tolls', name: 'The Tolls of the Gulf Road',
         icon: 'coins', col: 2, requires: ['dm_queens_granaries'],
-        desc: 'Silk and spices cross the Tigris at your fords. Bank 300 talents of the road\'s custom.',
+        desc: 'Silk and spices cross the Tigris at your fords. Bank 450 talents of the road\'s '
+          + 'custom.',
         rewardText: '"The Northern Tolls": +10% trade permanently.',
-        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 300,
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 450,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
           id: 'northern_tolls', name: 'The Northern Tolls', months: -1, effects: { tradeMult: 1.1 },
         }),
@@ -1670,31 +1611,34 @@ export const BOOKMARK_66 = {
       {
         id: 'dm_school_at_nisibis', name: 'The School at Nisibis',
         icon: 'lamp', col: 2, requires: ['dm_northern_tolls'],
-        desc: 'Judah ben Bathyra teaches at Nisibis, and a kingdom that keeps the Law must learn to read it: reach Government 6 — The Korban Treasury.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        desc: 'Judah ben Bathyra teaches at Nisibis, and a kingdom that keeps the Law must '
+          + 'learn to read it: reach Government 6 — The Korban Treasury.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).gov | 0) >= 6,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 60, legitimacy: 15 }),
       },
       {
         id: 'dm_wisdom_of_rivers', name: 'The Wisdom of Two Rivers',
         icon: 'scroll', col: 1, requires: ['dm_queens_granaries'],
-        desc: 'A court that prays toward Jerusalem and bows toward Ctesiphon needs every art of both. Take up three ideas of the age.',
-        rewardText: '+25 influence points.',
+        desc: 'A court that prays toward Jerusalem and bows toward Ctesiphon needs every art '
+          + 'of both. Take up three ideas of the age.',
+        rewardText: '+60 influence points.',
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { infl: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { infl: 60 }),
       },
       {
         id: 'dm_yoke_weighed', name: 'The Yoke, Weighed',
         icon: 'scales', col: 0, requires: ['dm_princes_ride'],
-        desc: 'A client house ends one of two ways: devoted beyond suspicion, or free. Reach the King of Kings\' full regard — or stand without an overlord.',
-        rewardText: '+15 legitimacy, +25 martial points.',
+        desc: 'A client house ends one of two ways: devoted beyond suspicion, or free. Reach '
+          + 'the King of Kings\' full regard — or stand without an overlord.',
+        rewardText: '+25 legitimacy, +60 martial points.',
         check: (ctx) => {
           const g = ctx.game;
           const adi = g.tags.ADI || {};
           const par = g.tags.PAR;
           return !adi.overlord || ((par && par.opinion && par.opinion.ADI) || 0) >= 120;
         },
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 15, mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 25, mar: 60 }),
       },
       // ── The chair's own reach (SPEC §196): the deeds Josephus credits the
       // house with — the escort of the half-shekel, the tombs by Jerusalem —
@@ -1702,40 +1646,37 @@ export const BOOKMARK_66 = {
       {
         id: 'dm_riders_of_two_rivers', name: 'The Riders of the Two Rivers',
         icon: 'spears', col: 0, row: 3, requires: ['dm_princes_ride'],
-        desc: 'Kenedaeus and the kinsmen of Monobazus charged at Beth Horon with the men they '
-          + 'brought themselves. Arm the house beyond its tribute-book — eight thousand under '
-          + 'the standards, and the King of Kings can count them however he likes.',
-        rewardText: '"The Convert Lances": +5% discipline for 24 months, +1,000 manpower.',
-        check: (ctx) => totalMen(ctx, 'ADI') >= 8000,
+        desc: 'Arm the house beyond its tribute-book — eight thousand under the standards, and '
+          + 'the King of Kings can count them however he likes.',
+        rewardText: '"The Convert Lances": +5% discipline permanently, +2,000 manpower.',
+        check: (ctx) => totalMen(ctx, 'ADI') >= 11000,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'ADI', {
-            id: 'convert_lances', name: 'The Convert Lances', months: 24, effects: { disciplineMult: 1.05 },
+            id: 'convert_lances', name: 'The Convert Lances', months: -1, effects: { disciplineMult: 1.05 },
           });
-          ctx.helpers.adjust(ctx, 'ADI', { manpower: 1000 });
+          ctx.helpers.adjust(ctx, 'ADI', { manpower: 2000 });
         },
       },
       {
         id: 'dm_treasure_house', name: 'The Treasure-Houses of the Half-Shekel',
         icon: 'market', col: 2, row: 3, requires: ['dm_northern_tolls'],
-        desc: 'Babylonia banks its Temple silver at Nehardea and Nisibis until the escort of '
-          + 'ten thousands can ride. Hold both treasure-cities, and the dispersion\'s '
-          + 'half-shekels cross under the house\'s own guard from strongroom to gate.',
-        rewardText: '"The Escort of the Ascents": +5% income permanently, +10 governance points.',
+        desc: 'Hold Nehardea and Nisibis, where Babylonia banks its Temple silver until the '
+          + 'escort of ten thousands can ride.',
+        rewardText: '"The Escort of the Ascents": +5% income permanently, +25 governance points.',
         check: (ctx) => ['Nehardea', 'Nisibis']
           .every((n) => ctx.helpers.controls(ctx, 'ADI', n)),
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'ADI', {
             id: 'escort_of_the_ascents', name: 'The Escort of the Ascents', months: -1, effects: { incomeMult: 1.05 },
           });
-          ctx.helpers.adjust(ctx, 'ADI', { gov: 10 });
+          ctx.helpers.adjust(ctx, 'ADI', { gov: 25 });
         },
       },
       {
         id: 'dm_tombs_of_kings', name: 'The Tombs of the Kings',
         icon: 'temple', col: 1, row: 2, requires: ['dm_princes_ride'],
-        desc: 'Helena\'s pyramids stand three stadia north of Jerusalem\'s wall, and the bones '
-          + 'of the queen and her son traveled west to fill them. Raise the house\'s '
-          + 'legitimacy to 80 — a covenant made stone outlasts every court that doubts it.',
+        desc: 'Raise the house\'s legitimacy to 80 — a covenant made stone outlasts every court '
+          + 'that doubts it.',
         rewardText: '"The Pyramids North of the Wall": +0.1 legitimacy a month permanently.',
         check: (ctx) => {
           const g = ctx.game;
@@ -1756,13 +1697,8 @@ export const BOOKMARK_66 = {
       {
         id: 'dm_the_five_sons_of_izates', name: 'The Five Sons of Izates',
         icon: 'quill', col: 0, row: 4, civil: 'govt',
-        desc: 'Izates sent five sons to Jerusalem to learn the language and the Law exactly, and in '
-          + 'the end sent his mother\'s bones and his own after them. Ananias the merchant had '
-          + 'taught the women of the palace first and told the king he could keep the covenant '
-          + 'uncircumcised; Eleazar the Galilean walked in with a scroll and told him that reading '
-          + 'the Law is not keeping it. A kingdom that has taken a foreign covenant must build the '
-          + 'schools and the courts that hold it — take a rung of The Art of Rule and two of The '
-          + 'Voice of Heaven.',
+        desc: 'Enact one civil and two religious reforms — a convert court has to say out loud '
+          + 'how far into the covenant it has come.',
         rewardText: '"The Law Read in Arbela": +0.2 legitimacy a month and −0.5 unrest everywhere, permanent.',
         check: (ctx) => {
           const r = crown(ctx, 'ADI').reforms || {};
@@ -1776,12 +1712,8 @@ export const BOOKMARK_66 = {
       {
         id: 'dm_between_two_empires', name: 'Between the Two Empires',
         icon: 'flag', col: 1, row: 4, civil: 'region',
-        desc: 'Arbela lies a few days from Ctesiphon and a whole season from Antioch, and the house '
-          + 'has already chosen once: Izates sheltered Artabanus when the Parthian nobility drove '
-          + 'him out, put him back on his throne, and was paid in Nisibis and the right to wear the '
-          + 'upright tiara. Do it a second time without paying twice. Hold a seat among the first '
-          + 'five courts of the world while Rome\'s court no longer files this house among its '
-          + 'enemies — a small kingdom on a great road lives by being counted and not resented.',
+        desc: 'Hold a seat among the first five courts of the world while Rome\'s court no '
+          + 'longer files this house among its enemies.',
         rewardText: '"The Road Both Empires Use": +12% trade and +1 diplomatic seat, permanent.',
         check: (ctx) => {
           const i = standingRank(ctx, 'ADI');
@@ -1795,12 +1727,7 @@ export const BOOKMARK_66 = {
       {
         id: 'dm_the_court_that_prays_west', name: 'The Court That Prays West',
         icon: 'altar', col: 2, row: 4, civil: 'court',
-        desc: 'Helena kept the Nazirite vow fourteen years and bought Egyptian grain and Cypriot '
-          + 'figs for a Jerusalem in famine; Izates was circumcised against his mother\'s advice and '
-          + 'his first teacher\'s; Monobazus sent the kinsmen Kenedaeus and Monobazus to fight at '
-          + 'the ascent of Beth Horon. Bring the Proselyte House to 70 approval with twenty-five of '
-          + 'its favor banked — a conversion that belongs only to the crown dies with the king who '
-          + 'made it.',
+        desc: 'Bring the Proselyte House to 70 approval with twenty-five of its favor banked.',
         rewardText: '"The Covenant of the House": +0.25 legitimacy a month and +5% manpower, permanent.',
         check: (ctx) => {
           const t = crown(ctx, 'ADI');
@@ -1816,48 +1743,47 @@ export const BOOKMARK_66 = {
       {
         id: 'hy_grain_ships', name: 'The Grain Ships Come Again', hypothetical: true,
         fork: '66ce/how_the_revolt_ends',
+        road: 'second_kingdom',
         icon: 'temple', col: 4, row: 0,
-        desc: 'If the Second Kingdom stands, the house that fed Jerusalem in the famine feeds a '
-          + 'free city in its triumph — Helena\'s road from the Tigris to the Temple courts, '
-          + 'open in both directions at last.',
-        rewardText: '+50 talents, +15 legitimacy.',
+        desc: 'Reach a standing Second Kingdom — the house that fed Jerusalem in the famine '
+          + 'feeds a free city in its triumph.',
+        rewardText: '+100 talents, +25 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'secondKingdom')
           && !!(ctx.game.tags.ADI && ctx.game.tags.ADI.alive !== false),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, legitimacy: 25 }),
       },
       {
         id: 'hy_road_past_arbela', name: 'The Road Home Runs Past Arbela', hypothetical: true,
         fork: '66ce/the_flank_of_trajans_war',
+        roads: ['road_held_open', 'road_shut', 'rose_with_the_east'],
         icon: 'horseshoe', col: 4, row: 1, requires: ['hy_grain_ships'],
-        desc: 'If a Jewish kingdom sits on Trajan\'s road home, the army that took Ctesiphon '
-          + 'must march back through the Tigris kingdoms — and the house of the converts '
-          + 'holds a ford on that road, with the whole war\'s weight in its answer.',
-        rewardText: '+25 martial points, +1,000 manpower.',
+        desc: 'Reach the year a Jewish kingdom sits on Trajan\'s road home, with the army that '
+          + 'took Ctesiphon obliged to march back through the Tigris kingdoms.',
+        rewardText: '+60 martial points, +2,000 manpower.',
         check: (ctx) => anyFlag(ctx, 'roadHeldOpen', 'roadShut', 'roseWithTheEast'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 25, manpower: 1000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 60, manpower: 2000 }),
       },
       {
         id: 'hy_city_never_starved', name: 'The City That Never Starved', hypothetical: true,
         fork: '66ce/the_granaries_of_the_city',
+        road: 'the_sealed_stores',
         icon: 'granary', col: 3, row: 0,
-        desc: 'The house bought Jerusalem out of one famine with Egyptian grain and Cypriot '
-          + 'figs. If the stores are sealed under one guard before the torches reach them, '
-          + 'the siege Josephus starved through never happens — and the queen\'s charity '
-          + 'becomes the city\'s own habit, kept without her.',
-        rewardText: '+50 talents, +15 governance points.',
+        desc: 'Seal Jerusalem\'s stores under one guard before the torches reach them, and the '
+          + 'siege Josephus starved through never happens.',
+        rewardText: '+100 talents, +35 governance points.',
         check: (ctx) => anyFlag(ctx, 'storesSealed'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, gov: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, gov: 35 }),
       },
           {
         id: 'hy_tigris_crown', name: 'The Crown Between the Rivers', hypothetical: true,
         fork: '66ce/the_tigris_crown',
+        road: 'tigris_free',
         icon: 'star4', col: 3, row: 1,
-        desc: 'The King of Kings is fighting his own nobility and the tribute convoy has gone '
-          + 'two seasons unacknowledged. Stop remitting and start declaring: the house that '
-          + 'took the covenant becomes, for the first time since Tigranes, nobody\'s client.',
-        rewardText: '+25 legitimacy, +30 martial points.',
+        desc: 'Stop remitting and start declaring: the house that took the covenant becomes, '
+          + 'for the first time since Tigranes, nobody\'s client.',
+        rewardText: '+40 legitimacy, +70 martial points.',
         check: (ctx) => anyFlag(ctx, 'tigrisFree'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 25, mar: 30 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 40, mar: 70 }),
       },
 ],
   },

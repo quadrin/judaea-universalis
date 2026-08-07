@@ -405,6 +405,34 @@ static site, the zero dependencies, or the missing build step changes.
   violet badge — "the road forks here" — whose tooltip asks the fork's own
   question, in singleplayer, on multiplayer guests' mirrored cards, and on
   the same card's page in the Compendium.
+- **Accomplishments are claimed, not collected.** The mission tree used to run
+  itself — read the world every month, decide you had done something, pay you,
+  and tell you afterwards. Now a mission whose terms are met goes gold, says
+  **Claim** under its name, and waits: nothing is banked and nothing is paid
+  until you click it, the Missions tab wears a badge for what it owes you, and
+  the terms have to still hold at the moment you click. Lose the province in
+  April and March's accomplishment goes with it. The chapter's own drumbeat
+  still spaces the claims out, so which branch you bank first is a decision.
+  (The AI has no panel to click, so its chains go on banking on the calendar —
+  the symmetry is the point: it earns exactly what you earn.)
+- **Harder asks, and rewards you keep.** Every muster, purse, development and
+  war-score bar in the game went up — twenty thousand men becomes twenty-eight
+  thousand — and every mission modifier is now **permanent**: the manpower
+  bonus, the discipline drill, the coinage. Point grants run 25–120 instead of
+  a flat 25, talents and manpower doubled. What a chapter asks of a realm is
+  now what the realm keeps. The descriptions were cut to the ask at the same
+  time — a median of 196 characters down to 95, the essays moved off the
+  tooltip where the Compendium already tells the story — and where a check
+  counts something the desc prints the number the check asks for, so the two
+  cannot drift.
+- **The road not taken is X'd out, and the fork says which you chose.** A
+  hypothetical is one road of one fork, and the roads of a fork are one
+  question asked once. Watch the Temple burn and *The House That Stood* is
+  struck through with an ✕ — with the branch hanging off it — and its tooltip
+  names the road your campaign actually took. Under the tree, **The Forks**
+  writes the whole either/or out: each question, the road taken with a check,
+  the roads it cost struck through, and every answer still on the table while
+  the question is open.
 - **The thin trees made thick.** The lighter chapters caught up on forks,
   major decisions and conquest branches: Herod's Rise grew from two forks to
   five (Cleopatra's demand for the balsam groves of Jericho, the musters of

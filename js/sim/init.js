@@ -46,7 +46,7 @@ import {
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
-import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked, missionPaceMonths } from './realm.js';
+import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked, missionPaceMonths, missionClosedSet, missionForkState, missionForkLedger, claimMission } from './realm.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFactionsInfo } from './factions.js';
@@ -3465,6 +3465,8 @@ export function gameActions(ctx) {
         if (!Array.isArray(list) || !t || t.alive === false) return [];
         const tree = isMissionTree(list);
         const done = missionDoneSet(t, list);
+        const closed = missionClosedSet(ctx, list);
+        const ready = new Set(Array.isArray(t.missionReady) ? t.missionReady.map(String) : []);
         const ids = list.map((m, i) => missionId(m, i));
         const nameOf = {};
         list.forEach((m, i) => { nameOf[ids[i]] = m.name || ids[i]; });
@@ -3492,6 +3494,7 @@ export function gameActions(ctx) {
           const requires = tree
             ? (Array.isArray(m.requires) ? m.requires.map(String).filter((rid) => rid !== id && ids.indexOf(rid) >= 0) : [])
             : (i > 0 ? [ids[i - 1]] : []);
+          const fork = missionForkState(ctx, m);
           return {
             id,
             name: m.name || id,
@@ -3509,11 +3512,35 @@ export function gameActions(ctx) {
             // §211): 'govt', 'region' or 'court'. Layout already separates
             // them by column; the panel names them so the column reads.
             civil: m.civil || '',
+            // The fork this road stands in (SPEC §227): the question it asks,
+            // and — when a sibling road has already answered it — the name of
+            // the road this campaign actually took.
+            forkQuestion: fork ? fork.question : '',
+            roadTaken: fork ? fork.takenName : '',
+            roadChosen: fork ? fork.oursName : '',
+            // Five states now, not three. READY is the one §227 added: the
+            // terms are met and the medallion is waiting for a hand. SHUT is
+            // the road a sibling closed — locked forever, and drawn to say so.
             status: done.has(id) ? 'done'
-              : missionUnlocked(list, i, done, tree) ? 'current' : 'locked',
+              : closed.has(id) ? 'shut'
+                : !missionUnlocked(list, i, done, tree) ? 'locked'
+                  : ready.has(id) ? 'ready' : 'current',
           };
         });
       } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }
+    },
+
+    // Claim an accomplishment (SPEC §227). The sim re-decides everything at
+    // the click; this only carries the answer back so the panel can say why.
+    claimMission(id) {
+      try { return claimMission(ctx, id); } catch (e) { warnOnce('claimMission', 'claimMission failed', e); return { ok: false, why: 'none' }; }
+    },
+
+    // The fork ledger (SPEC §227): the either/or behind the right-hand column
+    // — every question this tree stands a road in, the road taken, the roads
+    // refused.
+    getForks() {
+      try { return missionForkLedger(ctx, g.playerTag); } catch (e) { warnOnce('getForks', 'getForks failed', e); return []; }
     },
 
     // The drumbeat (SPEC §207): how long the player's chain still rests after
@@ -3909,6 +3936,10 @@ export function reviveGame(saved) {
     // missionIdx. Anything that is not an array is dropped, not trusted.
     if (t.missionsDone !== undefined && !Array.isArray(t.missionsDone)) t.missionsDone = undefined;
     if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§207 saves owe no rest
+    // The ready list (SPEC §227) is derived, not earned: the next monthly pass
+    // rebuilds it from live checks. A pre-§227 save joins with none, and a
+    // corrupt one is dropped rather than trusted — nothing is paid off it.
+    if (!Array.isArray(t.missionReady)) t.missionReady = [];
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§179 saves
     if (!t.programs || typeof t.programs !== 'object') t.programs = {}; // pre-§213 saves own no works

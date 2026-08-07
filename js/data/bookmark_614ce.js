@@ -634,56 +634,58 @@ export const BOOKMARK_614 = {
         id: 'p_jerusalem', name: 'The City of the Great King',
         icon: 'temple', col: 1,
         desc: 'Stand in Jerusalem — control the Holy City.',
-        rewardText: '+20 legitimacy, +25 influence points.',
+        rewardText: '+30 legitimacy, +60 influence points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 20, infl: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 30, infl: 60 }),
       },
       {
         id: 'p_host', name: 'The Watchmen on the Walls',
         icon: 'spears', col: 0, requires: ['p_jerusalem'],
-        desc: 'Field ten thousand men — the Return must be able to defend itself.',
-        rewardText: '"The Remnant Armed": +10% manpower for 24 months.',
-        check: (ctx) => totalMen(ctx, 'JUD') >= 10000,
+        desc: 'Field 14,000 men — the Return must be able to defend itself.',
+        rewardText: '"The Remnant Armed": +10% manpower permanently.',
+        check: (ctx) => totalMen(ctx, 'JUD') >= 14000,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
-          id: 'remnant_armed', name: 'The Remnant Armed', months: 24, effects: { manpowerMult: 1.1 },
+          id: 'remnant_armed', name: 'The Remnant Armed', months: -1, effects: { manpowerMult: 1.1 },
         }),
       },
       {
         id: 'p_coast', name: 'A Window on the Sea',
         icon: 'ship', col: 2, requires: ['p_jerusalem'],
         desc: 'Take Caesarea Maritima — a state without a port is a state on sufferance.',
-        rewardText: '+75 talents (the customs house).',
+        rewardText: '+150 talents (the customs house).',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 75 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 150 }),
       },
       {
         id: 'p_hills', name: 'The Heartland Whole',
         icon: 'mountain', col: 1, requires: ['p_jerusalem'],
         desc: 'Control Jerusalem, Hebron, Jericho and Emmaus together.',
-        rewardText: '+15 legitimacy, +25 governance points.',
+        rewardText: '+25 legitimacy, +60 governance points.',
         check: (ctx) => ['Jerusalem', 'Hebron', 'Jericho', 'Emmaus'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15, gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 25, gov: 60 }),
       },
       {
         id: 'p_worth_more_unsold', name: 'Worth More Unsold',
         icon: 'lamp', col: 1, requires: ['p_host', 'p_hills'],
-        desc: 'Still stand — alive, five provinces — in 620, after Persia has weighed selling you.',
-        rewardText: '+1 stability, +20 legitimacy.',
+        desc: 'Still stand — alive, five provinces — in 620, after Persia has weighed selling '
+          + 'you.',
+        rewardText: '+1 stability, +30 legitimacy.',
         check: (ctx) => dateGE(ctx.game.date, 620, 1) && ctx.helpers.countControlled(ctx, 'JUD', {}) >= 5,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 30 }),
       },
       {
         // SPEC §32: Nehemiah ben Hushiel's dream — five centuries after the
         // fire, the sacrifices resume on the Mount.
         id: 'p_third_temple', name: 'Raise the Third House',
         icon: 'shrine', col: 1, requires: ['p_worth_more_unsold'],
-        desc: 'Hold Jerusalem with 500 talents in the treasury and the realm steady (stability +1) — begin the sacrifices again.',
-        rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
+        desc: 'Hold Jerusalem with 750 talents in the treasury and the realm steady (stability '
+          + '+1) — begin the sacrifices again.',
+        rewardText: 'The Third Temple rises: −300 talents; +30 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
-          && (ctx.game.tags.JUD.treasury || 0) >= 500
+          && (ctx.game.tags.JUD.treasury || 0) >= 750
           && (ctx.game.tags.JUD.stability || 0) >= 1,
         reward: (ctx) => {
-          ctx.helpers.adjust(ctx, 'JUD', { treasury: -300, legitimacy: 20 });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: -300, legitimacy: 30 });
           const p = ctx.prov && ctx.prov('Jerusalem');
           if (p) p.wonder = 'temple';
         },
@@ -693,20 +695,21 @@ export const BOOKMARK_614 = {
       {
         id: 'p_walls_manned', name: 'A City That Can Refuse',
         icon: 'walls', col: 0, requires: ['p_host'],
-        desc: 'Whatever Persia decides, be expensive: reach Military 12 — The Refortified City.',
-        rewardText: '"The Breaches Closed": +1 to hill-country defense for 36 months.',
+        desc: 'Whatever Persia decides, be expensive: reach Military 12 — The Refortified '
+          + 'City.',
+        rewardText: '"The Breaches Closed": +1 to hill-country defense permanently.',
         check: (ctx) => (((ctx.game.tags.JUD || {}).tech || {}).mar | 0) >= 12,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
-          id: 'breaches_closed', name: 'The Breaches Closed', months: 36, effects: { hillDefBonus: 1 },
+          id: 'breaches_closed', name: 'The Breaches Closed', months: -1, effects: { hillDefBonus: 1 },
         }),
       },
       {
         id: 'p_rule_of_law', name: 'The Academies Govern',
         icon: 'scroll', col: 2, requires: ['p_coast'],
         desc: 'Take up three ideas of the age — four centuries of law must now run a state.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 60, legitimacy: 15 }),
       },
       // The empty ground made specific (SPEC §187): where a kingdom actually
       // marches when neither empire can field an army — the Phoenician coast,
@@ -714,18 +717,18 @@ export const BOOKMARK_614 = {
       {
         id: 'p_phoenicia', name: 'The Ladder of Tyre',
         icon: 'walls', col: 0, row: 3, requires: ['p_walls_manned'],
-        desc: 'Take Tyre and Sidon — the fortified coast that has flanked every army '
-          + 'that ever marched on Jerusalem from the north.',
-        rewardText: '+100 talents (the purple and the customs), +10 legitimacy.',
+        desc: 'Take Tyre and Sidon — the fortified coast that has flanked every army that ever '
+          + 'marched on Jerusalem from the north.',
+        rewardText: '+200 talents (the purple and the customs), +15 legitimacy.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Tyre')
           && ctx.helpers.controls(ctx, 'JUD', 'Sidon'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 200, legitimacy: 15 }),
       },
       {
         id: 'p_kings_highway', name: 'The King\'s Highway',
         icon: 'horseshoe', col: 2, row: 3, requires: ['p_rule_of_law'],
-        desc: 'Take Damascus and Bostra — the two ends of the road every conqueror of '
-          + 'this country has used, held for once from the middle.',
+        desc: 'Take Damascus and Bostra — the two ends of the road every conqueror of this '
+          + 'country has used, held for once from the middle.',
         rewardText: '"The Highway Held": +8% income, permanently.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Damascus')
           && ctx.helpers.controls(ctx, 'JUD', 'Bostra'),
@@ -739,10 +742,10 @@ export const BOOKMARK_614 = {
         icon: 'grain', col: 1, row: 4, requires: ['p_coast'],
         desc: 'Take Alexandria and Pelusium — the wheat that fed Constantinople, and the '
           + 'largest Jewish city on earth outside the Land, under the crown\'s law.',
-        rewardText: '+150 talents, +2,000 manpower — the diaspora of Egypt enlists.',
+        rewardText: '+300 talents, +4,000 manpower — the diaspora of Egypt enlists.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Alexandria')
           && ctx.helpers.controls(ctx, 'JUD', 'Pelusium'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, manpower: 2000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 300, manpower: 4000 }),
       },
       // ── The century the Return has to hold (SPEC §197) ──────────────────
       // The chapter runs to 692 — through Heraclius, the Arab conquest and
@@ -751,11 +754,9 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_mint_of_the_return', name: 'The Coinage of the Return',
         icon: 'coins', col: 1, row: 5, requires: ['p_granary'],
-        desc: 'Nehemiah ben Hushiel governed Jerusalem for three years and the record of it '
-          + 'is an argument about coins. Bank 500 talents and strike a currency the whole '
-          + 'Levant has to price against.',
+        desc: 'Bank 750 talents and strike a currency the whole Levant has to price against.',
         rewardText: '"The Silver of the Return": +12% income and +0.2 legitimacy a month, permanent.',
-        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 500,
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 750,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
           id: 'silver_of_the_return', name: 'The Silver of the Return', months: -1,
           effects: { incomeMult: 1.12, legitimacyAdd: 0.2 },
@@ -764,9 +765,7 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_desert_frontier', name: 'The Desert Frontier',
         icon: 'walls', col: 0, row: 4, requires: ['p_phoenicia'],
-        desc: 'Every power that has ever taken this country took it from the south-east, and '
-          + 'the next one is being assembled in the Hijaz while Persia and Byzantium bleed '
-          + 'each other white. Hold Bostra and Petra before somebody else needs them.',
+        desc: 'Hold Bostra and Petra before somebody else needs them.',
         rewardText: '"The Southern Watch": +8% morale, +1 stability.',
         check: (ctx) => ['Bostra', 'Petra'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
         reward: (ctx) => {
@@ -779,9 +778,8 @@ export const BOOKMARK_614 = {
       {
         id: 'p_a_state_that_outlives_its_patron', name: 'A State That Outlives Its Patron',
         icon: 'tower', col: 2, row: 4, requires: ['p_kings_highway'],
-        desc: 'This polity exists because Khosrow found it useful, and Khosrow will be '
-          + 'murdered by his own son in a dungeon. Reach Government 8 and +3 stability: a '
-          + 'government that does not depend on which empire is winning.',
+        desc: 'Reach Government 8 and +3 stability: a government that does not depend on which '
+          + 'empire is winning.',
         rewardText: '"Standing On Its Own": −1 unrest everywhere and +10% income, permanent.',
         check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).gov | 0) >= 8
           && ((ctx.game.tags[who(ctx, 'JUD')] || {}).stability || 0) >= 3,
@@ -793,12 +791,11 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_army_of_the_return', name: 'The Army of the Return',
         icon: 'spears', col: 0, row: 5, requires: ['p_the_desert_frontier'],
-        desc: 'The Return marched with Persian columns and garrisoned with volunteers from '
-          + 'Galilee and the dispersion. Reach Military 8 with twenty thousand men — an army '
-          + 'that does not need a great power to be its spine.',
+        desc: 'Reach Military 8 with 28,000 men — an army that does not need a great power to '
+          + 'be its spine.',
         rewardText: '"The Host of the Return": +10% discipline and +10% manpower, permanent.',
         check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).mar | 0) >= 8
-          && totalMen(ctx, 'JUD') >= 20000,
+          && totalMen(ctx, 'JUD') >= 28000,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
           id: 'host_of_the_return', name: 'The Host of the Return', months: -1,
           effects: { disciplineMult: 1.1, manpowerMult: 1.1 },
@@ -807,9 +804,7 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_gathering', name: 'The Gathering In',
         icon: 'diaspora', col: 2, row: 5, requires: ['p_a_state_that_outlives_its_patron'],
-        desc: 'A Jewish government in Jerusalem is a fact every community from Babylonia to '
-          + 'Spain has to have an opinion about. Reach 90 legitimacy — the exiles come to a '
-          + 'country that is worth coming to.',
+        desc: 'Reach 90 legitimacy — the exiles come to a country that is worth coming to.',
         rewardText: '"The Ingathering": +15% growth and +20% from the ascents, permanent.',
         check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).legitimacy || 0) >= 90,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
@@ -826,12 +821,8 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_rolls_of_the_return', name: 'The Rolls of the Return',
         icon: 'quill', col: 0, row: 6, civil: 'govt',
-        desc: 'Nehemiah ben Hushiel governed a city that first had to be told who its '
-          + 'people were: Galileans who came down with Shahrbaraz\'s column, Babylonians '
-          + 'who came for the altar, and the families of Jerusalem itself, whom Hadrian\'s '
-          + 'edict had kept out of the city for four hundred and eighty years. Take the '
-          + 'census and seat the governors — the first two rungs of the Art of Rule — '
-          + 'over six districts of your own.',
+        desc: 'Take the census and seat the governors — the first two rungs of the Art of '
+          + 'Rule.',
         rewardText: '"The Community Rolls": +10% income and +10% manpower, permanently.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'JUD')] || {};
@@ -846,11 +837,8 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_walls_titus_threw_down', name: 'The Walls Titus Threw Down',
         icon: 'bricks', col: 0, row: 7, civil: 'govt', requires: ['p_the_rolls_of_the_return'],
-        desc: 'Titus levelled the walls in 70; the Empress Eudocia raised them again in '
-          + 'the 440s; and the Persian miners went through them in twenty days in May 614, '
-          + 'which is the whole argument for owning your own masonry. Bring the realm to '
-          + 'ninety points of worked land with 250 talents still in the chest — the '
-          + 'governor\'s assessor comes for the tribute whether or not the masons are paid.',
+        desc: 'Bring the realm to ninety points of worked land with 250 talents still in the '
+          + 'chest.',
         rewardText: '"The Walls Raised Again": +1 to hill-country defense and −0.5 unrest everywhere, permanently.',
         check: (ctx) => {
           const g = ctx.game;
@@ -863,7 +851,7 @@ export const BOOKMARK_614 = {
             if (!p || p.impassable || p.owner !== tag || !p.dev) continue;
             dev += (p.dev.tax | 0) + (p.dev.prod | 0) + (p.dev.mp | 0);
           }
-          return dev >= 90;
+          return dev >= 115;
         },
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
           id: 'walls_raised_again', name: 'The Walls Raised Again', months: -1,
@@ -873,10 +861,7 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_letters_east_and_south', name: 'Letters East and South',
         icon: 'note', col: 1, row: 6, civil: 'region',
-        desc: 'A government in Jerusalem writes to a people that is mostly somewhere else: '
-          + 'to the oasis farmers of Khaybar and Yathrib, to the Jewish south of Arabia that '
-          + 'Aksum broke in 525, and to Alexandria, which holds more Jews than the Land does. '
-          + 'Stand in three bonds at once — allies and clients together — so that the Return '
+        desc: 'Stand in three bonds at once — allies and clients together — so that the Return '
           + 'is a party to the age and not merely a client of Ctesiphon.',
         rewardText: '"The Letters Go Out": +1 diplomatic seat and +5% income, permanently.',
         check: (ctx) => {
@@ -898,12 +883,9 @@ export const BOOKMARK_614 = {
       {
         id: 'p_between_two_empires', name: 'Between Two Empires',
         icon: 'scales', col: 1, row: 7, civil: 'region', requires: ['p_the_letters_east_and_south'],
-        desc: 'Persia kept the Return for three years and then worked out that a Christian '
-          + 'Jerusalem was cheaper to administer, and nothing in 617 made Ctesiphon pay for '
-          + 'the arithmetic. Stand among the three first powers of the world — a court that '
-          + 'cannot be handed back in a clause, because the clause would cost more than the '
-          + 'city is worth.',
-        rewardText: '"Weighed With the Powers": +1 deterrence and +0.2 legitimacy a month, permanently; +25 influence points.',
+        desc: 'Stand among the three first powers of the world — a court that cannot be handed '
+          + 'back in a clause.',
+        rewardText: '"Weighed With the Powers": +1 deterrence and +0.2 legitimacy a month, permanently; +60 influence points.',
         check: (ctx) => {
           const ord = (ctx.game.standing && ctx.game.standing.order) || [];
           const i = ord.indexOf(who(ctx, 'JUD'));
@@ -914,18 +896,14 @@ export const BOOKMARK_614 = {
             id: 'weighed_with_the_powers', name: 'Weighed With the Powers', months: -1,
             effects: { deterrent: 1, legitimacyAdd: 0.2 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { infl: 25 });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 60 });
         },
       },
       {
         id: 'p_the_exilarchs_purse', name: 'The Exilarch\'s Purse',
         icon: 'coins', col: 2, row: 6, civil: 'court',
-        desc: 'The oldest Jewish power on earth is not in Jerusalem. It is the Exilarch at '
-          + 'Mahoza, with Sura and Pumbedita behind him and the assessment of Babylonian '
-          + 'Jewry in his hands, and the house that will seat Bostanai within a decade does '
-          + 'not give — it lends, and only to a government that looks like it will still be '
-          + 'there. Bank forty-five points of the Exilarch\'s credit.',
-        rewardText: '"The Purse of Mahoza": +10% income, permanently; +200 talents and +20 influence points.',
+        desc: 'Bank forty-five points of the Exilarch\'s credit.',
+        rewardText: '"The Purse of Mahoza": +10% income, permanently; +400 talents and +50 influence points.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'JUD')] || {};
           return ((t.estateFavor || {}).exilarch || 0) >= 45;
@@ -935,18 +913,15 @@ export const BOOKMARK_614 = {
             id: 'purse_of_mahoza', name: 'The Purse of Mahoza', months: -1,
             effects: { incomeMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { treasury: 200, infl: 20 });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 400, infl: 50 });
         },
       },
       {
         id: 'p_the_twenty_four_courses', name: 'The Twenty-Four Courses',
         icon: 'flame', col: 2, row: 7, civil: 'court', requires: ['p_the_exilarchs_purse'],
-        desc: 'Twenty-four priestly courses served the House in rotation, and the lists were '
-          + 'still being cut into synagogue walls at Caesarea five centuries after there was '
-          + 'anything left to serve; Eleazar ha-Kallir was setting them to verse while the '
-          + 'Persian army was on the coast road. Bring the priests of the Mount to devotion — '
-          + 'eighty approval — and the courses are a rota again instead of a genealogy.',
-        rewardText: '"The Courses Restored": +0.3 legitimacy a month and −0.5 unrest everywhere, permanently; +25 governance points.',
+        desc: 'Bring the priests of the Mount to devotion — eighty approval — and the courses '
+          + 'are a rota again instead of a genealogy.',
+        rewardText: '"The Courses Restored": +0.3 legitimacy a month and −0.5 unrest everywhere, permanently; +60 governance points.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'JUD')] || {};
           return ((t.factions || {}).priests || 0) >= 80;
@@ -956,7 +931,7 @@ export const BOOKMARK_614 = {
             id: 'the_twenty_four_courses', name: 'The Courses Restored', months: -1,
             effects: { legitimacyAdd: 0.3, unrestAll: -0.5 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { gov: 25 });
+          ctx.helpers.adjust(ctx, 'JUD', { gov: 60 });
         },
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
@@ -966,79 +941,77 @@ export const BOOKMARK_614 = {
       {
         id: 'hy_whose_century', name: 'A Century of Our Own', hypothetical: true,
         fork: '614ce/whose_century',
+        roads: ['charter', 'third_power'],
         icon: 'split', col: 3, row: 0,
-        desc: 'Outlast the empires\' war still standing — no overlord, Jerusalem held — and the '
-          + 'Return is written down as a polity: the Davidic charter after the betrayal of 622, '
-          + 'or a kingdom apart from both thrones.',
-        rewardText: '+1 stability, +20 legitimacy.',
+        desc: 'Outlast the empires\' war still standing — no overlord, Jerusalem held.',
+        rewardText: '+1 stability, +30 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'charterDavidic', 'kingdomApart'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 30 }),
       },
       {
         id: 'hy_altar_mount', name: 'What Stands on the Mount', hypothetical: true,
         fork: '614ce/what_stands_on_the_mount',
+        roads: ['altar_restored', 'mount_kept_empty'],
         icon: 'altar', col: 3, row: 1, requires: ['hy_whose_century'],
         desc: 'Hold Jerusalem outright with six provinces under the charter, and the cleared '
-          + 'platform asks its question: the altar restored — the first sacrifice since '
-          + 'Titus — or swept, and left as it is.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+          + 'platform asks its question.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'altarRestored', 'mountKeptEmpty'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 60, legitimacy: 15 }),
       },
       {
         id: 'hy_window_628', name: 'The Window of 628', hypothetical: true,
         fork: '614ce/the_window_of_628',
+        roads: ['took_the_ground', 'depth_not_reach'],
         icon: 'play', col: 3, row: 2, requires: ['hy_whose_century'],
         desc: 'Reach 628 as a standing kingdom with a marshal worth the name, and both empires '
-          + 'have destroyed each other: the one decade this state can expand at all — ground, '
-          + 'or depth — before somebody else fills the vacuum.',
-        rewardText: '+25 martial points.',
+          + 'have destroyed each other.',
+        rewardText: '+60 martial points.',
         check: (ctx) => anyFlag(ctx, 'tookTheEmptyGround', 'depthNotReach'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 60 }),
       },
       {
         id: 'hy_crown_of_david', name: 'The Line of Jehoiachin', hypothetical: true,
         fork: '614ce/the_line_of_jehoiachin',
+        roads: ['david_crowned', 'david_declined'],
         icon: 'star8', col: 3, row: 3, requires: ['hy_whose_century'],
-        desc: 'Reach east to Nehardea and Babylon and settle the Exilarchate under Jerusalem, '
-          + 'and for the first time since 586 BCE a throne and a man with the pedigree share '
-          + 'one polity. Crowned, or honoured and kept — the age must answer.',
-        rewardText: '+20 legitimacy.',
+        desc: 'Reach east to Nehardea and Babylon and settle the Exilarchate under Jerusalem.',
+        rewardText: '+30 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'davidCrowned', 'davidDeclined'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 30 }),
       },
       {
         id: 'hy_exilarchate', name: 'The Other Half of the People', hypothetical: true,
         fork: '614ce/the_exilarchate',
+        roads: ['one_crown', 'two_houses'],
         icon: 'diaspora', col: 4, row: 0, requires: ['hy_whose_century'],
-        desc: 'Grow to a Levantine power while Persia comes apart, and the question no '
-          + 'generation since the First House could ask arrives: one Jewish government over '
-          + 'both centres — the Exilarch under Jerusalem, or two houses, one people.',
-        rewardText: '+20 influence points, +10 legitimacy.',
+        desc: 'Grow to a Levantine power while Persia comes apart, and answer the question no '
+          + 'generation since the First House could ask.',
+        rewardText: '+50 influence points, +15 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'oneCrownBothCentres', 'twoHousesOnePeople'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 20, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 50, legitimacy: 15 }),
       },
       {
         id: 'hy_caliphs_categories', name: 'What the Caliph Will Sign', hypothetical: true,
         fork: '614ce/the_caliphs_categories',
+        roads: ['the_treaty', 'no_category'],
         icon: 'scroll', col: 4, row: 1, requires: ['hy_whose_century'],
         desc: 'Still be standing when the new power out of the south offers its two '
-          + 'categories — submission, or treaty on the Nubian pattern — and answer as a '
-          + 'state: the tribute signed, or both categories refused to the envoy\'s face.',
-        rewardText: '+20 governance points.',
+          + 'categories.',
+        rewardText: '+50 governance points.',
         check: (ctx) => anyFlag(ctx, 'theTreatyState', 'refusedTheCategory'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 50 }),
       },
       {
         id: 'hy_other_israel', name: 'The Other Israel', hypothetical: true,
         fork: '614ce/the_other_israel',
+        roads: ['the_two_torahs', 'the_statutes_inherited'],
         icon: 'mountain', col: 4, row: 2,
-        desc: 'Govern Jerusalem and Neapolis under one crown, and inherit Justinian\'s '
-          + 'statutes against the Keepers of Gerizim — the first Israelite state ever in a '
-          + 'position to repeal them, or to keep them running under a new seal.',
-        rewardText: '+15 legitimacy, +1 stability.',
+        desc: 'Govern Jerusalem and Neapolis under one crown, and inherit Justinian\'s statutes '
+          + 'against the Keepers of Gerizim.',
+        rewardText: '+25 legitimacy, +1 stability.',
         check: (ctx) => anyFlag(ctx, 'twoTorahsPeace', 'oldQuarrelKept'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15, stability: 1 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 25, stability: 1 }),
       },
     ],
     BYZ: [
@@ -1046,9 +1019,9 @@ export const BOOKMARK_614 = {
         id: 'b_line', name: 'Hold the Line',
         icon: 'shield', col: 1,
         desc: 'Keep the Anatolian shield: control Iconium, Attalia and Seleucia Trachea.',
-        rewardText: '+25 martial points.',
+        rewardText: '+60 martial points.',
         check: (ctx) => ['Iconium', 'Attalia', 'Seleucia Trachea'].every((n) => ctx.helpers.controls(ctx, 'BYZ', n)),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { mar: 60 }),
       },
       {
         id: 'b_egypt', name: 'The Granary Held',
@@ -1056,20 +1029,20 @@ export const BOOKMARK_614 = {
         desc: 'Still hold Alexandria in 617 — the Empire eats Egyptian bread.',
         rewardText: '+25 government points.',
         check: (ctx) => dateGE(ctx.game.date, 617, 1) && ctx.helpers.controls(ctx, 'BYZ', 'Alexandria'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { gov: 60 }),
       },
       {
         id: 'b_fleet', name: 'The Sea Is Roman',
         icon: 'ship', col: 2, requires: ['b_line'],
         desc: 'Keep a fleet of six ships — the Empire\'s last undisputed possession.',
-        rewardText: '"Master of the Sea": +10% income for 24 months.',
+        rewardText: '"Master of the Sea": +10% income permanently.',
         check: (ctx) => {
           let ships = 0;
           for (const f of Object.values(ctx.game.fleets || {})) if (f && f.tag === 'BYZ') ships += f.ships || 0;
           return ships >= 6;
         },
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'BYZ', {
-          id: 'master_of_sea', name: 'Master of the Sea', months: 24, effects: { incomeMult: 1.1 },
+          id: 'master_of_sea', name: 'Master of the Sea', months: -1, effects: { incomeMult: 1.1 },
         }),
       },
       {
@@ -1078,35 +1051,37 @@ export const BOOKMARK_614 = {
         desc: 'Carry the war home: control Amida or Tigranocerta.',
         rewardText: '+25 of every point — the Empire believes again.',
         check: (ctx) => ctx.helpers.controls(ctx, 'BYZ', 'Amida') || ctx.helpers.controls(ctx, 'BYZ', 'Tigranocerta'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { gov: 25, infl: 25, mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { gov: 60, infl: 60, mar: 60 }),
       },
       {
         id: 'b_cross', name: 'The True Cross',
         icon: 'star8', col: 1, requires: ['b_counter'],
         desc: 'Hold Jerusalem again — whatever it takes, however long.',
-        rewardText: '+25 legitimacy, +1 stability.',
+        rewardText: '+40 legitimacy, +1 stability.',
         check: (ctx) => ctx.helpers.controls(ctx, 'BYZ', 'Jerusalem') && dateGE(ctx.game.date, 616, 1),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: 25, stability: 1 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: 40, stability: 1 }),
       },
       // The age's curriculum (SPEC §179): the reform that financed survival,
       // and the army it drilled for 622.
       {
         id: 'b_reform', name: 'The Empire Reorganized',
         icon: 'scales', col: 0, row: 2, requires: ['b_line'],
-        desc: 'Half the coinage, all of it paid to soldiers: reach Government 11 — The Rule of the Learned.',
-        rewardText: '"The Reform": +8% income for 36 months.',
+        desc: 'Half the coinage, all of it paid to soldiers: reach Government 11 — The Rule of '
+          + 'the Learned.',
+        rewardText: '"The Reform": +8% income permanently.',
         check: (ctx) => (((ctx.game.tags.BYZ || {}).tech || {}).gov | 0) >= 11,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'BYZ', {
-          id: 'heraclian_purse', name: 'The Reform', months: 36, effects: { incomeMult: 1.08 },
+          id: 'heraclian_purse', name: 'The Reform', months: -1, effects: { incomeMult: 1.08 },
         }),
       },
       {
         id: 'b_army_of_622', name: 'The Army of 622',
         icon: 'helmet', col: 2, row: 3, requires: ['b_fleet'],
-        desc: 'Take up three ideas of the age — the counteroffensive is trained before it is fought.',
-        rewardText: '+25 martial points, +10 legitimacy.',
+        desc: 'Take up three ideas of the age — the counteroffensive is trained before it is '
+          + 'fought.',
+        rewardText: '+60 martial points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.BYZ) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { mar: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { mar: 60, legitimacy: 15 }),
       },
     ],
   },

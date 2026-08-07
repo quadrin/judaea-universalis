@@ -8,6 +8,7 @@ const { BOOKMARK_40 } = await import(R + '/js/data/bookmark_40bce.js');
 const { EVENTS_40 } = await import(R + '/js/data/events_40bce.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { tickDay } = await import(R + '/js/sim/tick.js');
+const realm = await import(R + '/js/sim/realm.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -72,7 +73,11 @@ ok(w.attackers.indexOf('PAR') < 0 || !game.wars.includes(w), 'Parthia is out of 
 ok((game.tags.PAR.atWarWith || []).length === 0, 'Parthia fights no one');
 
 console.log('== missions tick ==');
-ok(game.tags.HER.missionIdx >= 1, 'HER missions progress: idx=' + game.tags.HER.missionIdx);
+// §227: the pass marks what is ready; the completion is a click.
+ok((game.tags.HER.missionReady || []).length >= 1,
+  'HER missions ready to claim: ' + (game.tags.HER.missionReady || []).join(','));
+ok(realm.claimMission(ctx, (game.tags.HER.missionReady || [])[0]).ok && game.tags.HER.missionIdx >= 1,
+  'and the claim moves the chain: idx=' + game.tags.HER.missionIdx);
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');
 process.exit(failures ? 1 : 0);

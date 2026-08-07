@@ -2294,6 +2294,124 @@ html, body {
 }
 .np-mn-hypo.np-mn-done .np-mn-medal { border-style: solid; border-color: #8a6d1a; color: #8a6d1a; }
 
+/* ── Claim and shut (SPEC §227) ─────────────────────────────────────────────
+   Two states the tree never had. READY is a reward the realm has earned and
+   not yet taken: the medallion lifts off the parchment, breathes, and says
+   Claim under its name, because nothing in this game should be owed to a
+   player who cannot see that it is owed. SHUT is a road a sibling closed —
+   the fork answered the other way — and it is struck through rather than
+   dimmed, because "will never happen" and "has not happened yet" are
+   different facts and the old dusk said only the second one. */
+.np-mt-ready-sum { color: var(--red-deep); font-style: normal; font-weight: 600; }
+.np-mt-lines .np-ml-shut { stroke: rgba(120, 96, 96, 0.35); stroke-dasharray: 2 4; }
+.np-mn-ready { cursor: pointer; }
+.np-mn-ready .np-mn-arrow { border-top-color: var(--gold); }
+.np-mn-ready .np-mn-medal {
+  border-color: var(--gold);
+  color: var(--red-deep);
+  box-shadow: inset 0 0 0 2px rgba(230, 197, 84, 0.7), 0 0 12px rgba(201, 162, 39, 0.85);
+  animation: np-mn-breathe 2.2s ease-in-out infinite;
+}
+.np-mn-ready .np-mn-name { color: var(--ink); }
+.np-mn-ready:hover .np-mn-medal { transform: scale(1.06); }
+.np-mn-ready:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+.np-mn-claim {
+  margin-top: 2px;
+  padding: 0 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--parch-hi);
+  background: var(--red-deep);
+  border-radius: 3px;
+  border: 1px solid rgba(43, 32, 21, 0.45);
+}
+@keyframes np-mn-breathe {
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(230, 197, 84, 0.7), 0 0 7px rgba(201, 162, 39, 0.5); }
+  50% { box-shadow: inset 0 0 0 2px rgba(230, 197, 84, 0.9), 0 0 15px rgba(201, 162, 39, 1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .np-mn-ready .np-mn-medal { animation: none; }
+}
+.np-mn-shut { opacity: 0.5; }
+.np-mn-shut .np-mn-medal { filter: grayscale(0.9); border-style: solid; border-color: rgba(122, 74, 74, 0.7); }
+.np-mn-shut .np-mn-name { text-decoration: line-through; text-decoration-color: rgba(122, 74, 74, 0.8); }
+.np-mn-cross {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #7a4a4a;
+  color: var(--parch-hi);
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(43, 32, 21, 0.4);
+}
+/* The road the fork actually took, worn on the medallion's own face. */
+.np-mn-road {
+  margin-top: 2px;
+  padding: 0 3px;
+  max-width: min(100%, 88px);
+  font-size: 9px;
+  font-style: italic;
+  line-height: 1.1;
+  text-align: center;
+  color: #5d4a78;
+  background: rgba(232, 220, 192, 0.85);
+  border-radius: 3px;
+}
+
+/* ── The Forks (SPEC §227) ──────────────────────────────────────────────────
+   The either/or the grid cannot draw. One row per §119 question the tree
+   stands a road in: the road taken with a check, the roads it cost struck
+   through, and — while the question is still open — every answer still on
+   the table. */
+.np-fk-title { margin-top: 10px; }
+.np-fk-list { display: flex; flex-direction: column; gap: 5px; }
+.np-fk {
+  padding: 5px 7px;
+  border: 1px solid rgba(85, 69, 46, 0.3);
+  border-left: 3px solid rgba(109, 90, 134, 0.55);
+  border-radius: 3px;
+  background: rgba(232, 220, 192, 0.45);
+}
+.np-fk-answered { border-left-color: var(--gold); }
+.np-fk-q { font-size: 11px; font-style: italic; color: var(--ink-soft); line-height: 1.25; }
+.np-fk-roads { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 3px; }
+.np-fk-road { font-size: 11px; font-weight: 600; color: var(--ink-soft); }
+.np-fk-road i { font-style: normal; margin-right: 3px; }
+.np-fk-took { color: var(--red-deep); }
+.np-fk-took i { color: #6f8a3d; }
+.np-fk-refused { color: rgba(122, 74, 74, 0.75); text-decoration: line-through; text-decoration-color: rgba(122, 74, 74, 0.6); }
+.np-fk-refused i { color: #7a4a4a; text-decoration: none; display: inline-block; }
+.np-fk-open { color: #6d5a86; font-weight: 500; }
+
+/* The claim badge on the tab strip: the count of what is owed. */
+.np-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--red-deep);
+  color: var(--parch-hi);
+  font-size: 9.5px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  vertical-align: 1px;
+}
+
 /* the chapters (SPEC §83): the sandbox second act's live contract */
 .np-chapter { display: flex; flex-direction: column; }
 .np-ch-head { padding: 3px 2px 5px; color: var(--ink); }

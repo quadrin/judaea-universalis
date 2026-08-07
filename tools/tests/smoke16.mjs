@@ -6,7 +6,7 @@ const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
-const { checkMissions } = await import(R + '/js/sim/realm.js');
+const { checkMissions, claimMission } = await import(R + '/js/sim/realm.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -154,12 +154,17 @@ for (const [bm, evf, exBm, exEv, missionCount] of [
   j.owner = 'JUD'; j.controller = 'JUD';
   checkMissions(ctx);
   ok(j.wonder === null, 'no House on 100 talents');
-  jud.treasury = 600; jud.stability = 2;
+  ok((jud.missionReady || []).indexOf(mission.id) < 0, 'and nothing to claim on 100 talents');
+  // §227 raised the House's price from 500 talents banked to 750.
+  jud.treasury = 900; jud.stability = 2;
   const legBefore = jud.legitimacy || 0;
+  // §227: the terms met make it ready; the House rises when it is claimed.
   checkMissions(ctx);
+  ok((jud.missionReady || []).indexOf(mission.id) >= 0, 'the House is ready to claim');
+  ok(claimMission(ctx, mission.id).ok, 'and the claim raises it');
   ok(j.wonder === 'temple', bm.replace('bookmark_', '') + ': the Third Temple rises on the Mount');
-  ok(jud.treasury === 300, 'the House cost 300 talents: ' + jud.treasury);
-  ok((jud.legitimacy || 0) === Math.min(100, legBefore + 20), '+20 legitimacy');
+  ok(jud.treasury === 600, 'the House cost 300 talents: ' + jud.treasury);
+  ok((jud.legitimacy || 0) === Math.min(100, legBefore + 30), '+30 legitimacy (§227 scaled the pay)');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

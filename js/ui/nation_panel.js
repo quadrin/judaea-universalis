@@ -86,6 +86,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // because every lever in this panel calls refresh() the moment it fires and
   // anything derived from the DOM would be clobbered by the next rebuild.
   let tab = DEFAULT_TAB;
+  // How many accomplishments are sitting ready to claim (SPEC §227). The
+  // Missions tab wears the count, because a reward that waits for a click is
+  // a reward a player can walk past for a decade if nothing says it is there.
+  // Written by refreshMissions, read by refreshTabs — which runs after it.
+  let readyClaims = 0;
   const refs = {};
 
   function setText(node, s) {
@@ -281,6 +286,18 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.dataset.tab = tab;
 
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
+    // A medallion is a grid cell, not a <button> — the tree's whole layout is
+    // grid-column/grid-row on divs. So a claimable one carries role/tabindex
+    // and this turns the two keys a role="button" promises into the click the
+    // delegation below already knows how to answer (SPEC §227).
+    el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (!(e.target instanceof Element)) return;
+      const c = e.target.closest('[data-claim]');
+      if (!c) return;
+      e.preventDefault();
+      c.click();
+    });
     el.addEventListener('click', (e) => {
       if (!(e.target instanceof Element)) return;
       // The tab strip is matched FIRST and returns immediately (SPEC §175).
@@ -300,6 +317,24 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         if (act.classList.contains('disabled') || !actions) return;
         const fn = actions[act.dataset.act];
         if (typeof fn === 'function') { try { fn(); } catch (err) { warnOnce('np-' + act.dataset.act, err); } }
+        refresh();
+        return;
+      }
+      // Claim an accomplishment (SPEC §227). Only a READY medallion carries
+      // the attribute, so there is nothing to disable — the sim re-decides at
+      // the click anyway, and says why when it refuses.
+      const claim = e.target.closest('[data-claim]');
+      if (claim) {
+        if (!actions || typeof actions.claimMission !== 'function') return;
+        let res = null;
+        try { res = actions.claimMission(claim.dataset.claim); } catch (err) { warnOnce('np-claimMission', err); }
+        if (res && !res.ok && ctx && ctx.bus) {
+          const why = res.why === 'resting' ? 'The realm is still consolidating — wait out the pace.'
+            : res.why === 'unmet' ? 'The terms no longer hold.'
+              : res.why === 'shut' ? 'That road is shut: the campaign took the other one.'
+                : res.why === 'locked' ? 'What it waits on is not accomplished yet.' : '';
+          if (why) ctx.bus.emit('notify', { title: 'Not claimed', text: why, type: 'bad' });
+        }
         refresh();
         return;
       }
@@ -530,10 +565,17 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // ten of the twenty sections. Fall back rather than show an empty panel.
     if (!avail.some((t) => t.id === tab)) tab = (avail[0] || { id: DEFAULT_TAB }).id;
     el.dataset.tab = tab;
-    setHtml(refs.tabs, avail.map((t) =>
-      `<button class="np-tab${t.id === tab ? ' active' : ''}" data-tab-go="${esc(t.id)}"`
-      + ` role="tab" aria-selected="${t.id === tab}" data-tt="${esc(t.tt)}">`
-      + `${esc(terms[t.term] || t.label)}</button>`).join(''));
+    setHtml(refs.tabs, avail.map((t) => {
+      // The claim badge (SPEC §227): the one tab that can be owed something.
+      const badge = t.id === 'missions' && readyClaims
+        ? `<i class="np-tab-badge">${readyClaims}</i>` : '';
+      const tt = badge
+        ? t.tt + '\n' + readyClaims + ' accomplishment' + (readyClaims === 1 ? '' : 's')
+          + ' ready to claim.' : t.tt;
+      return `<button class="np-tab${t.id === tab ? ' active' : ''}" data-tab-go="${esc(t.id)}"`
+        + ` role="tab" aria-selected="${t.id === tab}" data-tt="${esc(tt)}">`
+        + `${esc(terms[t.term] || t.label)}${badge}</button>`;
+    }).join(''));
     // One tab is not a choice — a foreign court with nothing but a Diplomacy
     // block should read as a plain panel, not as a tabbed one with no options.
     refs.tabs.classList.toggle('hidden', avail.length < 2);
@@ -779,6 +821,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // The levers of state belong to the player alone.
     refs.acts.classList.toggle('hidden', !self);
     refs.missionsBlock.classList.toggle('hidden', !self);
+    // A foreign court owes us nothing (SPEC §227) — and refreshMissions, which
+    // is what normally writes this, does not run for one.
+    if (!self) readyClaims = 0;
     refs.decisionsBlock.classList.toggle('hidden', !self);
     if (!self) refs.chapterBlock.classList.add('hidden');
     if (!self) refs.doctrineBlock.classList.add('hidden');
@@ -919,6 +964,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       try { list = actions.getMissions() || []; } catch (e) { warnOnce('np-getMissions', e); }
     }
     refs.missionsBlock.classList.toggle('hidden', !list.length);
+    readyClaims = list.filter((m) => m.status === 'ready').length;
     if (!list.length) { setHtml(refs.missions, ''); return; }
     let cols = 1;
     let rows = 1;
@@ -933,7 +979,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       for (const rid of (m.requires || [])) {
         const p = byId.get(rid);
         if (!p) continue;
-        const cls = m.status === 'done' ? 'np-ml-done' : m.status === 'current' ? 'np-ml-open' : 'np-ml-dim';
+        const cls = m.status === 'done' ? 'np-ml-done'
+          : m.status === 'shut' ? 'np-ml-shut'
+            : (m.status === 'current' || m.status === 'ready') ? 'np-ml-open' : 'np-ml-dim';
         lines += `<line class="${cls}" x1="${(p.col | 0) + 0.5}" y1="${(p.row | 0) + 0.62}"`
           + ` x2="${(m.col | 0) + 0.5}" y2="${(m.row | 0) + 0.1}"/>`;
       }
@@ -946,44 +994,91 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const hypo = list.filter((m) => m.hypothetical);
     const doneN = base.filter((m) => m.status === 'done').length;
     const hypoDone = hypo.filter((m) => m.status === 'done').length;
+    const readyN = list.filter((m) => m.status === 'ready').length;
     // The drumbeat (SPEC §207): while the chain rests from its last
     // accomplishment, say so — a satisfied medallion that has not landed
-    // is the pace at work, not a broken check.
+    // is the pace at work, not a broken check. Under §227 what it delays is
+    // the CLAIM, so the line says claim.
     let paceNote = '';
     if (actions && typeof actions.getMissionPace === 'function') {
       try {
         const p = actions.getMissionPace();
         if (p && p.rest > 0) {
-          paceNote = ` · <span class="np-mt-pace">the realm consolidates — the next may complete in ${p.rest} month${p.rest === 1 ? '' : 's'}</span>`;
+          paceNote = ` · <span class="np-mt-pace">the realm consolidates — the next may be claimed in ${p.rest} month${p.rest === 1 ? '' : 's'}</span>`;
         }
       } catch (e) { warnOnce('np-getMissionPace', e); }
     }
     const cells = list.map((m) => {
+      // What the medallion is, in the one line under the rule (SPEC §227).
+      // READY is the state the whole section now turns on: the terms are met
+      // and nothing is paid until it is clicked.
       const state = m.status === 'done' ? 'Accomplished.'
-        : m.status === 'current' ? 'The realm may work at this now.'
-          : 'Locked — first: ' + (m.requiresNames && m.requiresNames.length
-            ? m.requiresNames.join(', ') : 'the missions before it') + '.';
+        : m.status === 'ready' ? 'The terms are met — click to claim it. Nothing is paid until you do, and the terms must still hold when you click.'
+          : m.status === 'shut' ? 'Shut. This campaign took the other road'
+            + (m.roadTaken ? ' — ' + m.roadTaken + '.' : '.')
+            : m.status === 'current' ? 'The realm may work at this now.'
+              : 'Locked — first: ' + (m.requiresNames && m.requiresNames.length
+                ? m.requiresNames.join(', ') : 'the missions before it') + '.';
       const strand = m.civil === 'govt' ? 'The Government'
         : m.civil === 'region' ? 'The Region'
           : m.civil === 'court' ? 'The Court' : '';
       const tt = m.name
         + (strand ? '\n' + strand + ' — what the realm becomes while the war is fought.' : '')
         + (m.hypothetical ? '\nA road history never took — the cards exist if the realm can reach them.' : '')
+        + (m.forkQuestion ? '\nThe fork: ' + m.forkQuestion : '')
+        + (m.roadChosen ? '\nThe road taken: ' + m.roadChosen : '')
         + '\n' + (m.desc || '')
         + (m.rewardText ? '\nReward: ' + m.rewardText : '')
         + '\n――――――\n' + state;
       const arrow = (m.requires || []).length ? '<i class="np-mn-arrow"></i>' : '';
-      return `<div class="np-mn np-mn-${m.status}${m.hypothetical ? ' np-mn-hypo' : ''}" style="grid-column:${(m.col | 0) + 1};grid-row:${(m.row | 0) + 1}" data-tt="${esc(tt)}">`
+      const mark = m.status === 'done' ? '<i class="np-mn-tick">✓</i>'
+        : m.status === 'shut' ? '<i class="np-mn-cross">✕</i>' : '';
+      const claim = m.status === 'ready' ? ` data-claim="${esc(m.id)}" role="button" tabindex="0"` : '';
+      return `<div class="np-mn np-mn-${m.status}${m.hypothetical ? ' np-mn-hypo' : ''}" style="grid-column:${(m.col | 0) + 1};grid-row:${(m.row | 0) + 1}" data-tt="${esc(tt)}"${claim}>`
         + arrow
-        + `<span class="np-mn-medal">${icon(m.icon || 'scroll')}${m.status === 'done' ? '<i class="np-mn-tick">✓</i>' : ''}</span>`
-        + `<span class="np-mn-name">${esc(m.name)}</span></div>`;
+        + `<span class="np-mn-medal">${icon(m.icon || 'scroll')}${mark}</span>`
+        + `<span class="np-mn-name">${esc(m.name)}</span>`
+        + (m.status === 'ready' ? '<span class="np-mn-claim">Claim</span>' : '')
+        + (m.roadChosen ? `<span class="np-mn-road">${esc(m.roadChosen)}</span>` : '')
+        + '</div>';
     }).join('');
     setHtml(refs.missions,
       `<div class="np-mt-sum">${doneN} of ${base.length} accomplished`
       + (hypo.length ? ` · <span class="np-mt-hypo-sum">${hypoDone} of ${hypo.length} roads history never took</span>` : '')
+      + (readyN ? ` · <span class="np-mt-ready-sum">${readyN} ready to claim</span>` : '')
       + paceNote
       + '</div>'
-      + `<div class="np-mtree" style="--mt-cols:${cols}">${svg}${cells}</div>`);
+      + `<div class="np-mtree" style="--mt-cols:${cols}">${svg}${cells}</div>`
+      + forkLedger());
+  }
+
+  // The either/or behind the right-hand column (SPEC §227). A fork is one
+  // question with two or three mutually exclusive answers, and a grid of
+  // medallions can only ever draw the answer a campaign reached — the roads it
+  // refused have no circle of their own to strike through. This block draws
+  // them: the question, the road taken with a check, the roads it cost with an
+  // ✕ through them. Unanswered forks list their roads plainly, because a
+  // choice still open is worth seeing before it is made.
+  function forkLedger() {
+    let forks = [];
+    if (actions && typeof actions.getForks === 'function') {
+      try { forks = actions.getForks() || []; } catch (e) { warnOnce('np-getForks', e); }
+    }
+    if (!forks.length) return '';
+    const rows = forks.map((f) => {
+      const roads = f.roads.map((r) => {
+        const cls = r.taken ? 'np-fk-took' : r.refused ? 'np-fk-refused' : 'np-fk-open';
+        const glyph = r.taken ? '✓' : r.refused ? '✕' : '·';
+        return `<span class="np-fk-road ${cls}"><i>${glyph}</i>${esc(r.name)}</span>`;
+      }).join('');
+      return `<div class="np-fk${f.answered ? ' np-fk-answered' : ''}" data-tt="${esc(f.question)}">`
+        + `<div class="np-fk-q">${esc(f.question)}</div>`
+        + `<div class="np-fk-roads">${roads}</div></div>`;
+    }).join('');
+    const answered = forks.filter((f) => f.answered).length;
+    return '<div class="pp-build-title np-fk-title">The Forks</div>'
+      + `<div class="np-mt-sum">${answered} of ${forks.length} answered — one road taken is the others refused</div>`
+      + `<div class="np-fk-list">${rows}</div>`;
   }
 
   // The doctrine axes (SPEC §85): four tensions of the age, each a slider

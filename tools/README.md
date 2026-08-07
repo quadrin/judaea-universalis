@@ -1630,3 +1630,32 @@ The claim that keeps the harness still is narrow and worth preserving: a deal
 with no `concessions` in it runs through arithmetic identical to the old code
 (`offered` is zero, `net` is `cost`), and `buildAiPeaceProvinces` is untouched,
 so no AI ever offers or expects one.
+
+## What §227 does to the trajectories
+
+The mission overhaul reaches the harness through the AI, because §102's
+symmetry is preserved: a court with no panel to click still banks its chain on
+the calendar, so it now meets **harder** bars (musters ×1.4, purses ×1.5,
+development ×1.25, war score +10/+25 → +20/+40) and, when it meets them, keeps
+**permanent** modifiers where forty-nine of them used to expire. Every all-AI
+economy moves a little as a result, and the seeded runs move with them.
+
+`node tools/autorun.mjs 8`, against the §226 tree:
+
+- **167 PAR: BLEEDING** — back on the line it has drifted on and off since v5.0.
+  Same two-province western outpost, same accepted family as ARM.
+- **67 HYR: BLEEDING** cleared, SEL DEAD unchanged. The brothers' stalemate has
+  been documented as drifting version to version since v2.4; this is that drift.
+- **40 HER: BLEEDING → ATG: DEBT-SPIRAL.** The chapter §226 already documented
+  as the one that moves, moving again, and within the family the accepted set
+  has named since v2.9: Antigonus is the plunder-funded underdog fighting a
+  scripted war to the death. The reason it is a spiral rather than a bleed is
+  the whole of §227 in one court — a losing realm can no longer meet the bars,
+  so it no longer collects the temporary bonuses that used to paper over its
+  deficit. It does not compound: debt-desertion zeroes the host, and the run
+  ends with the crown war resolved.
+- **529 JUD DEAD + SAM DEBT-SPIRAL** unchanged.
+- 115, 132, 614 and 1948 flag nothing.
+
+Accepted as of §227: 167 PAR BLEEDING · 67 SEL DEAD · 40 ATG DEBT-SPIRAL ·
+529 JUD DEAD + SAM DEBT-SPIRAL · everything else clean.
