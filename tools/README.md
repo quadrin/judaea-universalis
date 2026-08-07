@@ -53,6 +53,33 @@ war's §226: the anomaly set is the union of the two notes and nothing else —
 `167bce PAR`, `67bce SEL`, `40bce HER` (the crown war's own documented move),
 `132ce JUD`, `529ce JUD` and `1948ce ETH`.
 
+Since §230 (the neighbours' country at the resolution Judea is played at) the
+set moves again, and for the reason §228 already wrote down: this section adds
+twenty-five districts to the ancient chapters, so the province counts and the
+folded centroids move, and every seeded campaign after that draws a different
+stream. What §230 holds fixed is DEVELOPMENT — every realm in every chapter
+opens on the total it always had, which `smoke155` checks tag by tag — not the
+eight-year trajectory that total then produces.
+
+Measured on the merged tree at the default eight years: `167bce PAR` and
+`167bce HAS`, `67bce SEL` (dead, Pompey's arc), `67bce ARI`, `67bce ITU`,
+`40bce ADI`, `132ce JUD`, `529ce JUD`. Every one is in a family this file
+already documents, and three deserve a word because they are new *names* in an
+old family:
+
+- `67bce ITU` — Ituraea, two provinces and nine development, treasury 60 → 32.
+  This is the two-province-outpost class that `167bce PAR` has occupied since
+  v5.0: too small for the flag to mean anything, self-limiting, no spiral.
+- `40bce ADI` — Adiabene, four provinces since Arrapha became its own district.
+  Income reads −0.2 while the treasury RISES 70 → 165, which is the ARM/GHA
+  hovering class: the flag reads the operating ledger, the purse disagrees.
+- `529ce JUD` is not a death. The Keepers' chapter seats no Jewish state in 529
+  by design (§162) — JUD is a dormant court with zero provinces until the rising
+  at Caesarea in 556 — so an eight-year all-AI run reports it DEAD every time.
+
+`40bce HER` and `1948ce ETH` dropped off; both are come-and-go members of the
+same hovering families, and neither is near anything this section touched.
+
 Run the 1948 chapter out to its full length (`node tools/autorun.mjs 55 1948ce`)
 and LEB BLEEDING is in the accepted set from §224 onward. Lebanon comes out of
 1975 carrying The Civil War permanently (−40% income), the Green Line, the
