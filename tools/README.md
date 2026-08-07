@@ -93,6 +93,16 @@ and three deserve a word because they are new *names* in an old family:
 `40bce HER` and `1948ce ETH` dropped off; both are come-and-go members of the
 same hovering families, and neither is near anything this section touched.
 
+§232 (the warp anchored to the v5.0 frame) re-rolls the stream one more
+time — the phase moves every border, so it moves every folded centroid —
+and the set comes back `67bce SEL, ITU · 132ce JUD · 529ce JUD · 614ce
+SAS`, with four chapters flagging nothing at all. Every name but one is
+documented above; the one addition, `614ce SAS: BLEEDING`, is the
+plunder-funded-war class wearing its biggest crown yet — income 48.6→−3.7
+across the Byzantine war while the treasury sits at 277 and debt-desertion
+trims the host 45,000→31,360. Self-limiting, no spiral, and the chapter's
+scripted war is the whole story of it.
+
 Run the 1948 chapter out to its full length (`node tools/autorun.mjs 55 1948ce`)
 and LEB BLEEDING is in the accepted set from §224 onward. Lebanon comes out of
 1975 carrying The Civil War permanently (−40% income), the Green Line, the

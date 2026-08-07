@@ -15794,3 +15794,69 @@ Regression contract: `smoke156` — the restored areas hold (Batanea, Gadara,
 Gerasa∪Mafraq, Philadelphia∪Zarqa within tolerance of their pre-§225 areas),
 the trimmed seeds stay trimmed (no §225/§228 Levant child above weight 0.70),
 and the §228 roads still run through the Ghouta.
+
+## 232. The warp remembers the old frame — the border phase anchored to v5.0
+
+The border wobble is a noise field sampled at PIXEL coordinates — `fbm2`
+over the fragment's position — and §160 grew the frame by moving the origin
+from (12°E, 42.5°N) to (11°W, 58°N). Same seeds, same frequencies, new
+origin: **every border on the old map re-rolled its jitter without a single
+seed moving.** Nobody saw it happen, because a re-rolled wobble is still a
+plausible wobble. What the eye eventually caught was downstream of it:
+Gerasa's NE triangle was §228's optimizer measuring the drifted raster —
+Mafraq's ground READ as Gerasa's under the new phase, and §228 folded
+Mafraq on that reading. Re-measured against the v5.4 raster, the ground
+was Bostra's all along; the fold moves to Bostra, and it is dev-neutral,
+because folded cells are null in the ancient chapters and count no
+development under either parent.
+
+The fix is one uniform. Density never changed at any growth, so the old
+phase is exactly one translation away: `MAP_DATA.warpAnchor =
+project(12.0, 42.5)` — the OLD origin's position in the CURRENT projection
+— and the border pass subtracts it before sampling, so the noise field is
+evaluated in the v5.0 frame's own coordinates. §205 kept §160's origin, so
+v5.x is the only phase there has ever been besides the drifted one; anchor
+once, and no future frame growth re-rolls a border again.
+
+### What the restored phase cost, measured
+
+§231 tuned its thirteen children against the drifted phase, so restoring
+v5.0 re-spilled them — and the first snapshot said exactly where: Douma
+collapsed to a Damascus enclave (2,416 px, both Ghouta roads severed), the
+coast cities surged over Mount Lebanon and left Chalcis∪Heliopolis 38.4%
+under its pre-§225 family area, Gadara ran +16.8%, Philadelphia∪Zarqa∪Esbus
++12.0%, Caesarea Philippi's family +21.1%, and the Ptolemais fold family
+came apart at Nahariya. Three further rounds, each re-measured against the
+live raster:
+
+- **Douma NE to (36.62, 33.66) at the 0.70 cap** — it retakes the Ghouta
+  corridor at 6,325 px and touches Damascus, Palmyra and Emesa again; the
+  Damascus family closes at +1.3%.
+- **The Beqaa pushes back**: Chalcis to 1.00, Heliopolis to 0.68 one step
+  east of §231's corridor seat — the family closes at −9.3%.
+- **The bloated parents shed**: Gadara 0.85→0.75 (−3.1%), Philadelphia
+  1.00→0.90 (−1.7%), Caesarea Philippi 0.80→0.68 with Mount Hermon at
+  0.50 (+8.9%).
+- **Nahariya took three tries**: 0.08° from Ptolemais the power diagram
+  swallowed it whole; the second seat was in the sea and the validator
+  said so; at (35.12, 33.06), weight 0.75, it holds 37 px between Tyre
+  and Ma'alot — a sliver, and enough: the fold family is connected and
+  smoke31 passes. Holding more means taking it from Ptolemais, itself at
+  its 198-px floor against Dora and Sepphoris. The Acre strip is simply
+  contested under the restored phase, and the sliver is the honest shape
+  of that.
+
+All eight pinned families end inside the ±10% tolerance (worst: Chalcis
+−9.3%, Caesarea Philippi +8.9%, Gerasa +8.4%). The seeded stream re-rolls
+with the phase, and `node tools/autorun.mjs 8` comes back the cleanest set
+this file has recorded — `67 SEL, ITU · 132 JUD · 529 JUD · 614 SAS` with
+four chapters flagging nothing. SAS is a new name in the oldest family:
+income 48.6→−3.7 while the treasury sits at 277 and debt-desertion trims
+the war host 45,000→31,360 — the plunder-funded-war class, wearing a
+bigger crown.
+
+Regression contract: `smoke153`'s fold table carries the Bostra
+re-parenting with its reason; `smoke156` holds unchanged — same pins, same
+tolerance — under the restored phase; `smoke31` holds the re-knit Acre
+family; and `tools/geom-snapshot.json` is re-measured per that file's own
+rule, 414 cells, Sinai still boxed inside its peninsula.
