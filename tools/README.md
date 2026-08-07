@@ -1640,6 +1640,10 @@ development ×1.25, war score +10/+25 → +20/+40) and, when it meets them, keep
 **permanent** modifiers where forty-nine of them used to expire. Every all-AI
 economy moves a little as a result, and the seeded runs move with them.
 
+An all-AI run seats nobody, so `isHumanChair` is false everywhere and every
+chain banks on the calendar — which is the only thing a run with no hands can
+mean, and keeps the harness measuring the sim rather than the panel.
+
 `node tools/autorun.mjs 8`, against the §226 tree:
 
 - **167 PAR: BLEEDING** — back on the line it has drifted on and off since v5.0.

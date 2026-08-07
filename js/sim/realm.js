@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag } from './military.js';
+import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag, isHumanChair } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { CHAPTER_PATHS } from '../data/chapter_paths.js';
 import { TRADE_ROUTES } from '../data/trade.js';
@@ -963,17 +963,24 @@ export function checkMissions(ctx) {
       const done = missionDoneSet(t, list);
       const closed = missionClosedSet(ctx, list);
 
-      // The player's chain is CLAIMED, not banked (SPEC §227). The calendar
-      // still reads every check every month, but what it writes is a READY
-      // list: the accomplishments whose terms are met right now, waiting at
-      // the panel for a hand. Nothing is paid until the medallion is clicked.
+      // A SEATED chain is CLAIMED, not banked (SPEC §227). The calendar still
+      // reads every check every month, but what it writes is a READY list: the
+      // accomplishments whose terms are met right now, waiting at the panel
+      // for a hand. Nothing is paid until the medallion is clicked.
       //
       // The list is rebuilt from live checks each pass rather than
       // accumulated, so it is a statement about the world as it stands and
       // not a promise made once. A realm that qualified in March by holding
       // Joppa and lost Joppa in April is not owed Joppa's reward — claim it
       // while it holds. That is most of what §227 means by *harder*.
-      if (tag === g.playerTag) {
+      //
+      // `isHumanChair` and not `playerTag`, for two reasons §216 and the
+      // balance harness each supply. A multiplayer GUEST has a panel of their
+      // own (§216), so their chain must wait for their click too — under
+      // `playerTag` the host's tree waited and the guest's paid itself. And an
+      // all-AI autorun seats nobody at all, so the harness banks every chain
+      // on the calendar, which is the only thing a run with no hands can mean.
+      if (isHumanChair(g, tag)) {
         const rest = Math.max(0, num(t.missionRest, 0) | 0);
         if (rest > 0) t.missionRest = rest - 1;
         const was = new Set(Array.isArray(t.missionReady) ? t.missionReady.map(String) : []);
