@@ -269,6 +269,7 @@ export function initUI(staticCtx) {
     }
     const deal = {
       provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
+      unifyCrown: false, // the crown war's answer (SPEC §226): one kingdom, one claimant
       concessions: [], // provinces of our own laid on the table (SPEC §222)
       provinceTo: {}, // directed spoils: demanded province -> our client in this war
       release: [], // restored, returned, or newly created states (SPEC §69/§76)
@@ -378,6 +379,16 @@ export function initUI(staticCtx) {
           <span class="peace-prov-name">Demand war reparations</span>
           <span class="peace-prov-cost">${info.reparationsCost || 15}</span>
         </label>
+        ${info.crownRival ? `<label class="peace-prov${info.canUnifyCrown ? '' : ' peace-off'}" data-tt="${info.canUnifyCrown
+    ? esc('The crown is one: ' + (info.crownRivalName || 'the rival claimant') + ' renounces, every province of theirs '
+      + 'passes to us at once — occupied or not — and their court passes into memory.'
+      + '\nReplaces every other term. Costs ' + info.unifyCrownCost + ' war score.')
+    : esc(info.whyNotUnifyCrown || 'No crown is in dispute here.')}">
+          <input type="checkbox" data-ref="unifyCrown" ${info.canUnifyCrown ? '' : 'disabled'}>
+          <span class="peace-prov-name">Take the whole kingdom
+            <span class="peace-dim">the crown of ${esc(info.crownOf || 'the realm')}, one claimant</span></span>
+          <span class="peace-prov-cost">${info.unifyCrownCost}</span>
+        </label>` : ''}
         <label class="peace-prov${info.canSubjugate ? '' : ' peace-off'}" data-tt="${info.canSubjugate
     ? esc('Make ' + (info.enemyName || 'them') + ' a client kingdom: they keep their lands but pay us 15% of their income and follow us to war.\nReplaces province demands.'
       + (info.subjugateGoalAligned ? '\nThis fulfills the ' + (info.subjugateGoalReason || 'war goal') + ' and receives favored terms.' : '')
@@ -441,6 +452,7 @@ export function initUI(staticCtx) {
     const sendBtn = peaceEl.querySelector('[data-ref="send"]');
     const humiliateBox = peaceEl.querySelector('[data-ref="humiliate"]');
     const subjugateBox = peaceEl.querySelector('[data-ref="subjugate"]');
+    const crownBox = peaceEl.querySelector('[data-ref="unifyCrown"]');
     const reparationsBox = peaceEl.querySelector('[data-ref="reparations"]');
 
     function update() {
@@ -449,35 +461,63 @@ export function initUI(staticCtx) {
       if (!ev) { closePeaceDialog(); return; }
       goldV.textContent = String(deal.gold);
       // Subjugation replaces province demands and releases: a client keeps
-      // its lands whole.
+      // its lands whole. Taking the crown (SPEC §226) replaces the whole
+      // table, indemnity and humiliation included — there is no court left
+      // to pay or be shamed next month.
+      const whole = deal.subjugate || deal.unifyCrown;
       peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
-        box.disabled = deal.subjugate;
-        if (deal.subjugate) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+        box.disabled = whole;
+        if (whole) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', whole);
       });
       peaceEl.querySelectorAll('[data-prov-to]').forEach((sel) => {
-        sel.disabled = deal.subjugate;
-        if (deal.subjugate) sel.value = '';
+        sel.disabled = whole;
+        if (whole) sel.value = '';
       });
       peaceEl.querySelectorAll('[data-concede]').forEach((box) => {
-        box.disabled = deal.subjugate;
-        if (deal.subjugate) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+        box.disabled = whole;
+        if (whole) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', whole);
       });
       peaceEl.querySelectorAll('[data-release]').forEach((box) => {
-        box.disabled = deal.subjugate;
-        if (deal.subjugate) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+        box.disabled = whole;
+        if (whole) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', whole);
       });
       peaceEl.querySelectorAll('[data-transfer-vassal]').forEach((box) => {
-        box.disabled = deal.subjugate;
-        if (deal.subjugate) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+        box.disabled = whole;
+        if (whole) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', whole);
       });
-      if (deal.subjugate) { deal.provinces = []; deal.release = []; deal.transferVassals = []; deal.provinceTo = {}; deal.concessions = []; }
+      if (whole) { deal.provinces = []; deal.release = []; deal.transferVassals = []; deal.provinceTo = {}; deal.concessions = []; }
+      // The two whole-house clauses exclude each other: a crown cannot both
+      // survive as a client and be taken.
+      if (subjugateBox) {
+        subjugateBox.disabled = !info.canSubjugate || deal.unifyCrown;
+        if (deal.unifyCrown) { subjugateBox.checked = false; deal.subjugate = false; }
+        subjugateBox.closest('.peace-prov').classList.toggle('peace-off', subjugateBox.disabled);
+      }
+      if (crownBox) {
+        crownBox.disabled = !info.canUnifyCrown || deal.subjugate;
+        if (deal.subjugate) { crownBox.checked = false; deal.unifyCrown = false; }
+        crownBox.closest('.peace-prov').classList.toggle('peace-off', crownBox.disabled);
+      }
+      if (deal.unifyCrown) {
+        deal.gold = 0;
+        deal.humiliate = false;
+        deal.reparations = false;
+        if (humiliateBox) humiliateBox.checked = false;
+        if (reparationsBox) reparationsBox.checked = false;
+        goldV.textContent = '0';
+      }
+      [humiliateBox, reparationsBox].forEach((box) => {
+        if (!box) return;
+        box.disabled = deal.unifyCrown;
+        box.closest('.peace-prov').classList.toggle('peace-off', deal.unifyCrown);
+      });
       const white = !deal.provinces.length && !deal.release.length && !deal.transferVassals.length
         && !deal.concessions.length && deal.gold <= 0
-        && !deal.humiliate && !deal.subjugate && !deal.reparations;
+        && !deal.humiliate && !deal.subjugate && !deal.unifyCrown && !deal.reparations;
       totalEl.textContent = white
         ? (info.exit
           ? 'A clean withdrawal: occupations between us and the enemy revert; the war goes on without us.'
@@ -569,6 +609,9 @@ export function initUI(staticCtx) {
     if (subjugateBox) {
       subjugateBox.addEventListener('change', () => { deal.subjugate = subjugateBox.checked; update(); });
     }
+    if (crownBox) {
+      crownBox.addEventListener('change', () => { deal.unifyCrown = crownBox.checked; update(); });
+    }
     sendBtn.addEventListener('click', () => {
       if (sendBtn.classList.contains('disabled')) return;
       closePeaceDialog();
@@ -601,7 +644,7 @@ export function initUI(staticCtx) {
     // so subjugation deals ignore the map.
     const demandable = new Set(info.provinces.map((p) => p.id));
     peaceProvToggle = (pid) => {
-      if (deal.subjugate || !demandable.has(pid)) return;
+      if (deal.subjugate || deal.unifyCrown || !demandable.has(pid)) return;
       const at = deal.provinces.indexOf(pid);
       if (at >= 0) {
         deal.provinces.splice(at, 1);

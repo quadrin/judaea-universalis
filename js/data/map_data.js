@@ -1880,7 +1880,7 @@ const PROVINCES = [
   P("Ma'alot", 35.27, 33.01, 0.62, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Ptolemais' }),
 
-  // --- v7.8 (SPEC §226): Jordan, Syria and Iraq at the same resolution ------
+  // --- v7.8 (SPEC §228): Jordan, Syria and Iraq at the same resolution ------
   // §225 gave Lebanon and the Golan thirteen districts where they had six.
   // East and north of them the atlas was still the ancient one, and the three
   // states 1948 actually fights beside and against were drawn in cells the

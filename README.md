@@ -193,6 +193,30 @@ static site, the zero dependencies, or the missing build step changes.
   for a decade, so it is not a move to make twice. It costs no influence at all: the price is
   the client. The one thing that refuses it is a war, because a client that walks out of one
   has not been freed, it has deserted.
+- **The crown is one.** Two courts claiming one throne is the oldest shape in this game's
+  material — Hyrcanus and Aristobulus in 67 BCE, Antigonus and Herod in 40 — and the engine
+  used to see a border dispute. A chapter now names its **claimants**, and the war between
+  them is a crown war: its pen belongs to the claimant rather than to whichever great power
+  is fighting beside him, so Rome and Parthia settle no Jewish crowns and a client claimant
+  is not handed a junior's withdrawal form for the one war his chapter is about. And its
+  table can write the answer both men say they are fighting for. **Take the whole kingdom**
+  at 80 war score: the loser renounces, every province of his passes at once whether your
+  armies are standing in it or not, his host disperses, and his court passes into memory.
+  One flat price, because a kingdom is one thing and not a list of towns — the old road
+  (occupy every acre and demand all of it) priced Antigonus' Judaea at more war score than
+  exists. It replaces every other term, the world counts it once rather than by the acre,
+  and it is symmetric: the AI signs it too, so a crown war lost badly enough is a crown lost.
+- **And the collar can be thrown off from below.** A client kingdom's exits all belonged to
+  somebody else — the lord dies, the lord absorbs you, the lord lets you go, or (for an AI
+  alone) you rise and win. A human client had no move at all, which is a strange thing to
+  hand a player whose chapter starts him in a collar: Herod is Rome's client from the first
+  day of 40 BCE, and Adiabene rides in Parthia's train in three bookmarks with *stand free
+  of every overlord* written into its own victory text. **Throw Off the Yoke** now sits on
+  your overlord's own panel. The bond breaks first and the war follows — an ordinary war of
+  independence, no infamy for the soil you are standing on, and if you lose it the yoke goes
+  back on at the table. It costs no influence; the price is the war. Not in the middle of
+  somebody else's, because a crown that breaks its word while its levies stand in another
+  man's line has not won its freedom, it has changed sides.
 - **The peace table runs both ways now, and there is a deed that needs no table.** Every
   term used to point one direction — you could demand provinces, gold, reparations, a
   humiliation, a collar — so a realm that was *losing* had exactly one move, a white peace,
@@ -454,6 +478,25 @@ static site, the zero dependencies, or the missing build step changes.
   elects its head of government — theocracies never anoint a child, and tribal
   confederations field every tent's sons. Forming a nation adopts its
   constitution.
+- **And a constitution you choose becomes a country of its own.** The forks
+  that ask what kind of state this is — the Hasmonean diadem, the settlement
+  after the Great Revolt, the accession of Beit Kosiba, the line of Jehoiachin
+  — used to leave the same three letters on the map in the same blue whichever
+  answer you gave. Each of the ten answers now has a crown you can proclaim:
+  the Temple-State, the Commonwealth of the Lot, the Jubilee Commonwealth, the
+  Freedom of Zion, the Priest-Kingdom, the Judaean Commonwealth, the Crown of
+  Judaea, the House of David, the Two Houses, the Patriarchate. Each has its
+  own name, colour and emblem, its own founding payoff and national ideas, and
+  its own thirteen-node mission tree — the temple-state restoring the
+  twenty-four courses and collecting the half-shekel from three continents,
+  the Lot keeping an honest register of every priestly house in the country,
+  the Jubilee coming through a sabbatical year at peace and unable to borrow,
+  Freedom of Zion holding a state with no ally and no address, Ezekiel's prince
+  obeying 46:18 while the founder's own leases sit in the room next door.
+  Taking the crown *is* adopting the constitution — the Lot's proclamation
+  abolishes your heir, the Jubilee's starts an election clock — and none of
+  them closes the road to the Kingdom of Israel, which ends the constitution
+  when you proclaim it, because a kingdom is what it is.
 - Armies wear their age on the map: antiquity's swallow-tailed standards, the
   lance ages' pennons, and squared modern brigade flags with rifle or tank
   glyphs — and modern armies march half again as fast and break fortress walls

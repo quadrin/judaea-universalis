@@ -38,7 +38,7 @@ eight-year window. 1948 runs clean: the coalition invades, the truces bite,
 Rhodes freezes the fighting, and the postwar guarantee/rearmament system builds
 the regional establishments instead of leaving rich states demobilized.
 
-Since §226 (Jordan, Syria and Iraq re-rastered) two more flags sit in the
+Since §228 (Jordan, Syria and Iraq re-rastered) two more flags sit in the
 accepted set at the default eight years, and both are the seeded stream moving
 rather than anything breaking. `132ce JUD: DEBT-SPIRAL` is the Return holding
 ALL eight of its provinces to the end instead of losing two, and paying for the
@@ -47,7 +47,11 @@ armories expire", arrived at a year or two earlier. `1948ce ETH: BLEEDING` is
 Ethiopia, six provinces and an income near zero, four thousand kilometres from
 anything this section touched. Adding cells changes the province count and the
 folded centroids, and every campaign after that draws different numbers; the
-ancient chapters' ADJACENCY is what §226 holds fixed, and smoke151 holds it.
+ancient chapters' ADJACENCY is what §228 holds fixed, and smoke153 holds it.
+Re-run once more on the merged tree that carries this section AND the crown
+war's §226: the anomaly set is the union of the two notes and nothing else —
+`167bce PAR`, `67bce SEL`, `40bce HER` (the crown war's own documented move),
+`132ce JUD`, `529ce JUD` and `1948ce ETH`.
 
 Run the 1948 chapter out to its full length (`node tools/autorun.mjs 55 1948ce`)
 and LEB BLEEDING is in the accepted set from §224 onward. Lebanon comes out of
@@ -296,6 +300,37 @@ class: Ituraea is ONE province (dev 9→11) carrying a 3,000-man host, income
 60→26 over eight years. Self-limiting, no spiral, the ARM/PAR/ARI/HYR family.
 614 JUD BLEEDING is already accepted as coming and going.
 
+The SPEC §226 batch (Herod's collar, the crown war, the yoke thrown off)
+re-ran the full 8-year harness against the parent tree in the same environment.
+**Seven of the eight bookmarks came back byte identical.** 40 BCE is the one
+that moves, and only because it is the chapter that changed: `HER.overlord =
+'ROM'` at setup puts 15% of Herod's revenue into Rome's ledger from July of 40,
+which perturbs the seeded stream from the first month.
+
+Its flag moves inside the family the chapter has always had. §225's parent run
+comes back `40bce HER: SNOWBALL` (Herod 8→14 provinces, Antigonus reduced to
+13); this one comes back `40bce HER: BLEEDING` (Herod held at 8, Antigonus at
+21, both hosts at zero by the eighth year). Both are the long-documented
+40 BCE class — *"HAS/HER/ATG bleed while their fight-to-the-death scripted wars
+run (plunder-funded underdogs)"* — and the pair has traded places on this
+bookmark before with nothing more than a redrawn province list behind it. The
+same batch against §224's tree, one commit earlier, was byte identical on seven
+bookmarks with the anomaly set identical on all eight; the northern frontier's
+ten new cells moved the draw between them.
+
+One deliberate cause sits underneath the seeded part. Before §226 the AI settled
+the crown war as ROME, because §61 promoted Herod's overlord to the head of his
+side — and Rome's reach is the Mediterranean, so the treaty it wrote could take
+half of Judaea. Now the claimant holds his own pen and demands only what his own
+territory can reach (§116), which is Idumea and a stretch of coast. A crown war
+that grinds for three years while its patron wins the wider one is the shape the
+chapter is about, and the underdog bleeding through it is the accepted flag, not
+a regression. The clause itself NEVER FIRES in an all-AI run: the planner takes
+it only at 80 war score, which is why 67 BCE (the documented brothers'
+stalemate) is byte identical too. If 40 BCE ever comes back with `ATG DEAD` or
+`HER DEAD` and one fewer war, that is the clause firing, and it is the model
+working rather than a regression — but check it against this note first.
+
 The SPEC §82–83 batch (supply lines, AI naval invasions, sandbox
 chapters) re-ran the full 8-year harness: the anomaly set came back a
 strict subset of the accepted families (167 PAR · 67 SEL DEAD + ARI ·
@@ -323,6 +358,9 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
+`smoke151.mjs` owns the SPEC §226 batch (Herod's collar on day one, the crown
+war's pen and its whole-kingdom clause in both Judaean civil wars, and the
+client's own war of independence).
 `smoke127.mjs` owns the SPEC §197 estate favor bank and the asks (the seed,
 the band rates, the one-object promise/payment contract, the ground scaling
 measured by handing the crown the coast, the gates, the AI silence).

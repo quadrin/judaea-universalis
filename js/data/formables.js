@@ -1476,6 +1476,1874 @@ function favorFloor(ctx, tag, min) {
   return vals.length >= 2 && Math.min(...vals) >= min;
 }
 
+// ---- the constitution takes a name of its own (SPEC §227) -------------------
+// §214 gave the five constitutional forks teeth: a road that abolishes
+// hereditary priestly power abolishes it, the succession rules move with the
+// answer, and the Government row in the realm panel finally says which of the
+// four was taken. What it could not do is make the answer a COUNTRY. All four
+// settlements of 71 left the same three letters on the map in the same blue,
+// under the same emblem, working the same chapter tree: a Judaea that filled
+// its high priesthood by lot and a Judaea that had handed the office back to
+// the four houses were one state wearing two labels, and the label was in a
+// panel row the player had to go and look at.
+//
+// So every Jewish constitution is now a crown of its own, carried on the §22
+// formable machinery every other greater banner already uses — three letters,
+// a name and a colour on the map, an emblem, national ideas, and a mission
+// tree written for THAT constitution and no other. Ten of them, out of the ten
+// the four Jewish forks adopt: the temple-state, the lot, the Jubilee and no
+// ruler but God out of the settlement of 71; the priest-kingdom and the
+// commonwealth out of the diadem of 104 BCE; and the crown, the Davidic house,
+// the two hereditary offices and Ezekiel's prince out of the accession of Beit
+// Kosiba, two of which the crown of David in 614 offers again.
+//
+// The plumbing is `GOV_OF`. Every one of these banners declares the
+// constitution it belongs to, and `switchTagCore` already applies the new
+// banner's government when a crown is proclaimed — so taking the crown IS
+// adopting the constitution, with the election clock started and the heir
+// cleared where it does not inherit, and a save that reaches the crown by the
+// fork and a save that reaches it by the panel land on the same state.
+//
+// The fork is untouched, on purpose. It still writes the constitution at its
+// own call site, still sets its road marker, still fills §130's store: a
+// player who answers The Second Government and never opens the Decisions panel
+// gets exactly the game §214 shipped. The crown is the second half — the
+// state's own name for what it has become, and a tree that asks after it.
+//
+// Two rules the ten obey. The first requirement of every one of them is the
+// constitution itself, read off `govType` rather than off a flag, because that
+// is the fact the crown is about; a realm that answered the fork differently
+// sees the other nine as decisions it does not have. And every one of them
+// keeps the road to the Kingdom of Israel open (the `israelFrom` entries
+// below), because MLI is the endgame crown of the whole Jewish arc and a
+// constitution is not a cul-de-sac — a commonwealth that finds a son of David
+// may still proclaim the kingdom, and proclaiming it ends the commonwealth,
+// which is the correct and rather pointed answer.
+//
+// The Samaritan crown at Neapolis (§136) adopts two of these same
+// constitutions and gets no banner here: SAM is not a Jewish court, its road
+// is its own chapter's, and a Samaritan state flying a Judaean crown would be
+// the one thing that whole fork is about not being.
+
+function govIs(ctx, tag, gov) {
+  const t = ctx.game.tags[tag];
+  return !!t && t.govType === gov;
+}
+// Court approval, read for a single named estate. The crowns below are each
+// offered in one or two chapters rather than six, so unlike the Kingdom of
+// Israel's shared spine they MAY name the party in the room — and should,
+// because a constitution is a bargain with particular men.
+function partyAt(ctx, tag, id, min) {
+  try {
+    const v = ctx.helpers.faction(ctx, tag, id);
+    return Number.isFinite(v) && v >= min;
+  } catch (e) { return false; }
+}
+function govAbove(ctx, tag, over) {
+  const t = ctx.game.tags[tag];
+  return (((t && t.tech) || {}).gov | 0) >= techBase(ctx) + over;
+}
+function heirSeated(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  return !!(t && t.heir);
+}
+function rulerWorth(ctx, tag, min) {
+  const r = (ctx.game.tags[tag] || {}).ruler;
+  if (!r) return false;
+  return ((r.gov | 0) + (r.infl | 0) + (r.mar | 0)) >= min;
+}
+function legitimacyOf(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  return (t && t.legitimacy) || 0;
+}
+function mod(ctx, tag, id, name, effects, months) {
+  return ctx.helpers.addTagModifier(ctx, tag, {
+    id, name, months: Number.isFinite(months) ? months : -1, effects,
+  });
+}
+
+// ---- the spine every settled constitution works -----------------------------
+// Five rungs, written once and read by all ten, because the first thing any of
+// these states has to do is the same thing: survive its own founding, be
+// obeyed from its own seat, put an army under the new name, run a chancery
+// that can collect a tax under it, and then — the hard one — stop. They read
+// RELATIVE to the chapter's own technology baseline for the reason §211 gives:
+// these crowns stand in chapters seven hundred years apart.
+//
+// Cols 0-1 are the spine's and cols 2-3 are the branch's, so no constitution's
+// own eight collide with it.
+function settledSpine(TAG) {
+  const k = TAG.toLowerCase();
+  return [
+    {
+      id: k + '_proclaimed', name: 'The Constitution Proclaimed',
+      icon: 'scroll', col: 1, row: 0,
+      desc: 'A constitution is a piece of paper until a government has run under it for a '
+        + 'season without falling over. Settle the realm under the new arrangement: '
+        + 'stability +2 and legitimacy 75, with nobody in the field claiming the seat it '
+        + 'names.',
+      rewardText: '"The New Arrangement": +8% income and −0.4 unrest everywhere for 60 months.',
+      check: (ctx) => stabilityOf(ctx, TAG) >= 2 && legitimacyOf(ctx, TAG) >= 75
+        && !(ctx.game.pretenders && ctx.game.pretenders[TAG]),
+      reward: (ctx) => mod(ctx, TAG, k + '_new_arrangement', 'The New Arrangement',
+        { incomeMult: 1.08, unrestAll: -0.4 }, 60),
+    },
+    {
+      id: k + '_the_seat', name: 'The Seat of Government',
+      icon: 'temple', col: 0, row: 1, requires: [k + '_proclaimed'],
+      desc: 'Every arrangement any Jewish state ever tried was administered from the same '
+        + 'city, and the ones that lost it stopped being arrangements and became parties. '
+        + 'Hold Jerusalem, with eighteen provinces owned and controlled under the new name '
+        + '— more than the crown itself was proclaimed on.',
+      rewardText: '+120 talents and "Obeyed From the City": +6% income, permanent.',
+      check: (ctx) => holds(ctx, TAG, 'Jerusalem') && ownedCount(ctx, TAG) >= 18,
+      reward: (ctx) => {
+        ctx.helpers.adjust(ctx, TAG, { treasury: 120 });
+        mod(ctx, TAG, k + '_obeyed_from_the_city', 'Obeyed From the City', { incomeMult: 1.06 });
+      },
+    },
+    {
+      id: k + '_the_muster', name: 'The Muster Under the New Name',
+      icon: 'spears', col: 1, row: 1, requires: [k + '_proclaimed'],
+      desc: 'The men were raised by somebody, for something, before any of this was '
+        + 'written down. Get twenty-eight thousand of them onto the rolls of the state the '
+        + 'constitution made, which is not the same act as having them.',
+      rewardText: '+30 martial points and "Sworn to the Arrangement": +6% discipline for 60 months.',
+      check: (ctx) => menOf(ctx, TAG) >= 28000,
+      reward: (ctx) => {
+        ctx.helpers.adjust(ctx, TAG, { mar: 30 });
+        mod(ctx, TAG, k + '_sworn_to_it', 'Sworn to the Arrangement', { disciplineMult: 1.06 }, 60);
+      },
+    },
+    {
+      id: k + '_the_chancery', name: 'The Ledger and the Assize',
+      icon: 'quill', col: 0, row: 2, requires: [k + '_the_seat'],
+      desc: 'A constitution that cannot assess a village or hear a case in it is a '
+        + 'pamphlet. Take the art of government two rungs past this age\'s baseline and put '
+        + '220 points of development under the new name.',
+      rewardText: '"The Clerks of the New State": +6% income and +8% development growth, permanent.',
+      check: (ctx) => govAbove(ctx, TAG, 2) && devOf(ctx, TAG) >= 220,
+      reward: (ctx) => mod(ctx, TAG, k + '_the_clerks', 'The Clerks of the New State',
+        { incomeMult: 1.06, growthMult: 1.08 }),
+    },
+    {
+      id: k + '_the_quiet', name: 'The Years Nobody Writes About',
+      icon: 'dove', col: 1, row: 2, requires: [k + '_the_muster'],
+      desc: 'Constitutions are adopted in emergencies and judged in the years afterwards, '
+        + 'and the years afterwards are the ones the sources skip. Stand at war with '
+        + 'nobody, with the realm steady at stability +2.',
+      rewardText: '"Nothing Happened That Year": −0.4 unrest everywhere and +0.1 public '
+        + 'belief a month, permanent.',
+      check: (ctx) => atPeace(ctx, TAG) && stabilityOf(ctx, TAG) >= 2,
+      reward: (ctx) => mod(ctx, TAG, k + '_nothing_happened', 'Nothing Happened That Year',
+        { unrestAll: -0.4, legitimacyAdd: 0.1 }),
+    },
+  ];
+}
+
+// ---- 66 CE, the settlement of 71: the temple-state --------------------------
+// The arrangement with four centuries of practice behind it, and with the
+// grievance that started the war written into it as the constitution.
+const SNH_BRANCH = [
+  {
+    id: 'snh_the_courses', name: 'The Twenty-Four Courses',
+    icon: 'altar', col: 2, row: 0, requires: ['snh_proclaimed'],
+    desc: 'The priesthood served the House on a rota of twenty-four courses, a week each, '
+      + 'twice a year, and the rota is the reason a country of villages had a national '
+      + 'institution at all — every valley sent its men up in their turn and got them back '
+      + 'with news. Put the roster back in place over a standing House, with 350 talents '
+      + 'to pay for the year it will take.',
+    rewardText: '+40 governance points and "The Rota Restored": +0.15 public belief a '
+      + 'month and −0.3 unrest everywhere, permanent.',
+    check: (ctx) => templeStands(ctx) && holds(ctx, 'SNH', 'Jerusalem')
+      && treasuryOf(ctx, 'SNH') >= 350,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SNH', { gov: 40 });
+      mod(ctx, 'SNH', 'snh_rota_restored', 'The Rota Restored',
+        { legitimacyAdd: 0.15, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'snh_the_half_shekel', name: 'The Chest From Every Province',
+    icon: 'coins', col: 2, row: 1, requires: ['snh_the_courses'],
+    desc: 'Half a shekel a year from every adult man who counts himself of Israel, and the '
+      + 'largest consignment of all came out of another empire under a Parthian escort. A '
+      + 'temple-state is the only one of the four settlements that can actually collect it, '
+      + 'because it is the only one the communities recognise the officers of. Alexandria, '
+      + 'Antioch and Babylon standing with us at 60, or under the crown outright.',
+    rewardText: '+200 talents and "The Levy Restored": +12% income and +8% trade, permanent.',
+    check: (ctx) => ['Alexandria', 'Antioch', 'Babylon']
+      .every((n) => standingAt(ctx, n) >= 60 || holds(ctx, 'SNH', n)),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SNH', { treasury: 200 });
+      mod(ctx, 'SNH', 'snh_levy_restored', 'The Levy Restored',
+        { incomeMult: 1.12, tradeMult: 1.08 });
+    },
+  },
+  {
+    id: 'snh_the_festivals', name: 'Three Times in the Year',
+    icon: 'granary', col: 2, row: 2, requires: ['snh_the_half_shekel'],
+    desc: 'Passover, Weeks and Tabernacles emptied every road in the country into one city '
+      + 'and filled it past what it could hold — which is why the war began at a festival '
+      + 'and why the state that runs the festivals runs the country. Hold the pilgrim '
+      + 'roads and the towns that feed them, Jerusalem, Jericho, Emmaus and Lydda, with 200 '
+      + 'points of development behind them.',
+    rewardText: '+150 talents and "The Roads Fill Three Times": +8% income and +8% '
+      + 'development growth, permanent.',
+    check: (ctx) => holdsAll(ctx, 'SNH', ['Jerusalem', 'Jericho', 'Emmaus', 'Lydda'])
+      && devOf(ctx, 'SNH') >= 200,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SNH', { treasury: 150 });
+      mod(ctx, 'SNH', 'snh_roads_fill', 'The Roads Fill Three Times',
+        { incomeMult: 1.08, growthMult: 1.08 });
+    },
+  },
+  {
+    id: 'snh_the_vestments', name: 'The Vestments in Our Own Keeping',
+    icon: 'shrine', col: 2, row: 3, requires: ['snh_the_festivals'],
+    desc: 'For most of a century the high priest\'s robes were kept in the Antonia and '
+      + 'issued for the festivals by a Roman officer, and getting them back was a diplomatic '
+      + 'campaign the house of Agrippa fought for two reigns. A temple-state that does not '
+      + 'hold its own vestments is an office somebody else appoints. Owe fealty to nobody, '
+      + 'with the House standing and legitimacy 70.',
+    rewardText: '"Ours to Keep": +0.2 public belief a month and +1 envoy, permanent.',
+    check: (ctx) => independent(ctx, 'SNH') && templeStands(ctx)
+      && legitimacyOf(ctx, 'SNH') >= 70,
+    reward: (ctx) => mod(ctx, 'SNH', 'snh_ours_to_keep', 'Ours to Keep',
+      { legitimacyAdd: 0.2, diploSeats: 1 }),
+  },
+  {
+    id: 'snh_the_four_houses', name: 'Boethus, Hanin, Kathros, Ishmael',
+    icon: 'scales', col: 3, row: 0, requires: ['snh_proclaimed'],
+    desc: 'Four families held the high priesthood between them for a century and were '
+      + 'cursed by name in the study houses for it. The settlement hands the country back '
+      + 'to them, so the settlement stands or falls on whether they and the men with '
+      + 'property can be got into one room: the Temple priesthood at 70 and the peace party '
+      + 'at 55.',
+    rewardText: '+40 influence points and "The Houses Content": +8% income, permanent.',
+    check: (ctx) => partyAt(ctx, 'SNH', 'priesthood', 70) && partyAt(ctx, 'SNH', 'notables', 55),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SNH', { infl: 40 });
+      mod(ctx, 'SNH', 'snh_houses_content', 'The Houses Content', { incomeMult: 1.08 });
+    },
+  },
+  {
+    id: 'snh_the_curse', name: 'Woe Is Me Because of the House of Ishmael',
+    icon: 'flame', col: 3, row: 1, requires: ['snh_the_four_houses'],
+    desc: 'Pesachim 57a lists the four houses and what each of them did with its staves and '
+      + 'its fists, and the men who burned the debt archives in the first summer of the war '
+      + 'had that list by heart. This settlement is the grievance restored, which means the '
+      + 'hardest thing it can be asked to do is be forgiven for it: hold the priesthood at '
+      + '60 and get the Zealots back to 45 anyway.',
+    rewardText: '+30 governance points and "The Curse Answered": −0.6 unrest everywhere, permanent.',
+    check: (ctx) => partyAt(ctx, 'SNH', 'priesthood', 60) && partyAt(ctx, 'SNH', 'zealots', 45),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SNH', { gov: 30 });
+      mod(ctx, 'SNH', 'snh_curse_answered', 'The Curse Answered', { unrestAll: -0.6 });
+    },
+  },
+  {
+    id: 'snh_the_assize', name: 'The Assize Goes Out to the Villages',
+    icon: 'flag', col: 3, row: 2, requires: ['snh_the_curse'],
+    desc: 'The Sanhedrin sat in one chamber in one city and the country it judged was four '
+      + 'days\' walk across. Every settlement of 71 has the same problem and this one has '
+      + 'the only established answer: local courts of three, under a court of twenty-three '
+      + 'in each town, under the seventy-one. Twenty provinces under the crown, fourteen of '
+      + 'them keeping the Law, with the realm steady at stability +2.',
+    rewardText: '+4,000 manpower and "The Courts of Three": +8% manpower and −0.2 unrest '
+      + 'everywhere, permanent.',
+    check: (ctx) => ownedCount(ctx, 'SNH') >= 20 && ownedCount(ctx, 'SNH', 'judaism') >= 14
+      && stabilityOf(ctx, 'SNH') >= 2,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SNH', { manpower: 4000 });
+      mod(ctx, 'SNH', 'snh_courts_of_three', 'The Courts of Three',
+        { manpowerMult: 1.08, unrestAll: -0.2 });
+    },
+  },
+  {
+    id: 'snh_four_centuries', name: 'The Arrangement With Four Centuries Behind It',
+    icon: 'star8', col: 3, row: 3, requires: ['snh_the_assize'],
+    desc: 'The whole argument for this settlement was that everybody already knows how it '
+      + 'is supposed to work — Persia ran it, the Ptolemies ran it, most of the Hasmonean '
+      + 'century ran it. That argument is only worth anything if the practice is actually '
+      + 'there: the art of government two rungs past this age\'s baseline, and no party in '
+      + 'the room below 50.',
+    rewardText: '+50 governance points and "Four Centuries of Practice": +8% income and '
+      + '+0.15 public belief a month, permanent.',
+    check: (ctx) => govAbove(ctx, 'SNH', 2) && courtFloor(ctx, 'SNH', 50),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SNH', { gov: 50 });
+      mod(ctx, 'SNH', 'snh_four_centuries', 'Four Centuries of Practice',
+        { incomeMult: 1.08, legitimacyAdd: 0.15 });
+    },
+  },
+];
+
+// ---- 66 CE, the settlement of 71: the lot -----------------------------------
+// Hereditary priestly power ended in one afternoon. What replaces it has to be
+// a chancery, because a lottery run badly is just a shorter kind of dynasty.
+const GRL_BRANCH = [
+  {
+    id: 'grl_the_stonecutter', name: 'The Stonecutter Learns the Vestments',
+    icon: 'altar', col: 2, row: 0, requires: ['grl_proclaimed'],
+    desc: 'Phanni ben Samuel of Aphtia was a countryman who had to be shown how the '
+      + 'vestments fastened, and Josephus — who was of a priestly house — never forgave the '
+      + 'men who drew his name. Let the first man the urn produced serve out his term over '
+      + 'a standing House with the realm at stability +2, and the joke stops being a joke.',
+    rewardText: '+30 governance points and "He Served Out the Year": −0.4 unrest everywhere '
+      + 'and +0.1 public belief a month, permanent.',
+    check: (ctx) => templeStands(ctx) && stabilityOf(ctx, 'GRL') >= 2
+      && holds(ctx, 'GRL', 'Jerusalem'),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRL', { gov: 30 });
+      mod(ctx, 'GRL', 'grl_served_out_the_year', 'He Served Out the Year',
+        { unrestAll: -0.4, legitimacyAdd: 0.1 });
+    },
+  },
+  {
+    id: 'grl_the_register', name: 'The Urn and the Register',
+    icon: 'quill', col: 2, row: 1, requires: ['grl_the_stonecutter'],
+    desc: 'A lot drawn from a list somebody controls is an appointment with extra steps. '
+      + 'The constitution only means anything if the state can keep an honest register of '
+      + 'every priestly house in the country and be seen to draw from all of it — which is '
+      + 'a harder administrative act than naming an heir. The art of government two rungs '
+      + 'past this age\'s baseline.',
+    rewardText: '+40 governance points and "Drawn From the Whole List": +8% income and '
+      + '+0.15 public belief a month, permanent.',
+    check: (ctx) => govAbove(ctx, 'GRL', 2),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRL', { gov: 40 });
+      mod(ctx, 'GRL', 'grl_whole_list', 'Drawn From the Whole List',
+        { incomeMult: 1.08, legitimacyAdd: 0.15 });
+    },
+  },
+  {
+    id: 'grl_the_whole_priesthood', name: 'The Whole Priesthood, Not Four Families',
+    icon: 'shrine', col: 2, row: 2, requires: ['grl_the_register'],
+    desc: 'The claim is that God chooses and four families do not, and the test of it is '
+      + 'the country priests who never saw the inside of the chamber under the old '
+      + 'arrangement — men who now have to be found, registered and paid out of the same '
+      + 'chest as the city ones. Sixteen provinces keeping the Law, a standing House, and '
+      + '250 talents to run a priesthood that is suddenly the whole priesthood.',
+    rewardText: '+150 talents and "The Country Priests": +15% conversion and −0.3 unrest '
+      + 'everywhere, permanent.',
+    check: (ctx) => ownedCount(ctx, 'GRL', 'judaism') >= 16 && templeStands(ctx)
+      && treasuryOf(ctx, 'GRL') >= 250,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRL', { treasury: 150 });
+      mod(ctx, 'GRL', 'grl_country_priests', 'The Country Priests',
+        { convertMult: 1.15, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'grl_god_chooses', name: 'God Chooses, and Four Families Do Not',
+    icon: 'star8', col: 2, row: 3, requires: ['grl_the_whole_priesthood'],
+    desc: 'The doctrine survives one bad draw and not two. Have the urn produce a man who '
+      + 'can actually govern — a head of state worth seven points across the three arts — '
+      + 'with the realm behind him at legitimacy 65, and the argument is closed by evidence '
+      + 'rather than by scripture.',
+    rewardText: '"The Draw Was Sound": +0.2 public belief a month and +6% income, permanent.',
+    check: (ctx) => rulerWorth(ctx, 'GRL', 7) && legitimacyOf(ctx, 'GRL') >= 65,
+    reward: (ctx) => mod(ctx, 'GRL', 'grl_draw_was_sound', 'The Draw Was Sound',
+      { legitimacyAdd: 0.2, incomeMult: 1.06 }),
+  },
+  {
+    id: 'grl_the_zealous_country', name: 'The Country That Drew Him',
+    icon: 'spears', col: 3, row: 0, requires: ['grl_proclaimed'],
+    desc: 'The lot was the Zealots\' act and the Zealots are the constituency that has to '
+      + 'keep turning out for it, because nobody else in the country wanted it. The Zealots '
+      + 'at 70.',
+    rewardText: '+5,000 manpower and "The Bands Are the Levy": +12% manpower, permanent.',
+    check: (ctx) => partyAt(ctx, 'GRL', 'zealots', 70),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRL', { manpower: 5000 });
+      mod(ctx, 'GRL', 'grl_bands_are_the_levy', 'The Bands Are the Levy', { manpowerMult: 1.12 });
+    },
+  },
+  {
+    id: 'grl_no_promises', name: 'Nothing Promised to Anybody',
+    icon: 'dove', col: 3, row: 1, requires: ['grl_the_zealous_country'],
+    desc: 'No head of this state will ever be in office long enough to promise a foreign '
+      + 'court anything, which costs an envoy and buys something no other settlement has: '
+      + 'a chancery nobody can plan around, and no ally who expects a favour back. Stand at '
+      + 'war with nobody, allied to nobody, and owing fealty to nobody.',
+    rewardText: '+30 martial points and "No Court Can Plan Around Us": +8% morale and +5% '
+      + 'discipline, permanent.',
+    check: (ctx) => atPeace(ctx, 'GRL') && alliesOf(ctx, 'GRL') === 0 && independent(ctx, 'GRL'),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRL', { mar: 30 });
+      mod(ctx, 'GRL', 'grl_no_planning', 'No Court Can Plan Around Us',
+        { moraleMult: 1.08, disciplineMult: 1.05 });
+    },
+  },
+  {
+    id: 'grl_the_estates', name: 'The Estates of the Houses Are the State\'s',
+    icon: 'market', col: 3, row: 2, requires: ['grl_no_promises'],
+    desc: 'Four families held the offices and the offices held land — the Kathros storehouse '
+      + 'in the Upper City burned with its weights and its inscribed stone still in it. A '
+      + 'constitution that abolished the families inherited the estates, and the question is '
+      + 'whether the state can run them: eighteen provinces and 350 talents in hand.',
+    rewardText: '+200 talents and "The Storehouses of Kathros": +10% income, permanent.',
+    check: (ctx) => ownedCount(ctx, 'GRL') >= 18 && treasuryOf(ctx, 'GRL') >= 350,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRL', { treasury: 200 });
+      mod(ctx, 'GRL', 'grl_storehouses', 'The Storehouses of Kathros', { incomeMult: 1.1 });
+    },
+  },
+  {
+    id: 'grl_no_crisis', name: 'The Death That Is Not a Wound',
+    icon: 'scales', col: 3, row: 3, requires: ['grl_the_estates'],
+    desc: 'Every other death in this country opened a succession: the brothers at the gates, '
+      + 'the sons strangled at Sebaste, the will rewritten six times. Under the lot nobody\'s '
+      + 'claim dies with the incumbent, because nobody had one — and the whole worth of that '
+      + 'shows only in a state large and calm enough for the difference to be visible. '
+      + 'Twenty provinces, at peace, at stability +3.',
+    rewardText: '+40 governance points and "Nobody\'s Claim Died With Him": −0.5 unrest '
+      + 'everywhere and +0.15 public belief a month, permanent.',
+    check: (ctx) => ownedCount(ctx, 'GRL') >= 20 && atPeace(ctx, 'GRL')
+      && stabilityOf(ctx, 'GRL') >= 3,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRL', { gov: 40 });
+      mod(ctx, 'GRL', 'grl_no_claim_died', 'Nobody\'s Claim Died With Him',
+        { unrestAll: -0.5, legitimacyAdd: 0.15 });
+    },
+  },
+];
+
+// ---- 66 CE, the settlement of 71: the Jubilee -------------------------------
+// Leviticus 25 enforced, which nobody has done, because it cannot be done
+// twice. The dividend is a countryside that owns something; the price is that
+// the credit system is gone and is not coming back inside a generation.
+const YVL_BRANCH = [
+  {
+    id: 'yvl_the_horn', name: 'The Horn on the Tenth of the Seventh Month',
+    icon: 'flame', col: 2, row: 0, requires: ['yvl_proclaimed'],
+    desc: 'Proclaim liberty throughout the land unto all the inhabitants thereof — and then '
+      + 'survive the winter after it, with the ledgers ash, the notables ruined and the men '
+      + 'who did it expecting the rest. The Zealots at 60, with the realm still standing at '
+      + 'stability +1.',
+    rewardText: '+30 influence points and "Liberty Proclaimed": +8% manpower and −0.3 unrest '
+      + 'everywhere, permanent.',
+    check: (ctx) => partyAt(ctx, 'YVL', 'zealots', 60) && stabilityOf(ctx, 'YVL') >= 1,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'YVL', { infl: 30 });
+      mod(ctx, 'YVL', 'yvl_liberty_proclaimed', 'Liberty Proclaimed',
+        { manpowerMult: 1.08, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'yvl_the_land_reverts', name: 'The Land Goes Back to the Families',
+    icon: 'grain', col: 2, row: 1, requires: ['yvl_the_horn'],
+    desc: 'The reversion is the whole law: every field returns to the household that held '
+      + 'it at the last count, which means the state has to know what that count said and be '
+      + 'able to enforce an answer against whoever is standing on the field now. Eighteen '
+      + 'provinces under the crown with 200 points of development on them.',
+    rewardText: '+150 talents and "Every Man Unto His Possession": +15% development growth '
+      + 'and +6% manpower, permanent.',
+    check: (ctx) => ownedCount(ctx, 'YVL') >= 18 && devOf(ctx, 'YVL') >= 200,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'YVL', { treasury: 150 });
+      mod(ctx, 'YVL', 'yvl_unto_his_possession', 'Every Man Unto His Possession',
+        { growthMult: 1.15, manpowerMult: 1.06 });
+    },
+  },
+  {
+    id: 'yvl_the_countryside', name: 'A Countryside That Owns Something',
+    icon: 'helmet', col: 2, row: 2, requires: ['yvl_the_land_reverts'],
+    desc: 'This is the dividend and the reason the road exists: men defending their own '
+      + 'ground do not need to be paid, watched or garrisoned. Thirty-four thousand under '
+      + 'arms out of twenty provinces — a levy the other three settlements would have to '
+      + 'hire.',
+    rewardText: '+6,000 manpower and "Their Own Fields Behind Them": +12% manpower and +5% '
+      + 'morale, permanent.',
+    check: (ctx) => menOf(ctx, 'YVL') >= 34000 && ownedCount(ctx, 'YVL') >= 20,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'YVL', { manpower: 6000 });
+      mod(ctx, 'YVL', 'yvl_own_fields', 'Their Own Fields Behind Them',
+        { manpowerMult: 1.12, moraleMult: 1.05 });
+    },
+  },
+  {
+    id: 'yvl_never_twice', name: 'The Law Nobody Has Ever Enforced Twice',
+    icon: 'star8', col: 2, row: 3, requires: ['yvl_the_countryside'],
+    desc: 'Hillel invented the prosbul precisely so that the release of debts could be '
+      + 'observed and evaded in the same breath, because a law that ruins every lender is a '
+      + 'law that is obeyed once. A Jubilee state that reaches twenty-two provinces, sixteen '
+      + 'of them keeping the Law, at stability +3, has done the thing the rabbis assumed '
+      + 'could not be done.',
+    rewardText: '"The Year of the Ram\'s Horn": +10% manpower, −0.5 unrest everywhere and '
+      + '+0.15 public belief a month, permanent.',
+    check: (ctx) => ownedCount(ctx, 'YVL') >= 22 && ownedCount(ctx, 'YVL', 'judaism') >= 16
+      && stabilityOf(ctx, 'YVL') >= 3,
+    reward: (ctx) => mod(ctx, 'YVL', 'yvl_year_of_the_horn', 'The Year of the Ram\'s Horn',
+      { manpowerMult: 1.1, unrestAll: -0.5, legitimacyAdd: 0.15 }),
+  },
+  {
+    id: 'yvl_the_assembly', name: 'The Assembly That Enforces It',
+    icon: 'scales', col: 3, row: 0, requires: ['yvl_proclaimed'],
+    desc: 'The Jubilee is the only settlement of the four that needs a permanent body to '
+      + 'keep enforcing it, and that body is the constitution — officers renewed by vote, '
+      + 'because a hereditary enforcer of the reversion becomes a landlord in two '
+      + 'generations. The art of government a rung past this age\'s baseline, at stability +2.',
+    rewardText: '+40 governance points and "The Officers Renewed": −0.4 unrest everywhere '
+      + 'and +0.12 public belief a month, permanent.',
+    check: (ctx) => govAbove(ctx, 'YVL', 1) && stabilityOf(ctx, 'YVL') >= 2,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'YVL', { gov: 40 });
+      mod(ctx, 'YVL', 'yvl_officers_renewed', 'The Officers Renewed',
+        { unrestAll: -0.4, legitimacyAdd: 0.12 });
+    },
+  },
+  {
+    id: 'yvl_the_vote', name: 'The Vote Held Without an Army in the Room',
+    icon: 'quill', col: 3, row: 1, requires: ['yvl_the_assembly'],
+    desc: 'The provisional government of 66 was formed by vote and destroyed by men who '
+      + 'came through the gates in the snow, and every assembly in this country since has '
+      + 'been held with that memory in it. Come out of an election with the realm behind the '
+      + 'result — legitimacy 60, and no party in the room under 45.',
+    rewardText: '+40 influence points and "The Result Stood": +0.15 public belief a month '
+      + 'and −0.3 unrest everywhere, permanent.',
+    check: (ctx) => legitimacyOf(ctx, 'YVL') >= 60 && courtFloor(ctx, 'YVL', 45),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'YVL', { infl: 40 });
+      mod(ctx, 'YVL', 'yvl_result_stood', 'The Result Stood',
+        { legitimacyAdd: 0.15, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'yvl_no_lenders', name: 'Nobody Will Lend to This Government',
+    icon: 'market', col: 3, row: 2, requires: ['yvl_the_vote'],
+    desc: 'The debts were cancelled and the archive that recorded them was burned in the '
+      + 'first summer of the war, so the credit system is not merely closed but unprovable. '
+      + 'A state that cannot borrow has to hold cash: 450 talents in the treasury against '
+      + '200 points of development, earned rather than advanced.',
+    rewardText: '+300 talents and "Cash and No Credit": +10% income and +8% trade, permanent.',
+    check: (ctx) => treasuryOf(ctx, 'YVL') >= 450 && devOf(ctx, 'YVL') >= 200,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'YVL', { treasury: 300 });
+      mod(ctx, 'YVL', 'yvl_cash_no_credit', 'Cash and No Credit',
+        { incomeMult: 1.1, tradeMult: 1.08 });
+    },
+  },
+  {
+    id: 'yvl_the_seventh_year', name: 'The Land Rests and the State Does Not',
+    icon: 'granary', col: 3, row: 3, requires: ['yvl_no_lenders'],
+    desc: 'The sabbatical year is the part of this law that beat every government that ever '
+      + 'tried it, Hasmonean and Roman alike: a whole country not sowing, one year in seven, '
+      + 'while the taxes and the garrisons carry on. Alexander and then Caesar both remitted '
+      + 'tribute for it in writing, which is a foreign power conceding it is real. Come '
+      + 'through one at peace, with 300 talents still in hand.',
+    rewardText: '+250 talents and "The Seventh Year Kept": +12% income and +8% development '
+      + 'growth, permanent.',
+    check: (ctx) => atPeace(ctx, 'YVL') && treasuryOf(ctx, 'YVL') >= 300
+      && ownedCount(ctx, 'YVL', 'judaism') >= 14,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'YVL', { treasury: 250 });
+      mod(ctx, 'YVL', 'yvl_seventh_year', 'The Seventh Year Kept',
+        { incomeMult: 1.12, growthMult: 1.08 });
+    },
+  },
+];
+
+// ---- 66 CE, the settlement of 71: no ruler but God --------------------------
+// Judas the Galilean's doctrine, held for sixty years and never implemented,
+// because implementing it means having no state to implement it with.
+const HRZ_BRANCH = [
+  {
+    id: 'hrz_no_census', name: 'No Census, No Tribute, No King',
+    icon: 'scroll', col: 2, row: 0, requires: ['hrz_proclaimed'],
+    desc: 'The doctrine is a refusal of three specific acts, and a state that performs any '
+      + 'of them has answered the question the other way. Owe fealty to nobody and stand in '
+      + 'no alliance — because an alliance is a promise, a promise needs an office to make '
+      + 'it, and an office is the beginning of a king.',
+    rewardText: '+30 martial points and "Acknowledging No King": +8% morale, permanent.',
+    check: (ctx) => independent(ctx, 'HRZ') && alliesOf(ctx, 'HRZ') === 0,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HRZ', { mar: 30 });
+      mod(ctx, 'HRZ', 'hrz_no_king', 'Acknowledging No King', { moraleMult: 1.08 });
+    },
+  },
+  {
+    id: 'hrz_fourth_philosophy', name: 'Judas the Galilean Wins the Argument',
+    icon: 'flame', col: 2, row: 1, requires: ['hrz_no_census'],
+    desc: 'He rose against the census of Quirinius in the sixth year, was killed, and his '
+      + 'sons were crucified by Tiberius Alexander forty years later — and sixty-five years '
+      + 'after his death the assembly adopts his position and adjourns without appointing '
+      + 'anybody to enforce it, which is the position. The Zealots at 80.',
+    rewardText: '+6,000 manpower and "The Fourth Philosophy": +15% manpower, permanent.',
+    check: (ctx) => partyAt(ctx, 'HRZ', 'zealots', 80),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HRZ', { manpower: 6000 });
+      mod(ctx, 'HRZ', 'hrz_fourth_philosophy', 'The Fourth Philosophy', { manpowerMult: 1.15 });
+    },
+  },
+  {
+    id: 'hrz_the_rocks', name: 'The Country Is the Fortress',
+    icon: 'tower', col: 2, row: 2, requires: ['hrz_fourth_philosophy'],
+    desc: 'A polity with no capital to lose is only strong where the ground is, and the '
+      + 'ground the knife-men kept for themselves is the ground that answers: Jerusalem, and '
+      + 'the desert rocks above the Salt Sea — Masada, Machaerus, Engaddi — with the '
+      + 'war-craft of the age two rungs past this chapter\'s baseline.',
+    rewardText: '+40 martial points and "The Rocks Above the Sea": +1 to hill-country '
+      + 'defense and +1 deterrence, permanent.',
+    check: (ctx) => holdsAll(ctx, 'HRZ', ['Jerusalem', 'Masada', 'Machaerus', 'Engaddi'])
+      && marAbove(ctx, 'HRZ', 2),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HRZ', { mar: 40 });
+      mod(ctx, 'HRZ', 'hrz_rocks_above_the_sea', 'The Rocks Above the Sea',
+        { hillDefBonus: 1, deterrent: 1 });
+    },
+  },
+  {
+    id: 'hrz_no_address', name: 'A Polity With No Address',
+    icon: 'dove', col: 2, row: 3, requires: ['hrz_the_rocks'],
+    desc: 'Two envoys fewer, because every neighbour has to deal with a state that has '
+      + 'nobody empowered to sign — and the thing that buys is that nobody can buy it. '
+      + 'Twenty provinces, at war with nobody, allied to nobody, owing fealty to nobody: a '
+      + 'quiet that was not negotiated.',
+    rewardText: '"Nothing to Negotiate With": +8% morale and +6% discipline, permanent.',
+    check: (ctx) => ownedCount(ctx, 'HRZ') >= 20 && atPeace(ctx, 'HRZ')
+      && alliesOf(ctx, 'HRZ') === 0 && independent(ctx, 'HRZ'),
+    reward: (ctx) => mod(ctx, 'HRZ', 'hrz_nothing_to_negotiate', 'Nothing to Negotiate With',
+      { moraleMult: 1.08, disciplineMult: 1.06 }),
+  },
+  {
+    id: 'hrz_the_bands', name: 'Every Village Its Own Band',
+    icon: 'spears', col: 3, row: 0, requires: ['hrz_proclaimed'],
+    desc: 'No sovereign means no muster roll, so the army is whatever the villages send and '
+      + 'keep sending. Thirty-four thousand men, raised by a state that cannot conscript '
+      + 'them.',
+    rewardText: '+30 martial points and "They Came Because They Came": +12% reinforcement, '
+      + 'permanent.',
+    check: (ctx) => menOf(ctx, 'HRZ') >= 34000,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HRZ', { mar: 30 });
+      mod(ctx, 'HRZ', 'hrz_they_came', 'They Came Because They Came', { reinforceMult: 1.12 });
+    },
+  },
+  {
+    id: 'hrz_the_coins', name: 'Freedom of Zion, Year Four',
+    icon: 'coins', col: 3, row: 1, requires: ['hrz_the_bands'],
+    desc: 'The revolt struck silver with no ruler\'s head on it — a chalice, a branch, and '
+      + 'the words for the freedom of Zion, dated by the year of the thing itself. It is the '
+      + 'only coinage in the ancient world that names no man. Hold Jerusalem with the House '
+      + 'standing, at legitimacy 80, and mint the fourth year.',
+    rewardText: '+150 talents and "No Head on the Silver": +0.15 public belief a month and '
+      + '−0.3 unrest everywhere, permanent.',
+    check: (ctx) => holds(ctx, 'HRZ', 'Jerusalem') && templeStands(ctx)
+      && legitimacyOf(ctx, 'HRZ') >= 80,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HRZ', { treasury: 150 });
+      mod(ctx, 'HRZ', 'hrz_no_head_on_the_silver', 'No Head on the Silver',
+        { legitimacyAdd: 0.15, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'hrz_no_purse', name: 'The Treasury That Is Not a Treasury',
+    icon: 'amphora', col: 3, row: 2, requires: ['hrz_the_coins'],
+    desc: 'Refusing tribute is easy; refusing to levy it is the constitution. A state that '
+      + 'will not count its people cannot assess them, so what it has is what the land gives '
+      + 'and what the roads pay: eighteen provinces, and 250 talents in hand anyway.',
+    rewardText: '+200 talents and "What the Land Gives": +12% income, permanent.',
+    check: (ctx) => ownedCount(ctx, 'HRZ') >= 18 && treasuryOf(ctx, 'HRZ') >= 250,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HRZ', { treasury: 200 });
+      mod(ctx, 'HRZ', 'hrz_what_the_land_gives', 'What the Land Gives', { incomeMult: 1.12 });
+    },
+  },
+  {
+    id: 'hrz_menahem', name: 'Menahem Came In Royal Dress',
+    icon: 'shieldCrack', col: 3, row: 3, requires: ['hrz_no_purse'],
+    desc: 'He came up from Masada with the arms out of Herod\'s armoury and went into the '
+      + 'Temple in the robes of a king, and his own side killed him in the Ophel for it — '
+      + 'which is the doctrine enforcing itself, once, violently, in the first autumn. A '
+      + 'settlement that means it has to survive its own Menahem: twenty provinces, sixteen '
+      + 'keeping the Law, at stability +3.',
+    rewardText: '+40 governance points and "His Own Side Killed Him": −0.5 unrest everywhere '
+      + 'and +6% morale, permanent.',
+    check: (ctx) => ownedCount(ctx, 'HRZ') >= 20 && ownedCount(ctx, 'HRZ', 'judaism') >= 16
+      && stabilityOf(ctx, 'HRZ') >= 3,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HRZ', { gov: 40 });
+      mod(ctx, 'HRZ', 'hrz_his_own_side', 'His Own Side Killed Him',
+        { unrestAll: -0.5, moraleMult: 1.06 });
+    },
+  },
+];
+
+// ---- 167 BCE, the diadem of 104: the priest-kingdom -------------------------
+// Aristobulus I put on a crown and Josephus says he was the first to do it.
+// One head, two offices, and a quarrel with the study houses that outlived the
+// dynasty that started it.
+const KHN_BRANCH = [
+  {
+    id: 'khn_the_royal_style', name: 'The Royal Style',
+    icon: 'star8', col: 2, row: 0, requires: ['khn_proclaimed'],
+    desc: 'The secretaries have their answer at last and every chancery from Alexandria to '
+      + 'Ctesiphon can use it: not the High Priest and Ethnarch of the Jews, but the King. '
+      + 'Hold Jerusalem at legitimacy 60 and let the new style go out over the seal.',
+    rewardText: '+40 governance points and "Addressed as King": +0.15 public belief a month '
+      + 'and +6% income, permanent.',
+    check: (ctx) => holds(ctx, 'KHN', 'Jerusalem') && legitimacyOf(ctx, 'KHN') >= 60,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KHN', { gov: 40 });
+      mod(ctx, 'KHN', 'khn_addressed_as_king', 'Addressed as King',
+        { legitimacyAdd: 0.15, incomeMult: 1.06 });
+    },
+  },
+  {
+    id: 'khn_a_peer', name: 'A Peer of Every Chancery',
+    icon: 'quill', col: 2, row: 1, requires: ['khn_the_royal_style'],
+    desc: 'A crown is worth exactly what it buys at other people\'s tables, and what it buys '
+      + 'is being treated as a principal rather than a petitioner. Stand in two alliances, '
+      + 'or with a client kingdom of our own under the collar.',
+    rewardText: '+40 influence points and "Among the Crowned Heads": +1 envoy, permanent.',
+    check: (ctx) => alliesOf(ctx, 'KHN') >= 2 || clientsOf(ctx, 'KHN') >= 1,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KHN', { infl: 40 });
+      mod(ctx, 'KHN', 'khn_crowned_heads', 'Among the Crowned Heads', { diploSeats: 1 });
+    },
+  },
+  {
+    id: 'khn_the_coast', name: 'The Ladder of Tyre to the River of Egypt',
+    icon: 'ship', col: 2, row: 2, requires: ['khn_a_peer'],
+    desc: 'The kings of this house took the seaboard because a kingdom with no harbour pays '
+      + 'somebody else\'s customs on its own grain. Joppa, Ascalon, Gaza and Ptolemais under '
+      + 'the crown.',
+    rewardText: '+250 talents and "The King\'s Customs": +12% trade and +6% income, permanent.',
+    check: (ctx) => holdsAll(ctx, 'KHN', ['Joppa', 'Ascalon', 'Gaza', 'Ptolemais']),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KHN', { treasury: 250 });
+      mod(ctx, 'KHN', 'khn_kings_customs', 'The King\'s Customs',
+        { tradeMult: 1.12, incomeMult: 1.06 });
+    },
+  },
+  {
+    id: 'khn_yannais_borders', name: "Yannai's Borders",
+    icon: 'flag', col: 2, row: 3, requires: ['khn_the_coast'],
+    desc: 'Alexander Jannaeus died besieging a fort east of the Jordan with the largest '
+      + 'Jewish state between Solomon and 1948 behind him, and the coins of that state were '
+      + 'struck in two languages with a diadem on one side and a priestly title on the '
+      + 'other. Twenty-two provinces under the crown.',
+    rewardText: '+5,000 manpower and "The Borders of the Kings": +8% morale, permanent.',
+    check: (ctx) => ownedCount(ctx, 'KHN') >= 22,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KHN', { manpower: 5000 });
+      mod(ctx, 'KHN', 'khn_borders_of_the_kings', 'The Borders of the Kings',
+        { moraleMult: 1.08 });
+    },
+  },
+  {
+    id: 'khn_the_mitre', name: 'The Mitre Kept',
+    icon: 'altar', col: 3, row: 0, requires: ['khn_proclaimed'],
+    desc: 'The diadem is the new half; the old half is the office the decree actually '
+      + 'granted this house, and letting it slide into a court appointment would concede '
+      + 'the schools\' whole case. Hold Jerusalem with the House standing and 200 talents '
+      + 'endowed on it.',
+    rewardText: '+30 influence points and "Both Offices, One Head": +15% conversion, permanent.',
+    check: (ctx) => holds(ctx, 'KHN', 'Jerusalem') && templeStands(ctx)
+      && treasuryOf(ctx, 'KHN') >= 200,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KHN', { infl: 30 });
+      mod(ctx, 'KHN', 'khn_both_offices', 'Both Offices, One Head', { convertMult: 1.15 });
+    },
+  },
+  {
+    id: 'khn_the_quarrel', name: 'The Quarrel That Outlived the Dynasty',
+    icon: 'split', col: 3, row: 1, requires: ['khn_the_mitre'],
+    desc: 'Hyrcanus was told at his own table to give up the high priesthood because of a '
+      + 'rumour about his mother, and the house never forgave the party that said it; two '
+      + 'generations later Jannaeus was pelted with citrons at the altar and answered with '
+      + 'six thousand dead in the Temple court. Hold both parties at 50 at once — the '
+      + 'Pharisees and the Sadducees — which is the thing the actual dynasty never once did.',
+    rewardText: '+50 governance points and "Both Parties at the Table": −0.6 unrest everywhere '
+      + 'and +0.15 public belief a month, permanent.',
+    check: (ctx) => partyAt(ctx, 'KHN', 'pharisees', 50) && partyAt(ctx, 'KHN', 'sadducees', 50),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KHN', { gov: 50 });
+      mod(ctx, 'KHN', 'khn_both_parties', 'Both Parties at the Table',
+        { unrestAll: -0.6, legitimacyAdd: 0.15 });
+    },
+  },
+  {
+    id: 'khn_the_army', name: 'The King\'s Own Foreigners',
+    icon: 'helmet', col: 3, row: 2, requires: ['khn_the_quarrel'],
+    desc: 'A priest-king who cannot rely on his own people in a civil quarrel hires Pisidians '
+      + 'and Cilicians, which Jannaeus did, and which is precisely the objection the schools '
+      + 'were making. Do it the other way: thirty-four thousand men on the rolls, and the '
+      + 'war-craft of the age two rungs past this chapter\'s baseline.',
+    rewardText: '+40 martial points and "The Levy of the Kingdom": +6% discipline and +10% '
+      + 'manpower, permanent.',
+    check: (ctx) => menOf(ctx, 'KHN') >= 34000 && marAbove(ctx, 'KHN', 2),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KHN', { mar: 40 });
+      mod(ctx, 'KHN', 'khn_levy_of_the_kingdom', 'The Levy of the Kingdom',
+        { disciplineMult: 1.06, manpowerMult: 1.1 });
+    },
+  },
+  {
+    id: 'khn_one_house', name: 'One House, Two Offices, One Succession',
+    icon: 'scales', col: 3, row: 3, requires: ['khn_the_army'],
+    desc: 'The dynasty was destroyed by the arithmetic of its own settlement: two offices '
+      + 'and two sons, and a war between brothers that ended with a Roman general in the '
+      + 'Temple court deciding which of them was high priest. Seat an heir with the realm '
+      + 'behind him — legitimacy 80, stability +3 — and the arithmetic is answered before '
+      + 'it is asked.',
+    rewardText: '"The Succession Not Divided": +0.2 public belief a month and −0.4 unrest '
+      + 'everywhere, permanent.',
+    check: (ctx) => heirSeated(ctx, 'KHN') && legitimacyOf(ctx, 'KHN') >= 80
+      && stabilityOf(ctx, 'KHN') >= 3,
+    reward: (ctx) => mod(ctx, 'KHN', 'khn_not_divided', 'The Succession Not Divided',
+      { legitimacyAdd: 0.2, unrestAll: -0.4 }),
+  },
+];
+
+// ---- 167 BCE, the diadem of 104 refused: the commonwealth -------------------
+// The road the chronicles do not have. The decree confirming the house named
+// it high priest and left the other title out, and this is the state that
+// takes the omission seriously.
+const GRS_BRANCH = [
+  {
+    id: 'grs_the_decree', name: 'The Decree of the Great Assembly',
+    icon: 'scroll', col: 2, row: 0, requires: ['grs_proclaimed'],
+    desc: 'High priest for ever, until a trustworthy prophet should arise — and the men who '
+      + 'wrote that on the bronze were careful about which word they left out. A '
+      + 'commonwealth is the decree read literally and then administered, which nobody has '
+      + 'tried: legitimacy 55, at stability +2.',
+    rewardText: '+40 governance points and "The Bronze Read Literally": −0.4 unrest everywhere '
+      + 'and +0.12 public belief a month, permanent.',
+    check: (ctx) => legitimacyOf(ctx, 'GRS') >= 55 && stabilityOf(ctx, 'GRS') >= 2,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { gov: 40 });
+      mod(ctx, 'GRS', 'grs_bronze_literally', 'The Bronze Read Literally',
+        { unrestAll: -0.4, legitimacyAdd: 0.12 });
+    },
+  },
+  {
+    id: 'grs_the_elders', name: 'The Elders in the Chamber',
+    icon: 'quill', col: 2, row: 1, requires: ['grs_the_decree'],
+    desc: 'Priesthood and assembly means the assembly is a branch of the state and not a '
+      + 'crowd the ruler addresses, which takes a chamber, a roll, a procedure for calling '
+      + 'it and a treasury it can question. The art of government two rungs past this age\'s '
+      + 'baseline.',
+    rewardText: '+40 influence points and "The Assembly Sits": +8% income and +0.12 public '
+      + 'belief a month, permanent.',
+    check: (ctx) => govAbove(ctx, 'GRS', 2),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { infl: 40 });
+      mod(ctx, 'GRS', 'grs_assembly_sits', 'The Assembly Sits',
+        { incomeMult: 1.08, legitimacyAdd: 0.12 });
+    },
+  },
+  {
+    id: 'grs_no_crown_to_dispute', name: 'No Crown for the Schools to Dispute',
+    icon: 'dove', col: 2, row: 2, requires: ['grs_the_elders'],
+    desc: 'The whole quarrel of the next two centuries is about a linen band that this state '
+      + 'never put on, so the study houses have to find something else to argue about — and '
+      + 'what they find is each other, which is survivable. Both parties at 55 at once, the '
+      + 'Pharisees and the Sadducees.',
+    rewardText: '+50 governance points and "Nothing to Argue About": −0.5 unrest everywhere, '
+      + 'permanent.',
+    check: (ctx) => partyAt(ctx, 'GRS', 'pharisees', 55) && partyAt(ctx, 'GRS', 'sadducees', 55),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { gov: 50 });
+      mod(ctx, 'GRS', 'grs_nothing_to_argue', 'Nothing to Argue About', { unrestAll: -0.5 });
+    },
+  },
+  {
+    id: 'grs_an_officer', name: 'An Officer, Not a Peer',
+    icon: 'scales', col: 2, row: 3, requires: ['grs_no_crown_to_dispute'],
+    desc: 'The price of the road: every neighbour goes on writing to a magistrate rather '
+      + 'than to a king, and a magistrate is somebody a chancery negotiates with rather '
+      + 'than somebody it fears. Make the arrangement pay anyway — twenty provinces, at '
+      + 'peace, standing in two alliances.',
+    rewardText: '+40 influence points and "Dealt With on the Merits": +8% income and +1 '
+      + 'envoy, permanent.',
+    check: (ctx) => ownedCount(ctx, 'GRS') >= 20 && atPeace(ctx, 'GRS')
+      && alliesOf(ctx, 'GRS') >= 2,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { infl: 40 });
+      mod(ctx, 'GRS', 'grs_on_the_merits', 'Dealt With on the Merits',
+        { incomeMult: 1.08, diploSeats: 1 });
+    },
+  },
+  {
+    id: 'grs_the_levy', name: 'The Levy of the Commonwealth',
+    icon: 'spears', col: 3, row: 0, requires: ['grs_proclaimed'],
+    desc: 'An army is followed more readily by a king — that was the captains\' whole '
+      + 'argument, and it is not a stupid one. Answer it with numbers: thirty thousand '
+      + 'men under a state with no crown on it.',
+    rewardText: '+30 martial points and "Followed Without a Diadem": +10% manpower, permanent.',
+    check: (ctx) => menOf(ctx, 'GRS') >= 30000,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { mar: 30 });
+      mod(ctx, 'GRS', 'grs_without_a_diadem', 'Followed Without a Diadem',
+        { manpowerMult: 1.1 });
+    },
+  },
+  {
+    id: 'grs_the_temple_treasury', name: 'The Treasury Under the Mount',
+    icon: 'coins', col: 3, row: 1, requires: ['grs_the_levy'],
+    desc: 'Where there is no royal fisc the Temple treasury IS the public purse, which is '
+      + 'exactly the arrangement Heliodorus was sent to raid and Jason and Menelaus bid '
+      + 'against each other for. Hold Jerusalem with the House standing and 350 talents in '
+      + 'it, under officers the assembly can call to account.',
+    rewardText: '+250 talents and "The Purse Audited": +10% income, permanent.',
+    check: (ctx) => holds(ctx, 'GRS', 'Jerusalem') && templeStands(ctx)
+      && treasuryOf(ctx, 'GRS') >= 350,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { treasury: 250 });
+      mod(ctx, 'GRS', 'grs_purse_audited', 'The Purse Audited', { incomeMult: 1.1 });
+    },
+  },
+  {
+    id: 'grs_the_country', name: 'The Country Without a Court',
+    icon: 'grain', col: 3, row: 2, requires: ['grs_the_temple_treasury'],
+    desc: 'A crown spends its revenue on a court and a commonwealth spends it on the '
+      + 'country, and over two generations that is a visible difference in the towns. '
+      + 'Twenty provinces with 220 points of development on them.',
+    rewardText: '+150 talents and "Spent on the Towns": +10% development growth and +6% '
+      + 'income, permanent.',
+    check: (ctx) => ownedCount(ctx, 'GRS') >= 20 && devOf(ctx, 'GRS') >= 220,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { treasury: 150 });
+      mod(ctx, 'GRS', 'grs_spent_on_the_towns', 'Spent on the Towns',
+        { growthMult: 1.1, incomeMult: 1.06 });
+    },
+  },
+  {
+    id: 'grs_the_office_outlives', name: 'The Office Outlives the Man',
+    icon: 'star8', col: 3, row: 3, requires: ['grs_the_country'],
+    desc: 'The house is hereditary and the settlement is not the house: a commonwealth is '
+      + 'the arrangement that goes on being the arrangement when the incumbent dies, which '
+      + 'is precisely what the kingdom of the brothers could not manage. An heir seated, '
+      + 'legitimacy 75, and no party in the room below 50.',
+    rewardText: '+50 governance points and "The Arrangement Holds": +0.2 public belief a '
+      + 'month and −0.4 unrest everywhere, permanent.',
+    check: (ctx) => heirSeated(ctx, 'GRS') && legitimacyOf(ctx, 'GRS') >= 75
+      && courtFloor(ctx, 'GRS', 50),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'GRS', { gov: 50 });
+      mod(ctx, 'GRS', 'grs_arrangement_holds', 'The Arrangement Holds',
+        { legitimacyAdd: 0.2, unrestAll: -0.4 });
+    },
+  },
+];
+
+// ---- 132 CE and 614 CE, the crown out of a war ------------------------------
+// A diadem taken by the house that won the fighting, with no priestly title
+// and no Davidic descent under it. Every chancery understands a king; the
+// objection is made at home, in writing, in every generation. Offered in two
+// chapters, so the branch names no estate and no foreign court — the parties
+// in the room are the chapter's own and they are not the same two rooms.
+const KTR_BRANCH = [
+  {
+    id: 'ktr_one_generation', name: 'King in One Generation',
+    icon: 'star8', col: 2, row: 0, requires: ['ktr_proclaimed'],
+    desc: 'The Hasmoneans took three generations of ethnarchies and decrees to reach the '
+      + 'linen band and this house did it in an afternoon, which is the whole advantage and '
+      + 'the whole objection. Hold Jerusalem at legitimacy 65, with the realm not at war '
+      + 'with itself.',
+    rewardText: '+40 governance points and "The Undivided Succession": +0.15 public belief a '
+      + 'month and +8% income, permanent.',
+    check: (ctx) => holds(ctx, 'KTR', 'Jerusalem') && legitimacyOf(ctx, 'KTR') >= 65
+      && !(ctx.game.pretenders && ctx.game.pretenders.KTR),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KTR', { gov: 40 });
+      mod(ctx, 'KTR', 'ktr_undivided', 'The Undivided Succession',
+        { legitimacyAdd: 0.15, incomeMult: 1.08 });
+    },
+  },
+  {
+    id: 'ktr_the_army_that_made_it', name: 'The Army That Made the Crown',
+    icon: 'helmet', col: 2, row: 1, requires: ['ktr_one_generation'],
+    desc: 'A crown with no priestly descent and no Davidic descent under it rests on exactly '
+      + 'one thing, and that thing has to stay in the field: thirty-six thousand men, with '
+      + 'the war-craft of the age two rungs past this chapter\'s baseline.',
+    rewardText: '+40 martial points and "The Men Who Made It": +6% discipline and +6% morale, '
+      + 'permanent.',
+    check: (ctx) => menOf(ctx, 'KTR') >= 36000 && marAbove(ctx, 'KTR', 2),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KTR', { mar: 40 });
+      mod(ctx, 'KTR', 'ktr_men_who_made_it', 'The Men Who Made It',
+        { disciplineMult: 1.06, moraleMult: 1.06 });
+    },
+  },
+  {
+    id: 'ktr_the_writing', name: 'The Writing Is What Survives',
+    icon: 'scroll', col: 2, row: 2, requires: ['ktr_the_army_that_made_it'],
+    desc: 'The objection to this crown is made at home, in writing, in every generation, by '
+      + 'men who cannot be arrested for making it because the argument is a reading and not '
+      + 'a revolt. It is answered the only way it can be — by being a good king in front of '
+      + 'them. No party in the room below 55, at stability +3.',
+    rewardText: '+50 governance points and "Answered In Front of Them": −0.6 unrest everywhere '
+      + 'and +0.15 public belief a month, permanent.',
+    check: (ctx) => courtFloor(ctx, 'KTR', 55) && stabilityOf(ctx, 'KTR') >= 3,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KTR', { gov: 50 });
+      mod(ctx, 'KTR', 'ktr_answered_in_front', 'Answered In Front of Them',
+        { unrestAll: -0.6, legitimacyAdd: 0.15 });
+    },
+  },
+  {
+    id: 'ktr_the_line', name: 'A Second King of the Same House',
+    icon: 'scales', col: 2, row: 3, requires: ['ktr_the_writing'],
+    desc: 'Any war can produce a king; the second one is what makes it a dynasty, and the '
+      + 'houses that took crowns in this country mostly did not get that far. An heir '
+      + 'seated at legitimacy 85, with the realm at peace.',
+    rewardText: '"The Second Reign": +0.25 public belief a month and −0.4 unrest everywhere, '
+      + 'permanent.',
+    check: (ctx) => heirSeated(ctx, 'KTR') && legitimacyOf(ctx, 'KTR') >= 85
+      && atPeace(ctx, 'KTR'),
+    reward: (ctx) => mod(ctx, 'KTR', 'ktr_second_reign', 'The Second Reign',
+      { legitimacyAdd: 0.25, unrestAll: -0.4 }),
+  },
+  {
+    id: 'ktr_every_chancery', name: 'Every Chancery Understands a King',
+    icon: 'quill', col: 3, row: 0, requires: ['ktr_proclaimed'],
+    desc: 'The dividend of the road, and the one thing the other three answers could not '
+      + 'buy: a title that needs no explaining anywhere between the Nile and the Tigris. '
+      + 'Two alliances, or a client kingdom of our own.',
+    rewardText: '+40 influence points and "A Title That Needs No Explaining": +1 envoy, '
+      + 'permanent.',
+    check: (ctx) => alliesOf(ctx, 'KTR') >= 2 || clientsOf(ctx, 'KTR') >= 1,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KTR', { infl: 40 });
+      mod(ctx, 'KTR', 'ktr_no_explaining', 'A Title That Needs No Explaining',
+        { diploSeats: 1 });
+    },
+  },
+  {
+    id: 'ktr_the_country', name: 'The Country the Crown Was Taken Over',
+    icon: 'flag', col: 3, row: 1, requires: ['ktr_every_chancery'],
+    desc: 'A crown out of a war is only worth the ground the war took. Twenty-two provinces '
+      + 'owned and controlled, sixteen of them keeping the Law.',
+    rewardText: '+5,000 manpower and "Held By the House": +10% manpower, permanent.',
+    check: (ctx) => ownedCount(ctx, 'KTR') >= 22 && ownedCount(ctx, 'KTR', 'judaism') >= 16,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KTR', { manpower: 5000 });
+      mod(ctx, 'KTR', 'ktr_held_by_the_house', 'Held By the House', { manpowerMult: 1.1 });
+    },
+  },
+  {
+    id: 'ktr_the_fisc', name: 'A Royal Fisc, Kept Separately',
+    icon: 'coins', col: 3, row: 2, requires: ['ktr_the_country'],
+    desc: 'The first thing a house that has just taken a crown discovers is that the state\'s '
+      + 'money and the house\'s money are now the same money, and the second thing is what '
+      + 'that costs it in the study houses. Keep the books apart and full: 400 talents '
+      + 'against 220 points of development.',
+    rewardText: '+250 talents and "The Books Kept Apart": +10% income and +8% trade, permanent.',
+    check: (ctx) => treasuryOf(ctx, 'KTR') >= 400 && devOf(ctx, 'KTR') >= 220,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KTR', { treasury: 250 });
+      mod(ctx, 'KTR', 'ktr_books_apart', 'The Books Kept Apart',
+        { incomeMult: 1.1, tradeMult: 1.08 });
+    },
+  },
+  {
+    id: 'ktr_the_letters', name: 'The Letters Go Out Under a Seal',
+    icon: 'diaspora', col: 3, row: 3, requires: ['ktr_the_fisc'],
+    desc: 'A crown nobody outside the country has heard of is a local arrangement. The '
+      + 'communities that will decide whether this house is a dynasty or an episode are the '
+      + 'ones that were writing to Jerusalem before it existed: Alexandria, Antioch and '
+      + 'Babylon standing with us at 60, or under the crown outright.',
+    rewardText: '+200 talents and "Read in the Communities": +0.2 public belief a month and '
+      + '+8% income, permanent.',
+    check: (ctx) => ['Alexandria', 'Antioch', 'Babylon']
+      .every((n) => standingAt(ctx, n) >= 60 || holds(ctx, 'KTR', n)),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'KTR', { treasury: 200 });
+      mod(ctx, 'KTR', 'ktr_read_in_the_communities', 'Read in the Communities',
+        { legitimacyAdd: 0.2, incomeMult: 1.08 });
+    },
+  },
+];
+
+// ---- 132 CE and 614 CE, the line of Jehoiachin ------------------------------
+// The one claim in the Jewish world nobody argues with, and an expectation the
+// state has to live beside for ever. Reached by marriage in 132 and by
+// coronation in 614; both roads raise the same flag, and the flag is what
+// makes the Kingdom of Israel formable at all.
+const BTD_BRANCH = [
+  {
+    id: 'btd_the_contract', name: 'The Contract Read Out in Jerusalem',
+    icon: 'scroll', col: 2, row: 0, requires: ['btd_proclaimed'],
+    desc: 'The line was kept in Babylonia, under a Parthian and then a Persian king, in an '
+      + 'office with a court, a prison and the right to appoint judges — and the whole point '
+      + 'of joining it is a document that can be read aloud and checked. Hold Jerusalem at '
+      + 'legitimacy 70.',
+    rewardText: '+40 governance points and "The Pedigree Entered": +0.2 public belief a month '
+      + 'and −0.3 unrest everywhere, permanent.',
+    check: (ctx) => holds(ctx, 'BTD', 'Jerusalem') && legitimacyOf(ctx, 'BTD') >= 70,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'BTD', { gov: 40 });
+      mod(ctx, 'BTD', 'btd_pedigree_entered', 'The Pedigree Entered',
+        { legitimacyAdd: 0.2, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'btd_the_east', name: 'The Academies Answer',
+    icon: 'diaspora', col: 2, row: 1, requires: ['btd_the_contract'],
+    desc: 'The Exilarch\'s house is in Babylonia and so are the schools that will decide '
+      + 'whether this claim is heard or laughed at, and they have four centuries of not '
+      + 'needing Jerusalem behind them. Babylon and Nehardea standing with us at 65, or '
+      + 'under the crown outright.',
+    rewardText: '+200 talents and "The East Writes Back": +0.2 public belief a month and +8% '
+      + 'income, permanent.',
+    check: (ctx) => ['Babylon', 'Nehardea']
+      .every((n) => standingAt(ctx, n) >= 65 || holds(ctx, 'BTD', n)),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'BTD', { treasury: 200 });
+      mod(ctx, 'BTD', 'btd_east_writes_back', 'The East Writes Back',
+        { legitimacyAdd: 0.2, incomeMult: 1.08 });
+    },
+  },
+  {
+    id: 'btd_the_grandson', name: 'The Payoff Is the Grandson',
+    icon: 'scales', col: 2, row: 2, requires: ['btd_the_east'],
+    desc: 'Herod\'s version of this took a generation to mature and he spent the interval '
+      + 'killing the wife who carried the claim and then her sons, which is the standing '
+      + 'risk of marrying a pedigree you do not have. Seat an heir of the joined line, at '
+      + 'legitimacy 85 and stability +3.',
+    rewardText: '+50 governance points and "The Line Joined": +0.3 public belief a month and '
+      + '−0.5 unrest everywhere, permanent.',
+    check: (ctx) => heirSeated(ctx, 'BTD') && legitimacyOf(ctx, 'BTD') >= 85
+      && stabilityOf(ctx, 'BTD') >= 3,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'BTD', { gov: 50 });
+      mod(ctx, 'BTD', 'btd_line_joined', 'The Line Joined',
+        { legitimacyAdd: 0.3, unrestAll: -0.5 });
+    },
+  },
+  {
+    id: 'btd_the_expectation', name: 'The Expectation Lives Next Door',
+    icon: 'star8', col: 2, row: 3, requires: ['btd_the_grandson'],
+    desc: 'A state whose ruler is of the line of David has permanently invited a question no '
+      + 'other constitution has to answer: whether this is the one. Akiva said it out loud '
+      + 'about a man who was not, and a generation died of the sentence. Live beside it — no '
+      + 'party in the room below 55, twenty-two provinces, and the realm at peace.',
+    rewardText: '"Not Yet, and Not Denied": +0.2 public belief a month, +6% morale and −0.3 '
+      + 'unrest everywhere, permanent.',
+    check: (ctx) => courtFloor(ctx, 'BTD', 55) && ownedCount(ctx, 'BTD') >= 22
+      && atPeace(ctx, 'BTD'),
+    reward: (ctx) => mod(ctx, 'BTD', 'btd_not_yet', 'Not Yet, and Not Denied',
+      { legitimacyAdd: 0.2, moraleMult: 1.06, unrestAll: -0.3 }),
+  },
+  {
+    id: 'btd_the_city_of_david', name: 'The City of David, Held',
+    icon: 'walls', col: 3, row: 0, requires: ['btd_proclaimed'],
+    desc: 'The claim is territorial before it is genealogical: a son of David reigning '
+      + 'anywhere but here is a claimant, and reigning here he is a king. Jerusalem, Hebron '
+      + 'and Engaddi — the city he took, the city he was crowned in, and the strongholds he '
+      + 'was hiding in when Saul came looking.',
+    rewardText: '+150 talents and "Where He Was Crowned": +0.15 public belief a month and '
+      + '+8% income, permanent.',
+    check: (ctx) => holdsAll(ctx, 'BTD', ['Jerusalem', 'Hebron', 'Engaddi']),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'BTD', { treasury: 150 });
+      mod(ctx, 'BTD', 'btd_where_crowned', 'Where He Was Crowned',
+        { legitimacyAdd: 0.15, incomeMult: 1.08 });
+    },
+  },
+  {
+    id: 'btd_the_host', name: 'The Host of the House',
+    icon: 'spears', col: 3, row: 1, requires: ['btd_the_city_of_david'],
+    desc: 'The Davidic claim is the one that costs nothing to assert and everything to '
+      + 'defend, because it makes every neighbouring throne\'s quarrel with us dynastic '
+      + 'rather than territorial. Thirty-two thousand men on the rolls.',
+    rewardText: '+40 martial points and "The Sceptre and the Sword": +8% morale, permanent.',
+    check: (ctx) => menOf(ctx, 'BTD') >= 32000,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'BTD', { mar: 40 });
+      mod(ctx, 'BTD', 'btd_sceptre_and_sword', 'The Sceptre and the Sword',
+        { moraleMult: 1.08 });
+    },
+  },
+  {
+    id: 'btd_the_ingathering', name: 'The Kingdom the Prophets Meant',
+    icon: 'grain', col: 3, row: 2, requires: ['btd_the_host'],
+    desc: 'Every prophet in the canon who mentions the house of David mentions it holding a '
+      + 'country full of Israel, and the difference between a Jewish crown and a Jewish '
+      + 'state is the second half. Twenty provinces keeping the Law, with 240 points of '
+      + 'development under them.',
+    rewardText: '+6,000 manpower and "The Land and the Line": +10% manpower and +8% '
+      + 'development growth, permanent.',
+    check: (ctx) => ownedCount(ctx, 'BTD', 'judaism') >= 20 && devOf(ctx, 'BTD') >= 240,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'BTD', { manpower: 6000 });
+      mod(ctx, 'BTD', 'btd_land_and_line', 'The Land and the Line',
+        { manpowerMult: 1.1, growthMult: 1.08 });
+    },
+  },
+  {
+    id: 'btd_the_standing_claim', name: 'Whoever Holds the Exilarchate Holds a Claim',
+    icon: 'split', col: 3, row: 3, requires: ['btd_the_ingathering'],
+    desc: 'Joining the line means the line\'s other branches now have a standing interest in '
+      + 'this succession, and the branch that stayed in Babylonia is a court with revenues, '
+      + 'a prison and a king behind it. Settle it the only way it settles: owe fealty to '
+      + 'nobody, hold legitimacy 90, and stand at war with nobody.',
+    rewardText: '+50 governance points and "One Claim, One Throne": +0.25 public belief a '
+      + 'month and −0.4 unrest everywhere, permanent.',
+    check: (ctx) => independent(ctx, 'BTD') && legitimacyOf(ctx, 'BTD') >= 90
+      && atPeace(ctx, 'BTD'),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'BTD', { gov: 50 });
+      mod(ctx, 'BTD', 'btd_one_claim', 'One Claim, One Throne',
+        { legitimacyAdd: 0.25, unrestAll: -0.4 });
+    },
+  },
+];
+
+// ---- 132 CE, prince and priest both hereditary ------------------------------
+// The arrangement the coinage implied, made permanent — the Hasmonean collapse
+// run in reverse, which nobody has tried. Two hereditary offices means two
+// successions to go wrong and no arbiter above either of them.
+const SHB_BRANCH = [
+  {
+    id: 'shb_the_coinage', name: 'Two Names on the Silver',
+    icon: 'coins', col: 2, row: 0, requires: ['shb_proclaimed'],
+    desc: 'The rising struck coins reading Shimon Nasi of Israel and Eleazar the Priest, '
+      + 'and no source ever explains what the second name was doing there. Make it the '
+      + 'constitution: hold Jerusalem, with the realm at stability +2 and 200 talents to '
+      + 'pay two households.',
+    rewardText: '+40 governance points and "Prince and Priest": +0.15 public belief a month '
+      + 'and −0.3 unrest everywhere, permanent.',
+    check: (ctx) => holds(ctx, 'SHB', 'Jerusalem') && stabilityOf(ctx, 'SHB') >= 2
+      && treasuryOf(ctx, 'SHB') >= 200,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SHB', { gov: 40 });
+      mod(ctx, 'SHB', 'shb_prince_and_priest', 'Prince and Priest',
+        { legitimacyAdd: 0.15, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'shb_the_courses', name: 'The Courses Settled Before the Office Is',
+    icon: 'altar', col: 2, row: 1, requires: ['shb_the_coinage'],
+    desc: 'A hereditary priesthood needs a priesthood: the rota of courses, the register of '
+      + 'houses, and a Mount for them to serve on. Hold Jerusalem with the House standing '
+      + 'and sixteen provinces keeping the Law.',
+    rewardText: '+200 talents and "The Second House Endowed": +15% conversion and +0.15 '
+      + 'public belief a month, permanent.',
+    check: (ctx) => templeStands(ctx) && holds(ctx, 'SHB', 'Jerusalem')
+      && ownedCount(ctx, 'SHB', 'judaism') >= 16,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SHB', { treasury: 200 });
+      mod(ctx, 'SHB', 'shb_second_house_endowed', 'The Second House Endowed',
+        { convertMult: 1.15, legitimacyAdd: 0.15 });
+    },
+  },
+  {
+    id: 'shb_two_purses', name: 'Two Households, One Treasury',
+    icon: 'market', col: 2, row: 2, requires: ['shb_the_courses'],
+    desc: 'The price is arithmetic and it never stops: the second office is paid for out of '
+      + 'the same revenue as the first, in a country that could not comfortably afford the '
+      + 'first. Carry it — 400 talents in hand against 220 points of development.',
+    rewardText: '+250 talents and "The Second Household Paid": +10% income, permanent.',
+    check: (ctx) => treasuryOf(ctx, 'SHB') >= 400 && devOf(ctx, 'SHB') >= 220,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SHB', { treasury: 250 });
+      mod(ctx, 'SHB', 'shb_second_household_paid', 'The Second Household Paid',
+        { incomeMult: 1.1 });
+    },
+  },
+  {
+    id: 'shb_no_arbiter', name: 'No Arbiter Above Either of Them',
+    icon: 'scales', col: 2, row: 3, requires: ['shb_two_purses'],
+    desc: 'This is the failure mode written into the design: when prince and priest '
+      + 'disagree there is no third office to decide, and the last time this country had two '
+      + 'hereditary claims in one room it took Pompey to separate them. Run it anyway — the '
+      + 'Sages at 65, the Captains at 55, and the realm at stability +3.',
+    rewardText: '+50 governance points and "They Have Not Quarrelled Yet": −0.6 unrest '
+      + 'everywhere and +0.2 public belief a month, permanent.',
+    check: (ctx) => partyAt(ctx, 'SHB', 'sages', 65) && partyAt(ctx, 'SHB', 'captains', 55)
+      && stabilityOf(ctx, 'SHB') >= 3,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SHB', { gov: 50 });
+      mod(ctx, 'SHB', 'shb_not_quarrelled', 'They Have Not Quarrelled Yet',
+        { unrestAll: -0.6, legitimacyAdd: 0.2 });
+    },
+  },
+  {
+    id: 'shb_the_hasmonean_lesson', name: 'The Hasmonean Collapse Run Backwards',
+    icon: 'split', col: 3, row: 0, requires: ['shb_proclaimed'],
+    desc: 'The Hasmoneans spent a century merging these two offices into one head and then '
+      + 'died of the merger; this state spent one morning separating them, on the theory '
+      + 'that the merger was the mistake. It has to be shown, not asserted: legitimacy 70 '
+      + 'with no pretender in the field.',
+    rewardText: '+40 influence points and "The Merger Undone": +0.15 public belief a month '
+      + 'and +6% income, permanent.',
+    check: (ctx) => legitimacyOf(ctx, 'SHB') >= 70
+      && !(ctx.game.pretenders && ctx.game.pretenders.SHB),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SHB', { infl: 40 });
+      mod(ctx, 'SHB', 'shb_merger_undone', 'The Merger Undone',
+        { legitimacyAdd: 0.15, incomeMult: 1.06 });
+    },
+  },
+  {
+    id: 'shb_the_captains', name: 'The Prince Keeps the Army',
+    icon: 'helmet', col: 3, row: 1, requires: ['shb_the_hasmonean_lesson'],
+    desc: 'Whatever else the division does, it puts the army on one side of it, which is why '
+      + 'every dyarchy in history is stable exactly as long as the soldier half wants it to '
+      + 'be. Thirty-two thousand men with the war-craft of the age two rungs past this '
+      + 'chapter\'s baseline.',
+    rewardText: '+40 martial points and "The Prince\'s Own": +6% discipline and +8% morale, '
+      + 'permanent.',
+    check: (ctx) => menOf(ctx, 'SHB') >= 32000 && marAbove(ctx, 'SHB', 2),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SHB', { mar: 40 });
+      mod(ctx, 'SHB', 'shb_princes_own', 'The Prince\'s Own',
+        { disciplineMult: 1.06, moraleMult: 1.08 });
+    },
+  },
+  {
+    id: 'shb_two_successions', name: 'Two Successions to Go Wrong',
+    icon: 'scroll', col: 3, row: 2, requires: ['shb_the_captains'],
+    desc: 'One hereditary office is a risk every year; two are two risks in the same year, '
+      + 'and the state has no procedure for the case where both fall vacant at once. Write '
+      + 'one: an heir seated, the art of government two rungs past this age\'s baseline, and '
+      + 'legitimacy 80.',
+    rewardText: '+50 governance points and "The Case Provided For": +0.2 public belief a '
+      + 'month and −0.4 unrest everywhere, permanent.',
+    check: (ctx) => heirSeated(ctx, 'SHB') && govAbove(ctx, 'SHB', 2)
+      && legitimacyOf(ctx, 'SHB') >= 80,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'SHB', { gov: 50 });
+      mod(ctx, 'SHB', 'shb_case_provided_for', 'The Case Provided For',
+        { legitimacyAdd: 0.2, unrestAll: -0.4 });
+    },
+  },
+  {
+    id: 'shb_the_two_signatures', name: 'Both Names on the Same Order',
+    icon: 'quill', col: 3, row: 3, requires: ['shb_two_successions'],
+    desc: 'The test of a dyarchy is not whether the two heads agree but whether the country '
+      + 'can be governed while they are agreeing: two seals on every instrument, and nothing '
+      + 'moving until both are on it. Twenty-two provinces held, at peace, with no party in '
+      + 'the room below 55.',
+    rewardText: '"Two Seals on Every Order": +8% income, −0.4 unrest everywhere and +0.15 '
+      + 'public belief a month, permanent.',
+    check: (ctx) => ownedCount(ctx, 'SHB') >= 22 && atPeace(ctx, 'SHB')
+      && courtFloor(ctx, 'SHB', 55),
+    reward: (ctx) => mod(ctx, 'SHB', 'shb_two_seals', 'Two Seals on Every Order',
+      { incomeMult: 1.08, unrestAll: -0.4, legitimacyAdd: 0.15 }),
+  },
+];
+
+// ---- 132 CE, Ezekiel's prince -----------------------------------------------
+// Chapters 44 to 46: a nasi who brings his offerings like any man, holds no
+// priestly office, and may leave his inheritance to his sons but may not take
+// the people's land. A hereditary office engineered not to be a monarchy — the
+// first Jewish constitution since the elders, written by somebody who never
+// expected it to be used.
+const NSI_BRANCH = [
+  {
+    id: 'nsi_the_forty_sixth', name: 'The Forty-Sixth Chapter, Verse Eighteen',
+    icon: 'scroll', col: 2, row: 0, requires: ['nsi_proclaimed'],
+    desc: 'The prince shall not take of the people\'s inheritance, thrusting them out of '
+      + 'their possession — and the founder of this house leased the land of Israel in his '
+      + 'own name, and the leases are in the room next door. Get the constitution and the '
+      + 'treasury into the same state: eighteen provinces held with the realm at stability '
+      + '+2, and the Sages at 60.',
+    rewardText: '+40 governance points and "The Text Obeyed": +0.2 public belief a month and '
+      + '−0.4 unrest everywhere, permanent.',
+    check: (ctx) => ownedCount(ctx, 'NSI') >= 18 && stabilityOf(ctx, 'NSI') >= 2
+      && partyAt(ctx, 'NSI', 'sages', 60),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { gov: 40 });
+      mod(ctx, 'NSI', 'nsi_text_obeyed', 'The Text Obeyed',
+        { legitimacyAdd: 0.2, unrestAll: -0.4 });
+    },
+  },
+  {
+    id: 'nsi_no_priestly_office', name: 'He Holds No Priestly Office',
+    icon: 'altar', col: 2, row: 1, requires: ['nsi_the_forty_sixth'],
+    desc: 'The road around the Davidic objection is that Ezekiel\'s prince was never David\'s '
+      + 'heir and never a priest either — he brings his offering at the gate like any man and '
+      + 'stands there while it is made. Which means the priesthood has to exist separately '
+      + 'and be content: the House standing in Jerusalem, and sixteen provinces keeping the '
+      + 'Law.',
+    rewardText: '+200 talents and "At the Gate Like Any Man": +15% conversion and −0.3 unrest '
+      + 'everywhere, permanent.',
+    check: (ctx) => templeStands(ctx) && holds(ctx, 'NSI', 'Jerusalem')
+      && ownedCount(ctx, 'NSI', 'judaism') >= 16,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { treasury: 200 });
+      mod(ctx, 'NSI', 'nsi_at_the_gate', 'At the Gate Like Any Man',
+        { convertMult: 1.15, unrestAll: -0.3 });
+    },
+  },
+  {
+    id: 'nsi_the_letters', name: 'The Letters of the Nasi',
+    icon: 'diaspora', col: 2, row: 2, requires: ['nsi_no_priestly_office'],
+    desc: 'The office outlasted the crown, the Temple and the country, because what it '
+      + 'actually did was write: the calendar, the intercalation, the rulings, and the '
+      + 'apostoloi who carried them and came back with money. Four communities reading our '
+      + 'letters at 60 — Alexandria, Antioch, Babylon and Rome — or under the crown outright.',
+    rewardText: '+250 talents and "Read Wherever the Letters Go": +0.25 public belief a month, '
+      + '+10% income and +1 envoy, permanent.',
+    check: (ctx) => ['Alexandria', 'Antioch', 'Babylon', 'Roma']
+      .every((n) => standingAt(ctx, n) >= 60 || holds(ctx, 'NSI', n)),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { treasury: 250 });
+      mod(ctx, 'NSI', 'nsi_read_wherever', 'Read Wherever the Letters Go',
+        { legitimacyAdd: 0.25, incomeMult: 1.1, diploSeats: 1 });
+    },
+  },
+  {
+    id: 'nsi_bound_in_writing', name: 'A House Bound in Writing',
+    icon: 'scales', col: 2, row: 3, requires: ['nsi_the_letters'],
+    desc: 'The other three answers bind nobody; this one binds the house that adopted it, '
+      + 'for ever, in a text anybody can read. An heir seated under those terms at legitimacy '
+      + '85, with no party in the room below 55 — the office proving it can pass without '
+      + 'becoming a crown on the way.',
+    rewardText: '+50 governance points and "Bound By the Prophet": +0.25 public belief a '
+      + 'month and −0.5 unrest everywhere, permanent.',
+    check: (ctx) => heirSeated(ctx, 'NSI') && legitimacyOf(ctx, 'NSI') >= 85
+      && courtFloor(ctx, 'NSI', 55),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { gov: 50 });
+      mod(ctx, 'NSI', 'nsi_bound_by_the_prophet', 'Bound By the Prophet',
+        { legitimacyAdd: 0.25, unrestAll: -0.5 });
+    },
+  },
+  {
+    id: 'nsi_the_patriarchs_court', name: 'The Patriarch\'s Own Court',
+    icon: 'quill', col: 3, row: 0, requires: ['nsi_proclaimed'],
+    desc: 'An office engineered not to be a monarchy still has to govern, and what it '
+      + 'governs with is a chancery of sages rather than a household of captains. The art of '
+      + 'government two rungs past this age\'s baseline.',
+    rewardText: '+40 influence points and "The Chancery of the Sages": +8% income and +0.15 '
+      + 'public belief a month, permanent.',
+    check: (ctx) => govAbove(ctx, 'NSI', 2),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { infl: 40 });
+      mod(ctx, 'NSI', 'nsi_chancery_of_sages', 'The Chancery of the Sages',
+        { incomeMult: 1.08, legitimacyAdd: 0.15 });
+    },
+  },
+  {
+    id: 'nsi_the_academies', name: 'The Academies Under the Patriarch',
+    icon: 'lamp', col: 3, row: 1, requires: ['nsi_the_patriarchs_court'],
+    desc: 'The Patriarchate\'s real instrument was ordination — who may sit, who may judge, '
+      + 'and whose ruling counts — which made every study house in the country a branch of '
+      + 'the office without a single garrison. The Sages at 75 with 220 points of '
+      + 'development under the realm.',
+    rewardText: '+150 talents and "Ordination in Our Hands": +10% development growth and '
+      + '−0.4 unrest everywhere, permanent.',
+    check: (ctx) => partyAt(ctx, 'NSI', 'sages', 75) && devOf(ctx, 'NSI') >= 220,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { treasury: 150 });
+      mod(ctx, 'NSI', 'nsi_ordination', 'Ordination in Our Hands',
+        { growthMult: 1.1, unrestAll: -0.4 });
+    },
+  },
+  {
+    id: 'nsi_not_a_monarchy', name: 'The Captains Are Told No',
+    icon: 'helmet', col: 3, row: 2, requires: ['nsi_the_academies'],
+    desc: 'The men who won the war are being told that the state they made is constrained by '
+      + 'a text, and every one of them can see that the constraint is on them. Keep an army '
+      + 'anyway — thirty thousand men — with the Captains still at 45, which is the '
+      + 'narrow thing this road has to do.',
+    rewardText: '+30 martial points and "Constrained and Still Obeyed": +8% morale and +8% '
+      + 'manpower, permanent.',
+    check: (ctx) => menOf(ctx, 'NSI') >= 30000 && partyAt(ctx, 'NSI', 'captains', 45),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { mar: 30 });
+      mod(ctx, 'NSI', 'nsi_constrained_obeyed', 'Constrained and Still Obeyed',
+        { moraleMult: 1.08, manpowerMult: 1.08 });
+    },
+  },
+  {
+    id: 'nsi_outlives_everything', name: 'The Office That Outlived the Country',
+    icon: 'star8', col: 3, row: 3, requires: ['nsi_not_a_monarchy'],
+    desc: 'The historical Patriarchate went on being obeyed for three centuries after the '
+      + 'state around it was gone, and was ended not by a rebellion but by a rescript. That '
+      + 'is what an office designed to survive looks like: twenty provinces at peace, owing '
+      + 'fealty to nobody, at stability +3.',
+    rewardText: '+50 influence points and "Ended Only By a Rescript": +0.2 public belief a '
+      + 'month, +8% income and −0.4 unrest everywhere, permanent.',
+    check: (ctx) => ownedCount(ctx, 'NSI') >= 20 && atPeace(ctx, 'NSI')
+      && independent(ctx, 'NSI') && stabilityOf(ctx, 'NSI') >= 3,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'NSI', { infl: 50 });
+      mod(ctx, 'NSI', 'nsi_only_a_rescript', 'Ended Only By a Rescript',
+        { legitimacyAdd: 0.2, incomeMult: 1.08, unrestAll: -0.4 });
+    },
+  },
+];
+
+// One table per crown: the spine every settled constitution works, and the
+// eight this one works instead of the other nine's.
+const SNH_MISSIONS = [...settledSpine('SNH'), ...SNH_BRANCH];
+const GRL_MISSIONS = [...settledSpine('GRL'), ...GRL_BRANCH];
+const YVL_MISSIONS = [...settledSpine('YVL'), ...YVL_BRANCH];
+const HRZ_MISSIONS = [...settledSpine('HRZ'), ...HRZ_BRANCH];
+const KHN_MISSIONS = [...settledSpine('KHN'), ...KHN_BRANCH];
+const GRS_MISSIONS = [...settledSpine('GRS'), ...GRS_BRANCH];
+const KTR_MISSIONS = [...settledSpine('KTR'), ...KTR_BRANCH];
+const BTD_MISSIONS = [...settledSpine('BTD'), ...BTD_BRANCH];
+const SHB_MISSIONS = [...settledSpine('SHB'), ...SHB_BRANCH];
+const NSI_MISSIONS = [...settledSpine('NSI'), ...NSI_BRANCH];
+
+// The ten crowns, in the order the chapters offer them. Every one of them is
+// player-only: an AI court that re-branded itself mid-chapter would orphan the
+// fork's own follow-on cards, exactly as the four dynastic restorations would.
+const CONSTITUTION_CROWNS = [
+  {
+    id: 'form_snh_jud', from: 'JUD', to: 'SNH', gov: 'sanhedrin',
+    name: 'Take the Name of the Temple-State',
+    desc: 'The settlement is adopted and the country is still called what the rebels '
+      + 'called it. Let the name say the arrangement instead: a High Priest, a Sanhedrin '
+      + 'and the constitution Judaea kept under Persia and the Ptolemies, written on the '
+      + 'coins and used by every chancery that writes to us.',
+    bookmarks: ['66ce'],
+    requires: [
+      { label: 'The settlement is the temple-state', check: (ctx, tag) => govIs(ctx, tag, 'sanhedrin') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control twelve provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 12 },
+      { label: 'The Temple priesthood stands with us (60)', check: (ctx, tag) => partyAt(ctx, tag, 'priesthood', 60) },
+      { label: 'Stability 1', check: (ctx, tag) => stabilityOf(ctx, tag) >= 1 },
+    ],
+    bonus: {
+      legitimacy: 20, stability: 1,
+      grant: { treasury: 150, gov: 40, infl: 30 },
+      rulerTitle: 'High Priest of the Jews',
+      modifier: {
+        id: 'the_ancient_constitution', name: 'The Ancient Constitution', months: -1,
+        effects: { incomeMult: 1.08, unrestAll: -0.4 },
+      },
+      modifier2: {
+        id: 'everybody_knows_the_forms', name: 'Everybody Knows the Forms', months: -1,
+        effects: { legitimacyAdd: 0.15, convertMult: 1.1 },
+      },
+    },
+    missions: SNH_MISSIONS,
+  },
+  {
+    id: 'form_grl_jud', from: 'JUD', to: 'GRL', gov: 'lot',
+    name: 'Take the Name of the Commonwealth of the Lot',
+    desc: 'Hereditary priestly power ended on an afternoon and the state has been trading '
+      + 'under the old name ever since. Name the thing that replaced it: a commonwealth '
+      + 'whose highest office is filled from the whole priesthood by the urn, where nobody '
+      + 'inherits and nobody is in office long enough to promise anything to anybody.',
+    bookmarks: ['66ce'],
+    requires: [
+      { label: 'The settlement is the lot', check: (ctx, tag) => govIs(ctx, tag, 'lot') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control twelve provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 12 },
+      { label: 'The Zealots stand with us (60)', check: (ctx, tag) => partyAt(ctx, tag, 'zealots', 60) },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 15, stability: 1,
+      grant: { treasury: 100, manpower: 3000, gov: 40 },
+      rulerTitle: 'High Priest by Lot',
+      modifier: {
+        id: 'the_urn_and_the_register', name: 'The Urn and the Register', months: -1,
+        effects: { unrestAll: -0.4, legitimacyAdd: 0.12 },
+      },
+      modifier2: {
+        id: 'nobody_inherits_anything', name: 'Nobody Inherits Anything', months: -1,
+        effects: { manpowerMult: 1.08, moraleMult: 1.05 },
+      },
+    },
+    missions: GRL_MISSIONS,
+  },
+  {
+    id: 'form_yvl_jud', from: 'JUD', to: 'YVL', gov: 'jubilee',
+    name: 'Take the Name of the Jubilee Commonwealth',
+    desc: 'Liberty is proclaimed, the debts are gone and the land is reverting, and the '
+      + 'state doing it is still filed under the name of a Roman province. Call it what it '
+      + 'is: a commonwealth constituted by Leviticus 25 and administered by an assembly '
+      + 'that renews its officers by vote, because a hereditary enforcer of the reversion '
+      + 'is a landlord in two generations.',
+    bookmarks: ['66ce'],
+    requires: [
+      { label: 'The settlement is the Jubilee', check: (ctx, tag) => govIs(ctx, tag, 'jubilee') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control fourteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 14 },
+      { label: 'The Zealots stand with us (55)', check: (ctx, tag) => partyAt(ctx, tag, 'zealots', 55) },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 20, stability: 1,
+      grant: { treasury: 80, manpower: 5000, gov: 30, infl: 30 },
+      rulerTitle: 'Warden of the Jubilee',
+      modifier: {
+        id: 'liberty_in_the_land', name: 'Liberty in the Land', months: -1,
+        effects: { manpowerMult: 1.1, growthMult: 1.1 },
+      },
+      modifier2: {
+        id: 'no_credit_no_creditors', name: 'No Credit and No Creditors', months: -1,
+        effects: { unrestAll: -0.4, incomeMult: 0.96 },
+      },
+    },
+    missions: YVL_MISSIONS,
+  },
+  {
+    id: 'form_hrz_jud', from: 'JUD', to: 'HRZ', gov: 'noRuler',
+    name: 'Take the Name of the Freedom of Zion',
+    desc: 'The assembly resolved that there is no ruler but God and adjourned without '
+      + 'appointing anybody to enforce the resolution, which is the resolution. The coins '
+      + 'have been saying so since the second year: no head on the silver, and the years '
+      + 'counted from the thing itself. Let the state be called what its own money calls it.',
+    bookmarks: ['66ce'],
+    requires: [
+      { label: 'The settlement is no ruler but God', check: (ctx, tag) => govIs(ctx, tag, 'noRuler') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control fourteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 14 },
+      { label: 'The Zealots stand with us (70)', check: (ctx, tag) => partyAt(ctx, tag, 'zealots', 70) },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 15, stability: 1,
+      grant: { manpower: 7000, mar: 40, gov: 20 },
+      rulerTitle: 'Convener of the Assembly',
+      modifier: {
+        id: 'no_tribute_no_census', name: 'No Tribute, No Census', months: -1,
+        effects: { moraleMult: 1.1, manpowerMult: 1.1 },
+      },
+      modifier2: {
+        id: 'nothing_to_negotiate_for', name: 'Nothing to Negotiate For', months: -1,
+        effects: { hillDefBonus: 1, incomeMult: 0.94 },
+      },
+    },
+    missions: HRZ_MISSIONS,
+  },
+  {
+    id: 'form_khn_has', from: 'HAS', to: 'KHN', gov: 'priestKing',
+    name: 'Take the Name of the Priest-Kingdom',
+    desc: 'The linen band is on and the secretaries have their answer, and the state is '
+      + 'still writing to the world under a name that means the house rather than the '
+      + 'kingdom. Style it as it is styled abroad: a kingdom of the Jews whose king is also '
+      + 'the high priest, on the coins in two languages, as Aristobulus struck them.',
+    bookmarks: ['167bce'],
+    requires: [
+      { label: 'The house wears the diadem', check: (ctx, tag) => govIs(ctx, tag, 'priestKing') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control sixteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 16 },
+      { label: 'Legitimacy 55', check: (ctx, tag) => legitimacyOf(ctx, tag) >= 55 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 25, stability: 1,
+      grant: { treasury: 200, manpower: 4000, gov: 40, infl: 40 },
+      rulerTitle: 'King and High Priest of the Jews',
+      modifier: {
+        id: 'the_diadem_and_the_mitre', name: 'The Diadem and the Mitre', months: -1,
+        effects: { incomeMult: 1.1, moraleMult: 1.06 },
+      },
+      modifier2: {
+        id: 'a_peer_of_every_chancery', name: 'A Peer of Every Chancery', months: -1,
+        effects: { legitimacyAdd: 0.15, tradeMult: 1.08 },
+      },
+    },
+    missions: KHN_MISSIONS,
+  },
+  {
+    id: 'form_grs_has', from: 'HAS', to: 'GRS', gov: 'gerousia',
+    name: 'Take the Name of the Judaean Commonwealth',
+    desc: 'The linen band went back in its box and what is left is the thing the decree '
+      + 'actually described: a commonwealth of the Jews governed by the high priesthood and '
+      + 'the elders, with no crown in it for anybody to dispute. Put that on the seal — the '
+      + 'road the chronicles do not have, given a name they would have had to use.',
+    bookmarks: ['167bce'],
+    requires: [
+      { label: 'The diadem was refused', check: (ctx, tag) => govIs(ctx, tag, 'gerousia') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control sixteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 16 },
+      { label: 'Stability 2', check: (ctx, tag) => stabilityOf(ctx, tag) >= 2 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 20, stability: 2,
+      grant: { treasury: 220, gov: 50, infl: 30 },
+      rulerTitle: 'High Priest and Ethnarch of the Jews',
+      modifier: {
+        id: 'the_decree_as_written', name: 'The Decree as Written', months: -1,
+        effects: { unrestAll: -0.5, legitimacyAdd: 0.15 },
+      },
+      modifier2: {
+        id: 'the_elders_in_session', name: 'The Elders in Session', months: -1,
+        effects: { incomeMult: 1.08, growthMult: 1.08 },
+      },
+    },
+    missions: GRS_MISSIONS,
+  },
+  {
+    id: 'form_ktr_jud', from: 'JUD', to: 'KTR', gov: 'diadem',
+    name: 'Take the Name of the Crown of Judaea',
+    desc: 'The house that won the war has taken the crown, and every chancery between the '
+      + 'Nile and the Tigris already knows how to address one. Say it on the coins and in '
+      + 'the letters: a kingdom, held by the men who took it, with no priestly title and no '
+      + 'genealogy under it and no intention of apologising for either.',
+    bookmarks: ['132ce', '614ce'],
+    requires: [
+      { label: 'The house took the crown', check: (ctx, tag) => govIs(ctx, tag, 'diadem') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control sixteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 16 },
+      { label: 'Twenty thousand men under arms', check: (ctx, tag) => menOf(ctx, tag) >= 20000 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 25, stability: 1,
+      grant: { treasury: 180, manpower: 5000, gov: 40, mar: 40 },
+      rulerTitle: 'King of the Jews',
+      modifier: {
+        id: 'a_crown_out_of_a_war', name: 'A Crown Out of a War', months: -1,
+        effects: { moraleMult: 1.08, incomeMult: 1.08 },
+      },
+      modifier2: {
+        id: 'the_objection_in_writing', name: 'The Objection, in Writing', months: -1,
+        effects: { legitimacyAdd: 0.15, unrestAll: 0.15 },
+      },
+    },
+    missions: KTR_MISSIONS,
+  },
+  {
+    id: 'form_btd_jud', from: 'JUD', to: 'BTD', gov: 'davidic',
+    name: 'Take the Name of the House of David',
+    desc: 'The line of Jehoiachin is on this throne, by marriage or by coronation, and it '
+      + 'is the one claim in the Jewish world that nobody argues with. Take the name that '
+      + 'goes with it — and with it the question every generation will now be entitled to '
+      + 'ask, which no other constitution has to answer.',
+    bookmarks: ['132ce', '614ce'],
+    requires: [
+      { label: 'The line of Jehoiachin is on the throne', check: (ctx, tag) => govIs(ctx, tag, 'davidic') },
+      { label: 'Own and control Jerusalem and Hebron', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem', 'Hebron']) },
+      { label: 'Own and control sixteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 16 },
+      { label: 'Legitimacy 65', check: (ctx, tag) => legitimacyOf(ctx, tag) >= 65 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 30, stability: 1,
+      grant: { treasury: 180, manpower: 4000, gov: 40, infl: 40 },
+      rulerTitle: 'King of the House of David',
+      modifier: {
+        // NOT `the_line_of_jehoiachin` — the 132 marriage and the shared
+        // house-of-David arc both seat a modifier under that id, and
+        // addTagModifier replaces by id: a crown proclaimed after either of
+        // them would have quietly downgraded the thing it was celebrating.
+        id: 'btd_nobody_argues_with_it', name: 'The Claim Nobody Argues With', months: -1,
+        effects: { legitimacyAdd: 0.2, unrestAll: -0.4 },
+      },
+      modifier2: {
+        id: 'the_question_next_door', name: 'The Question Next Door', months: -1,
+        effects: { moraleMult: 1.06, incomeMult: 1.06 },
+      },
+    },
+    missions: BTD_MISSIONS,
+  },
+  {
+    id: 'form_shb_jud', from: 'JUD', to: 'SHB', gov: 'dyarchy',
+    name: 'Take the Name of the Two Houses',
+    desc: 'Prince and priest, both hereditary, exactly as the coinage implied — and the '
+      + 'coinage is the only place it has ever been written down. Make it the state\'s own '
+      + 'name: two offices, two households, two seals on every order, and no arbiter above '
+      + 'either of them.',
+    bookmarks: ['132ce'],
+    requires: [
+      { label: 'Prince and priest are both hereditary', check: (ctx, tag) => govIs(ctx, tag, 'dyarchy') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control sixteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 16 },
+      { label: 'The Sages stand with us (60)', check: (ctx, tag) => partyAt(ctx, tag, 'sages', 60) },
+      { label: 'Stability 2', check: (ctx, tag) => stabilityOf(ctx, tag) >= 2 },
+    ],
+    bonus: {
+      legitimacy: 20, stability: 2,
+      grant: { treasury: 200, gov: 40, infl: 40 },
+      rulerTitle: 'Nasi of Israel',
+      modifier: {
+        id: 'two_offices_two_houses', name: 'Two Offices, Two Houses', months: -1,
+        effects: { legitimacyAdd: 0.15, convertMult: 1.15 },
+      },
+      modifier2: {
+        id: 'the_second_household', name: 'The Second Household', months: -1,
+        effects: { unrestAll: -0.4, incomeMult: 0.96 },
+      },
+    },
+    missions: SHB_MISSIONS,
+  },
+  {
+    id: 'form_nsi_jud', from: 'JUD', to: 'NSI', gov: 'nasi',
+    name: 'Take the Name of the Patriarchate',
+    desc: 'The house kept the founder\'s title and accepted the prophet\'s terms for it, '
+      + 'which makes this the first Jewish constitution since the elders and the only one '
+      + 'in the room that binds the men who adopted it. Let the state be the office: a '
+      + 'patriarchate, whose instrument is a letter and whose reach is wherever the letters '
+      + 'are read.',
+    bookmarks: ['132ce'],
+    requires: [
+      { label: 'The prince holds by Ezekiel\'s terms', check: (ctx, tag) => govIs(ctx, tag, 'nasi') },
+      { label: 'Own and control Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Own and control sixteen provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 16 },
+      { label: 'The Sages stand with us (65)', check: (ctx, tag) => partyAt(ctx, tag, 'sages', 65) },
+      { label: 'Stability 2', check: (ctx, tag) => stabilityOf(ctx, tag) >= 2 },
+    ],
+    bonus: {
+      legitimacy: 25, stability: 2,
+      grant: { treasury: 200, gov: 50, infl: 50 },
+      rulerTitle: 'Nasi of Israel',
+      modifier: {
+        id: 'the_prince_of_the_prophet', name: 'The Prince of the Prophet', months: -1,
+        effects: { legitimacyAdd: 0.2, convertMult: 1.1 },
+      },
+      modifier2: {
+        id: 'the_letters_are_the_office', name: 'The Letters Are the Office', months: -1,
+        effects: { incomeMult: 1.08, unrestAll: -0.3 },
+      },
+    },
+    missions: NSI_MISSIONS,
+  },
+];
+
+// The greater crown is not closed off by naming the lesser one (SPEC §227).
+// The Kingdom of Israel is the endgame of the whole Jewish arc and it is
+// reached by a dynasty rather than by a war, so every constitution keeps the
+// road to it on exactly the terms JUD and HAS have — and proclaiming it ENDS
+// the constitution, because MLI's own government is a monarchy and
+// switchTagCore applies the new banner's. A commonwealth that finds a son of
+// David and crowns him has answered its own question, which is the point.
+function israelFrom(from, bookmarks) {
+  return {
+    id: 'form_mli_' + from.toLowerCase(),
+    from, to: 'MLI',
+    name: 'Proclaim the Kingdom of Israel',
+    desc: 'The constitution answered what this state is. This answers what it is FOR: not '
+      + 'a settlement, not an arrangement, not an office with a text behind it — a kingdom, '
+      + 'with Jerusalem for its seat and the Law for its charter, under the crown of David. '
+      + 'Everything the last constitution was is now a chapter in the chronicle of this one.',
+    bookmarks,
+    requires: [
+      { label: 'A son of David on the throne', check: (ctx) => davidicThrone(ctx) },
+      {
+        label: 'Own and control Jerusalem, Hebron, Neapolis, Sepphoris, Tiberias, and Adora',
+        check: (ctx, tag) => ownsAndControls(ctx, tag, ISRAEL_HEARTLAND),
+      },
+      { label: 'Own and control twenty-five provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 25 },
+      { label: 'Twelve provinces follow Judaism', check: (ctx, tag) => ownedControlledCount(ctx, tag, 'judaism') >= 12 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+      { label: 'Stability 2', check: (ctx, tag) => stabilityOf(ctx, tag) >= 2 },
+      { label: 'Legitimacy 85', check: (ctx, tag) => legitimacyOf(ctx, tag) >= 85 },
+      { label: 'At peace', check: (ctx, tag) => atPeace(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 30, stability: 2,
+      grant: { treasury: 300, manpower: 8000, gov: 60, infl: 60, mar: 60 },
+      rulerTitle: 'King of Israel',
+      modifier: {
+        id: 'crown_of_david', name: 'The Crown of David', months: -1,
+        effects: { incomeMult: 1.1, moraleMult: 1.05, unrestAll: -0.5 },
+      },
+      modifier2: {
+        id: 'the_law_is_the_charter', name: 'The Law Is the Charter', months: -1,
+        effects: { manpowerMult: 1.1, legitimacyAdd: 0.25, disciplineMult: 1.05 },
+      },
+    },
+    missions: MLI_MISSIONS,
+  };
+}
+
 export const FORMABLES = [
   {
     id: 'form_has_hyr',
@@ -1827,4 +3695,16 @@ export const FORMABLES = [
       },
     },
   },
+  // ---- the ten constitutional crowns, and the road they keep open (SPEC §227)
+  ...CONSTITUTION_CROWNS,
+  israelFrom('SNH', ['66ce']),
+  israelFrom('GRL', ['66ce']),
+  israelFrom('YVL', ['66ce']),
+  israelFrom('HRZ', ['66ce']),
+  israelFrom('KHN', ['167bce']),
+  israelFrom('GRS', ['167bce']),
+  israelFrom('KTR', ['132ce', '614ce']),
+  israelFrom('BTD', ['132ce', '614ce']),
+  israelFrom('SHB', ['132ce']),
+  israelFrom('NSI', ['132ce']),
 ];

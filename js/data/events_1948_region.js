@@ -224,7 +224,7 @@ function syrOwn(ctx) {
 }
 
 // Everything Damascus rules, so the union takes all of it and the secession
-// gives all of it back in one piece (SPEC §226 adds the eight districts).
+// gives all of it back in one piece (SPEC §228 adds the eight districts).
 const SYRIA_CORE = ['Damascus', 'Douma', 'Emesa', 'Qusayr', 'Salamiyah',
   'Palmyra', 'Rusafa', 'Apamea', 'Idlib', 'Beroea', 'Manbij', 'Cyrrhus',
   'Laodicea', 'Aradus', 'Dura-Europos', 'Hasakah', 'Bostra', 'Suwayda',
