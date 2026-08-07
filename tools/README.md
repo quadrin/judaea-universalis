@@ -38,6 +38,17 @@ eight-year window. 1948 runs clean: the coalition invades, the truces bite,
 Rhodes freezes the fighting, and the postwar guarantee/rearmament system builds
 the regional establishments instead of leaving rich states demobilized.
 
+Since §226 (Jordan, Syria and Iraq re-rastered) two more flags sit in the
+accepted set at the default eight years, and both are the seeded stream moving
+rather than anything breaking. `132ce JUD: DEBT-SPIRAL` is the Return holding
+ALL eight of its provinces to the end instead of losing two, and paying for the
+host that holds them — the README's own "bleeding and in debt after the hidden
+armories expire", arrived at a year or two earlier. `1948ce ETH: BLEEDING` is
+Ethiopia, six provinces and an income near zero, four thousand kilometres from
+anything this section touched. Adding cells changes the province count and the
+folded centroids, and every campaign after that draws different numbers; the
+ancient chapters' ADJACENCY is what §226 holds fixed, and smoke151 holds it.
+
 Run the 1948 chapter out to its full length (`node tools/autorun.mjs 55 1948ce`)
 and LEB BLEEDING is in the accepted set from §224 onward. Lebanon comes out of
 1975 carrying The Civil War permanently (−40% income), the Green Line, the

@@ -115,6 +115,10 @@ const JOR_LANDS = [
   'Zoara',
   // the eastern Badia: the Azraq oasis, Wadi Sirhan, the desert patrol's beat
   'Azraq',
+  // SPEC §226: the kingdom at its own resolution — Zarqa and the Mafraq
+  // approaches, the desert road east to H4 at Ruwayshid, and the south from
+  // Shobak down to Mudawwara on the Saudi line.
+  'Zarqa', 'Mafraq', 'Ruwayshid', 'Shobak', 'Wadi Rum',
 ];
 const EGY_LANDS = [
   // the expeditionary axis and Egypt itself
@@ -137,6 +141,10 @@ const SYR_LANDS = [
   // the Golan approaches: Banias under the Hermon, the massif itself, the
   // plateau town at its centre, and the Hauran behind them (SPEC §225)
   'Caesarea Philippi', 'Mount Hermon', 'Quneitra', 'Batanea', 'Gamala',
+  // SPEC §226: the republic's own districts — Idlib, the Euphrates bend at
+  // Manbij and Raqqa, the Jazira at Hasakah, the Homs country, the Ghouta,
+  // and the Jabal Druze.
+  'Idlib', 'Manbij', 'Rusafa', 'Hasakah', 'Salamiyah', 'Qusayr', 'Douma', 'Suwayda',
 ];
 // Chalcis is the Beqaa (era name Zahle): Lebanese, not Syrian, since Greater
 // Lebanon's 1920 borders — the republic is the coast AND the valley.
@@ -156,6 +164,11 @@ const IRQ_LANDS = [
   'Singara', 'Hatra', 'Arbela', 'Assur', 'Seleucia-Ctesiphon', 'Babylon',
   'Nehardea', 'Uruk', 'Charax',
   'Rutba', // the western desert: the Rutbah wells and pumping stations
+  // SPEC §226: the kingdom at its own resolution — Mosul and the Kurdish
+  // north, the Diyala and the middle Euphrates, the Shia south from Najaf to
+  // the marshes at Amara, and the desert road at Nukhayb.
+  'Nineveh', 'Kirkuk', 'Sulaymaniyah', 'Baquba', 'Ramadi',
+  'Najaf', 'Kut', 'Samawa', 'Amara', 'Nukhayb',
 ];
 const TUR_LANDS = [
   'Halicarnassus', // Bodrum
@@ -197,6 +210,11 @@ const MODERN_PROVINCES = [
   // Hauran, and the central Upper Galilee out from under Gischala
   'Nabatieh', 'Chouf', 'Jounieh', 'Batroun', 'Bsharri', 'Akkar', 'Heliopolis',
   'Mount Hermon', 'Quneitra', "Ma'alot",
+  // v7.8 (SPEC §226): Jordan, Syria and Iraq at the same resolution
+  'Nineveh', 'Kirkuk', 'Sulaymaniyah', 'Baquba', 'Ramadi',
+  'Najaf', 'Kut', 'Samawa', 'Amara', 'Nukhayb',
+  'Idlib', 'Manbij', 'Rusafa', 'Hasakah', 'Salamiyah', 'Qusayr', 'Douma', 'Suwayda',
+  'Zarqa', 'Mafraq', 'Ruwayshid', 'Shobak', 'Wadi Rum',
   // v6.7: the southern borders drawn true — the Sinai side of the 1906 line
   // and Jordan's Ghor es-Safi, so the Negev triangle wears its real edges
   'Kadesh Barnea', 'Dizahab', 'Zoara',
@@ -596,10 +614,13 @@ export const BOOKMARK_1948 = {
     clientKingdoms: false, diploCapacity: false,
   },
 
-  // Black gold (SPEC §52): the age's prize goods. Kirkuk behind Arbela,
-  // Abadan and Khuzestan behind Susa, the al-Hasa fields behind Gerrha —
-  // the wells that paid for the region's armies.
-  goods: { Arbela: 'oil', Susa: 'oil', Gerrha: 'oil' },
+  // Black gold (SPEC §52): the age's prize goods. Kirkuk, Abadan and
+  // Khuzestan behind Susa, the al-Hasa fields behind Gerrha — the wells that
+  // paid for the region's armies. This line used to say "Kirkuk behind
+  // Arbela", because Kirkuk was inside Arbela's cell and there was nowhere
+  // else to put it; §226 gives the field its own cell and the oil goes on it.
+  // Erbil is a city on the plain beside the field, not the field.
+  goods: { Kirkuk: 'oil', Susa: 'oil', Gerrha: 'oil' },
 
   // Who actually lives here (SPEC §56): the crowded 20th century, and the
   // mixed cities of 1948 in their real proportions. Unlisted provinces are
@@ -665,7 +686,7 @@ export const BOOKMARK_1948 = {
     // town is now its own cell (SPEC §225) — Batanea back under the name of
     // the country it actually is, the Hauran.
     'Caesarea Philippi': 'Banias', 'Batanea': 'Hauran', 'Gamala': 'Golan',
-    'Heliopolis': 'Baalbek',
+    'Heliopolis': 'Baalbek', 'Nineveh': 'Mosul', 'Rusafa': 'Raqqa',
     'Berytus': 'Beirut', 'Tripolis': 'Tripoli', 'Aradus': 'Tartus',
     'Laodicea': 'Latakia', 'Emesa': 'Homs', 'Beroea': 'Aleppo',
     'Apamea': 'Hama', 'Bostra': 'Daraa', 'Dura-Europos': 'Deir ez-Zor',
@@ -887,10 +908,10 @@ export const BOOKMARK_1948 = {
     'Memphis': { tax: 14, prod: 11, mp: 10 },     // Cairo
     'Alexandria': { tax: 12, prod: 10, mp: 8 },
     'Seleucia-Ctesiphon': { tax: 11, prod: 9, mp: 8 }, // Baghdad
-    'Damascus': { tax: 10, prod: 8, mp: 7 },
+    'Damascus': { tax: 9, prod: 8, mp: 7 },   // …less the Ghouta (SPEC §226)
     'Beroea': { tax: 9, prod: 8, mp: 6 },         // Aleppo
     'Berytus': { tax: 9, prod: 9, mp: 5 },        // Beirut
-    'Philadelphia': { tax: 6, prod: 5, mp: 5 },   // Amman
+    'Philadelphia': { tax: 5, prod: 5, mp: 4 },   // Amman, less Zarqa (SPEC §226)
     'Charax': { tax: 7, prod: 7, mp: 5 },         // Basra
     'Gischala': { tax: 1, prod: 1, mp: 1 },       // Jish, no longer a Safed alias
     'Ptolemais': { tax: 4, prod: 4, mp: 3 },      // Acre
@@ -945,6 +966,67 @@ export const BOOKMARK_1948 = {
     'Bsharri': { tax: 1, prod: 1, mp: 1 },
     'Akkar': { tax: 1, prod: 1, mp: 1 },
     'Heliopolis': { tax: 2, prod: 1, mp: 1 },
+    // SPEC §226. Mosul and Kirkuk are cities and an oilfield; the desert road
+    // cells (Nukhayb, Ruwayshid, Mudawwara) are a police post and a well.
+    'Nineveh': { tax: 3, prod: 3, mp: 2 },
+    'Kirkuk': { tax: 3, prod: 3, mp: 2 },
+    'Sulaymaniyah': { tax: 1, prod: 1, mp: 2 },
+    'Baquba': { tax: 2, prod: 2, mp: 1 },
+    'Ramadi': { tax: 1, prod: 1, mp: 1 },
+    'Najaf': { tax: 2, prod: 2, mp: 1 },
+    'Kut': { tax: 1, prod: 2, mp: 1 },
+    'Samawa': { tax: 1, prod: 1, mp: 1 },
+    'Amara': { tax: 1, prod: 2, mp: 1 },
+    'Nukhayb': { tax: 1, prod: 1, mp: 0 },
+    'Idlib': { tax: 2, prod: 2, mp: 1 },
+    'Manbij': { tax: 1, prod: 2, mp: 1 },
+    'Rusafa': { tax: 1, prod: 2, mp: 1 },
+    'Hasakah': { tax: 1, prod: 2, mp: 1 },
+    'Salamiyah': { tax: 1, prod: 1, mp: 1 },
+    'Qusayr': { tax: 1, prod: 2, mp: 1 },
+    'Douma': { tax: 2, prod: 2, mp: 1 },
+    'Suwayda': { tax: 1, prod: 1, mp: 2 },
+    'Zarqa': { tax: 2, prod: 2, mp: 2 },
+    'Mafraq': { tax: 1, prod: 1, mp: 1 },
+    'Ruwayshid': { tax: 1, prod: 1, mp: 0 },
+    'Shobak': { tax: 1, prod: 1, mp: 1 },
+    'Wadi Rum': { tax: 1, prod: 1, mp: 0 },
+    // …and the wealth is REDISTRIBUTED, not duplicated (SPEC §226, the rule
+    // smoke27 has held since §47): a district carved out of a province takes
+    // its development with it, so Iraq, Syria and Jordan come out of this
+    // section with exactly the economies they went into it with. Mosul off
+    // al-Hadr and Shirqat and Sinjar; Kirkuk and Sulaymaniyah off Erbil; the
+    // Diyala and the middle Euphrates off Fallujah and Baghdad; Najaf off
+    // Hilla; Kut and Samawa off Nasiriyah; Amara off Basra, because its own
+    // parent cell is Iranian and Maysan's people are not.
+    'Hatra': { tax: 1, prod: 1, mp: 1 },
+    'Assur': { tax: 1, prod: 2, mp: 1 },
+    'Singara': { tax: 2, prod: 2, mp: 1 },
+    'Arbela': { tax: 1, prod: 1, mp: 1 },
+    'Nehardea': { tax: 2, prod: 2, mp: 1 },
+    'Babylon': { tax: 3, prod: 3, mp: 2 },
+    'Uruk': { tax: 1, prod: 1, mp: 1 },
+    'Charax': { tax: 5, prod: 6, mp: 4 },
+    'Seleucia-Ctesiphon': { tax: 9, prod: 8, mp: 7 },
+    // Syria: Idlib and Manbij off Aleppo, Rusafa off Tadmur, Hasakah off
+    // Qamishli, Qusayr off Homs, Salamiyah off Hama, Douma off the Ghouta,
+    // the Jabal Druze off Daraa.
+    'Beroea': { tax: 6, prod: 5, mp: 3 },
+    'Palmyra': { tax: 3, prod: 4, mp: 2 },
+    'Nisibis': { tax: 3, prod: 3, mp: 3 },
+    'Emesa': { tax: 3, prod: 3, mp: 2 },
+    'Apamea': { tax: 3, prod: 4, mp: 3 },
+    'Bostra': { tax: 2, prod: 2, mp: 2 },
+    'Dura-Europos': { tax: 2, prod: 3, mp: 2 },
+    'Laodicea': { tax: 3, prod: 4, mp: 3 },
+    // Jordan: Zarqa off Amman, Mafraq off Jerash, Shobak off Ma'an, and Wadi
+    // Rum off Aqaba.
+    'Gerasa': { tax: 3, prod: 3, mp: 2 },
+    'Petra': { tax: 3, prod: 6, mp: 3 },
+    'Aila': { tax: 1, prod: 3, mp: 1 },
+    'Gadora': { tax: 2, prod: 2, mp: 2 },
+    'Medaba': { tax: 1, prod: 2, mp: 2 },
+    'Machaerus': { tax: 1, prod: 1, mp: 1 },
     'Mount Hermon': { tax: 1, prod: 1, mp: 0 },
     'Quneitra': { tax: 1, prod: 1, mp: 1 },
     "Ma'alot": { tax: 1, prod: 1, mp: 1 },

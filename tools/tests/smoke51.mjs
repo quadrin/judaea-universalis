@@ -29,8 +29,20 @@ const N = MAP_DATA.provinces.length;
 const bus = { emit() {}, on() { return () => {}; } };
 function boot(seed) {
   const provinceMap = buildProvinceMapping(MAP_DATA, BOOKMARK_614);
+  // Folded, the way the game and the balance harness build it: a latent cell
+  // is not a node in this era, and reading the raw snapshot leaves the walk
+  // stepping into provinces that do not exist here (SPEC §226).
+  const fold = () => {
+    const to = (id) => provinceMap[id] || id;
+    const nb = Array.from({ length: N + 1 }, () => new Set());
+    for (let id = 1; id < snap.neighbors.length; id++) {
+      const t = to(id);
+      for (const x of snap.neighbors[id]) { const u = to(x); if (u !== t) { nb[t].add(u); nb[u].add(t); } }
+    }
+    return nb;
+  };
   const geom = {
-    neighbors: snap.neighbors.map((arr) => new Set(arr)),
+    neighbors: fold(),
     centroids: [null, ...MAP_DATA.provinces.map((p) => {
       const [x, y] = MAP_DATA.project(p.lon, p.lat);
       return { x, y };

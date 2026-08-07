@@ -14932,3 +14932,121 @@ off the occupier, where there is no Beirut to secede from at all.
   the new districts; and the Party of God seated with its ground, its court,
   its government and its opinions — from Beirut, from an occupier, and not
   twice.
+
+## 226. Jordan, Syria and Iraq, and the optimizer that placed them
+
+§225 gave Lebanon and the Golan thirteen districts where they had six. East and
+north of them the atlas was still the ancient one, and the three states the
+1948 chapter fights beside and against were drawn in cells the size of
+provinces. **Iraq was ten cells for four hundred thousand square kilometres,
+with no Mosul on it at all** — the second city of the country was inside a
+desert ruin called al-Hadr — and single cells of 88,000 raster units. Syria was
+seventeen, with nothing between Aleppo and the Tigris but Palmyra and a
+wasteland. Jordan's whole eastern Badia was one cell called Azraq and its whole
+south was Petra.
+
+It shows in the national outlines, which is what the eye reads first. A border
+between two states is a Voronoi arc between their nearest seeds, so where the
+seeds are two hundred kilometres apart the arc has nothing to follow: Susa's
+cell crossed the Tigris into Maysan, Carrhae and Zeugma came down over the
+Euphrates into the Jazira, and the impassable Syrian Desert reached south-west
+across the Baghdad road into Jordan. Twenty-three new cells, all latent:
+
+- **Iraq (10)**: Nineveh, Kirkuk, Sulaymaniyah, Baquba, Ramadi, Najaf, Kut,
+  Samawa, Amara, Nukhayb.
+- **Syria (8)**: Idlib, Manbij, Rusafa, Hasakah, Salamiyah, Qusayr, Douma,
+  Suwayda.
+- **Jordan (5)**: Zarqa, Mafraq, Ruwayshid, Shobak, Wadi Rum.
+
+Nineveh keeps its own name and 1948 shows Mosul over it, the arrangement
+Heliopolis and Caesarea Philippi already have. So does Rusafa: Sergiopolis is
+where that cell's seed had to sit, and Raqqa is the district capital forty
+kilometres north of it.
+
+### The invariant, and why it needed an optimizer
+
+The bar §225 set is that the seven older chapters' folded adjacency is
+**identical**, cell for cell. It was affordable in Lebanon because those parents
+are small and compact, so a child seeded inside one stays inside it. In the
+Jazira and the Babylonian core it is not affordable by hand at all: a new seed
+takes a whole region, and where the old cells are enormous that region crosses
+old boundaries. The first attempt lost twenty-six adjacency rows, and among them
+were **Seleucia-Ctesiphon–Susa and Seleucia-Ctesiphon–Ecbatana** — the road out
+of Babylon into Iran, which is most of what the Parthian and Sasanian chapters
+are about.
+
+Two tools made it tractable, and both are in the tree:
+
+- **The parent is measured, not guessed.** `tools/tests/dump-geometry.mjs`
+  exposes `window._renderer.idArray`; sampling it at a candidate's own pixel
+  says which cell that ground actually belongs to. Three of the twenty-three
+  guesses were wrong — Raqqa is Palmyra's ground and not Carrhae's, Mafraq is
+  Jerash's and not Bostra's, Shobak is Zoara's and not Petra's — and a wrong
+  parent moves pixels between families the moment the map folds.
+- **The placement is searched, not chosen.** The shader's assignment is a
+  weighted Voronoi over a land mask with an 18px domain warp on a 7264px map;
+  the warp jitters borders and does not move adjacency, so the whole thing
+  reproduces in Node over a strided scanline mask in about three seconds
+  against a browser dump's four minutes. That turns "does this break the
+  ancient map" into a function, and a function can be optimized: coordinate
+  descent over (nudge toward the parent seed, weight), maximizing the new
+  cells' total area subject to zero links lost and zero gained. Eleven minutes
+  of search, and the answer is cells three to five times the size hand-tuning
+  had settled for — Nukhayb and Ruwayshid at 1.70, Amara at 1.50, Najaf, Mafraq
+  and Shobak at 1.30 — with the ancient map untouched.
+
+Confirmed against the real raster afterwards, which is the only run that counts:
+**adjacency identical in all seven chapters.** What is left is area drift —
+185k raster units, worst case Dumatha — and area drives nothing but label
+placement and label size (`js/map/labels.js`), which is why the bar is
+adjacency and not area.
+
+### The wealth is redistributed, not duplicated
+
+§47's rule, which `smoke27` has held since: a district carved out of a province
+takes its development with it. Twenty-three new cells at three to eight
+development each is forty-six points of Iraq, thirty-three of Syria and sixteen
+of Jordan appearing out of nothing, so every one of them comes out of the
+parent it was carved from — Mosul off al-Hadr and Shirqat and Sinjar, Kirkuk and
+Sulaymaniyah off Erbil, the Diyala and the middle Euphrates off Fallujah and
+Baghdad, Zarqa off Amman, Douma off the Ghouta, Idlib and Manbij off Aleppo.
+Amara comes off **Basra** rather than off its own parent cell, because its
+parent is Susa and Maysan's people are not Iranian. The three states come out of
+this section with exactly the economies they went into it with: ISR 183, JOR
+173, EGY 213, SYR 187, IRQ 119, unchanged to the point.
+
+And the Kirkuk field goes on Kirkuk. The 1948 goods overlay said `Arbela: oil`
+with a comment reading "Kirkuk behind Arbela", because there was nowhere else to
+put it. There is now.
+
+### Three suites this uncovered
+
+None of them are about the new cells; all three were reading the map in a way
+that only worked while it stayed still.
+
+- `smoke31` checked that a latent group folds to one contiguous province by
+  reading **one level** of `latentParent`. §226 seats Shobak under Zoara, which
+  is itself under Petra, and it is Shobak that joins the other two — so Petra's
+  group read as disjoint while the folded cell it describes is connected.
+  `buildProvinceMapping` resolves chains and so does the raster; now so does the
+  test.
+- `smoke51` built its geometry from the **raw** snapshot instead of folding it,
+  so a latent cell was a node in a chapter that does not have it. The moment
+  Samawa sat between Dumatha and Uruk, a peace table walked into a province that
+  does not exist in 614 CE. It folds now, the way the game and the balance
+  harness always did.
+- `ev_i_secession` handed Syria back `SYRIA_CORE` at the break-up of the United
+  Arab Republic, and that list did not know about the eight new districts — so
+  Damascus seceded without Idlib, Aleppo's countryside or the Jabal Druze, and
+  left the union holding eight orphan cells four hundred kilometres from Cairo.
+  `smoke77` caught it as seven disconnected pieces of Egypt.
+
+- **Regression contract**: `smoke151` — the twenty-three cells registered,
+  latent, parented at the cell the RASTER says owns their ground, and regioned;
+  every one active in 1948 and owned by the right state; the folded adjacency of
+  all seven ancient chapters identical to the snapshot, with Ctesiphon–Susa,
+  Ctesiphon–Ecbatana and Damascus–Palmyra named explicitly because they are what
+  the search was protecting; the five national development totals unchanged to
+  the point; the oil on Kirkuk; Mosul and Raqqa over Nineveh and Rusafa; and
+  Syria seceding from the union in one piece with all twenty-five of its
+  districts.

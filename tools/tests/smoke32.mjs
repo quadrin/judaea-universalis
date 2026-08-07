@@ -197,7 +197,7 @@ console.log('== oil on the map, oil at sea ==');
   const m = boot(BOOKMARK_1948, [], 'ISR');
   const a = boot(BOOKMARK_66, [], 'JUD');
   ok(m.ctx.prov('Susa').good === 'oil' && m.ctx.prov('Gerrha').good === 'oil'
-      && m.ctx.prov('Arbela').good === 'oil',
+      && m.ctx.prov('Kirkuk').good === 'oil',
     '1948 re-goods Khuzestan, al-Hasa and Kirkuk to oil');
   ok(a.ctx.prov('Susa').good !== 'oil' && a.ctx.prov('Arbela').good !== 'oil',
     'the ancient chapters keep their base goods');
@@ -233,7 +233,10 @@ console.log('== old saves meet the wider world (v5.4 reconcile) ==');
   delete legacy.tags.ITA;
   const idOf = (name) => MAP_DATA.provinces.findIndex((p) => p.name === name) + 1;
   legacy.provinces.length = 149; // the pre-v5.4 148-cell schema
-  legacy.provinces[idOf('Arbela')].good = 'grain'; // pre-oil-overlay save
+  legacy.provinces[idOf('Susa')].good = 'grain'; // pre-oil-overlay save
+  // (Susa, not Kirkuk: §226 gave the Kirkuk field its own cell, which a
+  // 148-cell save predates entirely — reconcile has to ADD it, which the
+  // 'pumps Kirkuk again' assertion below is the check for.)
   reconcileGameProvinces({
     game: legacy, DEFINES, MAP_DATA, geom,
     bookmark: BOOKMARK_1948,
@@ -243,7 +246,7 @@ console.log('== old saves meet the wider world (v5.4 reconcile) ==');
     'a missing court is backfilled alive, at era tech, with a manpower pool');
   ok(legacy.provinces[idOf('Roma')] && legacy.provinces[idOf('Roma')].owner === 'ITA',
     'the backfilled court owns its new land');
-  ok(legacy.provinces[idOf('Arbela')].good === 'oil',
+  ok(legacy.provinces[idOf('Susa')].good === 'oil',
     'the goods overlay reaches provinces saved before it existed');
   const mctx = makeCtx({
     game: legacy, DEFINES, MAP_DATA, geom, bus,
