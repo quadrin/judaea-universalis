@@ -1879,6 +1879,93 @@ const PROVINCES = [
   // plain to the Hula: Tarshiha and the villages of the Ma'alot ridge.
   P("Ma'alot", 35.27, 33.01, 0.62, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Ptolemais' }),
+
+  // --- v7.8 (SPEC §228): Jordan, Syria and Iraq at the same resolution ------
+  // §225 gave Lebanon and the Golan thirteen districts where they had six.
+  // East and north of them the atlas was still the ancient one, and the three
+  // states 1948 actually fights beside and against were drawn in cells the
+  // size of provinces: Iraq was TEN cells for four hundred thousand square
+  // kilometres, with no Mosul on it at all and single cells of 88,000 raster
+  // units; Syria was seventeen, with nothing between Aleppo and the Tigris but
+  // Palmyra and a wasteland; Jordan's whole eastern Badia was one cell called
+  // Azraq, and its whole south was Petra.
+  //
+  // It shows in the national outlines, which is what the eye reads first. A
+  // border between two states is a Voronoi arc between their nearest seeds, so
+  // where the seeds are two hundred kilometres apart the arc has nothing to
+  // follow: Susa's cell crossed the Tigris into Maysan, Carrhae and Zeugma
+  // came down over the Euphrates into the Jazira, and the impassable Syrian
+  // Desert reached south-west across the Baghdad road into Jordan. Every one
+  // of the twenty-three cells below is seeded INSIDE the cell it comes out of,
+  // so the seven older chapters fold back to exactly the map they had — and
+  // where the cell it comes out of belongs to the wrong country in 1948, the
+  // new cell is the fix for that border.
+  //
+  // Iraq: the north (Mosul, Kirkuk, Sulaymaniyah), the middle Euphrates and
+  // Diyala (Ramadi, Baquba), the Shia south (Najaf, Kut, Samawa, Amara) and
+  // the western desert road (Nukhayb). Nineveh keeps its own name, the way
+  // Heliopolis does; the rest take the names 1948 knows them by.
+  P('Nineveh', 43.06, 36.2, 1.15, 'PAR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Hatra' }),
+  P('Kirkuk', 44.24, 35.76, 0.90, 'ADI', 'hills', 'grain', 'judaism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Arbela' }),
+  P('Sulaymaniyah', 44.69, 35.72, 0.80, 'ADI', 'mountains', 'livestock', 'judaism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Arbela' }),
+  P('Baquba', 44.46, 33.6, 0.70, 'PAR', 'farmland', 'dates', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Nehardea' }),
+  P('Ramadi', 43.49, 33.41, 1.15, 'PAR', 'desert', 'dates', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Nehardea' }),
+  P('Najaf', 44.37, 32.21, 1.30, 'PAR', 'drylands', 'dates', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Babylon' }),
+  P('Kut', 45.76, 32.15, 1.15, 'PAR', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Uruk' }),
+  P('Samawa', 45.43, 31.32, 1.15, 'PAR', 'drylands', 'dates', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Uruk' }),
+  // Maysan and its marshes. Susa's cell has always crossed the Tigris here,
+  // which is right for Elam and wrong for a map with an Iraq on it.
+  P('Amara', 47.41, 32.05, 1.50, 'PAR', 'marsh', 'fish', 'zoroastrianism', 'persian', 1, 1, 1, 0,
+    { latentParent: 'Susa' }),
+  P('Nukhayb', 41.95, 32.34, 1.70, 'PAR', 'desert', 'livestock', 'zoroastrianism', 'arab', 1, 1, 1, 0,
+    { latentParent: 'Rutba' }),
+
+  // Syria: the north-west (Idlib), the Euphrates bend (Manbij, Raqqa), the
+  // Jazira (Hasakah), the Homs country (Salamiyah, Qusayr), the Ghouta
+  // (Douma) and the Jabal Druze (Suwayda). Manbij and Raqqa come out of cells
+  // that are Turkish in 1948, which is the Euphrates border they fix.
+  P('Idlib', 36.79, 36.01, 0.90, 'ROM', 'hills', 'olive_oil', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Beroea' }),
+  P('Manbij', 37.92, 36.74, 0.70, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Zeugma' }),
+  // Sergiopolis: the pilgrim city on the steppe south of the Euphrates bend,
+  // which is where this cell's seed had to sit to leave Beroea–Carrhae alone.
+  // 1948 shows Raqqa over it — the district capital forty kilometres north.
+  P('Rusafa', 38.72, 35.39, 0.80, 'OSR', 'drylands', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Palmyra' }),
+  P('Hasakah', 40.89, 36.67, 1.00, 'ADI', 'drylands', 'grain', 'zoroastrianism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Nisibis' }),
+  P('Salamiyah', 36.92, 34.9, 0.70, 'ROM', 'steppe', 'livestock', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Emesa' }),
+  P('Qusayr', 36.58, 34.56, 1.30, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Emesa' }),
+  P('Douma', 36.59, 33.56, 0.90, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Damascus' }),
+  P('Suwayda', 36.56, 32.69, 0.90, 'NAB', 'hills', 'wine', 'nabataean', 'nabataean', 1, 1, 1, 0,
+    { latentParent: 'Bostra' }),
+
+  // Jordan: the kingdom's own north (Zarqa, Mafraq), the desert road east to
+  // the Iraqi frontier (Ruwayshid — out of the impassable Syrian Desert,
+  // which is the cell that used to reach across the Badia), and the south
+  // (Shobak, and Mudawwara on the Saudi line).
+  P('Zarqa', 36.03, 32.02, 1.00, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 1, 1, 1, 0,
+    { latentParent: 'Philadelphia' }),
+  P('Mafraq', 36.18, 32.33, 1.30, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 1, 1, 1, 0,
+    { latentParent: 'Gerasa' }),
+  P('Ruwayshid', 38.75, 32.5, 1.70, 'WASTE', 'desert', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
+    { latentParent: 'Syrian Desert' }),
+  P('Shobak', 35.55, 30.6, 1.30, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 1, 0,
+    { latentParent: 'Zoara' }),
+  P('Wadi Rum', 35.63, 29.49, 0.70, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 1, 0,
+    { latentParent: 'Aila' }),
 ];
 
 // ---------------------------------------------------------------------------
@@ -1920,14 +2007,16 @@ const REGIONS = {
     'Kiryat Shmona', "Ma'alot"],
   'Transjordan': ['Gadora', 'Machaerus', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia',
     'Caesarea Philippi', 'Batanea', 'Gamala', 'Medaba', 'Bostra', 'Azraq', 'Zoara',
-    'Mount Hermon', 'Quneitra'],
+    'Mount Hermon', 'Quneitra',
+    'Suwayda', 'Zarqa', 'Mafraq', 'Ruwayshid'],
   'Negev': ['Oboda', 'Aila', 'Kadesh Barnea', 'Beersheba', 'Arad', 'Dimona',
-    'Mitzpe Ramon', 'Paran', 'Eilat'],
+    'Mitzpe Ramon', 'Paran', 'Eilat', 'Shobak', 'Wadi Rum'],
   'Phoenicia': ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus',
     'Nabatieh', 'Chouf', 'Jounieh', 'Batroun', 'Bsharri', 'Akkar'],
   'Syria': ['Damascus', 'Chalcis', 'Emesa', 'Apamea', 'Antioch', 'Seleucia Pieria',
     'Laodicea', 'Beroea', 'Cyrrhus', 'Palmyra', 'Zeugma', 'Samosata', 'Dura-Europos',
-    'Syrian Desert', 'Rutba', 'Heliopolis'],
+    'Syrian Desert', 'Rutba', 'Heliopolis',
+    'Idlib', 'Manbij', 'Salamiyah', 'Qusayr', 'Douma'],
   'Arabia': ['Petra', 'Hegra', 'Tayma', 'Dumatha', 'Yathrib', 'Khaybar', 'Gerrha',
     'Arabian Desert', 'Macoraba', 'Asir', 'Yamama', 'Rub al-Khali'],
   'Egypt': ['Pelusium', 'Rhinocolura', 'Alexandria', 'Athribis', 'Leontopolis', 'Memphis',
@@ -1940,8 +2029,10 @@ const REGIONS = {
     'Trapezus', 'Halicarnassus'],
   'Armenia': ['Tigranocerta', 'Sophene', 'Amida'],
   'Caucasus': ['Phasis', 'Caucasian Albania'],
-  'Assyria': ['Edessa', 'Carrhae', 'Nisibis', 'Singara', 'Hatra', 'Arbela', 'Assur'],
-  'Babylonia': ['Seleucia-Ctesiphon', 'Babylon', 'Nehardea', 'Uruk', 'Charax'],
+  'Assyria': ['Edessa', 'Carrhae', 'Nisibis', 'Singara', 'Hatra', 'Arbela', 'Assur',
+    'Nineveh', 'Kirkuk', 'Sulaymaniyah', 'Hasakah', 'Rusafa'],
+  'Babylonia': ['Seleucia-Ctesiphon', 'Babylon', 'Nehardea', 'Uruk', 'Charax',
+    'Baquba', 'Ramadi', 'Najaf', 'Kut', 'Samawa', 'Amara', 'Nukhayb'],
   'Persia': ['Ecbatana', 'Gazaca', 'Susa', 'Persepolis', 'Gabae', 'Hyrcania'],
   'Greece': ['Corinth', 'Athens', 'Sparta', 'Thessalonica', 'Gortyn', 'Rhodes'],
   'Thrace': ['Hadrianopolis', 'Byzantion', 'Philippopolis', 'Serdica', 'Novae'],

@@ -86,9 +86,23 @@ console.log('== every merged province is one piece of land ==');
 {
   const { readFileSync } = await import('fs');
   const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
+  // The merged province is the whole CHAIN, not one level of it: §226 seats
+  // Shobak under Zoara, which is itself under Petra, so Petra's folded cell is
+  // Petra + Zoara + Shobak and it is Shobak that joins the other two. Reading
+  // one level deep called that disjoint — buildProvinceMapping resolves chains
+  // and so does the raster, so the test has to as well.
+  const root = (name) => {
+    let cur = name, guard = 0;
+    while (guard++ < 16) {
+      const p = MAP_DATA.provinces.find((q) => q.name === cur);
+      if (!p || !p.latentParent) return cur;
+      cur = p.latentParent;
+    }
+    return cur;
+  };
   const groups = {};
   MAP_DATA.provinces.forEach((p) => {
-    if (p.latentParent) (groups[p.latentParent] = groups[p.latentParent] || []).push(p.name);
+    if (p.latentParent) (groups[root(p.name)] = groups[root(p.name)] || []).push(p.name);
   });
   const disjoint = [];
   for (const parent of Object.keys(groups)) {

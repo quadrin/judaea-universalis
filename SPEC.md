@@ -15086,6 +15086,257 @@ it has changed sides.
   crown war is now settled by the claimant on his own reach (§116) rather than
   by the patron §61 used to promote over him.
 
+## 227. The constitution takes a name of its own
+
+Five forks in five chapters ask a playable court what kind of state it is, and
+four of them ask a Jewish one. Since §214 the answer is a fact rather than a
+label: the Government row moves with it, the succession rules move with it, a
+Judaea that filled its high priesthood by lot stopped designating heirs that
+afternoon and could no longer be married into by anybody.
+
+**And the map did not move at all.** All four settlements of 71 left the same
+three letters on it, in the same blue, under the same menorah, working the same
+chapter tree. The Temple-State and No Ruler but God were one state wearing two
+labels, and the label was in a panel row a player had to go and look at. The
+one decision in each of those chapters that is explicitly about what the
+country IS was the only decision in the game that did not give the country a
+name.
+
+### Ten constitutions, ten crowns, ten trees
+
+Every Jewish constitution is now a formable crown on the §22 machinery every
+other greater banner already uses — three letters, a name and a colour on the
+map, an emblem, national ideas, a founding payoff, and a mission tree written
+for that constitution and no other:
+
+| Crown | Constitution | Out of | Chapters |
+|---|---|---|---|
+| **SNH** The Temple-State | Temple-State | JUD | 66 |
+| **GRL** The Commonwealth of the Lot | The Lot | JUD | 66 |
+| **YVL** The Jubilee Commonwealth | The Jubilee | JUD | 66 |
+| **HRZ** The Freedom of Zion | No Ruler but God | JUD | 66 |
+| **KHN** The Priest-Kingdom | Diadem and Mitre | HAS | 167 |
+| **GRS** The Judaean Commonwealth | Priesthood and Assembly | HAS | 167 |
+| **KTR** The Crown of Judaea | The Diadem | JUD | 132, 614 |
+| **BTD** The House of David | The House of David | JUD | 132, 614 |
+| **SHB** The Two Houses | The Two Houses | JUD | 132 |
+| **NSI** The Patriarchate | The Patriarchate | JUD | 132 |
+
+**The plumbing is one line per crown in `GOV_OF`,** and it is the whole
+section. `switchTagCore` has applied the target banner's government since §25 —
+a proclaimed republic votes, a proclaimed kingdom crowns — and §214 taught that
+step the declared succession rules. So a banner that declares `lot` is a banner
+whose proclamation abolishes the heir, and one that declares `jubilee` is a
+banner whose proclamation starts an election clock. Nothing new was needed in
+the engine: the crown is the constitution because the table says which
+constitution it is.
+
+**The fork is untouched, on purpose.** It still writes the government at its
+own call site, still sets its §119 road marker, still fills §130's store. A
+player who answers The Second Government and never opens the Decisions panel
+gets exactly the game §214 shipped; the crown is the second half, offered
+afterwards, and its first requirement is the constitution itself — read off
+`govType` rather than off a flag, because that is the fact it is about. Answer
+the fork one way and one crown appears in the panel and the other three do not,
+which is `smoke152`'s live test through the real cards.
+
+### What ten different trees had to mean
+
+Each crown reads thirteen nodes: a spine of five and a branch of eight. The
+spine is written once and shared, because the first thing any of these states
+has to do is the same thing — survive its own founding, be obeyed from
+Jerusalem, put an army under the new name, run a chancery that can assess a
+village under it, and then the hard one, stop. It reads relative to the
+chapter's own technology baseline for §211's reason: these crowns stand in
+chapters seven hundred years apart. Its bars sit deliberately ABOVE what the
+crown was proclaimed on, so no rung is already ticked on the day the panel
+opens.
+
+The branch is where the constitutions stop resembling each other, and the
+branches share no node at all. The temple-state restores the twenty-four
+courses, collects the half-shekel from three continents, and is asked to be
+forgiven for being the grievance of Pesachim 57a while holding the four houses
+at 70. The Lot has to keep an honest register of every priestly house in the
+country — a harder administrative act than naming an heir — and its last rung
+is the death that is not a wound, which is the mechanical content of
+"hereditary priestly power ends in an afternoon". The Jubilee has to come
+through a sabbatical year at peace with money still in hand, and cannot
+borrow, ever. Freedom of Zion is asked for a state with no ally, no overlord
+and no address, and to survive its own Menahem. The priest-kingdom is asked to
+hold the Pharisees and the Sadducees at fifty *at once*, which the actual
+dynasty never managed. The commonwealth is asked to be dealt with on the merits
+by chanceries that would rather address a peer. The crown out of a war is asked
+for a second king of the same house. The house of David is asked to live beside
+the expectation. The two houses are asked to put two seals on every order. And
+Ezekiel's prince is asked for the one thing the other nine are not: to obey
+46:18 while the founder's own leases are in the room next door.
+
+### The road onward, and what it costs
+
+The Kingdom of Israel is the endgame of the whole Jewish arc and it is reached
+by a dynasty rather than by a war, so naming the lesser crown may not close off
+the greater one: every one of the ten keeps an MLI formable on exactly the
+terms JUD and HAS have. And proclaiming it **ends the constitution**, because
+MLI's own government is a monarchy and `switchTagCore` applies the new banner's
+— a commonwealth that finds a son of David and crowns him has answered its own
+question, which is the point and not an oversight.
+
+Three smaller consequences. All ten are player-only, for the reason the four
+dynastic restorations are: an AI court that re-branded itself mid-chapter would
+orphan the fork's own follow-on cards, every one of which is addressed to JUD
+or HAS. All ten join `JUDAEAN_HOMELAND_TAGS`, because a temple-state driven off
+the coastal plain is still a state the Judaean hills rise inside. And the
+Samaritan crown at Neapolis (§136) adopts two of these same constitutions and
+gets no banner here: SAM is not a Jewish court, its road is its own chapter's,
+and a Samaritan state flying a Judaean crown would be the one thing that whole
+fork is about not being.
+
+- **Regression contract**: `smoke152` — the table (ten adoptable Jewish
+  constitutions, ten crowns, each with a tag def, an emblem, a government, an
+  AI temper, a payoff and a chain; no two sharing three letters, a name, a
+  colour, a constitution or an emblem; none of them wearing Judaea's menorah or
+  Israel's hexagram; none of them AI-formable; none of them booted by any
+  chapter); the plumbing (each proclamation landing on its constitution, the
+  clock started where it votes, the heir gone where nothing inherits, the name,
+  the lineage and §135's forwarding address); the gate (shut on the wrong
+  constitution, open on the right one, and shutting every rival crown of the
+  same chapter); the four settlements of 71 fired through the live cards, each
+  opening exactly its own crown; the trees (thirteen nodes each, every node
+  dressed, seated, reachable and waiting only on nodes that exist, no branch
+  node shared between any two crowns, and every reward seating keys the engine
+  actually reads); nothing free on the day of the proclamation; **every node of
+  every crown paying in a maximal realm** in every chapter it is offered in,
+  which is where dead content hides; `missionsFor` returning the crown's own
+  chain rather than the chapter's; and the road onward — the MLI formable
+  present from all ten, and the constitution ending when the kingdom is
+  proclaimed over it. `smoke141` (§214's table and rules), `smoke138` (§211's
+  crown and civil bands), `smoke89` (§130's store), `smoke83`/`smoke117` (the
+  road markers and fork badges) and `smoke46`/`smoke71` (emblem art and tag
+  completeness) pass unmoved: the forks, the store, the markers and the four
+  starting constitutions are all exactly where they were. On the merged tree —
+  which renumbered this section once, under the crown war's §226 and its
+  `smoke151` — the battery is **152 of 152 headless suites, zero failures**,
+  the crown war's own suite included, and `node tools/autorun.mjs 8` is byte
+  identical to `origin/main` on all eight bookmarks: the ten crowns are
+  player-only, no bookmark boots one, and not one all-AI trajectory moves.
+## 228. Jordan, Syria and Iraq, and the optimizer that placed them
+
+§225 gave Lebanon and the Golan thirteen districts where they had six. East and
+north of them the atlas was still the ancient one, and the three states the
+1948 chapter fights beside and against were drawn in cells the size of
+provinces. **Iraq was ten cells for four hundred thousand square kilometres,
+with no Mosul on it at all** — the second city of the country was inside a
+desert ruin called al-Hadr — and single cells of 88,000 raster units. Syria was
+seventeen, with nothing between Aleppo and the Tigris but Palmyra and a
+wasteland. Jordan's whole eastern Badia was one cell called Azraq and its whole
+south was Petra.
+
+It shows in the national outlines, which is what the eye reads first. A border
+between two states is a Voronoi arc between their nearest seeds, so where the
+seeds are two hundred kilometres apart the arc has nothing to follow: Susa's
+cell crossed the Tigris into Maysan, Carrhae and Zeugma came down over the
+Euphrates into the Jazira, and the impassable Syrian Desert reached south-west
+across the Baghdad road into Jordan. Twenty-three new cells, all latent:
+
+- **Iraq (10)**: Nineveh, Kirkuk, Sulaymaniyah, Baquba, Ramadi, Najaf, Kut,
+  Samawa, Amara, Nukhayb.
+- **Syria (8)**: Idlib, Manbij, Rusafa, Hasakah, Salamiyah, Qusayr, Douma,
+  Suwayda.
+- **Jordan (5)**: Zarqa, Mafraq, Ruwayshid, Shobak, Wadi Rum.
+
+Nineveh keeps its own name and 1948 shows Mosul over it, the arrangement
+Heliopolis and Caesarea Philippi already have. So does Rusafa: Sergiopolis is
+where that cell's seed had to sit, and Raqqa is the district capital forty
+kilometres north of it.
+
+### The invariant, and why it needed an optimizer
+
+The bar §225 set is that the seven older chapters' folded adjacency is
+**identical**, cell for cell. It was affordable in Lebanon because those parents
+are small and compact, so a child seeded inside one stays inside it. In the
+Jazira and the Babylonian core it is not affordable by hand at all: a new seed
+takes a whole region, and where the old cells are enormous that region crosses
+old boundaries. The first attempt lost twenty-six adjacency rows, and among them
+were **Seleucia-Ctesiphon–Susa and Seleucia-Ctesiphon–Ecbatana** — the road out
+of Babylon into Iran, which is most of what the Parthian and Sasanian chapters
+are about.
+
+Two tools made it tractable, and both are in the tree:
+
+- **The parent is measured, not guessed.** `tools/tests/dump-geometry.mjs`
+  exposes `window._renderer.idArray`; sampling it at a candidate's own pixel
+  says which cell that ground actually belongs to. Three of the twenty-three
+  guesses were wrong — Raqqa is Palmyra's ground and not Carrhae's, Mafraq is
+  Jerash's and not Bostra's, Shobak is Zoara's and not Petra's — and a wrong
+  parent moves pixels between families the moment the map folds.
+- **The placement is searched, not chosen.** The shader's assignment is a
+  weighted Voronoi over a land mask with an 18px domain warp on a 7264px map;
+  the warp jitters borders and does not move adjacency, so the whole thing
+  reproduces in Node over a strided scanline mask in about three seconds
+  against a browser dump's four minutes. That turns "does this break the
+  ancient map" into a function, and a function can be optimized: coordinate
+  descent over (nudge toward the parent seed, weight), maximizing the new
+  cells' total area subject to zero links lost and zero gained. Eleven minutes
+  of search, and the answer is cells three to five times the size hand-tuning
+  had settled for — Nukhayb and Ruwayshid at 1.70, Amara at 1.50, Najaf, Mafraq
+  and Shobak at 1.30 — with the ancient map untouched.
+
+Confirmed against the real raster afterwards, which is the only run that counts:
+**adjacency identical in all seven chapters.** What is left is area drift —
+185k raster units, worst case Dumatha — and area drives nothing but label
+placement and label size (`js/map/labels.js`), which is why the bar is
+adjacency and not area.
+
+### The wealth is redistributed, not duplicated
+
+§47's rule, which `smoke27` has held since: a district carved out of a province
+takes its development with it. Twenty-three new cells at three to eight
+development each is forty-six points of Iraq, thirty-three of Syria and sixteen
+of Jordan appearing out of nothing, so every one of them comes out of the
+parent it was carved from — Mosul off al-Hadr and Shirqat and Sinjar, Kirkuk and
+Sulaymaniyah off Erbil, the Diyala and the middle Euphrates off Fallujah and
+Baghdad, Zarqa off Amman, Douma off the Ghouta, Idlib and Manbij off Aleppo.
+Amara comes off **Basra** rather than off its own parent cell, because its
+parent is Susa and Maysan's people are not Iranian. The three states come out of
+this section with exactly the economies they went into it with: ISR 183, JOR
+173, EGY 213, SYR 187, IRQ 119, unchanged to the point.
+
+And the Kirkuk field goes on Kirkuk. The 1948 goods overlay said `Arbela: oil`
+with a comment reading "Kirkuk behind Arbela", because there was nowhere else to
+put it. There is now.
+
+### Three suites this uncovered
+
+None of them are about the new cells; all three were reading the map in a way
+that only worked while it stayed still.
+
+- `smoke31` checked that a latent group folds to one contiguous province by
+  reading **one level** of `latentParent`. §228 seats Shobak under Zoara, which
+  is itself under Petra, and it is Shobak that joins the other two — so Petra's
+  group read as disjoint while the folded cell it describes is connected.
+  `buildProvinceMapping` resolves chains and so does the raster; now so does the
+  test.
+- `smoke51` built its geometry from the **raw** snapshot instead of folding it,
+  so a latent cell was a node in a chapter that does not have it. The moment
+  Samawa sat between Dumatha and Uruk, a peace table walked into a province that
+  does not exist in 614 CE. It folds now, the way the game and the balance
+  harness always did.
+- `ev_i_secession` handed Syria back `SYRIA_CORE` at the break-up of the United
+  Arab Republic, and that list did not know about the eight new districts — so
+  Damascus seceded without Idlib, Aleppo's countryside or the Jabal Druze, and
+  left the union holding eight orphan cells four hundred kilometres from Cairo.
+  `smoke77` caught it as seven disconnected pieces of Egypt.
+
+- **Regression contract**: `smoke153` — the twenty-three cells registered,
+  latent, parented at the cell the RASTER says owns their ground, and regioned;
+  every one active in 1948 and owned by the right state; the folded adjacency of
+  all seven ancient chapters identical to the snapshot, with Ctesiphon–Susa,
+  Ctesiphon–Ecbatana and Damascus–Palmyra named explicitly because they are what
+  the search was protecting; the five national development totals unchanged to
+  the point; the oil on Kirkuk; Mosul and Raqqa over Nineveh and Rusafa; and
+  Syria seceding from the union in one piece with all twenty-five of its
+  districts.
+
 ## 229. What history asks, and what a realm is owed for doing it
 
 The mission tree was the one screen in this game that ran itself. It read the

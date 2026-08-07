@@ -506,6 +506,25 @@ static site, the zero dependencies, or the missing build step changes.
   elects its head of government — theocracies never anoint a child, and tribal
   confederations field every tent's sons. Forming a nation adopts its
   constitution.
+- **And a constitution you choose becomes a country of its own.** The forks
+  that ask what kind of state this is — the Hasmonean diadem, the settlement
+  after the Great Revolt, the accession of Beit Kosiba, the line of Jehoiachin
+  — used to leave the same three letters on the map in the same blue whichever
+  answer you gave. Each of the ten answers now has a crown you can proclaim:
+  the Temple-State, the Commonwealth of the Lot, the Jubilee Commonwealth, the
+  Freedom of Zion, the Priest-Kingdom, the Judaean Commonwealth, the Crown of
+  Judaea, the House of David, the Two Houses, the Patriarchate. Each has its
+  own name, colour and emblem, its own founding payoff and national ideas, and
+  its own thirteen-node mission tree — the temple-state restoring the
+  twenty-four courses and collecting the half-shekel from three continents,
+  the Lot keeping an honest register of every priestly house in the country,
+  the Jubilee coming through a sabbatical year at peace and unable to borrow,
+  Freedom of Zion holding a state with no ally and no address, Ezekiel's prince
+  obeying 46:18 while the founder's own leases sit in the room next door.
+  Taking the crown *is* adopting the constitution — the Lot's proclamation
+  abolishes your heir, the Jubilee's starts an election clock — and none of
+  them closes the road to the Kingdom of Israel, which ends the constitution
+  when you proclaim it, because a kingdom is what it is.
 - Armies wear their age on the map: antiquity's swallow-tailed standards, the
   lance ages' pennons, and squared modern brigade flags with rifle or tank
   glyphs — and modern armies march half again as fast and break fortress walls
