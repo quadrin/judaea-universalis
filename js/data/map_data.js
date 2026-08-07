@@ -1215,7 +1215,7 @@ const PROVINCES = [
   // The 1948 bookmark activates them as independent modern gameplay regions.
   P('Safed', 35.50, 32.97, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Gischala' }),
-  P('Nahariya', 35.09, 33.04, 0.70, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Nahariya', 35.12, 33.06, 0.75, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Ptolemais' }),
   P('Afula', 35.29, 32.61, 0.68, 'ROM', 'farmland', 'grain', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Scythopolis' }),
