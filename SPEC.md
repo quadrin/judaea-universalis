@@ -15098,7 +15098,7 @@ account of Trajan at the Gulf and the melted plate of every church in the City
 wrapped around the fact that you have to hold two provinces. A tooltip is not
 a page. The Compendium is the page.
 
-**It paid too little, and not for long.** A quarter of the rewards were
+**It paid too little, and not for long.** Forty-nine of the rewards were
 temporary — a manpower bonus for twenty-four months, a discipline bonus for
 two years — so the thing a chapter asked you to do bought a bonus you outlived
 inside the same chapter. The rest were flat grants of 25 points against a
@@ -15139,11 +15139,19 @@ after each accomplishment the chain rests `missionPaceMonths` before the next
 may be banked, so the order you claim a satisfied branch in is a decision
 rather than a formality.
 
-**The AI is not asked to click.** §102's symmetry is the load-bearing rule
-here — a court with no panel earns its branches on the same terms as the
-player — so every non-player chain goes on banking one a month at exactly the
-old cadence. That half of the contract is unchanged, and `smoke134` now counts
-it on Judaea with Rome on the throne.
+**A chair nobody is sitting in is not asked to click.** §102's symmetry is the
+load-bearing rule here — a court with no panel earns its branches on the same
+terms as the player — so every unseated chain goes on banking one a month at
+exactly the old cadence. That half of the contract is unchanged, and
+`smoke134` now counts it on Judaea with Rome on the throne.
+
+The question the gate asks is `isHumanChair`, not `playerTag`, and the
+difference is two real cases. A multiplayer GUEST holds a chair of their own
+(§216) and has the same panel, so their chain has to wait for their click too
+— under `playerTag` the host's tree waited while the guest's paid itself, and
+the two players were playing different games. And an all-AI autorun seats
+nobody at all, so the harness banks every chain on the calendar, which is the
+only thing a run with no hands can mean.
 
 ### The terms are worth meeting
 
@@ -15155,9 +15163,9 @@ were left exactly as authored — those are history, and history does not scale.
 Every mission modifier is now **permanent**: forty-nine temporary bonuses lost
 their expiry, because what a chapter asks of a realm should be what the realm
 KEEPS. Point grants scale ×2.4 into the 25–120 band, talents and manpower
-double, legitimacy ×1.5 to a ceiling of 40. The Freedom of Zion pays sixty
-martial points and a coinage that never lapses; it also now wants +40 war
-score against Rome, which is a war visibly being won.
+double, legitimacy ×1.5 to a ceiling of 40. Throw Back the Governor pays sixty martial
+points where it paid twenty-five; the Freedom of Zion still mints its coinage
+and now wants +40 war score against Rome, which is a war visibly being won.
 
 Because the descriptions are generated from the checks wherever a check counts
 something, the two cannot drift: the desc says 28,000 because the check says
