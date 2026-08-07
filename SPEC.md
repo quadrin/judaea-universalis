@@ -15444,3 +15444,80 @@ Carrhae–Dura-Europos are untouched. Damascus reaches Palmyra and Emesa **throu
 the Ghouta** now instead of directly, which is where those roads physically ran
 — §228 could not seat a cell east of Damascus without losing the road entirely,
 and this section seats one *on* it.
+
+### Nine cells for ground that had none
+
+The other half of the gap could not be closed by activating anything, because
+the atlas had no cell there to activate. The Decapolis is ten cities and the map
+carried five of them; the Nabataean kingdom's whole interior — the Hisma, the
+Moabite plateau, the Wadi Sirhan, the Hejaz oases — was four enormous cells. So
+nine are added, appended to `PROVINCES` like every cell since §225 so that no
+existing id moves:
+
+- **The Decapolis and the plateaux (5)**: Hippos (Susita, the ridge above the
+  lake's south-east shore), Abila, Dion, Esbus (Heshbon of the Ammonite
+  plateau), Characmoba (Kir of Moab).
+- **The Nabataean interior (4)**: Auara (Humayma, the cistern town of the
+  Hisma), Elusa (Haluza, first of the Negev caravan towns), Dedan (the Lihyanite
+  oasis north of Hegra), Sirhan (the wadi road from the Hauran to the Jawf).
+
+These are **not latent**. A latent cell needs a chapter to switch it on and, by
+`smoke27`, needs 1948 to switch it on too; these places are Hellenistic and
+Nabataean ones the modern map merely inherited, so they are provinces in all
+eight chapters and wear a modern district name in 1948 — Karak over Characmoba,
+Ma'an over Auara, al-Ula over Dedan, Sakakah over Sirhan, the arrangement Nineveh
+and Heliopolis already have.
+
+Every one takes its development out of the province it was carved from, and the
+carve-parent is chosen so that **parent and child share an owner in every
+chapter** — which is what makes the conservation hold per realm and not merely
+per group. Dion is seated at Husn rather than at Tell al-Ash'ari for exactly this
+reason: the identification is genuinely disputed, and the Jordanian candidate
+keeps the district with the Decapolis it was carved out of instead of moving
+development across a modern border.
+
+One trap this sprang: 1948 overrides some parents' development and not others,
+and only the overridden ones need their table adjusted. Gerasa is overridden, so
+reducing its base did nothing and Dion's three points appeared out of nowhere —
+Jordan opened on 176 where it has always opened on 173. Philadelphia, Medaba,
+Petra, Oboda and Gerasa are the five that needed the second edit; Gadara,
+Hegra and Dumatha did not, because 1948 reads their base.
+
+### What moved, and what did not
+
+Development is conserved **in every era, for every tag** — checked by booting
+all eight chapters against the pre-§229 tree and diffing the whole table, not a
+named subset. What changed is the count and the grain:
+
+| chapter | before | after |
+|---|---|---|
+| 66 CE | NAB 10 provinces, 45,486 km² each | NAB 22, **21,017** |
+| 66 CE | ROM 169, 29,861 · AGR 3, 2,433 · ADI 3, 27,670 | ROM 179, 28,195 · AGR 4, 1,774 · ADI 4, 20,763 |
+| 167 BCE | NAB 10, 45,641 · SEL 76, 21,473 | NAB 22, **21,059** · SEL 89, 18,331 |
+| 67 BCE | NAB 12, 39,114 | NAB 25, **18,961** |
+| 40 BCE | NAB 12, 38,581 | NAB 26, **18,105** |
+| 529/614 CE | GHA 7, 42,547 | GHA 14, **22,324** |
+
+Judaea against Nabataea in 66 CE was one province to seventy-one of theirs by
+area; it is one to thirty-seven now. The gradient is not gone — the Judaean hill
+country genuinely was settled more densely than the Hisma, and a map that says
+otherwise is lying — but it is no longer the difference between a country and a
+continent.
+
+The raster was regenerated from a real browser dump, twice: once **before** any
+edit, to prove the tool reproduces the committed snapshot byte for byte in this
+environment (it does — zero adjacency links lost or gained), and once after. No
+cell was starved: nothing that had land neighbours lost them, and the seven that
+have none are the islands that never had any. The largest boundary drift is
+Dumatha at 20%, which is the Wadi Sirhan becoming its own district, and Gadara at
+56%, which is Hippos and Abila taking the ground they are named for.
+
+- **Regression contract**: `smoke154` — all twenty-five districts registered and
+  regioned, the nine new ones appended past the whole §228 atlas and none of them
+  latent; every one a province in all seven ancient chapters and under the same
+  crown as the province it was carved from; every realm in every chapter opening
+  on the development it always had, 1948 included to the point in all six states
+  `smoke153` names; the four §228 roads still one hop and the two through the
+  Ghouta still two; every new cell carrying real area and neighbours from the
+  raster; and the genuinely modern districts — Dimona, the Chouf, Najaf, Idlib —
+  still folding away in 66 CE.

@@ -281,6 +281,13 @@ export const BOOKMARK_67 = {
     'Salamiyah': 'SEL',     // with Emesa
     'Akkar': 'SEL',         // with Tripolis
     'Batroun': 'SEL',       // with Byblos
+    // …and the five §229 cells east of the Jordan, split between the brothers,
+    // Aretas and the Decapolis Aristobulus holds
+    'Hippos': 'ARI',        // with Gadara
+    'Abila': 'ARI',         // with Gadara
+    'Dion': 'ARI',          // with Gerasa
+    'Esbus': 'NAB',         // with Philadelphia
+    'Characmoba': 'HYR',    // with Medaba
     // -- Hyrcanus (HYR): Idumea, the Shephelah, the coast, Samaria, Perea ------
     'Hebron': 'HYR',
     'Adora': 'HYR',

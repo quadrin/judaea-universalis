@@ -156,6 +156,9 @@ const BYZ_LANDS = [
   // the Damascene, each with the province it was carved out of.
   'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
   'Mount Hermon', 'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
+  // …and the §229 cells the empire kept: the lake's east ridge with Gadara,
+  // and the Negev-Arabah road with Petra and Oboda.
+  'Hippos', 'Abila', 'Auara', 'Elusa',
   // Anatolia, Cyprus, Egypt, and the empire's west
   'Tarsus', 'Iconium', 'Tyana', 'Pisidia', 'Attalia', 'Seleucia Trachea',
   'Caesarea Mazaca', 'Salamis', 'Paphos', 'Alexandria', 'Athribis',
@@ -180,7 +183,10 @@ const SAS_LANDS = [
   'Nineveh', 'Kirkuk',  // SPEC §229, with Hatra and Arbela
 ];
 const GHA_LANDS = ['Bostra', 'Philadelphia', 'Medaba', 'Gerasa', 'Hegra', 'Dumatha', 'Tayma',
-  'Azraq', 'Suwayda'];  // SPEC §229: the Hauran and the Sirhan ride with Bostra
+  // SPEC §229: the Hauran and the Sirhan ride with Bostra, and the phylarchate's
+  // own country — the Decapolis interior, the Ammonite and Moabite plateaux, and
+  // the Hejaz road — rides with Gerasa, Philadelphia, Medaba, Hegra and Dumatha.
+  'Azraq', 'Suwayda', 'Dion', 'Esbus', 'Characmoba', 'Dedan', 'Sirhan'];
 
 const OWNERS = {};
 for (const n of BYZ_LANDS) OWNERS[n] = 'BYZ';

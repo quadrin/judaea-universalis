@@ -1108,9 +1108,9 @@ const PROVINCES = [
   P('Ptolemais', 35.11, 32.91, 0.75, 'ROM', 'coast', 'glass', 'hellenism', 'phoenician', 4, 5, 3, 0),
   P('Scythopolis', 35.50, 32.50, 0.80, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 5, 3, 0),
   P('Pella', 35.61, 32.45, 0.80, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 3, 3, 3, 0),
-  P('Gadara', 35.68, 32.65, 0.85, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 4, 4, 3, 0),
-  P('Gerasa', 35.89, 32.28, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
-  P('Philadelphia', 35.93, 31.95, 1.00, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 3, 4, 3, 0),
+  P('Gadara', 35.68, 32.65, 0.85, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 2, 2, 2, 0),
+  P('Gerasa', 35.89, 32.28, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 3, 3, 2, 0),
+  P('Philadelphia', 35.93, 31.95, 1.00, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 2, 3, 2, 0),
   // --- Kingdom of Agrippa II (AGR) -----------------------------------------
   P('Caesarea Philippi', 35.69, 33.25, 0.80, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 3, 4, 2, 0),
   P('Batanea', 36.25, 32.90, 1.10, 'AGR', 'farmland', 'grain', 'judaism', 'galilean', 3, 4, 4, 0),
@@ -1159,14 +1159,14 @@ const PROVINCES = [
   P('Salamis', 33.75, 35.12, 0.90, 'ROM', 'coast', 'timber', 'hellenism', 'greek', 4, 5, 3, 0),
   P('Paphos', 32.60, 34.85, 0.90, 'ROM', 'coast', 'wine', 'hellenism', 'greek', 3, 4, 2, 0),
   // --- Nabataea (NAB) -------------------------------------------------------
-  P('Petra', 35.44, 30.32, 1.20, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 3, 6, 2, 2,
+  P('Petra', 35.44, 30.32, 1.20, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 3, 5, 1, 2,
     { wonder: 'petra' }),
   P('Bostra', 36.48, 32.52, 1.10, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 2, 3, 1, 0),
-  P('Oboda', 34.78, 30.79, 1.30, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 2, 0, 0),
+  P('Oboda', 34.78, 30.79, 1.30, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0),
   P('Aila', 35.08, 29.62, 1.10, 'NAB', 'desert', 'spices', 'nabataean', 'nabataean', 2, 2, 0, 0),
-  P('Hegra', 37.95, 26.80, 1.80, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 2, 3, 1, 0),
-  P('Dumatha', 39.87, 29.80, 2.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 2, 1, 0),
-  P('Medaba', 35.80, 31.72, 0.95, 'NAB', 'drylands', 'livestock', 'nabataean', 'nabataean', 2, 3, 2, 0),
+  P('Hegra', 37.95, 26.80, 1.80, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 2, 1, 0),
+  P('Dumatha', 39.87, 29.80, 2.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 1, 1, 0),
+  P('Medaba', 35.80, 31.72, 0.95, 'NAB', 'drylands', 'livestock', 'nabataean', 'nabataean', 1, 2, 2, 0),
   // --- Parthia & the east (PAR) --------------------------------------------
   P('Edessa', 38.79, 37.16, 0.95, 'OSR', 'hills', 'grain', 'hellenism', 'aramean', 4, 5, 4, 0),
   P('Carrhae', 39.03, 36.87, 1.00, 'OSR', 'drylands', 'grain', 'hellenism', 'aramean', 3, 3, 3, 0),
@@ -1966,6 +1966,20 @@ const PROVINCES = [
     { latentParent: 'Zoara' }),
   P('Wadi Rum', 35.63, 29.49, 0.70, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Aila' }),
+  // --- SPEC §229: ground the ancient theatre had no cell for ---------------
+  // Appended, like every cell since §225, so no existing id moves. These are
+  // NOT latent: they are provinces in all eight chapters, because the places
+  // are Hellenistic and Nabataean ones the modern map merely inherited. Each
+  // takes its development out of the province it was carved from, above.
+  P('Hippos', 35.75, 32.72, 0.75, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 1, 1, 1, 0), // out of Gadara — Susita, the ridge above the lake's south-east shore
+  P('Abila', 35.87, 32.62, 0.75, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 1, 1, 0, 0), // out of Gadara — Abila of the Decapolis, above the Yarmuk
+  P('Dion', 35.98, 32.48, 0.85, 'ROM', 'drylands', 'grain', 'hellenism', 'greek', 1, 1, 1, 0), // out of Gerasa — the Ten Cities' eastern march, at Husn
+  P('Esbus', 35.81, 31.80, 0.85, 'ROM', 'hills', 'grain', 'hellenism', 'greek', 1, 1, 1, 0), // out of Philadelphia — Heshbon of the Ammonite plateau
+  P('Characmoba', 35.70, 31.18, 0.95, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Medaba — Kir of Moab, on the plateau above the Dead Sea
+  P('Auara', 35.33, 29.95, 1.00, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Petra — Humayma, the cistern town of the Hisma
+  P('Elusa', 34.65, 31.10, 0.80, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 0, 0, 0), // out of Oboda — Haluza, first of the Negev caravan towns
+  P('Dedan', 37.92, 26.62, 1.20, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Hegra — the Lihyanite oasis north of Hegra
+  P('Sirhan', 38.30, 30.60, 1.40, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0), // out of Dumatha — the wadi road from the Hauran to the Jawf
 ];
 
 // ---------------------------------------------------------------------------
@@ -2005,11 +2019,11 @@ const REGIONS = {
     'Rishon LeZion', 'Rehovot', 'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya',
     'Ramallah', 'Bethlehem', 'Beit Shemesh', 'Kiryat Gat', 'Khan Yunis', 'Rafah',
     'Kiryat Shmona', "Ma'alot"],
-  'Transjordan': ['Gadora', 'Machaerus', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia',
+  'Transjordan': ['Hippos', 'Abila', 'Dion', 'Esbus', 'Characmoba', 'Gadora', 'Machaerus', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia',
     'Caesarea Philippi', 'Batanea', 'Gamala', 'Medaba', 'Bostra', 'Azraq', 'Zoara',
     'Mount Hermon', 'Quneitra',
     'Suwayda', 'Zarqa', 'Mafraq', 'Ruwayshid'],
-  'Negev': ['Oboda', 'Aila', 'Kadesh Barnea', 'Beersheba', 'Arad', 'Dimona',
+  'Negev': ['Auara', 'Elusa', 'Oboda', 'Aila', 'Kadesh Barnea', 'Beersheba', 'Arad', 'Dimona',
     'Mitzpe Ramon', 'Paran', 'Eilat', 'Shobak', 'Wadi Rum'],
   'Phoenicia': ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus',
     'Nabatieh', 'Chouf', 'Jounieh', 'Batroun', 'Bsharri', 'Akkar'],
@@ -2017,7 +2031,7 @@ const REGIONS = {
     'Laodicea', 'Beroea', 'Cyrrhus', 'Palmyra', 'Zeugma', 'Samosata', 'Dura-Europos',
     'Syrian Desert', 'Rutba', 'Heliopolis',
     'Idlib', 'Manbij', 'Salamiyah', 'Qusayr', 'Douma'],
-  'Arabia': ['Petra', 'Hegra', 'Tayma', 'Dumatha', 'Yathrib', 'Khaybar', 'Gerrha',
+  'Arabia': ['Dedan', 'Sirhan', 'Petra', 'Hegra', 'Tayma', 'Dumatha', 'Yathrib', 'Khaybar', 'Gerrha',
     'Arabian Desert', 'Macoraba', 'Asir', 'Yamama', 'Rub al-Khali'],
   'Egypt': ['Pelusium', 'Rhinocolura', 'Alexandria', 'Athribis', 'Leontopolis', 'Memphis',
     'Arsinoe', 'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Syene', 'Berenice', 'Paraetonium',

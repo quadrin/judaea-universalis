@@ -105,7 +105,10 @@ const JUD_LANDS = [
 const GHA_LANDS = [
   // the phylarchate and the tribes it answers for
   'Bostra', 'Philadelphia', 'Medaba', 'Gerasa', 'Hegra', 'Dumatha', 'Tayma',
-  'Azraq', 'Suwayda',  // SPEC §229: the Hauran and the Sirhan ride with Bostra
+  // SPEC §229: the Hauran and the Sirhan ride with Bostra, and the phylarchate's
+  // own country — the Decapolis interior, the Ammonite and Moabite plateaux, and
+  // the Hejaz road — rides with Gerasa, Philadelphia, Medaba, Hegra and Dumatha.
+  'Azraq', 'Suwayda', 'Dion', 'Esbus', 'Characmoba', 'Dedan', 'Sirhan',
 ];
 // Everything else on the map is the Empire's: Palestine, Phoenicia, Anatolia,
 // Cyprus, Egypt, and the Petra corridor.
@@ -125,6 +128,9 @@ const BYZ_LANDS = [
   // reached the Negev road or the coast north of Berytus.
   'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
   'Mount Hermon', 'Akkar', 'Batroun',
+  // …and the §229 cells the empire still keeps: the lake's east ridge with
+  // Gadara, and the Negev-Arabah road with Petra and Oboda.
+  'Hippos', 'Abila', 'Auara', 'Elusa',
   // v5.0: the empire's west — Hellas, Crete, Cyrenaica, Upper Egypt
   'Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Halicarnassus',
   'Cyrene', 'Marmarica', 'Paraetonium', 'Syene', 'Berenice',

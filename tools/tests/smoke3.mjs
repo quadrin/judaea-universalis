@@ -89,9 +89,10 @@ const EV66 = EVENTS_66.concat(GENERIC_EVENTS);
   // that keep them from being 83 more armies.
   // SPEC §229 opens six imperial districts in the ancient chapters that had
   // been visible only in 1948 — Arad in Idumea, and Heliopolis, Douma,
-  // Salamiyah, Arca and Botrys in Syria and Phoenice. Rome's development is
-  // unchanged; it is carved into six more pieces.
-  ok(rom && rom.provs === 175 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
+  // Salamiyah, Arca and Botrys in Syria and Phoenice — and adds four new ones
+  // on Decapolis ground: Hippos, Abila, Dion and Esbus. Rome's development is
+  // unchanged; it is carved into ten more pieces.
+  ok(rom && rom.provs === 179 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
   ok(agr && agr.overlord === 'ROM', 'client marked in ledger');
 
   console.log('== diplomatic mapmode + peace highlight ==');

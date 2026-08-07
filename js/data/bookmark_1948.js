@@ -234,6 +234,13 @@ const MODERN_PROVINCES = [
 
 const OWNERS = {};
 for (const n of ISR_LANDS) OWNERS[n] = 'ISR';
+// SPEC §229 added nine cells for Decapolis and Nabataean ground the ancient
+// atlas had none for. They are not latent, so this chapter has them too, and
+// each goes with the province it was carved out of — the development came from
+// there, so the ownership does as well and no state's total moves.
+for (const n of ['Hippos', 'Abila', 'Dion', 'Esbus', 'Characmoba', 'Auara']) OWNERS[n] = 'JOR';
+OWNERS['Elusa'] = 'EGY';                              // with Oboda, in the Egyptian-held Negev
+for (const n of ['Dedan', 'Sirhan']) OWNERS[n] = 'SAU'; // with Hegra and the Jawf
 for (const n of JOR_LANDS) OWNERS[n] = 'JOR';
 for (const n of EGY_LANDS) OWNERS[n] = 'EGY';
 for (const n of SYR_LANDS) OWNERS[n] = 'SYR';
@@ -670,6 +677,12 @@ export const BOOKMARK_1948 = {
   // renamed AFTER conquering them open under their 15-May originals — the
   // victors' names wait in `integratedNames` below (SPEC §66).
   provinceNames: {
+    // SPEC §229's nine cells, under the districts that hold their ground now.
+    // Hippos and Abila keep the arrangement Nineveh and Heliopolis already
+    // have: the ancient name is the cell's, the modern one is this chapter's.
+    'Hippos': 'Wadi al-Arab', 'Abila': 'Irbid', 'Dion': 'Husn',
+    'Esbus': 'Hesban', 'Characmoba': 'Karak', 'Auara': "Ma'an",
+    'Elusa': 'Halutza', 'Dedan': 'al-Ula', 'Sirhan': 'Sakakah',
     'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
     'Safed': 'Tzfat',
     'Ptolemais': 'Acre', 'Caesarea Maritima': 'Caesarea', 'Jamnia': 'Yavne',
@@ -679,7 +692,7 @@ export const BOOKMARK_1948 = {
     'Sepphoris': 'Nazareth', 'Jotapata': 'Sakhnin', 'Tarichaea': 'Migdal',
     'Gischala': 'Jish', 'Scythopolis': 'Beit She\'an', 'Engaddi': 'Ein Gedi',
     'Ascalon': 'al-Majdal', 'Azotus': 'Isdud', 'Neapolis': 'Nablus',
-    'Sebaste': 'Samaria', 'Adora': 'Dura', 'Gadora': 'Salt', 'Machaerus': 'Karak',
+    'Sebaste': 'Samaria', 'Adora': 'Dura', 'Gadora': 'Salt', 'Machaerus': 'Mukawir',
     'Medaba': 'Madaba', 'Philadelphia': 'Amman', 'Gerasa': 'Jerash',
     'Gadara': 'Irbid', 'Aila': 'Aqaba', 'Oboda': 'al-Auja',
     // Banias under the Hermon, the Golan plateau, and — since the plateau
@@ -933,7 +946,7 @@ export const BOOKMARK_1948 = {
     'Sebaste': { tax: 1, prod: 1, mp: 1 },
     'Hebron': { tax: 2, prod: 2, mp: 2 },
     'Ascalon': { tax: 3, prod: 3, mp: 2 },        // Ashkelon
-    'Oboda': { tax: 1, prod: 1, mp: 0 },          // Nitzana
+    'Oboda': { tax: 1, prod: 0, mp: 0 },          // Nitzana, less Elusa (SPEC §229)
     'Adora': { tax: 2, prod: 2, mp: 2 },          // Dura
     'Gaza': { tax: 2, prod: 2, mp: 2 },
     'Iconium': { tax: 8, prod: 7, mp: 7 },        // Konya
@@ -1030,11 +1043,11 @@ export const BOOKMARK_1948 = {
     'Laodicea': { tax: 3, prod: 4, mp: 3 },
     // Jordan: Zarqa off Amman, Mafraq off Jerash, Shobak off Ma'an, and Wadi
     // Rum off Aqaba.
-    'Gerasa': { tax: 3, prod: 3, mp: 2 },
-    'Petra': { tax: 3, prod: 6, mp: 3 },
+    'Gerasa': { tax: 2, prod: 2, mp: 1 },         // less Dion (SPEC §229)
+    'Petra': { tax: 3, prod: 5, mp: 2 },          // less Auara (SPEC §229)
     'Aila': { tax: 1, prod: 3, mp: 1 },
-    'Gadora': { tax: 2, prod: 2, mp: 2 },
-    'Medaba': { tax: 1, prod: 2, mp: 2 },
+    'Gadora': { tax: 1, prod: 1, mp: 1 },         // Salt, less Hesban (SPEC §229)
+    'Medaba': { tax: 1, prod: 1, mp: 1 },         // less Characmoba (SPEC §229)
     'Machaerus': { tax: 1, prod: 1, mp: 1 },
     'Mount Hermon': { tax: 1, prod: 1, mp: 0 },
     'Quneitra': { tax: 1, prod: 1, mp: 1 },

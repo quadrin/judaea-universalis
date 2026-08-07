@@ -223,6 +223,12 @@ export const BOOKMARK_132 = {
     'Azraq': 'ROM',         // with Bostra, the legionary seat of Arabia
     'Suwayda': 'ROM',       // with Bostra
     'Mount Hermon': 'ROM',  // with Caesarea Philippi
+    // …and the five §229 cells south and east of it, Provincia Arabia entire
+    'Characmoba': 'ROM',    // with Medaba
+    'Auara': 'ROM',         // with Petra
+    'Elusa': 'ROM',         // with Oboda
+    'Dedan': 'ROM',         // with Hegra
+    'Sirhan': 'ROM',        // with Dumatha
     // -- The rising (JUD): the Judean hills and the rift edge ------------------
     'Hebron': 'JUD',
     'Adora': 'JUD',

@@ -310,6 +310,11 @@ export const BOOKMARK_167 = {
     'Batroun': 'SEL',       // with Byblos
     'Nineveh': 'SEL',       // with Hatra — the east is still the king's
     'Kirkuk': 'SEL',        // with Arbela
+    // …and the four §229 cells on Decapolis ground, which is the king's too
+    'Hippos': 'SEL',        // with Gadara
+    'Abila': 'SEL',         // with Gadara
+    'Dion': 'SEL',          // with Gerasa
+    'Esbus': 'SEL',         // with Philadelphia
     // -- Judea proper (SEL: the Akra garrison holds Jerusalem, fort intact) ---
     'Jerusalem': 'SEL',
     'Jericho': 'SEL',
