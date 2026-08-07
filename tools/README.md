@@ -1659,22 +1659,21 @@ An all-AI run seats nobody, so `isHumanChair` is false everywhere and every
 chain banks on the calendar — which is the only thing a run with no hands can
 mean, and keeps the harness measuring the sim rather than the panel.
 
-`node tools/autorun.mjs 8`, against the §226 tree:
+`node tools/autorun.mjs 8`, measured against §228's own tree (the re-raster
+moved the map under this comparison, so the §226 numbers this section first
+carried are not the ones to read it by). The set gets SHORTER by three:
 
-- **167 PAR: BLEEDING** — back on the line it has drifted on and off since v5.0.
-  Same two-province western outpost, same accepted family as ARM.
-- **67 HYR: BLEEDING** cleared, SEL DEAD unchanged. The brothers' stalemate has
-  been documented as drifting version to version since v2.4; this is that drift.
-- **40 HER: BLEEDING → ATG: DEBT-SPIRAL.** The chapter §226 already documented
-  as the one that moves, moving again, and within the family the accepted set
-  has named since v2.9: Antigonus is the plunder-funded underdog fighting a
-  scripted war to the death. The reason it is a spiral rather than a bleed is
-  the whole of §229 in one court — a losing realm can no longer meet the bars,
-  so it no longer collects the temporary bonuses that used to paper over its
-  deficit. It does not compound: debt-desertion zeroes the host, and the run
-  ends with the crown war resolved.
-- **529 JUD DEAD + SAM DEBT-SPIRAL** unchanged.
-- 115, 132, 614 and 1948 flag nothing.
+- **40 HER: BLEEDING** and **132 JUD: DEBT-SPIRAL** and **529 SAM:
+  DEBT-SPIRAL** all clear. Permanent rewards are worth more to a court that
+  can meet the bars than the expiring ones were, and these three can.
+- **167 PAR: BLEEDING**, **67 SEL: DEAD**, **529 JUD: DEAD** and **1948 ETH:
+  BLEEDING** are unchanged from §228 — all four are §228's own accepted set.
+- **67 AED: EXHAUSTED** is the one addition, and it is the smallest court on
+  the board: a three-province Aeduan chiefdom in an all-AI 67 BCE, income 0.6,
+  no army and no treasury either way, whose manpower pool now empties instead
+  of ending the run at 909. The §2.4 small-token class — GRM, MAS, CTB, LUS,
+  AVN, SEQ, BLG — drifts in and out of these lines run to run; this is one of
+  them crossing it.
 
-Accepted as of §229: 167 PAR BLEEDING · 67 SEL DEAD · 40 ATG DEBT-SPIRAL ·
-529 JUD DEAD + SAM DEBT-SPIRAL · everything else clean.
+Accepted as of §229: 167 PAR BLEEDING · 67 SEL DEAD + AED EXHAUSTED ·
+529 JUD DEAD · 1948 ETH BLEEDING · everything else clean.

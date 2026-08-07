@@ -15453,7 +15453,19 @@ road was taken wears the answer on the medallion's face as well.
   refuses the claim, our own marker never shuts our own road; the ledger lists
   every fork with its question, none answered at boot, one road taken and the
   rest refused with no road both; and every declared road is a road its fork
-  actually has, across all eight chapters. `smoke134` keeps §207's drum on an
-  AI chain, where it now lives. `smoke2/3/7/16/111/116/120/126/129/138/142`
-  each grew the hand on the panel their world-building always implied — a
-  pumped month is now a month plus a claim.
+  actually has, across all eight chapters; and the contract the tables
+  themselves owe — every numeric ask cross-checked against the sentence that
+  describes it (the guard form `if (treasury < N) return false` included,
+  because it reads the same to a player), no mission modifier that expires and
+  no label that promises one, a median description of 100 characters and none
+  over 200. `smoke134` keeps §207's drum on an AI chain, where it now lives.
+  `smoke2/3/7/16/111/116/120/126/129/138/142/152` each grew the hand on the
+  panel their world-building always implied — a pumped month is now a month
+  plus a claim.
+
+The 130 missions §227's constitutional crowns landed while this section was in
+flight went through the same pass, scoped to their own ids so nothing was
+scaled twice. Their descriptions needed the mirror of it: the era chains put
+the ask first and the history after, and those tables put the history first
+with the ask in the last sentence, so the shortener takes the tail there
+rather than the head.
