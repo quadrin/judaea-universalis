@@ -93,6 +93,16 @@ and three deserve a word because they are new *names* in an old family:
 `40bce HER` and `1948ce ETH` dropped off; both are come-and-go members of the
 same hovering families, and neither is near anything this section touched.
 
+The §232 reading (the drawn European borders, the Belgium/Luxembourg carve,
+and 1948's consolidation): `167bce PAR · 529ce JUD` at eight years, with
+`66ce` and `1948ce` clean — the smallest set yet, and both names are charter
+members of documented families (PAR the two-province-outpost class it has
+occupied since v5.0, 529's JUD the dormant-by-design court). The west's
+raster changed under every ancient chapter and no western court tripped a
+flag; 1948's consolidated background — thirty-one courts, fifteen of them
+now one-province states — runs without a mark, and the war still reaches
+Rhodes on schedule.
+
 Run the 1948 chapter out to its full length (`node tools/autorun.mjs 55 1948ce`)
 and LEB BLEEDING is in the accepted set from §224 onward. Lebanon comes out of
 1975 carrying The Civil War permanently (−40% income), the Green Line, the
@@ -193,31 +203,28 @@ embargo book first (`game.embargoes`), not at the armies.
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)
 dumped from the browser's WebGL province raster so headless tools get true
-pathing. The snapshot is FULL-RESOLUTION: dump it from the 1948 bookmark,
-where every latent cell is active, so it carries every permanent cell's own
-geometry. Headless consumers fold it per bookmark through
-buildProvinceMapping (autorun's foldGeom) — the same collapse computeGeometry
-performs from the live raster. REGENERATE whenever js/data/map_data.js
-changes: serve the repo, boot the 1948 bookmark in a browser with
-window._ctx, and save the value of
+pathing. The snapshot is FULL-RESOLUTION: it is computed under an IDENTITY
+province mapping (SPEC §232), so it carries every permanent cell's own
+geometry regardless of what any bookmark folds. It used to be dumped from a
+live 1948 campaign because 1948 was the one chapter with every latent cell
+active — until §232 made 1948 also the chapter that CONSOLIDATES the
+established world into one province per country, and "full resolution" and
+"the 1948 profile" stopped being the same thing. Headless consumers fold it
+per bookmark through buildProvinceMapping (autorun's foldGeom) — the same
+collapse computeGeometry performs from the live raster. REGENERATE whenever
+js/data/map_data.js changes: serve the repo and run
+`tools/tests/dump-geometry.mjs`, which boots the title screen under
+Playwright, computes computeGeometry(window._renderer.idArray, MAP_DATA,
+identity) in-page, writes the snapshot, prints Sinai's measured
+bounds/neighbors, and leaves a Sinai screenshot in `/tmp`. Any browser
+console works too — the same three imports, no campaign needed.
 
-    JSON.stringify({
-      neighbors: _ctx.geom.neighbors.map(s => [...s]),
-      centroids: _ctx.geom.centroids.map(c => c ? [c.x, c.y] : null),
-      coastal: _ctx.geom.coastal.map(b => b ? 1 : 0),
-      offshore: _ctx.geom.offshore.map(c => c ? [c.x, c.y] : null),
-      areas: [..._ctx.geom.areas],
-    })
-
-to this file. `tools/tests/dump-geometry.mjs` performs that Playwright boot,
-writes the snapshot, prints Sinai's measured bounds/neighbors, and leaves a
-Sinai screenshot in `/tmp`; any browser console works too.
-
-"Every latent cell is active in 1948" is a real invariant, not a description —
-`smoke27` asserts it. A latent cell missing from that bookmark's
-`activeProvinces` has no geometry of its own in ANY era: it comes back with zero
-area and no neighbours, and the only symptom is a suite that reads the snapshot
-reporting something odd elsewhere. Add a `latentParent` cell, add it there.
+"Every latent cell is active in 1948" is still a real invariant — `smoke27`
+asserts it — but it now guards CONTENT (a district that no chapter can reach
+is a district nobody wrote for) rather than the snapshot, which no longer
+depends on any bookmark's profile. §232's consolidation keeps the British and
+Irish city cells in `activeProvinces` and then folds them, so the invariant
+and the one-province United Kingdom coexist.
 
 Since v6.8 (SPEC §160) the boot is minutes, not seconds — the ID pass is one
 fullscreen draw over every texel against every seed, and this runs on
@@ -225,7 +232,8 @@ SwiftShader. Measured at v6.8: 74s to the start screen, 104s to a live
 campaign (25.0M texels × 307 seeds), against 17s and 47s on the pre-§160
 tree. The §205 frame is 46.0M × 373 — about 2.2× that work again — so the
 timeouts in `dump-geometry.mjs` doubled with it. A slow dump is the frame's
-cost and not a flaky selector.
+cost and not a flaky selector. (§232's identity dump no longer starts a
+campaign at all, which gives a few of those minutes back.)
 
 ## coastcheck.mjs — the coastline's invariants, and a picture of it
 

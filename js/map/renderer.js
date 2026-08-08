@@ -111,6 +111,8 @@ uniform sampler2D uSeedTex;
 uniform int uSeedCount;
 uniform float uWarpAmp;
 uniform float uWarpFreq;
+uniform sampler2D uRegion;   // painted country index per pixel (SPEC §232); 0 = free ground
+uniform int uUseRegion;      // 0 when the atlas ships no countryRegions
 out vec4 outColor;
 ${GLSL_NOISE}
 void main(){
@@ -118,6 +120,13 @@ void main(){
   vec2 uv = px / uMapSize;
   int best = 0;
   if (texture(uLand, uv).r >= 0.5) {
+    // The drawn border first (SPEC §232): a pixel inside a painted country is
+    // contested only by that country's own seeds, and a country's seeds claim
+    // nothing outside it — so the ring IS the border, to the pixel. Read at
+    // the UNWARPED pixel: the warp is for the arcs Voronoi invents, not for
+    // lines somebody drew.
+    int reg = 0;
+    if (uUseRegion == 1) reg = int(texelFetch(uRegion, ivec2(px), 0).r * 255.0 + 0.5);
     // One shared domain warp for the whole pixel (NOT per seed) — borders wobble
     // organically while the weighted-Voronoi diagram stays globally consistent.
     vec2 wv = vec2(fbm2(px * uWarpFreq), fbm2(px * uWarpFreq + vec2(37.2, 91.7)));
@@ -126,6 +135,7 @@ void main(){
     for (int i = 0; i < ${MAX_PROVINCE_SEEDS}; i++) {
       if (i >= uSeedCount) break;
       vec4 seed = texelFetch(uSeedTex, ivec2(i, 0), 0);
+      if (int(seed.w + 0.5) != reg) continue;
       float d = distance(wp, seed.xy) / max(seed.z, 0.05);
       if (d < bd) { bd = d; best = i + 1; }
     }
@@ -282,8 +292,8 @@ void main(){
     landCol *= 1.0 + d * 0.16 * dfade;
   }
 
-  // ---- rivers (decor alpha) ----
-  float riv = inMap ? texture(uDecor, uv).a : 0.0;
+  // ---- rivers (decor luminance; R8 since SPEC §232) ----
+  float riv = inMap ? texture(uDecor, uv).r : 0.0;
   landCol = mix(landCol, vec3(${f3(CFG.RIVER)}) * (0.65 + 0.35 * shade), riv * 0.8);
 
   // ---- sea: deep -> shallow via smoothed land mask, faint animated noise ----
@@ -400,7 +410,11 @@ function buildDecorCanvas(MAP_DATA) {
   c.width = MAP_DATA.MAP_W;
   c.height = MAP_DATA.MAP_H;
   const x2 = c.getContext('2d');
-  x2.clearRect(0, 0, c.width, c.height);
+  // Black ground, white strokes (SPEC §232): the channel is now luminance in
+  // .r rather than coverage in .a, so the R8 upload below carries the same
+  // soft-bank/channel distinction the alpha used to.
+  x2.fillStyle = '#000';
+  x2.fillRect(0, 0, c.width, c.height);
   x2.lineJoin = 'round';
   x2.lineCap = 'round';
   const strokeRiver = (river, widthMul, alpha) => {
@@ -466,6 +480,89 @@ function insideRing(ring, x, y) {
       && x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi) inside = !inside;
   }
   return inside;
+}
+
+// Beads and ribbons (SPEC §232): the land canvas is filled with antialiasing
+// (Canvas2D offers no way off), so a coast carries a one-pixel strip of
+// blended texels the ID pass reads as land — and under the drawn-borders
+// regime the id that strip gets can be ABSURD, because every local seed is
+// ring-locked and the nearest ELIGIBLE seed is an unregioned island or
+// desert three countries away. Measured: Atlas ribbons on the Asturian
+// shore, Aleria along Dalmatia, and 3,400 pixels of Panormus strung along
+// ring-locked Italy's coast — dragging Panormus' own centroid into the
+// Tyrrhenian and every 'Roman Sicily' label with it, while handing the sim
+// phantom land roads (Spain walked to Morocco; Rome's second century
+// stalled on the distorted border calculus). Rather than chase each strait:
+// any 4-connected fragment of a cell that does not contain its seed dies if
+// it is either smaller than DESPECKLE_MIN or made ENTIRELY of antialiased
+// edge texels — a real island has interior pixels at full 255 and keeps
+// itself at any size; a ribbon is all edge and cannot.
+const DESPECKLE_MIN = 12;
+export function despeckleProvinceRaster(idArray, MAP_DATA, landBytes) {
+  const W = MAP_DATA.MAP_W | 0;
+  const H = MAP_DATA.MAP_H | 0;
+  const provinces = MAP_DATA.provinces || [];
+  if (!idArray || idArray.length < W * H) return 0;
+  const seedPx = new Int32Array(provinces.length + 1).fill(-1);
+  for (let i = 0; i < provinces.length; i++) {
+    const p = provinces[i];
+    if (!p || typeof p.lon !== 'number') continue;
+    const [sx, sy] = MAP_DATA.project(p.lon, p.lat);
+    seedPx[i + 1] = Math.max(0, Math.min(H - 1, Math.floor(sy))) * W
+      + Math.max(0, Math.min(W - 1, Math.floor(sx)));
+  }
+  const seen = new Uint8Array(W * H);
+  let comp = new Int32Array(4096);
+  let cleaned = 0;
+  for (let start = 0; start < idArray.length; start++) {
+    if (seen[start] || !idArray[start]) continue;
+    const id = idArray[start];
+    let n = 0;
+    let hasSeed = false;
+    let allEdge = !landBytes || landBytes[start] !== 255;
+    comp[0] = start;
+    n = 1;
+    seen[start] = 1;
+    for (let head = 0; head < n; head++) {
+      const at = comp[head];
+      if (at === seedPx[id]) hasSeed = true;
+      const x = at % W;
+      const y = (at / W) | 0;
+      for (const next of [x > 0 ? at - 1 : -1, x + 1 < W ? at + 1 : -1,
+        y > 0 ? at - W : -1, y + 1 < H ? at + W : -1]) {
+        if (next < 0 || seen[next] || idArray[next] !== id) continue;
+        seen[next] = 1;
+        if (n === comp.length) {
+          const grown = new Int32Array(comp.length * 2);
+          grown.set(comp);
+          comp = grown;
+        }
+        comp[n++] = next;
+        if (allEdge && landBytes && landBytes[next] === 255) allEdge = false;
+      }
+    }
+    if (hasSeed || (n >= DESPECKLE_MIN && !(landBytes && allEdge))) continue;
+    // A fragment too small to be anybody's island: give it to whichever
+    // neighboring id surrounds it most; failing any land neighbor, the sea.
+    const votes = new Map();
+    for (let k = 0; k < n; k++) {
+      const at = comp[k];
+      const x = at % W;
+      const y = (at / W) | 0;
+      for (const next of [x > 0 ? at - 1 : -1, x + 1 < W ? at + 1 : -1,
+        y > 0 ? at - W : -1, y + 1 < H ? at + W : -1]) {
+        if (next < 0) continue;
+        const v = idArray[next];
+        if (v && v !== id) votes.set(v, (votes.get(v) || 0) + 1);
+      }
+    }
+    let best = 0;
+    let bestVotes = 0;
+    for (const [v, c] of votes) if (c > bestVotes) { best = v; bestVotes = c; }
+    for (let k = 0; k < n; k++) idArray[comp[k]] = best;
+    cleaned += n;
+  }
+  return cleaned;
 }
 
 // A weighted Voronoi cell can occasionally jump a narrow sea and claim a
@@ -739,13 +836,30 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
-  function canvasTexture(srcCanvas, mips) {
+  // One byte a texel for the canvas-built planes (SPEC §232). The land mask
+  // has only ever been read as .r and the river decor now draws luminance, so
+  // RGBA8 spent three dead bytes a texel on each — mipmapped, which made it
+  // four-thirds of three. R8 keeps the bilinear filtering and the mip chain
+  // and cuts the two planes from 468 MB to 117 at this frame; getImageData
+  // pays one transient readback per plane at boot for it.
+  function redChannel(srcCanvas) {
+    const w = srcCanvas.width;
+    const h = srcCanvas.height;
+    const rgba = srcCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+    const red = new Uint8Array(w * h);
+    for (let i = 0, n = w * h; i < n; i++) red[i] = rgba[i * 4];
+    return red;
+  }
+  function byteTexture(bytes, w, h, mips) {
     const t = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, bytes);
     if (mips) gl.generateMipmap(gl.TEXTURE_2D);
     setTexParams(gl.LINEAR, mips);
     return t;
+  }
+  function canvasTexture(srcCanvas, mips) {
+    return byteTexture(redChannel(srcCanvas), srcCanvas.width, srcCanvas.height, mips);
   }
   // Full-size render targets, in the narrowest format that carries the data
   // (SPEC §158). Both of these were RGBA8 and neither ever used four channels:
@@ -768,7 +882,12 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     return t;
   }
 
-  const landTex = canvasTexture(buildLandCanvas(MAP_DATA), true);
+  // The land bytes serve twice: the R8 texture, and the land gate on the
+  // country-region seam heal (SPEC §232 — a heal that cannot tell sea from
+  // land floods the open Mediterranean with paint and beads far countries
+  // onto foreign coasts).
+  const landBytes = redChannel(buildLandCanvas(MAP_DATA));
+  const landTex = byteTexture(landBytes, W, H, true);
   const decorTex = canvasTexture(buildDecorCanvas(MAP_DATA), true);
   const idTex = targetTexture(gl.NEAREST, gl.RG8, gl.RG); // NEAREST, no mips — texelFetch in the main pass
   const heightTex = targetTexture(gl.LINEAR, gl.R8, gl.RED);
@@ -800,6 +919,15 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   if (N > MAX_PROVINCE_SEEDS) {
     warnOnce('seed-cap', `province count ${N} exceeds the ${MAX_PROVINCE_SEEDS}-seed renderer cap; extras get no territory`);
   }
+  // The drawn borders (SPEC §232): each seed carries its country's paint
+  // index in the w channel, and a full-frame R8 texture carries the painted
+  // ground. Both live only as long as this pass — the texture is deleted the
+  // moment the raster is read back, so the 46 MB never sits in video memory
+  // while the game runs.
+  const regionOfCell = new Map();
+  (MAP_DATA.countryRegions || []).forEach((reg, idx) => {
+    for (const nm of (reg && reg.cells) || []) regionOfCell.set(nm, idx + 1);
+  });
   const seedArr = new Float32Array(Math.max(1, seedCount) * 4);
   for (let i = 0; i < seedCount; i++) {
     const p = provinces[i];
@@ -807,13 +935,26 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     seedArr[i * 4] = xy[0];
     seedArr[i * 4 + 1] = xy[1];
     seedArr[i * 4 + 2] = (p && p.weight) || 1.0;
-    seedArr[i * 4 + 3] = 0;
+    seedArr[i * 4 + 3] = (p && regionOfCell.get(p.name)) || 0;
   }
   const seedTex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, seedTex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.max(1, seedCount), 1,
     0, gl.RGBA, gl.FLOAT, seedArr);
   setTexParams(gl.NEAREST, false);
+  const regionArray = (regionOfCell.size && typeof MAP_DATA.rasterizeCountryRegions === 'function')
+    ? MAP_DATA.rasterizeCountryRegions(MAP_DATA, (x, y) => landBytes[y * W + x] >= 128) : null;
+  let regionTex = null;
+  {
+    regionTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, regionTex);
+    if (regionArray) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, W, H, 0, gl.RED, gl.UNSIGNED_BYTE, regionArray);
+    } else {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, 1, 1, 0, gl.RED, gl.UNSIGNED_BYTE, new Uint8Array(1));
+    }
+    setTexParams(gl.NEAREST, false);
+  }
   const idOk = runPass(idProg, idTex, 'id-pass', (prog) => {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, landTex);
@@ -821,6 +962,10 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, seedTex);
     gl.uniform1i(gl.getUniformLocation(prog, 'uSeedTex'), 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, regionTex);
+    gl.uniform1i(gl.getUniformLocation(prog, 'uRegion'), 2);
+    gl.uniform1i(gl.getUniformLocation(prog, 'uUseRegion'), regionArray ? 1 : 0);
     gl.uniform2f(gl.getUniformLocation(prog, 'uMapSize'), W, H);
     gl.uniform1i(gl.getUniformLocation(prog, 'uSeedCount'), seedCount);
     gl.uniform1f(gl.getUniformLocation(prog, 'uWarpAmp'), CFG.WARP_AMP);
@@ -840,7 +985,8 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       const v = buf[i * 2] + buf[i * 2 + 1] * 256;
       idArray[i] = v > N ? 0 : v;
     }
-    const repaired = repairDisconnectedProvinceRaster(idArray, MAP_DATA);
+    const despeckled = despeckleProvinceRaster(idArray, MAP_DATA, landBytes);
+    const repaired = repairDisconnectedProvinceRaster(idArray, MAP_DATA) + despeckled;
     if (repaired) {
       for (let i = 0, n = W * H; i < n; i++) {
         const v = idArray[i];
@@ -857,6 +1003,9 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RG, gl.UNSIGNED_BYTE, buf);
     }
   }
+  // The painted countries have done their work — they exist in the ID raster
+  // now, and nothing samples them again (SPEC §232).
+  if (regionTex) { gl.deleteTexture(regionTex); regionTex = null; }
 
   // Heightmap pass: coast falloff + primitives + fbm detail.
   const prims = (MAP_DATA.heightPrimitives || []).slice(0, MAX_HEIGHT_PRIMS);

@@ -366,10 +366,14 @@ console.log('== 1948 presents its modern states as modern (SPEC §141) ==');
       canon + ' answers to ' + modern + ' in 1948' + (p ? ' (' + p.name + ')' : ' — MISSING'));
     ok(!!p && p.canon === canon, '  and keeps ' + canon + ' as its canonical key for content');
   }
-  // 2. Every court sits in a city it holds, and in the right one.
+  // 2. Every court sits in a city it holds, and in the right one. A §232
+  //    consolidated court's capital province IS the country and wears its
+  //    name — Rome's cell reads Italy — while the theatre's seats keep
+  //    their cities, and Greece (which does not consolidate: its cells are
+  //    the dispersion's oldest cities) is still governed from Athens.
   const SEATS = {
     ISR: 'Tel Aviv-Jaffa', EGY: 'Cairo', JOR: 'Amman', SYR: 'Damascus',
-    LEB: 'Beirut', IRQ: 'Baghdad', TUR: 'Ankara', GRC: 'Athens', ITA: 'Rome',
+    LEB: 'Beirut', IRQ: 'Baghdad', TUR: 'Ankara', GRC: 'Athens', ITA: 'Italy',
   };
   for (const [tag, city] of Object.entries(SEATS)) {
     const capName = tagDef(w.ctx, tag).capital;

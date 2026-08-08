@@ -66,7 +66,11 @@ for (const era of ERAS) {
   }
   ok(bad.length === 0, id + ': every painted western cell has a seated court'
     + (bad.length ? ' (' + bad.slice(0, 4).join(', ') + ')' : ''));
-  ok(painted >= 100, id + ': the west is filled (' + painted + ' cells painted, '
+  // §232: 1948 consolidates the established world, so most western cells are
+  // FOLDED into their countries' survivors rather than live provinces — the
+  // ground is still painted, but the provinces carrying it are few.
+  const floor = id === '1948ce' ? 40 : 100;
+  ok(painted >= floor, id + ': the west is filled (' + painted + ' cells painted, '
     + wasted + ' deliberate waste)');
 }
 
@@ -104,7 +108,8 @@ console.log('== the levy contract ==');
     if (NEW.has(p.canon)) { romNew++; westMp += p.dev.mp * levyOf(p); westFl += dev * levyOf(p); }
     else { baseMp += p.dev.mp; baseFl += dev; }
   }
-  ok(romNew === 83, 'Rome holds exactly 83 new provinces in 66 CE (' + romNew + ')');
+  // 83 since §173; 84 since §232 gave Belgica back its middle (Atuatuca).
+  ok(romNew === 84, 'Rome holds exactly 84 new provinces in 66 CE (' + romNew + ')');
   const mpDelta = westMp / baseMp;
   const flDelta = westFl / baseFl;
   ok(mpDelta > 0.10 && mpDelta < 0.25,
@@ -145,10 +150,13 @@ console.log('== three of the eight are corrections ==');
     '1948: Albania is somebody\'s, and still sealed');
   ok(at('Phasis').owner === 'SOV' && at('Caucasian Albania').owner === 'SOV',
     '1948: the Soviet Caucasus is Soviet');
-  ok(at('Lutetia').name === 'Paris' && at('Hyperborea').name === 'Moscow'
-    && at('Aquincum').name === 'Budapest' && at('Londinium').name === 'London',
-    '1948: the west wears its 1948 names (Lutetia → Paris)');
-  ok(at('Roxolania').name === 'Stalingrad',
+  // §232: a consolidated country's one province wears the COUNTRY's name;
+  // the cells the dispersion keeps apart still wear their cities'.
+  ok(at('Lutetia').name === 'France' && at('Hyperborea').name === 'Soviet Union'
+    && at('Aquincum').name === 'Hungary' && at('Londinium').name === 'London'
+    && at('Massilia').name === 'Marseille',
+    '1948: the consolidated west wears its countries\' names, the kept cities their own');
+  ok(at('Kiryat Gat').name === 'al-Faluja',
     '1948: and the names are the 15-May originals, not today\'s');
 }
 

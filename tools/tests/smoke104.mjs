@@ -73,28 +73,34 @@ const MEASURED_MAX_TEXTURE = 8192;
 // ---------------------------------------------------------------------------
 console.log('== what the renderer actually allocates ==');
 {
-  // Four full-size textures, and the two built from canvases carry mipmaps.
-  const full = [...SRC.matchAll(/=\s*(canvasTexture|targetTexture)\(/g)].map((m) => m[1]);
+  // Four full-size textures, and the two canvas-built planes carry mipmaps
+  // (§232: the land plane uploads via byteTexture so its bytes also gate the
+  // region seam heal; the decor plane still goes through canvasTexture).
+  const full = [...SRC.matchAll(/=\s*(canvasTexture|targetTexture|byteTexture)\(/g)]
+    .filter((m) => !/return byteTexture/.test(m.input.slice(Math.max(0, m.index - 40), m.index)))
+    .map((m) => m[1]);
   ok(full.length === 4, 'four textures are allocated at full map size (' + full.length + ')');
-  const mipped = [...SRC.matchAll(/canvasTexture\([\s\S]*?,\s*true\)/g)].length;
+  const mipped = [...SRC.matchAll(/(?:canvasTexture|byteTexture)\([^;]*?,\s*true\)/g)].length;
   ok(mipped === 2, '  two of them mipmapped, which costs a third again each (' + mipped + ')');
 
   const texels = MAP_DATA.MAP_W * MAP_DATA.MAP_H;
-  // What the renderer allocates, in the formats it actually uses since §159:
-  // two mipmapped RGBA8 canvases, the ID plane at RG8, relief at R8.
-  const shipped = texels * 4 * (4 / 3) * 2 + texels * 2 + texels;
-  // What the same frame would have cost before the format rework.
+  // What the renderer allocates, in the formats it actually uses since §232:
+  // two mipmapped R8 canvases (land mask, river decor — three dead bytes a
+  // texel each until then), the ID plane at RG8, relief at R8.
+  const shipped = texels * (4 / 3) * 2 + texels * 2 + texels;
+  // What the same frame would have cost before any of the format work.
   const asRGBA8 = texels * 4 * (4 / 3) * 2 + texels * 4 * 2;
   ok(shipped > 0, 'this frame costs ' + MB(shipped).toFixed(0) + ' MB of texture');
   // The saving is not a threshold to guess at: it is exactly the two channels
-  // per texel the ID plane gave up (RGBA8 -> RG8) plus the three the relief
-  // plane gave up (RGBA8 -> R8). If a format ever silently widens again, this
-  // is the line that notices.
-  const narrowing = texels * 2 + texels * 3;
+  // per texel the ID plane gave up (RGBA8 -> RG8), the three the relief plane
+  // gave up (RGBA8 -> R8), and the three-with-mips each canvas plane gave up
+  // (§232). If a format ever silently widens again, this is the line that
+  // notices.
+  const narrowing = texels * 2 + texels * 3 + texels * 8;
   ok(asRGBA8 - shipped === narrowing,
     '  which is ' + MB(narrowing).toFixed(0) + ' MB less than the ' + MB(asRGBA8).toFixed(0)
-    + ' MB it would cost in RGBA8 — 2 bytes a texel off the ID plane and 3 off relief, '
-    + 'exactly what §158–159 bought, and it is what makes this frame affordable');
+    + ' MB it would cost in RGBA8 — 2 bytes a texel off the ID plane, 3 off relief '
+    + 'and 8 off the two mipmapped canvas planes (§158–159, §232)');
 }
 
 // ---------------------------------------------------------------------------
@@ -109,17 +115,18 @@ console.log('== the frame that was costed, against the frame that shipped ==');
   // point: the next person to propose a frame still gets numbers.
   const bigW = Math.round(79 * pxPerLon), bigH = Math.round(60 * pxPerLat);
   const bigTexels = bigW * bigH;
-  const bigBill = bigTexels * 4 * (4 / 3) * 2 + bigTexels * 2 + bigTexels;
+  const bigBill = bigTexels * (4 / 3) * 2 + bigTexels * 2 + bigTexels;
   ok(bigW <= MEASURED_MAX_TEXTURE && bigH <= MEASURED_MAX_TEXTURE,
     'the §156 proposal fits the ceiling too (' + bigW + '×' + bigH + ')');
   const texels = MAP_DATA.MAP_W * MAP_DATA.MAP_H;
-  const shipped = texels * 4 * (4 / 3) * 2 + texels * 2 + texels;
+  const shipped = texels * (4 / 3) * 2 + texels * 2 + texels;
   ok(MB(bigBill) > MB(shipped),
     '  §156\'s frame costs ' + MB(bigBill).toFixed(0) + ' MB against this frame\'s '
     + MB(shipped).toFixed(0) + ' — what its margin still buys is the Urals, west '
     + 'Africa\'s bulge and the equator, and that is still not worth it');
-  ok(MB(shipped) < 700,
-    '  and the §205 bill stays under the 694 MB the §156 costing was refused at');
+  ok(MB(shipped) < 320,
+    '  and the §232 diet holds the bill under 320 MB — less than half the 694 '
+    + 'the §156 costing was refused at');
 }
 
 // ---------------------------------------------------------------------------

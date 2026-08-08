@@ -230,6 +230,9 @@ const MODERN_PROVINCES = [
   'Isca Dumnoniorum', 'Dumnonia', 'Isca Silurum', 'Cambria', 'Deva', 'Lindum',
   'Eboracum', 'Brigantia', 'Caledonia Ultima',
   'Hibernia Occidentalis', 'Mumu',
+  // v8.0 (SPEC §232): the Grand Duchy, active in the one chapter that seats
+  // it. The seven older chapters fold it home into Augusta Treverorum.
+  'Luxembourg',
 ];
 
 const OWNERS = {};
@@ -477,7 +480,7 @@ export const BOOKMARK_1948 = {
     // month. Dyrrhachium wears Albania's color and name from the TAGS catalog
     // (the same painted-not-seated pattern as Arabia's rump in 132), and a
     // sealed country keeps sealed politics.
-    'FRA', 'SPA', 'POR', 'NLD', 'DEN', 'SWE', 'SUI', 'IRL',
+    'FRA', 'SPA', 'POR', 'NLD', 'BEL', 'LUX', 'DEN', 'SWE', 'SUI', 'IRL',
     'GER', 'AUT', 'POL', 'CZE', 'HUN', 'YUG', 'BUL', 'ROU', 'SOV',
     // The political east and south (SPEC §205): the sovereigns of the new
     // frame — the Negus, the Imam, the Sultan, the King of Afghanistan,
@@ -561,12 +564,124 @@ export const BOOKMARK_1948 = {
   // fact that Washington outweighs every court of the age (SPEC §180).
   financialAid: { donors: ['USA', 'SOV', 'UK', 'FRA'] },
   activeProvinces: MODERN_PROVINCES,
+  // The established world is not played in districts (SPEC §232). In 1948 an
+  // established country's internal subdivisions decide nothing this chapter
+  // stages — nobody besieges Lyon, nobody counts the vote in Bononia — and a
+  // France wearing twenty ancient cells read as noise beside an Israel whose
+  // districts are the whole game. Every consolidated background state folds
+  // into the cell its capital sits on and plays as ONE province wearing the
+  // country's name: France IS France. The theatre — Israel and every state
+  // that marches on it, with Turkey, Iran, Saudi Arabia and the colonial
+  // holdings — keeps its cells; a war is fought in districts or not at all.
+  //
+  // The wealth moves with the fold: each survivor's devTweaks entry below is
+  // the exact sum of its family's 1948 development, so no court's economy
+  // moves a point. Where the folded cells carried mixed levy shares (Italy:
+  // the seven old full-levy cells and the eight §173 cells at 0.2) the
+  // survivor carries the dev-weighted blend, so income, manpower and force
+  // limit come out where they went in.
+  mergeProvinces: {
+    // France: the metropole and Corsica, into Paris — LESS Marseille and
+    // Narbonne, whose Jewish communities (one living, one remembered) keep
+    // their cities' own chairs: the dispersion is this game's subject, and
+    // the map that hatches a memory must have the city to hatch it on.
+    'Nemausus': 'Lutetia',
+    'Tolosa': 'Lutetia', 'Burdigala': 'Lutetia', 'Lugdunum': 'Lutetia',
+    'Augustodunum': 'Lutetia', 'Avaricum': 'Lutetia', 'Limonum': 'Lutetia',
+    'Condate': 'Lutetia', 'Darioritum': 'Lutetia', 'Rotomagus': 'Lutetia',
+    'Samarobriva': 'Lutetia', 'Gesoriacum': 'Lutetia', 'Durocortorum': 'Lutetia',
+    'Argentorate': 'Lutetia', 'Vesontio': 'Lutetia', 'Aleria': 'Lutetia',
+    // Spain and Portugal, into Madrid and Lisbon.
+    'Gades': 'Toletum', 'Malaca': 'Toletum', 'Hispalis': 'Toletum',
+    'Carthago Nova': 'Toletum', 'Valentia': 'Toletum',
+    'Tarraco': 'Toletum', 'Barcino': 'Toletum', 'Caesaraugusta': 'Toletum',
+    'Numantia': 'Toletum', 'Emerita': 'Toletum', 'Salmantica': 'Toletum',
+    'Asturica': 'Toletum', 'Emporiae': 'Toletum', 'Baleares': 'Toletum',
+    // Córdoba stays out: Sepharad is hatched there since 1492, on its own cell.
+    'Bracara': 'Olisipo',
+    // The United Kingdom and Ireland: the whole island into Britannia, the
+    // Republic into Hibernia. The city cells stay ACTIVE (smoke27's rule —
+    // 1948 is still the chapter that switches every latent cell on) and then
+    // consolidate, exactly like France's permanent ones.
+    'Caledonia': 'Britannia', 'Camulodunum': 'Britannia',
+    'Durovernum': 'Britannia', 'Venta Belgarum': 'Britannia', 'Corinium': 'Britannia',
+    'Isca Dumnoniorum': 'Britannia', 'Dumnonia': 'Britannia', 'Isca Silurum': 'Britannia',
+    'Cambria': 'Britannia', 'Deva': 'Britannia', 'Lindum': 'Britannia',
+    'Eboracum': 'Britannia', 'Brigantia': 'Britannia', 'Caledonia Ultima': 'Britannia',
+    // London stays out: the §172 community writes to its own city.
+    'Hibernia Occidentalis': 'Hibernia', 'Mumu': 'Hibernia',
+    // The Low Countries' crowns and the occupied middle.
+    'Frisia': 'Batavia',
+    'Colonia Agrippina': 'Mogontiacum', 'Augusta Treverorum': 'Mogontiacum',
+    'Augusta Vindelicorum': 'Mogontiacum', 'Chatti': 'Mogontiacum',
+    'Teutoburgium': 'Mogontiacum', 'Semnones': 'Mogontiacum',
+    'Virunum': 'Carnuntum',
+    'Cimbria': 'Selandia',
+    // Italy, the Republic entire, into Rome — less Naples and Syracuse,
+    // whose communities (Campania's to 1541, Sicily's to 1493) hatch on
+    // their own cells.
+    'Mediolanum': 'Roma', 'Genua': 'Roma', 'Bononia': 'Roma', 'Ravenna': 'Roma',
+    'Pisae': 'Roma', 'Ancona': 'Roma', 'Aquileia': 'Roma',
+    'Tarentum': 'Roma', 'Brundisium': 'Roma', 'Rhegium': 'Roma',
+    'Panormus': 'Roma', 'Caralis': 'Roma', 'Turris Libisonis': 'Roma',
+    // The Balkans' three republics and the kingdom of the Greeks.
+    'Salona': 'Singidunum', 'Delminium': 'Singidunum', 'Siscia': 'Singidunum',
+    'Sirmium': 'Singidunum', 'Naissus': 'Singidunum',
+    'Philippopolis': 'Serdica', 'Novae': 'Serdica',
+    'Sarmizegetusa': 'Tomis', 'Napoca': 'Tomis',
+    // Greece does not consolidate at all: five of its six cells carry the
+    // oldest communities of the dispersion — Salonica and Rhodes murdered
+    // within the chapter's living memory, Corinth's still writing — and an
+    // active court beside the theatre besides. Cities first.
+    // The Soviet Union: every SSR cell on the frame, into the cell Moscow
+    // governs from. One country, one color, one province — which is also the
+    // plain 1948 fact about how much of it any neighbor could tell apart.
+    // EXCEPT the two sealed Caucasus cells: Phasis and Caucasian Albania are
+    // the closed border itself (SPEC §173, smoke29/41 hold them impassable),
+    // and folding them into a passable union would open a land road through
+    // the USSR from Anatolia to Iran. The seal outranks the tidy map.
+    'Aestii': 'Hyperborea', 'Tyras': 'Hyperborea', 'Olbia': 'Hyperborea',
+    'Chersonesus': 'Hyperborea', 'Panticapaeum': 'Hyperborea', 'Phanagoria': 'Hyperborea',
+    'Tanais': 'Hyperborea', 'Tauria': 'Hyperborea', 'Scythia': 'Hyperborea',
+    'Sarmatia': 'Hyperborea', 'Roxolania': 'Hyperborea', 'Aorsia': 'Hyperborea',
+    'Borysthenia': 'Hyperborea', 'Venedia': 'Hyperborea', 'Rha': 'Hyperborea',
+    'Ripaea': 'Hyperborea',
+    'Nisa': 'Hyperborea', 'Antiochia Margiana': 'Hyperborea', 'Dahae': 'Hyperborea',
+    'Chorasmia': 'Hyperborea', 'Massagetae': 'Hyperborea', 'Issedones': 'Hyperborea',
+  },
+  // Italy's blend, stated so the check can ask it: the five old full-share
+  // cells inside the fold carry 72 development (Naples and Syracuse stay out
+  // with their communities), the §173 north and isles 91 at 0.2, and
+  // (72×1.0 + 91×0.2) / 163 = 0.55. Everything else that consolidates was
+  // already levy-uniform, so the survivor's own share answers for the union
+  // unchanged.
+  levies: { 'Roma': 0.55 },
   // One-time save migration: preserve any development the player added above
-  // the old coarse province baseline while redistributing that baseline among
-  // the new cells. Fresh campaigns already start at mapProfileVersion 1.
+  // the old baseline while the baseline itself moves under the save. The
+  // formula (js/sim/init.js) is newBaseline + max(0, saved − previousDev),
+  // which is a no-op wherever baseline and previousDev agree — so the v1
+  // rows stay for saves old enough to need them, and v2 (SPEC §232) adds the
+  // consolidation survivors, whose baselines jump from one city's figures to
+  // a whole country's. Fresh campaigns already start at the current version.
   mapProfileMigration: {
-    version: 1,
+    version: 2,
     previousDev: {
+      // -- v2 (SPEC §232): the survivors' old single-cell baselines --
+      'Lutetia': { tax: 3, prod: 4, mp: 3 },
+      'Toletum': { tax: 2, prod: 3, mp: 3 },
+      'Olisipo': { tax: 3, prod: 4, mp: 2 },
+      'Britannia': { tax: 2, prod: 3, mp: 3 },
+      'Hibernia': { tax: 1, prod: 2, mp: 3 },
+      'Batavia': { tax: 1, prod: 2, mp: 3 }, // the pre-§232 base, before the Atuatuca carve
+      'Mogontiacum': { tax: 3, prod: 4, mp: 3 },
+      'Carnuntum': { tax: 2, prod: 3, mp: 3 },
+      'Selandia': { tax: 1, prod: 2, mp: 2 },
+      'Roma': { tax: 10, prod: 9, mp: 8 },
+      'Singidunum': { tax: 2, prod: 3, mp: 3 },
+      'Serdica': { tax: 2, prod: 3, mp: 3 },
+      'Tomis': { tax: 3, prod: 4, mp: 2 },
+      'Hyperborea': { tax: 1, prod: 1, mp: 1 },
+      // -- v1: the pre-expansion coarse baselines --
       'Gischala': { tax: 3, prod: 3, mp: 3 },
       'Ptolemais': { tax: 5, prod: 5, mp: 4 },
       'Scythopolis': { tax: 4, prod: 5, mp: 3 },
@@ -726,7 +841,10 @@ export const BOOKMARK_1948 = {
     'Kiryat Gat': 'al-Faluja', 'Beit Shemesh': 'Ayn Shams',
     'Eilat': 'Umm Rashrash',
     // v5.4: the wider frame in its 1948 names
-    'Roma': 'Rome', 'Capua': 'Naples', 'Tarentum': 'Taranto',
+    // §232: a consolidated country's one province wears the COUNTRY's name —
+    // the province is France, not Paris; the metropolis entries beneath the
+    // fold stay for the record but nothing reads them while the fold holds.
+    'Roma': 'Italy', 'Capua': 'Naples', 'Tarentum': 'Taranto',
     'Brundisium': 'Brindisi', 'Rhegium': 'Reggio Calabria',
     'Panormus': 'Palermo', 'Syracusae': 'Syracuse',
     'Oea': 'Tripoli (Libya)', 'Leptis Magna': 'Al-Khums', 'Macomades': 'Sirte',
@@ -772,48 +890,49 @@ export const BOOKMARK_1948 = {
     'Sala': 'Rabat', 'Atlas': 'Marrakesh', 'Gaetulia': 'Ouarzazate',
     'Garama': 'Sebha',
     'Gades': 'Cádiz', 'Corduba': 'Córdoba', 'Hispalis': 'Seville',
-    'Malaca': 'Málaga', 'Carthago Nova': 'Cartagena', 'Toletum': 'Madrid',
-    'Emerita': 'Mérida', 'Olisipo': 'Lisbon', 'Bracara': 'Braga',
+    'Malaca': 'Málaga', 'Carthago Nova': 'Cartagena', 'Toletum': 'Spain',
+    'Emerita': 'Mérida', 'Olisipo': 'Portugal', 'Bracara': 'Braga',
     'Asturica': 'Oviedo', 'Tarraco': 'Tarragona', 'Caesaraugusta': 'Zaragoza',
     'Valentia': 'Valencia', 'Numantia': 'Soria', 'Salmantica': 'Salamanca',
     'Barcino': 'Barcelona', 'Emporiae': 'Girona', 'Baleares': 'Palma',
     'Narbo': 'Narbonne', 'Massilia': 'Marseille', 'Nemausus': 'Nîmes',
     'Tolosa': 'Toulouse', 'Burdigala': 'Bordeaux', 'Lugdunum': 'Lyon',
     'Augustodunum': 'Dijon', 'Avaricum': 'Bourges', 'Limonum': 'Poitiers',
-    'Condate': 'Rennes', 'Darioritum': 'Vannes', 'Lutetia': 'Paris',
+    'Condate': 'Rennes', 'Darioritum': 'Vannes', 'Lutetia': 'France',
     'Rotomagus': 'Rouen', 'Samarobriva': 'Amiens', 'Gesoriacum': 'Boulogne',
     'Durocortorum': 'Reims', 'Augusta Treverorum': 'Trier',
-    'Colonia Agrippina': 'Cologne', 'Mogontiacum': 'Frankfurt',
-    'Argentorate': 'Strasbourg', 'Batavia': 'Amsterdam',
-    'Vesontio': 'Besançon', 'Genava': 'Geneva',
+    'Colonia Agrippina': 'Cologne', 'Mogontiacum': 'Germany',
+    'Argentorate': 'Strasbourg', 'Batavia': 'Netherlands',
+    'Vesontio': 'Besançon', 'Genava': 'Switzerland',
     'Augusta Vindelicorum': 'Munich', 'Virunum': 'Klagenfurt',
     'Mediolanum': 'Milan', 'Genua': 'Genoa', 'Bononia': 'Bologna',
     'Pisae': 'Pisa', 'Aquileia': 'Trieste', 'Aleria': 'Bastia',
     'Caralis': 'Cagliari', 'Turris Libisonis': 'Sassari',
-    'Britannia': 'Birmingham', 'Londinium': 'London',
+    'Britannia': 'United Kingdom', 'Londinium': 'London',
     'Camulodunum': 'Colchester', 'Durovernum': 'Canterbury',
     'Venta Belgarum': 'Southampton', 'Corinium': 'Bristol',
     'Isca Dumnoniorum': 'Exeter', 'Dumnonia': 'Plymouth',
     'Isca Silurum': 'Cardiff', 'Cambria': 'Caernarfon', 'Deva': 'Liverpool',
     'Lindum': 'Lincoln', 'Eboracum': 'York', 'Brigantia': 'Newcastle',
     'Caledonia': 'Glasgow', 'Caledonia Ultima': 'Inverness',
-    'Hibernia': 'Dublin', 'Hibernia Occidentalis': 'Galway', 'Mumu': 'Cork',
+    'Hibernia': 'Ireland', 'Hibernia Occidentalis': 'Galway', 'Mumu': 'Cork',
     'Chatti': 'Kassel', 'Teutoburgium': 'Hanover', 'Frisia': 'Groningen',
-    'Semnones': 'Berlin', 'Boiohaemum': 'Prague',
-    'Cimbria': 'Aarhus', 'Selandia': 'Copenhagen', 'Scandia': 'Malmö',
-    'Gothiscandza': 'Gdańsk', 'Aestii': 'Kaunas',
+    'Semnones': 'Berlin', 'Boiohaemum': 'Czechoslovakia',
+    'Cimbria': 'Aarhus', 'Selandia': 'Denmark', 'Scandia': 'Sweden',
+    'Gothiscandza': 'Poland', 'Aestii': 'Kaunas',
     'Salona': 'Split', 'Delminium': 'Sarajevo', 'Siscia': 'Zagreb',
-    'Carnuntum': 'Vienna', 'Aquincum': 'Budapest', 'Sirmium': 'Novi Sad',
-    'Singidunum': 'Belgrade', 'Naissus': 'Niš', 'Serdica': 'Sofia',
-    'Philippopolis': 'Plovdiv', 'Novae': 'Ruse', 'Tomis': 'Constanța',
+    'Carnuntum': 'Austria', 'Aquincum': 'Hungary', 'Sirmium': 'Novi Sad',
+    'Singidunum': 'Yugoslavia', 'Naissus': 'Niš', 'Serdica': 'Bulgaria',
+    'Philippopolis': 'Plovdiv', 'Novae': 'Ruse', 'Tomis': 'Romania',
     'Sarmizegetusa': 'Hunedoara', 'Napoca': 'Cluj',
     'Tyras': 'Odessa', 'Olbia': 'Mykolaiv', 'Chersonesus': 'Sevastopol',
     'Panticapaeum': 'Kerch', 'Phanagoria': 'Krasnodar',
     'Tauria': 'Simferopol', 'Tanais': 'Rostov', 'Scythia': 'Kryvyi Rih',
     'Sarmatia': 'Kharkov', 'Roxolania': 'Stalingrad', 'Aorsia': 'Astrakhan',
     'Borysthenia': 'Gomel', 'Venedia': 'Minsk', 'Rha': 'Penza',
-    'Hyperborea': 'Moscow', 'Ripaea': 'Kuybyshev',
-    'Dyrrhachium': 'Durrës', 'Phasis': 'Batumi', 'Caucasian Albania': 'Baku',
+    'Hyperborea': 'Soviet Union', 'Ripaea': 'Kuybyshev',
+    'Dyrrhachium': 'Albania', 'Phasis': 'Batumi', 'Caucasian Albania': 'Baku',
+    'Atuatuca': 'Belgium', // §232: consolidated, so the one cell is the country
     // -- SPEC §205: the eastern and southern frame in its 1948 names, same
     // metropolis rule. Where the classical name IS the 1948 name (Aksum,
     // Marib, Najran, Ogaden, Danakil) nothing is written.
@@ -951,6 +1070,25 @@ export const BOOKMARK_1948 = {
     'Tarsus': { tax: 7, prod: 7, mp: 6 },         // Adana plain
     'Ecbatana': { tax: 8, prod: 7, mp: 7 },       // Hamadan
     'Susa': { tax: 8, prod: 9, mp: 6 },           // Ahvaz & the oil
+    // The consolidated countries (SPEC §232): each survivor carries the EXACT
+    // sum of its family's development, so every court's totals come out of
+    // the fold to the point. The numbers are checked, not decorative —
+    // smoke157 recomputes each sum from the atlas and asks that they agree.
+    'Lutetia': { tax: 42, prod: 57, mp: 46 },     // France with Corsica, less its two community cities
+    'Toletum': { tax: 44, prod: 58, mp: 40 },     // Spain with the Balearics, less Córdoba
+    'Olisipo': { tax: 5, prod: 7, mp: 5 },        // Portugal
+    'Britannia': { tax: 28, prod: 39, mp: 41 },   // the United Kingdom, less London's own cell
+    'Hibernia': { tax: 3, prod: 5, mp: 7 },       // Ireland
+    'Batavia': { tax: 2, prod: 3, mp: 4 },        // the Netherlands
+    'Mogontiacum': { tax: 12, prod: 18, mp: 20 }, // the four zones of Germany
+    'Carnuntum': { tax: 4, prod: 6, mp: 6 },      // Austria
+    'Selandia': { tax: 2, prod: 4, mp: 4 },       // Denmark
+    'Roma': { tax: 55, prod: 66, mp: 42 },        // Italy with the isles, less Naples and Syracuse
+    'Singidunum': { tax: 13, prod: 19, mp: 18 },  // Yugoslavia
+    'Serdica': { tax: 7, prod: 10, mp: 9 },       // Bulgaria
+    'Tomis': { tax: 6, prod: 9, mp: 8 },          // Romania
+    'Hyperborea': { tax: 38, prod: 49, mp: 44 },  // the Soviet Union on this frame, less the
+                                                  // two sealed Caucasus cells it keeps apart
     // The following are subdivisions, not newly created wealth: their parent
     // province's old total is redistributed across the active modern cells.
     'Safed': { tax: 2, prod: 2, mp: 2 },

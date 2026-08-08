@@ -23,8 +23,8 @@
 //
 // The ceilings stay measured, not assumed. MAX_TEXTURE_SIZE is 8192 on
 // SwiftShader, the weakest thing that will ever run this (SPEC §157) — 7264
-// still fits. The texture bill at this frame is ~629 MB in the §158–159
-// narrowed formats (smoke104 keeps the arithmetic executable); the §156
+// still fits. The texture bill at this frame is ~249 MB in the §158–159 and
+// §232 narrowed formats (smoke104 keeps the arithmetic executable); the §156
 // costing said a frame this size was affordable and not worth it, and §205
 // is the section where it became worth it. Neither number is what makes a
 // map: the coastline below is, and it is the part traced by hand.
@@ -1491,22 +1491,25 @@ const PROVINCES = [
     { habitation: 'town', settleable: false }),
   P('Rotomagus', 1.10, 49.35, 0.95, 'WASTE', 'coast', 'timber', 'druidic', 'celtic', 2, 3, 3, 0,
     { habitation: 'rural', settleable: false }),
-  P('Samarobriva', 2.30, 49.89, 0.95, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 3, 0,
-    { habitation: 'rural', settleable: false }),
+  P('Samarobriva', 2.30, 49.89, 0.95, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 1, 2, 2, 0,
+    { habitation: 'rural', settleable: false }), // §232: 1/1/1 to Atuatuca — the Nervian marches were Belgica's, not Picardy's
   P('Gesoriacum', 1.85, 50.55, 0.90, 'WASTE', 'coast', 'fish', 'druidic', 'celtic', 2, 3, 2, 0,
     { habitation: 'town', settleable: false }),
-  P('Durocortorum', 4.03, 49.25, 1.05, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 4, 3, 0,
-    { habitation: 'town', settleable: false }),
+  P('Durocortorum', 4.03, 49.25, 1.05, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 2, 0,
+    { habitation: 'town', settleable: false }), // §232: 1/1/1 to Atuatuca
   P('Augusta Treverorum', 6.64, 49.76, 0.95, 'WASTE', 'hills', 'wine', 'roman_cult', 'celtic', 3, 4, 3, 0,
-    { habitation: 'town', settleable: false }),
-  P('Colonia Agrippina', 6.96, 50.94, 0.95, 'WASTE', 'farmland', 'grain', 'germanic_cult', 'germanic', 3, 4, 3, 0,
-    { habitation: 'town', settleable: false }),
+    { habitation: 'town', settleable: false }), // §232: keeps its base — Luxembourg's carve is 1948's
+                                                // (the latent cell folds home in every ancient era, so a
+                                                // base carve would leak 3 points OUT of those chapters;
+                                                // the 1948 Germany sum pays the Grand Duchy instead)
+  P('Colonia Agrippina', 6.96, 50.94, 0.95, 'WASTE', 'farmland', 'grain', 'germanic_cult', 'germanic', 2, 3, 3, 0,
+    { habitation: 'town', settleable: false }), // §232: 1/1/0 to Atuatuca
   P('Mogontiacum', 8.27, 50.00, 0.95, 'WASTE', 'farmland', 'wine', 'roman_cult', 'celtic', 3, 4, 3, 0,
     { habitation: 'town', settleable: false }),
   P('Argentorate', 7.75, 48.58, 0.95, 'WASTE', 'farmland', 'timber', 'druidic', 'celtic', 2, 3, 3, 0,
     { habitation: 'rural', settleable: false }),
-  P('Batavia', 5.60, 51.90, 1.00, 'WASTE', 'marsh', 'fish', 'germanic_cult', 'germanic', 1, 2, 3, 0,
-    { habitation: 'rural', settleable: false }),
+  P('Batavia', 5.60, 51.90, 1.00, 'WASTE', 'marsh', 'fish', 'germanic_cult', 'germanic', 1, 1, 2, 0,
+    { habitation: 'rural', settleable: false }), // §232: 0/1/1 to Atuatuca — the Scheldt was never the Rhine's
   P('Vesontio', 6.02, 47.24, 0.95, 'WASTE', 'hills', 'salt', 'druidic', 'celtic', 2, 3, 3, 0,
     { habitation: 'rural', settleable: false }),
   P('Genava', 6.15, 46.20, 0.95, 'WASTE', 'hills', 'timber', 'druidic', 'celtic', 2, 3, 2, 0,
@@ -1981,7 +1984,721 @@ const PROVINCES = [
   P('Elusa', 34.65, 31.10, 0.80, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 0, 0, 0), // out of Oboda — Haluza, first of the Negev caravan towns
   P('Dedan', 37.70, 26.10, 1.50, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Hegra — the Lihyanite oasis south of Hegra; seed cheated down the valley so the pair splits the corridor instead of nesting
   P('Sirhan', 38.45, 30.85, 1.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0), // out of Dumatha — the wadi road from the Hauran to the Jawf, seeded on the wadi axis
+  // --- SPEC §232: the two countries 1948 could not draw ---------------------
+  // Appended, so no earlier id moves. Belgium had NO cell at all: its ground
+  // was raster spill from Amiens, Reims, Cologne and the Rhine mouth, which is
+  // why 1948's political map quietly showed Belgium as parts of France, the
+  // Netherlands and occupied Germany. Atuatuca — the civitas Tungrorum, the
+  // one Roman city on that ground — is a province in all eight chapters, like
+  // §230's cells: Belgica in the tribal centuries, Rome's from Caesar on, and
+  // Belgium in 1948. Its development is carved from the four cells whose
+  // raster spill it replaces (above), so no era's totals move.
+  P('Atuatuca', 4.90, 50.62, 1.00, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  // Luxembourg is latent: at cell scale the Ardennes plateau is Treveran
+  // ground with no ancient identity apart from Trier's, so the seven older
+  // chapters fold it home and only 1948 seats the Grand Duchy. Its 1/1/1 is
+  // paid out of GERMANY's 1948 consolidation sum rather than out of Trier's
+  // base (§47 applied at the one era the cell exists in — a base carve would
+  // leak the points out of the seven chapters that fold it away).
+  P('Luxembourg', 6.13, 49.61, 0.60, 'WASTE', 'hills', 'timber', 'roman_cult', 'celtic', 1, 1, 1, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Augusta Treverorum' }),
 ];
+
+// ---------------------------------------------------------------------------
+// Country regions — the drawn borders of Europe (SPEC §232).
+//
+// A border between two states used to be a Voronoi arc between their nearest
+// seeds, and every section from §225 to §231 is a record of fighting that
+// arithmetic with weights. This is the other way: where the line of a border
+// is a KNOWN THING — and every European land border of 1948 is exactly that —
+// it is drawn, not grown. Each entry names a country, the cells that are its
+// ground, and a ring in lon/lat. The raster pass assigns a pixel inside a
+// ring only to that ring's own cells, and a ring's cells claim nothing
+// outside it, so the ring IS the country's land border, to the pixel. Inside
+// a ring the member cells still divide the ground by weighted Voronoi;
+// outside every ring nothing changes at all, which is why the Levant raster
+// is byte-identical to §231's and the theatre's fought-for silhouettes stand.
+//
+// PAINT ORDER IS THE TOPOLOGY. Rings are painted in array order and a later
+// ring overwrites an earlier one, so each shared border is traced ONCE, in
+// the ring of whichever neighbor paints LATER; the earlier neighbor simply
+// overshoots and is cut back. Coasts are never traced — every seaward edge
+// overshoots into open water and the land mask clips it, so the coastline
+// keeps its own hand-drawn accuracy. A border with unregioned ground (the
+// USSR beyond Poland and Romania, Turkey beyond Greece and Bulgaria) is
+// exact in the ring that faces it, because nobody paints after it.
+//
+// The lines are the borders of May 1948, which for most of the continent are
+// the borders of today: Oder–Neisse and Curzon in the east, the 1920
+// Schleswig line, the 1947 treaty lines in the Alps and on the Isonzo, the
+// 1940 Craiova line in the Dobruja. Where a state too small to seat sits on
+// a line (Andorra, Liechtenstein, San Marino), the ring runs through it and
+// its ground reads as its large neighbor — the same honesty rule as §173:
+// better absorbed than invented.
+//
+// Islands whose whole coast is the border need no ring and get none: Britain,
+// Ireland, Sicily, Sardinia, Corsica, the Balearics, Crete. Elba is the one
+// exception (the Italy ring reaches around it) because unregioned it would
+// fall to Corsica's cell — which 1948 folds into France.
+// ---------------------------------------------------------------------------
+
+const COUNTRY_REGIONS = [
+  {
+    // Painted first: everything east of the true line is Spain's to cut back.
+    name: 'Portugal',
+    cells: ['Olisipo', 'Bracara'],
+    ring: [
+      [-10.00, 36.80], [-7.00, 36.90],               // sea off the Algarve
+      [-6.30, 38.00], [-5.90, 39.50], [-6.00, 41.00], // overshoot into Extremadura and León
+      [-5.80, 41.80],                                 // overshoot past Miranda and Bragança
+      [-6.80, 42.50],                                 // overshoot into Galicia
+      [-9.40, 42.20], [-10.20, 39.50],                // Atlantic
+    ],
+  },
+  {
+    // Authoritative over Portugal: the 1926-convention line, Minho to
+    // Guadiana. Sloppy north — France cuts the Pyrenees.
+    name: 'Spain',
+    cells: ['Gades', 'Malaca', 'Hispalis', 'Corduba', 'Carthago Nova', 'Valentia',
+      'Tarraco', 'Barcino', 'Caesaraugusta', 'Numantia', 'Toletum', 'Emerita',
+      'Salmantica', 'Asturica', 'Emporiae'],
+    ring: [
+      [-8.87, 41.86],                                 // Minho mouth, Caminha opposite
+      [-8.20, 42.07],                                 // Melgaço — Portugal's northernmost point
+      [-8.09, 41.81], [-7.40, 41.84],                 // the Trás-os-Montes shoulder
+      [-6.55, 41.94],                                 // past Bragança
+      [-6.19, 41.59],                                 // Miranda do Douro
+      [-6.93, 41.02],                                 // the international Douro gorge
+      [-6.86, 40.26],                                 // the Beira line under the Serra da Gata
+      [-7.01, 39.67], [-7.53, 39.66],                 // the Tejo at Cedillo, jogging west
+      [-7.25, 38.95],                                 // Alentejo marches
+      [-6.95, 38.55],                                 // past Badajoz (Spanish, by a river's width)
+      [-7.10, 38.05], [-7.25, 37.98],                 // Mourão and the middle Guadiana
+      [-7.45, 37.55],                                 // the lower Guadiana
+      [-7.40, 37.17],                                 // Vila Real de Santo António: the mouth
+      [-6.80, 36.80], [-6.35, 36.30], [-6.05, 36.05], // sea off Cádiz and Trafalgar
+      [-5.60, 35.98], [-5.44, 35.97],                 // the strait, north of Africa's Point Cires
+      [-5.10, 36.10], [-4.40, 36.40],                 // off Marbella
+      [-2.00, 36.50], [-0.60, 37.40],                 // Alborán sea
+      [0.20, 38.80], [0.60, 40.00], [1.50, 41.10],    // Levante sea
+      [2.45, 41.40], [3.30, 41.85], [3.55, 42.25],    // sea off the Costa Brava (Emporiae inside)
+      [3.45, 42.60], [1.00, 43.40], [-1.50, 43.80],   // past Cape Creus; overshoot into Gascony
+      [-2.50, 43.70], [-4.50, 43.80], [-6.50, 44.00], // Biscay
+      [-8.60, 43.90], [-9.60, 42.80],                 // Finisterre
+      [-9.00, 42.00],                                 // Rías Baixas, closing at the Minho
+    ],
+  },
+  {
+    // Authoritative over Spain: the Pyrenean crest, Bidasoa to Cerbère, with
+    // the Val d'Aran bulge and Andorra ridden through. Everything east and
+    // north-east is overshoot for Italy, Switzerland, Germany, Luxembourg and
+    // Belgium to cut. The Channel run threads between the Cotentin and the
+    // (British) Channel Islands.
+    name: 'France',
+    cells: ['Narbo', 'Massilia', 'Nemausus', 'Tolosa', 'Burdigala', 'Lugdunum',
+      'Augustodunum', 'Avaricum', 'Limonum', 'Condate', 'Darioritum', 'Lutetia',
+      'Rotomagus', 'Samarobriva', 'Gesoriacum', 'Durocortorum', 'Argentorate',
+      'Vesontio'],
+    ring: [
+      [-1.79, 43.37],                                 // Hendaye: the Bidasoa mouth
+      [-1.30, 43.05], [-0.55, 42.80],                 // the western crest, Roncevaux to Somport
+      [0.00, 42.68], [0.66, 42.70],                   // the high Pyrenees
+      [0.76, 42.84], [1.10, 42.77],                   // the Val d'Aran, north of the watershed
+      [1.44, 42.60], [1.78, 42.57],                   // through Andorra
+      [2.00, 42.36], [2.55, 42.40],                   // the Cerdanya and the Albères
+      [3.17, 42.43],                                  // Cerbère: the Mediterranean
+      [3.60, 42.30], [4.80, 42.70], [6.20, 42.70],    // Gulf of Lion, at sea
+      [7.20, 43.40],                                  // off the Riviera
+      [8.10, 44.10], [8.20, 45.20], [8.00, 46.10],    // overshoot into Piedmont and the Valais
+      [7.80, 46.70], [7.90, 47.45],                   // overshoot deep into the Bernese Jura
+      [8.30, 48.30], [8.70, 49.20],                   // overshoot over the Rhine into Baden
+      [7.20, 49.60], [6.70, 50.00],                   // overshoot into the Saar and Eifel
+      [5.60, 50.60], [4.60, 51.05], [3.40, 51.45],    // overshoot into Wallonia and Flanders
+      [2.40, 51.40], [1.30, 50.60], [1.10, 50.10],    // the Channel, off Gris-Nez and the Somme
+      [0.10, 49.90], [-1.20, 49.90],                  // off the Seine bay
+      [-1.60, 49.80], [-1.95, 49.73],                 // rounding the Cotentin close in
+      [-1.92, 49.20],                                 // between Barneville and (British) Jersey
+      [-2.60, 48.75],                                 // off Saint-Malo, south of the islands
+      [-3.60, 49.00], [-5.40, 48.70], [-5.20, 48.30], // off Ushant
+      [-4.80, 47.60], [-2.60, 47.00], [-1.90, 46.00], // Biscay
+      [-1.50, 44.50], [-1.60, 43.60],                 // the Landes shore, at sea
+    ],
+  },
+  {
+    // Authoritative over France: the Alpine border as the 1947 treaty left it
+    // — Tende and the Mont Cenis shelf French. Overshoots north into
+    // Switzerland and Austria, east into Istria for Yugoslavia to cut, and
+    // reaches around (Italian) Elba so it cannot fall to Corsica's cell.
+    name: 'Italy',
+    cells: ['Mediolanum', 'Genua', 'Bononia', 'Ravenna', 'Pisae', 'Ancona',
+      'Aquileia', 'Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium'],
+    ring: [
+      [7.53, 43.79],                                  // Menton: the sea
+      [7.49, 44.13],                                  // above Tende, ceded 1947
+      [6.89, 44.42],                                  // Col de Larche
+      [6.95, 44.68], [6.73, 44.90],                   // Monte Viso's west, Montgenèvre
+      [6.90, 45.15], [7.10, 45.40],                   // the Mont Cenis shelf, French since '47
+      [6.98, 45.64], [6.87, 45.83],                   // Mont Blanc
+      [7.04, 45.93],                                  // Mont Dolent: the Swiss tripoint
+      [7.60, 46.30], [8.60, 46.60], [10.00, 46.90],   // overshoot into Valais, Ticino, Grisons
+      [11.50, 47.20], [13.00, 47.20], [13.95, 46.90], // overshoot into Tyrol and Carinthia
+      [14.60, 46.20], [14.60, 45.60],                 // overshoot into Carniola and Istria
+      [14.20, 44.60],                                 // the Adriatic, at sea
+      [15.60, 43.00], [17.20, 41.80], [18.90, 40.40], // down the Adriatic, off the heel
+      [18.65, 40.00], [18.55, 39.65],                 // seaward of Otranto and the Leuca tip
+      [18.10, 39.60],                                 // rounding Santa Maria di Leuca
+      [17.60, 40.20], [17.10, 40.32], [16.75, 40.18], // into the Gulf of Taranto, off the head
+      [17.05, 39.85], [17.28, 39.40],                 // the gulf's west shore, off Sibari
+      [17.35, 38.95], [17.30, 38.55],                 // seaward of Crotone
+      [16.90, 38.20], [16.30, 37.80],                 // off Capo Spartivento
+      [15.75, 37.85],                                 // off Capo dell'Armi
+      [15.62, 38.10], [15.66, 38.30],                 // through the strait: Sicily stays outside
+      [15.63, 38.40],                                 // clearing the strait's north gate
+      [15.70, 38.75], [15.65, 39.20], [15.30, 39.45], // seaward of Capo Vaticano and Cetraro
+      [15.20, 39.95],                                 // wide of the map's chunky Policastro shore
+      [15.15, 40.12],                                 // off Capo Palinuro
+      [14.60, 40.45], [13.80, 40.90], [13.20, 41.15], // the gulfs of Salerno and Naples, at sea
+      [12.40, 41.45], [11.60, 42.20], [10.90, 42.30], // off Anzio and the Argentario
+      [10.55, 42.60],                                 // off the Maremma
+      [10.00, 42.65], [10.02, 42.95],                 // around Elba, keeping it Italian
+      [9.40, 43.80], [8.80, 43.90],                   // the Ligurian sea, north of Corsica's cap
+      [8.10, 43.60],                                  // off San Remo
+    ],
+  },
+  {
+    // Authoritative over France (Jura, the Geneva pocket, the lake shore) and
+    // Italy (the crest from the Dolent to the Reschen corner). Vorarlberg and
+    // the German side are overshoot; Liechtenstein rides with Austria.
+    name: 'Switzerland',
+    cells: ['Genava'],
+    ring: [
+      [7.04, 45.93],                                  // Mont Dolent
+      [7.17, 45.88], [7.56, 45.97], [7.87, 45.92],    // Grand St Bernard to Monte Rosa
+      [8.16, 46.06], [8.44, 46.25],                   // the Simplon and the Ossola notch
+      [8.71, 46.10], [8.95, 45.83],                   // Lago Maggiore to Chiasso
+      [9.04, 45.85], [9.25, 46.23], [9.46, 46.38],    // the Ticino east side, Splügen
+      [10.04, 46.35], [10.45, 46.53],                 // the Valtellina ridge, Stelvio
+      [10.47, 46.85],                                 // the Reschen corner: Austria's tripoint
+      [10.20, 47.15], [9.90, 47.50],                  // overshoot into Vorarlberg
+      [9.30, 47.80], [8.40, 47.95], [7.75, 47.75],    // overshoot over the Rhine into Baden
+      [7.59, 47.58],                                  // Basel
+      [7.38, 47.43], [7.13, 47.42], [6.99, 47.30],    // the Jura crest
+      [6.88, 47.05], [6.46, 46.77], [6.13, 46.55],    // the Doubs and the Vallée de Joux
+      [6.06, 46.41], [5.95, 46.29],                   // the Pays de Gex wraps the city's west
+      [5.94, 46.14], [6.10, 46.15], [6.22, 46.19],    // Chancy to Veyrier: Geneva stays Swiss
+      [6.31, 46.30], [6.50, 46.41], [6.75, 46.44],    // Hermance, then mid-Léman: Évian's
+      [6.80, 46.39],                                  // shore is Savoy, France — to St-Gingolph
+      [6.80, 46.13], [6.87, 46.05],                   // the Rhône and the Trient valley
+    ],
+  },
+  {
+    // Authoritative over Italy (the Brenner line — South Tyrol stays Italian)
+    // and Switzerland (Vorarlberg, with Liechtenstein ridden through).
+    // Bavaria, Bohemia, Hungary and Slovenia are all overshoot for later
+    // rings; the Danube corner at Bratislava is Czechoslovakia's to draw.
+    name: 'Austria',
+    cells: ['Carnuntum', 'Virunum'],
+    ring: [
+      [10.47, 46.85],                                 // the Reschen corner
+      [10.10, 46.85], [9.88, 47.02],                  // the Silvretta and the Rätikon
+      [9.60, 47.06], [9.53, 47.27],                   // through Liechtenstein: the Rhine
+      [9.55, 47.51],                                  // the Bodensee shore
+      [9.90, 47.80], [11.00, 48.10], [12.40, 48.60],  // overshoot into Bavaria
+      [13.60, 48.90], [14.80, 49.20], [16.30, 49.15], // overshoot into Bohemia and Moravia
+      [17.45, 48.40], [17.60, 47.60],                 // overshoot into the Little Alföld
+      [17.00, 47.00], [16.60, 46.60],                 // overshoot toward the Mur
+      [15.60, 46.30], [14.40, 46.20], [13.90, 46.30], // overshoot into Slovenia
+      [13.70, 46.52],                                 // Peč: the Italian–Yugoslav tripoint
+      [13.50, 46.55], [12.73, 46.63], [12.30, 46.78], // the Carnic crest
+      [12.15, 47.08], [11.51, 47.01],                 // the Dolomite corner and the Brenner
+      [11.02, 46.77], [10.70, 46.79],                 // the Ötztal crest over the Vinschgau
+    ],
+  },
+  {
+    // No authoritative edge of its own: Belgium and Germany paint later and
+    // cut this blob back to the Scheldt line and the Dutch–German border.
+    name: 'Netherlands',
+    cells: ['Batavia', 'Frisia'],
+    ring: [
+      [3.10, 51.35], [4.20, 50.90], [5.60, 50.55],    // overshoot into Flanders and Limburg
+      [6.60, 50.55], [7.60, 51.60], [7.70, 52.60],    // overshoot into the Rhineland and Westphalia
+      [7.60, 53.50],                                  // overshoot past the Ems
+      [6.20, 53.80], [4.60, 53.20], [3.20, 51.80],    // the North Sea, at sea
+    ],
+  },
+  {
+    // Authoritative over France (the line from the dunes at De Panne to the
+    // Lorraine tripoint, with the French Givet salient) and the Netherlands
+    // (Zeeland Flanders, the Kempen, the Maastricht appendage). Luxembourg
+    // and Germany paint later and take the east.
+    name: 'Belgium',
+    cells: ['Atuatuca'],
+    ring: [
+      [2.55, 51.20],                                  // the sea at De Panne
+      [2.60, 50.81], [3.02, 50.77],                   // behind Dunkirk; Lille stays French
+      [3.27, 50.52], [3.66, 50.45],                   // Tournai's loop and the Scheldt
+      [4.03, 50.32], [4.20, 50.13],                   // the Sambre; Maubeuge stays French
+      [4.44, 49.94], [4.70, 49.99],                   // the Ardennes shoulder
+      [4.83, 50.16], [4.98, 50.00],                   // around the French Givet salient
+      [5.30, 49.70], [5.52, 49.50],                   // the Gaume line below Virton
+      [5.82, 49.55],                                  // the Athus corner: France–Belgium–Luxembourg
+      [6.20, 49.90], [6.35, 50.10],                   // overshoot into Luxembourg and the Eifel
+      [6.60, 50.55], [6.30, 50.72],                   // overshoot east of Eupen, to the Voeren rim
+      [6.02, 50.75], [5.88, 50.76],                   // the Voeren line to the Vaals corner
+      [5.70, 50.78], [5.60, 50.82],                   // south and west of Maastricht: the city is Dutch
+      [5.58, 50.92], [5.68, 51.03],                   // the Meuse below Maasmechelen
+      [5.81, 51.09], [5.77, 51.16],                   // Belgian Maaseik keeps its west bank
+      [5.56, 51.22], [5.24, 51.28],                   // the Kempen line under Weert
+      [5.10, 51.43], [4.75, 51.50], [4.40, 51.47],    // Baarle's country, drawn straight
+      [4.24, 51.37], [3.95, 51.22], [3.52, 51.29],    // Antwerp stays Belgian, the polders Dutch
+      [3.37, 51.31],                                  // Zeeland Flanders: the Zwin
+      [3.10, 51.40],                                  // the sea
+    ],
+  },
+  {
+    // Authoritative over Belgium and France: the Grand Duchy's west and
+    // south. The Moselle–Sûre–Our side is Germany's to draw.
+    name: 'Luxembourg',
+    cells: ['Luxembourg'],
+    ring: [
+      [6.14, 50.13],                                  // Ouren: the Belgian–German tripoint
+      [5.97, 50.06], [5.85, 49.86],                   // the Ardennes edge past Wiltz
+      [5.86, 49.72],                                  // Rambrouch and the Attert line; Arlon Belgian
+      [5.82, 49.55],                                  // Athus: the French tripoint
+      [5.98, 49.46], [6.20, 49.45],                   // the minette line past Esch and Dudelange
+      [6.36, 49.47],                                  // Schengen: the Moselle corner
+      [6.75, 49.70], [6.65, 50.05],                   // overshoot over the Our into the Eifel
+    ],
+  },
+  {
+    // Authoritative over France (Rhine and the Wissembourg–Saar line),
+    // Luxembourg (Moselle–Sûre–Our), Belgium (Eupen–Malmedy stays Belgian),
+    // the Netherlands (the long 1815 line, Vaals to the Dollart) and Austria
+    // (Salzach–Inn–Bodensee). The four occupation zones are one color and one
+    // ring — the era draws no line at the Elbe, and neither did the map of
+    // May 1948. Denmark, Czechoslovakia and Poland paint later.
+    name: 'Germany',
+    cells: ['Colonia Agrippina', 'Mogontiacum', 'Augusta Treverorum',
+      'Augusta Vindelicorum', 'Chatti', 'Teutoburgium', 'Semnones'],
+    ring: [
+      [7.59, 47.58],                                  // Basel: the Swiss corner
+      [7.58, 48.12], [7.80, 48.58],                   // the Rhine; Strasbourg stays French
+      [8.12, 48.90], [8.23, 48.97],                   // Lauterbourg: the Rhine corner
+      [7.63, 49.05], [7.10, 49.15], [6.85, 49.22],    // the Wissembourg line and the Saar edge
+      [6.36, 49.47],                                  // Schengen
+      [6.44, 49.66], [6.50, 49.81],                   // the Moselle and the Sûre
+      [6.14, 50.13],                                  // Ouren
+      [6.40, 50.32], [6.34, 50.49],                   // Eupen–Malmedy stays Belgian
+      [6.20, 50.62], [6.02, 50.75],                   // to Vaals: the Dutch tripoint
+      [6.09, 50.92], [6.07, 51.22],                   // the Meuse–Rhine line; Limburg Dutch
+      [6.23, 51.40], [6.22, 51.51],                   // east of Venlo
+      [6.16, 51.90], [6.72, 51.90],                   // the Rhine crossing at Emmerich
+      [6.83, 52.12], [7.07, 52.24], [7.00, 52.64],    // Bentheim and the moor line
+      [7.21, 53.01], [7.21, 53.24],                   // the Ems; the Dollart
+      [7.02, 53.55],                                  // the sea beyond the Ems mouth
+      [8.20, 55.10], [9.40, 55.00], [10.10, 54.80],   // overshoot deep into Schleswig for Denmark
+      [11.20, 54.20], [12.60, 54.60], [14.00, 54.30], // the Baltic, at sea (Zealand stays out)
+      [14.60, 53.80], [15.20, 52.80], [15.20, 51.60], // overshoot over the Oder for Poland
+      [15.12, 51.12], [15.08, 50.93],                 // hugging east of the Neisse for Poland
+      [13.80, 50.60], [12.80, 50.10],                 // under the Ore crest, into Bohemia
+      [12.35, 49.85], [13.10, 49.40], [13.55, 49.10], // overshoot past the Šumava crest
+      [13.84, 48.77],                                 // the tripoint at the Plöckenstein
+      [13.51, 48.59], [13.44, 48.56],                 // the Inn at Passau
+      [13.33, 48.32], [12.93, 48.02],                 // the Inn and the Salzach
+      [13.00, 47.85], [12.91, 47.72],                 // Salzburg stays Austrian
+      [12.20, 47.61], [11.63, 47.59], [11.25, 47.43], // the Karwendel line
+      [10.90, 47.48], [10.45, 47.40], [10.10, 47.37], // the Allgäu
+      [9.77, 47.55],                                  // the Bodensee
+      // The High Rhine to Basel — drawn, not overshot: Switzerland painted
+      // five rings ago and nothing here cuts after Germany, so this stretch
+      // IS the border. Schaffhausen keeps its right-bank pocket.
+      [9.30, 47.62], [8.80, 47.60],                   // the Rhine below the lake
+      [8.72, 47.70], [8.45, 47.72], [8.40, 47.60],    // around Swiss Schaffhausen
+      [7.95, 47.56], [7.68, 47.60],                   // Rheinfelden to the Basel corner
+    ],
+  },
+  {
+    // Authoritative over Germany: the 1920 plebiscite line across Schleswig.
+    // Jutland only — Zealand and the isles are all coast and need no ring.
+    name: 'Denmark',
+    cells: ['Cimbria'],
+    ring: [
+      [8.45, 55.05],                                  // the North Sea at the Wadden shore
+      [8.65, 54.90], [9.00, 54.87], [9.45, 54.83],    // the 1920 line; Flensburg stays German
+      [9.62, 54.85],                                  // Flensburg fjord's mouth
+      [10.40, 54.70], [11.10, 55.10], [11.05, 55.60], // seaward of Funen in the Great Belt
+      [11.00, 56.20], [11.20, 56.80],                 // the Kattegat off Djursland
+      [10.90, 57.40], [10.70, 57.90],                 // rounding Skagen
+      [8.90, 57.40], [7.90, 56.20], [7.90, 55.40],    // the North Sea, at sea
+    ],
+  },
+  {
+    // Authoritative over Germany (Šumava and the Ore Mountains, with the Cheb
+    // salient) and Austria (the Bohemian–Moravian line to the March, and the
+    // Danube corner that keeps Bratislava's bank Czechoslovak). The east end
+    // is the 1945 cession of Ruthenia: exact, because the USSR paints never.
+    // Poland and Hungary paint later.
+    name: 'Czechoslovakia',
+    cells: ['Boiohaemum'],
+    ring: [
+      [13.84, 48.77],                                 // Plöckenstein: the German–Austrian tripoint
+      [13.40, 48.98], [12.90, 49.34],                 // the Šumava crest
+      [12.55, 49.68], [12.40, 49.78],                 // the Cham gap
+      [12.20, 50.06], [12.09, 50.25], [12.35, 50.45], // the Cheb salient, kept whole
+      [13.00, 50.50], [13.65, 50.72], [14.30, 50.88], // the Ore Mountains
+      [14.56, 50.92], [14.82, 50.87],                 // the Zittau corner: Poland's tripoint
+      [15.50, 51.20], [17.00, 51.00], [18.50, 50.30], // overshoot into Silesia for Poland
+      [19.80, 49.80], [21.50, 49.60],                 // overshoot along the Carpathians
+      [22.56, 49.09],                                 // the Užok pass: Poland–USSR tripoint
+      [22.30, 48.80], [22.16, 48.58],                 // the 1945 line: Ruthenia is Soviet now
+      [22.14, 48.40],                                 // Čop: the Hungarian tripoint
+      [21.60, 48.20], [20.55, 48.35], [19.90, 47.95], // overshoot into the Alföld for Hungary
+      [19.00, 47.75], [18.20, 47.55], [17.55, 47.60], // overshoot south past the Danube bend
+      [17.16, 48.01],                                 // the Danube at the March mouth
+      [16.98, 48.17], [16.85, 48.72],                 // the March; Bratislava keeps its bank
+      [16.40, 48.78], [15.80, 48.87], [15.00, 48.76], // the Thaya line
+      [14.70, 48.58],                                 // the Bohemian forest corner
+    ],
+  },
+  {
+    // Authoritative over Germany (Oder–Neisse, with Świnoujście and Szczecin
+    // Polish) and Czechoslovakia (Sudetes and the Olza). The east is Curzon
+    // and the 1945 Königsberg line, both exact against unregioned Soviet
+    // ground. Gdańsk — two names and one ruin ago Danzig — sits mid-ring.
+    name: 'Poland',
+    cells: ['Gothiscandza'],
+    ring: [
+      [14.18, 53.92],                                 // the sea west of Świnoujście
+      [14.30, 53.55], [14.15, 53.25],                 // west of the lagoon; Szczecin Polish
+      [14.35, 53.05], [14.15, 52.82],                 // to the Oder
+      [14.55, 52.60], [14.60, 52.35], [14.72, 52.05], // the Oder line past Frankfurt
+      [14.75, 51.55],                                 // the Neisse mouth
+      [14.97, 51.35], [15.03, 51.00],                 // the Neisse line
+      [14.82, 50.87],                                 // Zittau
+      [15.50, 50.78], [16.20, 50.63],                 // the Sudetes
+      [16.35, 50.20], [16.90, 50.22],                 // the Kłodzko salient, kept whole
+      [16.60, 50.40], [17.40, 50.27], [17.90, 50.00], // the Opava line
+      [18.30, 49.93], [18.85, 49.52],                 // the Olza at Cieszyn
+      [19.80, 49.20], [20.60, 49.40], [21.60, 49.43], // the Carpathian crest
+      [22.56, 49.09],                                 // the Užok pass
+      [22.65, 49.50], [23.40, 50.40],                 // the Curzon line: the San headwaters
+      [23.60, 50.85], [23.65, 51.50], [23.60, 52.10], // the Bug
+      [23.90, 52.70], [23.90, 53.20],                 // east of Białystok
+      [23.50, 53.95],                                 // toward the East Prussian line
+      [22.77, 54.36],                                 // the 1945 Königsberg line's east end
+      [19.64, 54.44],                                 // …ruled straight west to the Vistula spit
+      [19.40, 54.70], [17.00, 54.90], [15.50, 54.50], // the Baltic, at sea
+    ],
+  },
+  {
+    // Authoritative over Austria (the Burgenland line, Sopron's salient kept
+    // Hungarian... kept Austrian — the 1921 plebiscite) and Czechoslovakia
+    // (Danube and Ipoly). The short Soviet stretch is exact. Romania and
+    // Yugoslavia paint later.
+    name: 'Hungary',
+    cells: ['Aquincum'],
+    ring: [
+      [17.16, 48.01],                                 // the Danube below Bratislava
+      [17.70, 47.87], [18.15, 47.76], [18.72, 47.79], // the Danube line
+      [18.85, 47.83],                                 // the Ipoly mouth
+      [19.30, 48.09], [19.90, 48.13], [20.50, 48.54], // the Ipoly and the Mátra rim
+      [21.00, 48.56], [21.62, 48.50],                 // north of Miskolc to the Zemplén
+      [22.14, 48.40],                                 // Čop: the Czechoslovak–Soviet corner
+      [22.60, 48.10], [22.88, 47.95],                 // the 1945 Soviet stretch at the Tisza
+      [22.90, 47.40], [22.50, 46.60],                 // overshoot into Crișana for Romania
+      [21.20, 45.80], [20.00, 45.60],                 // overshoot into the Banat and Bácska
+      [18.50, 45.50], [17.50, 45.80], [16.80, 46.30], // overshoot over the Drava for Yugoslavia
+      [16.11, 46.87],                                 // the Austrian–Yugoslav tripoint
+      [16.28, 46.96], [16.44, 47.14],                 // the Őrség edge
+      [16.66, 47.45], [16.43, 47.66],                 // Sopron's bay: the 1921 vote held it
+      [16.75, 47.68], [16.97, 47.70],                 // to the Danube meadows
+    ],
+  },
+  {
+    // Authoritative over Italy (the 1947 line east of Gorizia, with Trieste
+    // riding Italian as the era registry already draws it), Austria (the
+    // Karawanken) and Hungary (Mura–Drava–Danube and the Bácska). Albania,
+    // Greece, Bulgaria and Romania paint later.
+    name: 'Yugoslavia',
+    cells: ['Salona', 'Delminium', 'Siscia', 'Sirmium', 'Singidunum', 'Naissus'],
+    ring: [
+      [13.85, 45.60],                                 // the sea east of Trieste
+      [13.72, 45.78], [13.64, 45.99],                 // the 1947 line; Gorizia stays Italian
+      [13.50, 46.22], [13.60, 46.44],                 // the Soča valley rim and the Predil
+      [13.72, 46.52],                                 // Peč
+      [14.20, 46.44], [14.55, 46.41], [15.05, 46.65], // the Karawanken and the Drava watershed
+      [15.65, 46.71], [16.02, 46.71],                 // the Mur line
+      [16.11, 46.87],                                 // the Austrian–Hungarian tripoint
+      [16.60, 46.48], [17.20, 46.18], [17.85, 45.95], // the Mura and the Drava
+      [18.45, 45.76], [18.90, 45.92],                 // the Drava mouth and the Baja bend
+      [19.05, 46.02], [19.65, 46.17],                 // the Bácska line
+      [20.26, 46.11],                                 // the Romanian tripoint on the Maros plain
+      [21.50, 45.30], [22.30, 44.65],                 // overshoot over the Iron Gates for Romania
+      [22.80, 44.20],                                 // overshoot to the Timok for Romania/Bulgaria
+      [22.60, 43.20], [22.90, 42.30],                 // overshoot into the Bulgarian marches
+      [23.05, 41.70], [23.00, 41.30],                 // overshoot past Strumica to the Belasica
+      [22.60, 41.05],                                 // overshoot toward the Vardar for Greece
+      [21.50, 40.80], [20.80, 40.90],                 // overshoot into the lakes for Greece/Albania
+      [20.30, 41.40], [19.70, 41.80],                 // overshoot into the Albanian north
+      [19.00, 42.00],                                 // the Adriatic at the Buna, at sea
+      [18.20, 42.35], [17.20, 42.65], [16.10, 43.20], // seaward of Lastovo and Vis
+      [15.10, 43.85], [14.30, 44.55], [13.95, 45.10], // seaward of Kornati and Lošinj
+      [13.80, 45.35],                                 // the Istrian sea
+    ],
+  },
+  {
+    // Authoritative over Yugoslavia: the northern mountain line from the Buna
+    // to Prespa, drawn around Shkodër. Greece paints later and takes the
+    // southern line.
+    name: 'Albania',
+    cells: ['Dyrrhachium'],
+    ring: [
+      [19.30, 41.87],                                 // the sea at the Buna mouth
+      [19.37, 42.07], [19.51, 42.28],                 // east around lake Shkodër
+      [19.83, 42.47], [20.10, 42.56],                 // the Prokletije
+      [20.25, 42.33], [20.60, 41.87],                 // the Drin gorges
+      [20.52, 41.60], [20.74, 41.20],                 // through lake Ohrid
+      [20.98, 40.85],                                 // Prespa: the Greek tripoint
+      [20.90, 40.45], [20.75, 40.05],                 // overshoot down the Pindus rim for Greece
+      [20.35, 39.75],                                 // overshoot into Epirus for Greece
+      [19.85, 39.72],                                 // the Ionian off Saranda
+      [19.50, 40.10], [19.15, 40.65],                 // seaward of the riviera and Vlorë
+      [19.10, 41.20],                                 // the Adriatic, at sea
+    ],
+  },
+  {
+    // Authoritative over Albania (the 1926-protocol line above Epirus) and
+    // Yugoslavia (the Prespa–Vardar–Belasica line). The Evros against
+    // unregioned Turkey is exact; the Rhodope side is Bulgaria's to draw.
+    // The ring reaches to sea so Corfu, Euboea and the near islands ride
+    // Greek; Crete, Rhodes and the far Aegean are coast-made and need none.
+    name: 'Greece',
+    cells: ['Corinth', 'Athens', 'Sparta', 'Thessalonica'],
+    ring: [
+      [20.02, 39.66],                                 // the Ionian at Konispol
+      [20.22, 39.85], [20.42, 40.06],                 // the Kakavia line
+      [20.60, 40.08], [20.84, 40.47],                 // the Pindus border ridge
+      [20.98, 40.85],                                 // Prespa
+      [21.40, 41.10], [21.75, 41.00],                 // the Pelagonia line at Bitola
+      [22.20, 41.15], [22.76, 41.32],                 // to the Vardar gates at Gevgelija
+      [22.94, 41.34],                                 // Belasica: the Bulgarian tripoint
+      [23.80, 41.70], [25.20, 41.60],                 // overshoot into the Rhodope for Bulgaria
+      [26.10, 41.90],                                 // overshoot to the Maritsa for Bulgaria
+      [26.35, 41.71],                                 // the Evros corner: Turkey, exact from here
+      [26.33, 41.40], [26.36, 41.10],                 // the Evros line; Edirne stays Turkish
+      [26.30, 40.94], [26.03, 40.73],                 // the river to its mouth
+      [25.50, 40.20], [24.40, 40.10],                 // the Thracian sea: Thasos, Samothrace ride
+      [23.90, 39.90],                                 // off Athos
+      [24.20, 38.90], [24.60, 38.40], [24.30, 37.80], // seaward of Euboea
+      [23.90, 36.90], [23.20, 36.20], [22.00, 36.20], // rounding the Peloponnese, at sea
+      [21.00, 37.20], [20.30, 38.20],                 // the Ionian: Zante and Cephalonia ride
+      [19.90, 39.00], [19.35, 39.70],                 // seaward of Corfu
+      [19.70, 40.05], [19.98, 39.85],                 // the strait at Corfu's back, Butrint inside
+    ],
+  },
+  {
+    // Authoritative over Yugoslavia (the western line, Timok to Belasica) and
+    // Greece (the Rhodope crest). The Black Sea corner against unregioned
+    // Turkey — Rezovo to the Maritsa — is exact. Romania paints later and
+    // draws the Danube and the Dobruja.
+    name: 'Bulgaria',
+    cells: ['Serdica', 'Philippopolis', 'Novae'],
+    ring: [
+      [22.67, 44.05],                                 // the Timok mouth on the Danube
+      [22.50, 43.60], [22.36, 43.03],                 // the western marches
+      [22.55, 42.88], [22.44, 42.36],                 // past Dimitrovgrad and Kyustendil
+      [22.51, 42.15], [22.85, 41.60],                 // the Osogovo line
+      [22.94, 41.34],                                 // Belasica
+      [23.20, 41.33], [23.62, 41.38],                 // the Rupel gorge
+      [24.05, 41.52], [24.60, 41.42], [25.20, 41.36], // the Rhodope crest
+      [25.90, 41.32],                                 // above the Maritsa plain
+      [26.35, 41.71],                                 // the Evros corner: the Turkish tripoint
+      [26.62, 41.97], [26.95, 42.00],                 // the 1913 line; Edirne's back
+      [27.30, 42.00], [27.55, 41.91],                 // the Strandzha
+      [28.03, 41.98],                                 // Rezovo: the Black Sea
+      [28.55, 42.40], [28.60, 43.10],                 // the Black Sea, off Burgas and Varna
+      [28.75, 43.45],                                 // seaward of Cape Kaliakra
+      [28.60, 44.20], [27.00, 44.60], [25.00, 44.30], // overshoot over the Danube for Romania
+      [23.50, 44.30],                                 // overshoot into Oltenia for Romania
+    ],
+  },
+  {
+    // Painted last: authoritative over Hungary (the Trianon line through
+    // Crișana), Yugoslavia (the Banat line and the Danube through the Iron
+    // Gates) and Bulgaria (the Danube and the 1940 Craiova line in the
+    // Dobruja). The whole north and east — Sighet, Bukovina ceded, then the
+    // Prut and the Chilia arm — is exact against unregioned Soviet ground.
+    name: 'Romania',
+    cells: ['Tomis', 'Sarmizegetusa', 'Napoca'],
+    ring: [
+      [20.26, 46.11],                                 // the Hungarian–Yugoslav tripoint
+      [20.75, 46.15], [21.10, 46.25],                 // the Maros plain; Arad Romanian
+      [21.30, 46.62], [21.60, 47.00],                 // the Crișana line; Oradea Romanian
+      [21.70, 47.10], [22.00, 47.50], [22.30, 47.76], // to the Someș plain; Satu Mare Romanian
+      [22.88, 47.95],                                 // the Tisza: the Soviet corner
+      [23.20, 48.10], [23.85, 47.95], [24.20, 47.92], // the Tisza line past Sighet
+      [24.90, 47.72], [25.25, 47.89],                 // the Bukovina line: Cernăuți is Soviet now
+      [26.20, 47.98], [26.65, 48.25],                 // to the Herța corner
+      [26.98, 48.00], [27.20, 47.60], [27.60, 47.10], // down the Prut
+      [28.10, 46.50], [28.25, 45.90],                 // the lower Prut
+      [28.21, 45.47],                                 // Reni: the Prut joins the Danube
+      [28.80, 45.32], [29.60, 45.34],                 // the Chilia arm: the delta's north is Soviet
+      [29.95, 44.95],                                 // the sea beyond the delta
+      [29.40, 44.40], [29.00, 43.85],                 // the Black Sea, at sea
+      [28.58, 43.74],                                 // south of Mangalia: the 1940 line
+      [28.20, 43.76], [27.65, 43.96], [27.27, 44.10], // the Craiova line to Silistra
+      [26.50, 44.08], [25.00, 43.72], [24.00, 43.70], // the Danube
+      [23.20, 43.85], [22.67, 44.05],                 // the Danube to the Timok mouth
+      [22.15, 44.48], [21.60, 44.75], [21.36, 44.87], // up the Danube through the Iron Gates
+      [21.20, 45.30], [20.80, 45.75], [20.35, 45.90], // the Banat line
+    ],
+  },
+];
+
+// Paint the country regions into a region-index array, one byte per map
+// pixel, 0 = no region, i+1 = COUNTRY_REGIONS[i]. Painter's algorithm: rings
+// fill in array order and a later ring overwrites an earlier one, which is
+// the whole topology contract above. Plain even-odd scanline fill — no
+// canvas, so the browser's ID pass and every Node consumer rasterize the
+// SAME bytes and antialiasing can never blend two region indices into a
+// third. Cost: one pass over each ring's bounding rows, ~120ms at the full
+// frame, run once per boot before the ID pass and then released.
+//
+// `isLand(x, y)` gates the seam heal below to ground the ID pass can
+// actually assign. Without it the heal is skipped entirely: healing sea
+// pixels is how the first raster FLOODED the open Mediterranean and
+// Atlantic with whichever ring's index won the zip — harmless for true sea,
+// until the ID pass's bilinearly-filtered land mask reads a one-pixel
+// coastal bead as land inside the flooded paint and binds it to a member
+// seed three countries away. Measured: Yugoslav paint off Genoa put a
+// Siscia bead on the Ligurian shore, Dutch paint off Cádiz a Frisian one,
+// and the phantom land adjacencies (Spain touching Morocco) reshaped AI
+// border calculus badly enough to stall Rome's whole second century.
+// The browser passes its land-mask bytes; Node consumers pass
+// `landTesterPx()` below.
+export function rasterizeCountryRegions(mapData, isLand) {
+  const md = mapData || MAP_DATA;
+  const W = md.MAP_W | 0;
+  const H = md.MAP_H | 0;
+  const regions = md.countryRegions || [];
+  if (!regions.length) return null;
+  const out = new Uint8Array(W * H);
+  const xs = [];
+  for (let r = 0; r < regions.length; r++) {
+    const ring = (regions[r] && regions[r].ring) || [];
+    if (ring.length < 3) continue;
+    const px = ring.map(([lon, lat]) => md.project(lon, lat));
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    for (const [, py] of px) {
+      if (py < y0) y0 = py;
+      if (py > y1) y1 = py;
+    }
+    const yLo = Math.max(0, Math.floor(y0));
+    const yHi = Math.min(H - 1, Math.ceil(y1));
+    const value = r + 1;
+    for (let y = yLo; y <= yHi; y++) {
+      const cy = y + 0.5;
+      xs.length = 0;
+      for (let i = 0, j = px.length - 1; i < px.length; j = i++) {
+        const [xi, yi] = px[i];
+        const [xj, yj] = px[j];
+        if ((yi > cy) !== (yj > cy)) {
+          xs.push(xi + ((cy - yi) * (xj - xi)) / (yj - yi));
+        }
+      }
+      xs.sort((a, b) => a - b);
+      for (let k = 0; k + 1 < xs.length; k += 2) {
+        const xa = Math.max(0, Math.round(xs[k]));
+        const xb = Math.min(W - 1, Math.round(xs[k + 1]) - 1);
+        for (let x = xa; x <= xb; x++) out[y * W + x] = value;
+      }
+    }
+  }
+  // Seam healing. Two hand-traced overshoots are supposed to overlap, but a
+  // pair that merely KISSES leaves a thread of unpainted ground down the
+  // seam — and an unpainted pixel deep in Europe is claimed by the nearest
+  // UNREGIONED seed, which can be Britannia's, three countries away
+  // (measured: the first raster grew a one-pixel British Jura). Heal only
+  // WEDGED pixels — unpainted ground whose 8-neighborhood holds two
+  // DIFFERENT countries, or paint on both sides of an axis — so a border
+  // that legitimately faces unregioned land (the Curzon line, the Evros)
+  // never moves: those have paint on one side only. Later ring wins each
+  // fill, matching the painter's contract. Queue-driven: one full scan
+  // seeds the frontier, then only the neighborhoods of healed pixels are
+  // re-examined, so the cost is the cracks' own area and not passes over
+  // the frame. LAND ONLY — see the contract above; without a land test
+  // there is no heal, and the pure ring paint (whose seaward overshoots
+  // are deliberate and safe) is the whole answer.
+  if (typeof isLand === 'function') {
+    const wedgeFill = (at) => {
+      if (out[at]) return 0;
+      if (!isLand(at % W, (at / W) | 0)) return 0;
+      const l = out[at - 1], r = out[at + 1], u = out[at - W], d = out[at + W];
+      const axis = (l && r) || (u && d)
+        || (l && u && l !== u) || (l && d && l !== d)
+        || (r && u && r !== u) || (r && d && r !== d);
+      if (axis) return Math.max(l, r, u, d);
+      const n8 = [l, r, u, d,
+        out[at - W - 1], out[at - W + 1], out[at + W - 1], out[at + W + 1]];
+      let a = 0, two = false;
+      for (const v of n8) { if (v && !a) a = v; else if (v && v !== a) two = true; }
+      return two ? Math.max(...n8) : 0;
+    };
+    // The seed scan only needs to cover ground a ring could have painted:
+    // the rings' joint bounding box, plus a pixel of margin.
+    let bx0 = W, bx1 = 0, by0 = H, by1 = 0;
+    for (const reg of regions) {
+      for (const [lon, lat] of (reg && reg.ring) || []) {
+        const [px, py] = md.project(lon, lat);
+        if (px < bx0) bx0 = px;
+        if (px > bx1) bx1 = px;
+        if (py < by0) by0 = py;
+        if (py > by1) by1 = py;
+      }
+    }
+    const sy0 = Math.max(1, Math.floor(by0) - 1);
+    const sy1 = Math.min(H - 2, Math.ceil(by1) + 1);
+    const sx0 = Math.max(1, Math.floor(bx0) - 1);
+    const sx1 = Math.min(W - 2, Math.ceil(bx1) + 1);
+    const queue = [];
+    for (let y = sy0; y <= sy1; y++) {
+      const row = y * W;
+      for (let x = sx0; x <= sx1; x++) {
+        if (!out[row + x] && wedgeFill(row + x)) queue.push(row + x);
+      }
+    }
+    for (let head = 0; head < queue.length; head++) {
+      const at = queue[head];
+      const fill = wedgeFill(at);
+      if (!fill) continue;
+      out[at] = fill;
+      const x = at % W, y = (at / W) | 0;
+      if (x > 1 && x < W - 2 && y > 1 && y < H - 2) {
+        for (const next of [at - 1, at + 1, at - W, at + W,
+          at - W - 1, at - W + 1, at + W - 1, at + W + 1]) {
+          if (!out[next] && wedgeFill(next)) queue.push(next);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// A pixel-space land test for Node consumers of rasterizeCountryRegions —
+// the browser has the real land-mask bytes and passes those instead. Slow
+// per call (a point-in-polygon walk over the hand-traced coast), fast
+// enough for the heal, whose candidates are the seams' own pixels.
+export function landTesterPx(mapData) {
+  const md = mapData || MAP_DATA;
+  const W = md.MAP_W | 0;
+  const H = md.MAP_H | 0;
+  return (x, y) => onLand(
+    md.LON0 + ((x + 0.5) / W) * (md.LON1 - md.LON0),
+    md.LAT1 - ((y + 0.5) / H) * (md.LAT1 - md.LAT0),
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Regions — the named lands this map is written in (SPEC §5.6).
@@ -2069,7 +2786,8 @@ const REGIONS = {
     'Numantia', 'Salmantica', 'Barcino', 'Emporiae', 'Baleares'],
   'Gaul': ['Narbo', 'Massilia', 'Nemausus', 'Tolosa', 'Burdigala', 'Lugdunum',
     'Augustodunum', 'Avaricum', 'Limonum', 'Condate', 'Darioritum', 'Lutetia', 'Rotomagus',
-    'Samarobriva', 'Gesoriacum', 'Durocortorum', 'Augusta Treverorum', 'Vesontio', 'Genava'],
+    'Samarobriva', 'Gesoriacum', 'Durocortorum', 'Augusta Treverorum', 'Vesontio', 'Genava',
+    'Atuatuca', 'Luxembourg'], // §232: Belgica's city and the Treveran plateau are Gaul
   'Britain': ['Britannia', 'Londinium', 'Camulodunum', 'Durovernum', 'Venta Belgarum',
     'Corinium', 'Isca Dumnoniorum', 'Dumnonia', 'Isca Silurum', 'Cambria', 'Deva', 'Lindum',
     'Eboracum', 'Brigantia', 'Caledonia', 'Caledonia Ultima'],
@@ -2251,6 +2969,13 @@ export const MAP_DATA = {
     ],
   },
   provinces: PROVINCES,
+  // The drawn borders of Europe (SPEC §232): painter-ordered country rings.
+  // The ID pass reads the painted index raster (rasterizeCountryRegions) and
+  // lets a seed claim only pixels of its own country; nothing else reads it.
+  // The rasterizer rides on MAP_DATA like `project` does, so the renderer
+  // keeps its zero-import property.
+  countryRegions: COUNTRY_REGIONS,
+  rasterizeCountryRegions,
   // The named lands (SPEC §5.6): region -> canonical province names. Labels
   // read it; nothing in the sim does.
   regions: REGIONS,
@@ -2472,6 +3197,63 @@ export function validateMapData() {
     }
     for (const p of provs) {
       if (!regioned.has(p.name)) warnings.push(`${p.name}: belongs to no region`);
+    }
+
+    // Country regions (SPEC §232): the drawn borders must agree with the
+    // seeds, because the raster obeys the rings absolutely. A member seed
+    // outside its own painted country can claim nothing and boots as a
+    // zero-area province; a NON-member seed inside a painted country is
+    // worse — its own home pixel is ineligible ground, and the ring has a
+    // hole where its cells cannot follow. Membership is checked against the
+    // PAINTED result (last ring wins), not each ring alone, because the
+    // overshoot convention makes single-ring containment meaningless.
+    {
+      const regions = MAP_DATA.countryRegions || [];
+      const byCell = new Map();
+      for (let r = 0; r < regions.length; r++) {
+        const reg = regions[r];
+        if (!reg || !Array.isArray(reg.ring) || reg.ring.length < 3) {
+          warnings.push(`countryRegions[${r}]: malformed ring`);
+          continue;
+        }
+        if (!Array.isArray(reg.cells) || !reg.cells.length) {
+          warnings.push(`country region '${reg.name}': no member cells`);
+          continue;
+        }
+        for (const nm of reg.cells) {
+          if (!names.has(nm)) warnings.push(`country region '${reg.name}': unknown cell '${nm}'`);
+          else if (byCell.has(nm)) {
+            warnings.push(`${nm}: in two country regions ('${byCell.get(nm)}' and '${reg.name}')`);
+          } else byCell.set(nm, reg.name);
+        }
+        for (const [lon, lat] of reg.ring) {
+          if (!Number.isFinite(lon) || !Number.isFinite(lat)
+            || lon < LON0 || lon > LON1 || lat < LAT0 || lat > LAT1) {
+            warnings.push(`country region '${reg.name}': ring point (${lon}, ${lat}) outside frame`);
+          }
+        }
+      }
+      // Painted membership per seed: the LAST ring containing it wins.
+      const paintedAt = (lon, lat) => {
+        let hit = null;
+        for (const reg of regions) {
+          if (reg && Array.isArray(reg.ring) && reg.ring.length >= 3
+            && pointInPolygon(lon, lat, reg.ring)) hit = reg.name;
+        }
+        return hit;
+      };
+      if (regions.length) {
+        for (const p of provs) {
+          const home = byCell.get(p.name) || null;
+          const painted = paintedAt(p.lon, p.lat);
+          if (home && painted !== home) {
+            warnings.push(`${p.name}: member of country '${home}' but its seed paints as '${painted || 'no region'}'`);
+          }
+          if (!home && painted) {
+            warnings.push(`${p.name}: seed sits inside country '${painted}' without membership`);
+          }
+        }
+      }
     }
 
     for (const link of MAP_DATA.extraLinks.concat(MAP_DATA.seaLinks || [])) {

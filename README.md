@@ -61,9 +61,13 @@ static site, the zero dependencies, or the missing build step changes.
 - Province map of the whole classical world — the Atlantic to the edge of
   India's approaches, Britain to the Horn of Africa: all of Iran to the
   Makran and Merv, all of Ethiopia to the lakes, Nubia, Arabia entire, the
-  Sahel to the Gulf of Guinea (~374 permanent cells, Judaea at city/district
+  Sahel to the Gulf of Guinea (~415 permanent cells, Judaea at city/district
   density), GPU-generated province-ID texture, EU4-style mapmode shaders,
-  heightmap relief, parchment crossfade at strategic zoom.
+  heightmap relief, parchment crossfade at strategic zoom. Europe's country
+  borders are DRAWN, not grown: nineteen hand-traced 1948 rings that the
+  raster obeys to the pixel (SPEC §232), so France is France-shaped — and in
+  the 1948 chapter every established country plays as one province under its
+  own name, while the theatre keeps the districts the war is fought in.
 - A political west — and, beyond the Euphrates and the cataracts, a political
   east and south — in every chapter: eight per-era maps seat some 77 courts
   on the ground beyond the original theater. Carthage, Masinissa's Numidia

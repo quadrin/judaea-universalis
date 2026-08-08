@@ -15794,3 +15794,248 @@ Regression contract: `smoke156` — the restored areas hold (Batanea, Gadara,
 Gerasa∪Mafraq, Philadelphia∪Zarqa within tolerance of their pre-§225 areas),
 the trimmed seeds stay trimmed (no §225/§228 Levant child above weight 0.70),
 and the §228 roads still run through the Ghouta.
+
+## 232. The countries are drawn, not grown
+
+The user looked at the province borders and said they were ugly and inaccurate,
+and asked whether there was not some more memory-efficient way to draw them —
+and, for 1948, why established countries had provinces at all: "just make
+France France, and make its shape more accurate." Both halves of that sentence
+are this section.
+
+The diagnosis first. A border between two states on this map has always been a
+weighted-Voronoi arc between their nearest seeds, wobbled by an 18px domain
+warp, and every section from §225 to §231 is a chapter in the war against that
+arithmetic — optimizers to place seeds, family-purity passes to un-place them,
+weight floors, envelope repairs. That war is winnable where the border is
+nobody's fact (no one knows where Gadara ended), and unwinnable where the
+border is a KNOWN THING: the Pyrenees crest, the Rhine at Strasbourg, the
+Oder–Neisse line. France's real border was not in the data, so no seed weight
+could produce it — and worse, the map was quietly WRONG about who existed:
+Belgium had no cell at all, so 1948's political map showed Belgian ground as
+parts of France, the Netherlands and occupied Germany, and nobody had ever
+noticed because no border there was accurate enough to make the absence
+visible.
+
+### The drawn borders
+
+`MAP_DATA.countryRegions` (js/data/map_data.js): nineteen European countries,
+each a name, a member-cell list, and a hand-traced ring in lon/lat — the
+borders of May 1948, which for most of the continent are the borders of today.
+The ID pass reads the rings' painted raster and obeys it absolutely: a pixel
+inside a painted country is contested only by that country's own seeds, and a
+country's seeds claim nothing outside it. The ring IS the land border, to the
+pixel; inside a ring the member cells still divide the ground by the same
+weighted Voronoi as always, and the warp still wobbles those interior arcs —
+the warp is for lines Voronoi invents, not for lines somebody drew, so the
+region test reads the UNWARPED pixel.
+
+Three properties fall out of the encoding rather than being engineered:
+
+- **Painter's order is the topology.** Rings paint in array order, later over
+  earlier, so each shared border is traced ONCE — in the ring of whichever
+  neighbor paints later; the earlier neighbor overshoots generously and is cut
+  back. No pair of rings has to agree about a shared line, which is the sliver
+  bug (two hand-traced copies of one border disagreeing by a pixel) made
+  unrepresentable.
+- **Coasts are free.** Every seaward edge overshoots into open water and the
+  hand-traced land mask clips it, so the coastline keeps the accuracy it has
+  always had and the rings never duplicate it.
+- **Everything outside every ring is untouched.** A pixel in no region is
+  contested by unregioned seeds exactly as before — the easternmost ring point
+  sits at 29.8°E, so the Levant, Anatolia, Egypt and every silhouette §231
+  fought for rasterize byte-identical. A border between a drawn country and
+  unregioned ground (Poland against the USSR, Greece against Turkey) is exact
+  from the drawn side, because nobody paints after it.
+
+The rasterizer is a plain even-odd scanline fill shared as
+`rasterizeCountryRegions` — no canvas, so browser and any Node consumer
+produce the SAME bytes and antialiasing can never blend two region indices
+into a third. A queue-driven seam heal follows the fill: two hand-traced
+overshoots are supposed to overlap, but a pair that merely kisses leaves a
+thread of unpainted ground down the seam, and an unpainted pixel deep in
+Europe is claimed by the nearest UNREGIONED seed — measured, before the heal
+the first raster grew a one-pixel British Jura, Britannia being the nearest
+unregioned seed three countries away. Only WEDGED pixels heal (two different
+countries in the 8-neighborhood, or paint bracketing an axis), so a border
+that legitimately faces unregioned ground — the Curzon line, the Evros —
+never moves: those have paint on one side only. The whole thing costs ~500ms
+once at boot; the painted plane rides into the ID pass as an R8 texture and
+is deleted the moment the raster is read back.
+
+Two failure modes of that machinery were found by the tests and are closed
+by construction rather than by tracing more carefully:
+
+- **The heal is gated to LAND.** Ungated, it zipped the open sea between
+  different countries' seaward overshoots and flooded whole basins with
+  whichever ring's index won — harmless for true water, until a coastal
+  blend pixel read as land inside the flooded paint and bound to a member
+  seed three countries away. Yugoslav paint reached the Ligurian sea and put
+  a Siscia bead off Genoa; Dutch paint reached the Gulf of Cádiz. The heal
+  now consumes the renderer's own land-mask bytes (Node consumers use
+  `landTesterPx`), and open water stays honestly unpainted.
+- **The raster is despeckled.** The land canvas is filled with antialiasing
+  (Canvas2D offers no way off), so every coast carries a one-pixel strip of
+  blended texels the ID pass reads as land — and under ring-locking, the
+  nearest ELIGIBLE seed for that strip can be an unregioned cell an ocean
+  away: Atlas ribbons on the Asturian shore, Aleria along Dalmatia, 3,400
+  pixels of Panormus strung up the ring-locked Tyrrhenian coast, dragging
+  Panormus' centroid — and every 'Roman Sicily' label — into the sea, and
+  handing the sim phantom land roads (Spain walked to Morocco; Rome's whole
+  second century stalled on the distorted border calculus, which is how
+  smoke78 caught it). `despeckleProvinceRaster` now kills any 4-connected
+  fragment that neither contains its seed nor is anything BUT antialiased
+  edge: a real island has interior texels at full value and keeps itself at
+  any size; a ribbon is all edge and cannot.
+`validateMapData` holds the data honest: every member seed must sit on its own
+painted ground (a stranded seed is a zero-area province), and no unlisted seed
+may sit inside a painted country (its home pixel would be ineligible ground).
+
+Andorra, Liechtenstein and San Marino are ridden through, on §173's honesty
+rule — better absorbed than invented. Islands whose whole border is coastline
+get no ring; Elba gets reached around by Italy's, because unregioned it would
+fall to Corsica's cell, and Corsica folds into France in 1948.
+
+### Belgium and Luxembourg
+
+Two countries the map could not draw until it had drawn borders. `Atuatuca` —
+the civitas Tungrorum, the one Roman city on that ground — is a PERMANENT
+cell like §230's: Belgica in the tribal centuries (it joins `GAUL_BELGICA`,
+so every era's deal carries it), Rome's from Caesar on, Austrasia's under the
+Franks, and Belgium in 1948 under a new `BEL` court. Its 3/4/3 comes out of
+the four cells whose raster spill used to cover its ground (§47's rule):
+Amiens, Reims, Cologne and the Rhine mouth give up exactly what Atuatuca
+gets back, in every era at once, because a permanent cell's carve is a BASE
+carve. `Luxembourg` is LATENT under Augusta Treverorum — at cell scale the
+Ardennes plateau has no ancient identity apart from Trier's — and 1948 alone
+seats the Grand Duchy (`LUX`). Its 1/1/1 is deliberately NOT a base carve:
+a latent cell's development exists only in the eras that activate it, so
+carving Trier's base would leak three points out of the seven chapters that
+fold the Grand Duchy away (smoke155 caught exactly this). The Duchy is paid
+out of Germany's 1948 consolidation sum instead — §47 applied at the one
+era the cell exists in. The 1948 ledger moves by FRA −6, GER −5, NLD −2,
+BEL +10, LUX +3, net zero; the seven ancient ledgers move by nothing at
+all; and every other court is unchanged to the point.
+
+### 1948: the established world is one province per country
+
+In 1948 an established country's internal subdivisions decide nothing this
+chapter stages — nobody besieges Lyon, nobody counts the vote in Bononia — and
+a France wearing twenty ancient cells read as noise beside an Israel whose
+districts are the whole game. So the background states consolidate
+(`mergeProvinces`, the §47 lever, used at scale): France, Spain, Portugal, the
+United Kingdom, Ireland, the Netherlands, Belgium, Luxembourg, Germany,
+Austria, Switzerland, Denmark, Sweden, Poland, Czechoslovakia, Hungary, Italy,
+Yugoslavia, Albania, Bulgaria, Romania and the Soviet Union each fold into
+the cell their capital sits on and play as ONE province wearing the country's
+name. France IS France: one click, one label, one chair. The THEATRE keeps
+its cells — Israel and every state that marches on it, Turkey, Iran, Saudi
+Arabia, and the colonial holdings, because a war is fought in districts or
+not at all.
+
+Two classes of cell stay out of the fold, each for a reason the game itself
+supplied:
+
+- **The sealed Caucasus.** Phasis and Caucasian Albania — the closed Soviet
+  border, impassable since §173 — stay their own provinces, because folding
+  the closed border into a passable country would open a land road through
+  the USSR from Anatolia to Iran (smoke29/41 hold the seal). The seal
+  outranks the tidy map.
+- **The cities of the dispersion.** A community of the diaspora — living or
+  remembered — is a fact about a CITY, and the dispersion map that hatches
+  Salonica's murder from the chapter's first day must have a Salonica to
+  hatch (smoke110/124/125 hold exactly this). So Marseille and Narbonne
+  stay out of France, Córdoba out of Spain, London out of the United
+  Kingdom, Naples and Syracuse out of Italy — and Greece does not
+  consolidate at all, five of its six cells being the dispersion's oldest
+  cities and the court an active neighbor of the theatre besides. Cities
+  first: the map's subject outranks its tidiness, the same rule as the
+  seal.
+
+What the fold conserves, stated so a check can ask it:
+
+- **Development.** Each survivor's `devTweaks` entry is the exact sum of its
+  family's 1948 development — France 42/57/46 (with Corsica, less its two
+  community cities), the Soviet frame 38/49/44 (less the sealed Caucasus),
+  and so on, recomputed from the atlas by `smoke157` and required to agree.
+- **The levy.** Every consolidated family was levy-uniform except Italy,
+  whose old full-levy cells meet the §173 north at 0.2; the survivor carries
+  the dev-weighted blend (72×1.0 + 91×0.2)/163 = 0.55 over the cells the
+  fold actually holds, so income, manpower and force limit come out where
+  they went in.
+- **The address book.** `ctx.prov`/`provId` now resolve a folded cell's name
+  through the same mapping the raster uses — the §47 story finished: pixels,
+  clicks and adjacency already resolved to the parent, and now the NAME does
+  too. The cold-war cards stir 'Semnones' and reach Germany; 'Burdigala'
+  delivers to France; a genuine typo still misses, because an unknown name
+  maps to no base cell. The community cities never enter this machinery —
+  they were never folded.
+- **Old saves.** `mapProfileMigration` v2 carries each survivor's old
+  single-cell baseline, so the standing formula (new baseline + what the
+  player built above the old one) upgrades a v1 save without inventing or
+  destroying a point. The seven ancient chapters get no migration for the
+  Belgium carve — an old ancient save keeps up to four stale points on the
+  donor cells, which is named here rather than engineered away.
+
+The geometry snapshot moves with this: `tools/geom-snapshot.json` is now
+computed under an IDENTITY mapping (dump-geometry boots only to the title
+screen — no campaign), because "the full-resolution bookmark" and "the 1948
+profile" stopped being the same thing the moment 1948 started consolidating.
+smoke27's invariant — every latent cell active in 1948 — still holds and
+still matters, but it guards content reachability now, not the snapshot: the
+British and Irish city cells stay in `activeProvinces` and then fold, so the
+invariant and the one-province United Kingdom coexist.
+
+### The memory question, answered with a number
+
+The user asked for a more memory-efficient way, and the honest answer is that
+the borders themselves were never the memory — the ID raster is 88 MB at this
+frame in RG8 and is also the picking, the mapmodes and the fills, and border
+data proper is now a few hundred ring points. The memory was next door: the
+land mask and the river decor were RGBA8 mipmapped canvases — three dead
+bytes a texel, times four-thirds, times two planes — because that is what a
+canvas upload defaults to. Both are R8 now (the rivers moved from coverage-
+in-alpha to luminance-in-red to survive the trip), which cuts the resident
+texture bill from ~600 MB to ~249 at this frame. smoke104's executable
+arithmetic moved with the formats, and the §156 costing discipline holds: the
+next person to propose a frame still gets numbers.
+
+### What is left, named
+
+- **Turkey's and the USSR's own outlines** east of the drawn world are still
+  Voronoi — the Kars line, the Soviet–Iranian border, and everything south of
+  the Mediterranean. The mechanism is general and the day those bother
+  someone, they are rings away from being fixed.
+- **The far south keeps its cells.** Ethiopia, Yemen, Oman, Afghanistan,
+  Pakistan and Liberia stay cellular in 1948: their regions carry event
+  content (the Ogaden, Tana's airlift, Yemen's unrest cards) and no drawn
+  borders yet, so consolidation there would trade real texture for nothing.
+- **The ancient west's cell arcs moved.** Where a drawn 1948 line crosses an
+  ancient province pair (Argentorate against the German bank, the Pyrenees
+  between Hispania and Gaul), the ancient boundary now follows it — which is
+  the crest a Roman surveyor would have named anyway, and no ancient OWNER
+  border moved except where the cells' owners already differed across a real
+  mountain line. The seven chapters' folded adjacency was re-snapshotted with
+  the new raster; the Levant rows are unchanged, which is §231's promise kept.
+
+Regression contract: `smoke157` — nineteen rings agreeing with the atlas
+(every member seed on its own painted ground, no foreign seed inside any
+ring, both checked against the PAINTED result); twenty-six sharp border towns
+painting in the right country and eight that must stay outside every ring;
+no painted pixel east of 30°E; the Atuatuca carve summing back to its four
+donors' old 9/13/12 in the base atlas and the Luxembourg identity holding
+against Germany's family sum; Atuatuca dealt correctly in all eight eras;
+the 1948 folds landing on their survivors while the theatre's cells, the
+sealed Caucasus and every community city keep their own chairs; every
+survivor's devTweaks entry equal to its recomputed family sum and Italy's
+levy equal to the recomputed blend; the survivors wearing their countries'
+names under the right courts; folded names delivering ('Semnones' to
+Germany, 'Burdigala' to France) while Marseille and London answer for
+themselves and unknown names still miss; Luxembourg folding to Trier in all
+seven ancient chapters while Atuatuca stands in each; and the renderer
+reading the painted countries, freeing them after the ID pass, and uploading
+the canvas planes at one byte a texel. Plus `smoke3`, `smoke94`, `smoke104`
+and `smoke107` moved to the §232 board (Rome's 84th new province, the
+consolidated capitals, the diet's arithmetic, the folded west), and
+`tools/geom-snapshot.json` regenerated from the real browser raster under
+the identity profile.

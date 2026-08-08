@@ -1081,6 +1081,17 @@ export const FLAGS = {
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
     `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#1d3c6e" stroke="none"/>`,
+  // §232: the Low Countries' missing pair, in the same flag hand as their
+  // neighbors — Belgium's tricolor of 1830, and Luxembourg's, whose pale
+  // blue is what tells it from the Dutch banner above.
+  BEL:
+    `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#2b2b30" stroke="none"/>` +
+    `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#d9a520" stroke="none"/>` +
+    `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#b5342c" stroke="none"/>`,
+  LUX:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#4a8fc7" stroke="none"/>`,
   DEN:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#b5342c" stroke="none"/>` +
     `<path d="M8.8 0.6v22.8M0.6 12h22.8" stroke="#f2f4f4" stroke-width="3.4" fill="none"/>`,

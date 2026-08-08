@@ -3,10 +3,18 @@
 //   JU_PW_DIR=/path/to/dir [JU_CHROMIUM=...] node tools/tests/dump-geometry.mjs
 //
 // Requires the game served at http://127.0.0.1:8613 (python3 -m http.server
-// 8613 --directory .) and playwright resolvable from JU_PW_DIR. The dump runs
-// on the 1948 bookmark, where every latent cell is active, so the snapshot
-// carries every permanent cell's own geometry (tools/README.md). Headless
-// consumers fold it per bookmark through buildProvinceMapping.
+// 8613 --directory .) and playwright resolvable from JU_PW_DIR.
+//
+// The dump is computed under an IDENTITY province mapping (SPEC §232), not
+// under any bookmark's. It used to run on 1948 because 1948 was the one
+// chapter with every latent cell active — until §232 made 1948 also the one
+// chapter that CONSOLIDATES the established world, at which point "the
+// full-resolution bookmark" and "the bookmark every cell is active in"
+// stopped being the same thing. The identity mapping is what the snapshot
+// always actually meant: every permanent cell's OWN geometry, which headless
+// consumers then fold per bookmark through buildProvinceMapping
+// (tools/README.md). No campaign is started; the raster is ready the moment
+// the title screen is.
 //
 // Besides writing the snapshot it reports on Sinai — the cell the atlas
 // envelope (MAP_DATA.provinceRasterRegions) exists to hold inside its
@@ -26,23 +34,11 @@ const SNAPSHOT = resolve(ROOT, 'tools', 'geom-snapshot.json');
 // v6.8: the waits are minutes, not seconds, and that is the frame's real cost
 // rather than a flaky selector. The ID pass is one fullscreen draw over every
 // texel against every seed — and this dump runs it on SwiftShader, a software
-// rasteriser. Measured at v6.8: 74s to the start screen and 104s to a live
-// campaign (25.0M × 307). The §205 frame is 46.0M texels × 374 seeds, about
-// 2.2× that work again, so the timeout doubles with it. A real GPU does this
-// in a fraction; the timeout has to survive the machine that does not.
+// rasteriser. Measured at v6.8: 74s to the start screen (25.0M × 307). The
+// §205 frame is 46.0M texels × 415 seeds, about 2.2× that work again, so the
+// timeout doubles with it. A real GPU does this in a fraction; the timeout
+// has to survive the machine that does not.
 const BOOT_TIMEOUT = 600000;
-
-async function pickBookmark(page, nameFrag) {
-  await page.waitForSelector('.bm-card', { timeout: BOOT_TIMEOUT });
-  for (let i = 0; i < 8; i++) {
-    const cur = page.locator('.bm-card.current');
-    const txt = (await cur.textContent()) || '';
-    if (txt.includes(nameFrag)) { await cur.click(); return; }
-    await page.locator('.ss-next').click();
-    await page.waitForTimeout(450);
-  }
-  throw new Error('bookmark not found: ' + nameFrag);
-}
 
 const browser = await chromium.launch({
   executablePath: process.env.JU_CHROMIUM || '/opt/pw-browsers/chromium',
@@ -55,31 +51,37 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
-await pickBookmark(page, 'War of Independence'); // 1948: every latent cell active
-await page.waitForSelector('.nation-card', { timeout: BOOT_TIMEOUT });
-await page.locator('.nation-card').first().click();
-await page.waitForFunction(() => !!window._ctx, null, { timeout: BOOT_TIMEOUT });
-await page.waitForTimeout(1200);
+// boot() exposes the renderer before the title screen goes up, and the ID
+// raster is read back synchronously inside initRenderer — so a filled
+// idArray is the whole readiness condition.
+await page.waitForFunction(
+  () => window._renderer && window._renderer.idArray && window._renderer.idArray.length > 0,
+  null, { timeout: BOOT_TIMEOUT },
+);
 
-const snapshot = await page.evaluate(() => ({
-  neighbors: window._ctx.geom.neighbors.map((s) => [...s]),
-  centroids: window._ctx.geom.centroids.map((c) => (c ? [c.x, c.y] : null)),
-  coastal: window._ctx.geom.coastal.map((b) => (b ? 1 : 0)),
-  offshore: window._ctx.geom.offshore.map((c) => (c ? [c.x, c.y] : null)),
-  areas: [...window._ctx.geom.areas],
-}));
+const snapshot = await page.evaluate(async () => {
+  const { MAP_DATA } = await import('./js/data/map_data.js');
+  const { computeGeometry } = await import('./js/map/geometry.js');
+  const N = MAP_DATA.provinces.length;
+  const identity = new Uint16Array(N + 1);
+  for (let id = 0; id <= N; id++) identity[id] = id;
+  const geom = computeGeometry(window._renderer.idArray, MAP_DATA, identity);
+  return {
+    neighbors: geom.neighbors.map((s) => [...s]),
+    centroids: geom.centroids.map((c) => (c ? [c.x, c.y] : null)),
+    coastal: geom.coastal.map((b) => (b ? 1 : 0)),
+    offshore: geom.offshore.map((c) => (c ? [c.x, c.y] : null)),
+    areas: [...geom.areas],
+  };
+});
 writeFileSync(SNAPSHOT, JSON.stringify(snapshot) + '\n');
 console.log('wrote ' + SNAPSHOT + ' — ' + snapshot.centroids.length + ' cells');
 
 // ---- Sinai: measured bounds, neighbors, and a picture of the peninsula -----
 const sinai = await page.evaluate(async () => {
-  const ctx = window._ctx;
   const { MAP_DATA } = await import('./js/data/map_data.js');
-  const p = ctx.prov('Sinai Interior');
-  if (!p) return null;
-  // The raster is keyed by the ATLAS index (1-based over MAP_DATA.provinces);
-  // geometry is keyed by the live province id.
   const rasterId = MAP_DATA.provinces.findIndex((q) => q && q.name === 'Sinai Interior') + 1;
+  if (!rasterId) return null;
   const raster = window._renderer && window._renderer.idArray;
   const W = MAP_DATA.MAP_W, H = MAP_DATA.MAP_H;
   const unproject = (x, y) => [
@@ -87,7 +89,7 @@ const sinai = await page.evaluate(async () => {
     MAP_DATA.LAT1 - (y / H) * (MAP_DATA.LAT1 - MAP_DATA.LAT0),
   ];
   let bounds = null;
-  if (raster && rasterId > 0) {
+  if (raster) {
     let x0 = W, x1 = 0, y0 = H, y1 = 0, n = 0;
     for (let at = 0; at < raster.length; at++) {
       if (raster[at] !== rasterId) continue;
@@ -103,11 +105,19 @@ const sinai = await page.evaluate(async () => {
       bounds = { pixels: n, lon: [nw[0], se[0]], lat: [se[1], nw[1]] };
     }
   }
+  // Neighbors from the raster directly, so the report needs no campaign.
+  const { computeGeometry } = await import('./js/map/geometry.js');
+  const N = MAP_DATA.provinces.length;
+  const identity = new Uint16Array(N + 1);
+  for (let id = 0; id <= N; id++) identity[id] = id;
+  const geom = computeGeometry(raster, MAP_DATA, identity);
+  const seed = MAP_DATA.provinces[rasterId - 1];
+  const [sx, sy] = MAP_DATA.project(seed.lon, seed.lat);
   return {
-    x: p.x, y: p.y,
+    x: sx, y: sy,
     bounds,
-    neighbors: [...(ctx.geom.neighbors[p.id] || [])]
-      .map((n) => (ctx.game.provinces[n] || {}).canon || '#' + n).sort(),
+    neighbors: [...(geom.neighbors[rasterId] || [])]
+      .map((n) => (MAP_DATA.provinces[n - 1] || {}).name || '#' + n).sort(),
   };
 });
 if (sinai) {
@@ -117,17 +127,14 @@ if (sinai) {
       + sinai.bounds.lon.map((v) => v.toFixed(2)).join('..') + ', lat '
       + sinai.bounds.lat.map((v) => v.toFixed(2)).join('..')
       + ' (' + sinai.bounds.pixels + ' px)');
-  } else {
-    console.log('Sinai Interior bounds: no raster handle exposed on ctx.map');
   }
 } else {
   console.log('Sinai Interior: not on this map');
 }
 
-await page.evaluate(() => {
-  const p = window._ctx.prov('Sinai Interior');
-  if (p && window._camera && window._camera.centerOn) window._camera.centerOn(p.x, p.y, 3.2);
-});
+await page.evaluate((at) => {
+  if (at && window._camera && window._camera.centerOn) window._camera.centerOn(at.x, at.y, 3.2);
+}, sinai ? { x: sinai.x, y: sinai.y } : null);
 await page.waitForTimeout(900);
 await page.screenshot({ path: OUT + 'geom-sinai.png' });
 console.log('screenshot: ' + OUT + 'geom-sinai.png');

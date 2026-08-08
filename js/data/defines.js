@@ -229,6 +229,8 @@ export const DEFINES = {
     ROU: { aggression: 0.1, caution: 2.0 },
     IRL: { aggression: 0.05, caution: 2.0 },
     SUI: { aggression: 0.05, caution: 2.0 },
+    BEL: { aggression: 0.05, caution: 2.0 },
+    LUX: { aggression: 0.05, caution: 2.0 },
     // -- the political east and south (SPEC §205). Missing tags default {1,1}.
     // Kush raids Roman Egypt when Rome looks away (the Kandake sacked Syene
     // in 25 BCE) but is no conqueror; Aksum is a rising trading crown that
@@ -435,6 +437,7 @@ export const DEFINES = {
     YUG: 'republic', ALB: 'republic', BUL: 'republic', ROU: 'republic',
     IRL: 'republic', SUI: 'republic',
     SPA: 'monarchy', NLD: 'monarchy', DEN: 'monarchy', SWE: 'monarchy',
+    BEL: 'monarchy', LUX: 'monarchy', // §232: Leopold's contested crown, Charlotte's quiet one
     // -- the political east and south (SPEC §205) --
     // Kush is the one place on this map a crowned QUEEN is the constitution
     // (the Kandakes of Meroe), which the monarchy rule carries; Saba's
@@ -1285,6 +1288,21 @@ export const DEFINES = {
       name: 'Switzerland', adj: 'Swiss', color: [200, 60, 70], religion: 'christianity', culture: 'germanic', capital: 'Genava',
       names: 'swiss_modern',
       description: 'Armed to the teeth and party to nothing.',
+      ideas: {},
+    },
+    // SPEC §232: the two countries the map could not draw until it had drawn
+    // borders — Belgium was raster spill from four neighbors, Luxembourg a
+    // latent cell nobody had cut out of Trier.
+    BEL: {
+      name: 'Belgium', adj: 'Belgian', color: [188, 156, 60], religion: 'christianity', culture: 'celtic', capital: 'Atuatuca',
+      names: 'french_modern',
+      description: 'Occupied twice in thirty years, and writing the treaties so it cannot happen again.',
+      ideas: { incomeMult: 1.05 },
+    },
+    LUX: {
+      name: 'Luxembourg', adj: 'Luxembourgish', color: [120, 150, 185], religion: 'christianity', culture: 'celtic', capital: 'Luxembourg',
+      names: 'french_modern',
+      description: 'The Grand Duchy: one city, one steel basin, and a seat at every table being set.',
       ideas: {},
     },
     // ---- the political east and south (SPEC §205): the courts of the new
