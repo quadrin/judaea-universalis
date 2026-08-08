@@ -1845,17 +1845,17 @@ const PROVINCES = [
   // Lebanon south to north: Jabal Amil, the Chouf, the Kesrouan, the coast
   // between Byblos and Tripoli, the Qadisha highland, the Akkar plain, and the
   // northern Beqaa — which is Heliopolis, and keeps its own name.
-  P('Nabatieh', 35.44, 33.34, 0.50, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Nabatieh', 35.45, 33.34, 0.60, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Tyre' }),
-  P('Chouf', 35.55, 33.66, 0.55, 'ROM', 'mountains', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Chouf', 35.56, 33.67, 0.62, 'ROM', 'mountains', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Sidon' }),
-  P('Jounieh', 35.62, 33.96, 0.52, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Jounieh', 35.62, 33.96, 0.60, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Berytus' }),
-  P('Batroun', 35.76, 34.26, 0.60, 'ROM', 'coast', 'wine', 'hellenism', 'phoenician', 1, 1, 0, 0,
+  P('Batroun', 35.77, 34.27, 0.65, 'ROM', 'coast', 'wine', 'hellenism', 'phoenician', 1, 1, 0, 0,
     { latentParent: 'Byblos' }),
-  P('Bsharri', 35.96, 34.14, 0.50, 'ROM', 'mountains', 'timber', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Bsharri', 35.97, 34.15, 0.58, 'ROM', 'mountains', 'timber', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Tripolis' }),
-  P('Akkar', 36.06, 34.48, 0.52, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Akkar', 36.08, 34.50, 0.60, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Tripolis' }),
   // Heliopolis of Syria: the great temple platform, and the northern Beqaa
   // under it. The low weight is load-bearing: Chalcis' old cell ran east to
@@ -1867,17 +1867,17 @@ const PROVINCES = [
   // one cell covered before. The one cell here with an ancient identity too large to file
   // under a modern district name, so it keeps the ancient one and 1948 shows
   // Baalbek over it — the same arrangement Caesarea Philippi has with Banias.
-  P('Heliopolis', 36.08, 33.90, 0.50, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
+  P('Heliopolis', 36.12, 33.95, 0.62, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
     { latentParent: 'Chalcis' }),
   // The Golan, told apart: the massif, and the plateau town the atlas kept
   // putting out in the Hauran.
-  P('Mount Hermon', 35.79, 33.36, 0.52, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
+  P('Mount Hermon', 35.80, 33.37, 0.58, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
     { latentParent: 'Caesarea Philippi' }),
-  P('Quneitra', 35.74, 33.10, 0.50, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Quneitra', 35.78, 33.10, 0.60, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Caesarea Philippi' }),
   // And the central Upper Galilee, which Gischala held alone from the Acre
   // plain to the Hula: Tarshiha and the villages of the Ma'alot ridge.
-  P("Ma'alot", 35.26, 33.00, 0.55, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P("Ma'alot", 35.27, 33.01, 0.60, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Ptolemais' }),
 
   // --- v7.8 (SPEC §228): Jordan, Syria and Iraq at the same resolution ------
@@ -1947,7 +1947,7 @@ const PROVINCES = [
     { latentParent: 'Emesa' }),
   P('Qusayr', 36.55, 34.60, 0.60, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Emesa' }),
-  P('Douma', 36.52, 33.56, 0.60, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
+  P('Douma', 36.55, 33.55, 0.75, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
     { latentParent: 'Damascus' }),
   P('Suwayda', 36.62, 32.62, 0.68, 'NAB', 'hills', 'wine', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Bostra' }),
@@ -1958,7 +1958,7 @@ const PROVINCES = [
   // (Shobak, and Mudawwara on the Saudi line).
   P('Zarqa', 36.00, 31.99, 0.85, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 1, 1, 1, 0,
     { latentParent: 'Philadelphia' }),
-  P('Mafraq', 36.12, 32.32, 0.50, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Mafraq', 36.20, 32.35, 0.62, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Bostra' }),
   P('Ruwayshid', 38.75, 32.5, 1.70, 'WASTE', 'desert', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
@@ -1975,10 +1975,10 @@ const PROVINCES = [
   // day (§230): they carved the junction where Gamala meets Batanea and where
   // Mafraq folds into Gerasa, and pinched those display-unions into claws in
   // every chapter that merges them. The sown country stays at Gadara's grain.
-  P('Esbus', 35.85, 31.82, 0.62, 'ROM', 'hills', 'grain', 'hellenism', 'greek', 1, 1, 1, 0), // out of Philadelphia — Heshbon of the Ammonite plateau
+  P('Esbus', 35.85, 31.82, 0.68, 'ROM', 'hills', 'grain', 'hellenism', 'greek', 1, 1, 1, 0), // out of Philadelphia — Heshbon of the Ammonite plateau
   P('Characmoba', 35.70, 31.18, 0.95, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Medaba — Kir of Moab, on the plateau above the Dead Sea
   P('Auara', 35.33, 29.95, 1.00, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Petra — Humayma, the cistern town of the Hisma
-  P('Elusa', 34.68, 31.08, 0.60, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 0, 0, 0), // out of Oboda — Haluza, first of the Negev caravan towns
+  P('Elusa', 34.70, 31.05, 0.65, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 0, 0, 0), // out of Oboda — Haluza, first of the Negev caravan towns
   P('Dedan', 37.70, 26.10, 1.50, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Hegra — the Lihyanite oasis south of Hegra; seed cheated down the valley so the pair splits the corridor instead of nesting
   P('Sirhan', 38.45, 30.85, 1.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0), // out of Dumatha — the wadi road from the Hauran to the Jawf, seeded on the wadi axis
 ];
