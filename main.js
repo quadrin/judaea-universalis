@@ -70,7 +70,7 @@ async function boot() {
     if (nextKey === mapProfileKey) return provinceMap;
     provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
     renderer.setProvinceMapping(provinceMap);
-    Object.assign(geom, computeGeometry(renderer.idArray, MAP_DATA, provinceMap));
+    Object.assign(geom, computeGeometry(renderer.idArray, MAP_DATA, provinceMap, renderer.landBytes));
     mapProfileKey = nextKey;
     return provinceMap;
   }

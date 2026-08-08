@@ -16039,3 +16039,37 @@ and `smoke107` moved to the §232 board (Rome's 84th new province, the
 consolidated capitals, the diet's arithmetic, the folded west), and
 `tools/geom-snapshot.json` regenerated from the real browser raster under
 the identity profile.
+
+## 233. The line holds still — the warp cut, and the metric that stayed
+
+The province borders carried an 18-pixel domain warp from the day the ID
+pass was born: enough wobble to hide the weighted diagram's geometry under
+a hand-drawn fray. §232 removed the reason. Where a border is drawn — every
+European national line, and the theatre's own once its governorates are
+traced — the ring is authoritative to the pixel and read UNWARPED, so the
+warp's only remaining subjects are the interior seams between one country's
+own districts and the unowned world's cell walls. Those don't need a
+disguise eighteen pixels deep; they need the faint waver of an inked line.
+`WARP_AMP` drops 18 → 4.
+
+The warp was never free. At eighteen pixels it manufactured geography:
+Tiberias touched Gamala ACROSS the Sea of Galilee, Dumnonia reached Cambria
+over the Bristol Channel, and the Lisan narrows bridged wherever the noise
+said so that boot. At four, the lake separates its shores, the channel is
+water, and the one narrows crossing settles at the Dead Sea's north end —
+measured on the regenerated snapshot as a thirteen-pair adjacency delta,
+each pair inspected: three water-hops died, one isthmus (Suez — real)
+appeared, the rest are hairline reshuffles between dense neighbors.
+
+A second knife was sharpened for this section and put back in the drawer,
+and the drawer is documented so nobody reaches for it twice. An additive
+metric (d − B·ln w, hyperbola bisectors, provably incapable of closing a
+disc around a heavy seed) kills the Apollonius circles in one line — and
+was measured to churn TWO HUNDRED adjacencies, because after twenty
+sections of events, roads, and story assertions, the metric IS the road
+network: Masada lost Hebron, Damascus lost Palmyra, and Rome walked to
+Seleucid Hyrcania around the Caspian when the additive reach thinned the
+Karakum wall that a 2.2× multiplicative reach had held (smoke57's
+amphibious contract collapsed on the spot). The circles the eye meets die
+under drawn borders, where dying is cheap and exact; the metric stays, and
+the roads stay with it.

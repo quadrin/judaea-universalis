@@ -2,7 +2,7 @@
 // Single pass over idArray comparing right & down neighbors. idArray row 0 = north.
 // Every land cell stays IN neighbors; the sim filters current impassability for pathing.
 
-export function computeGeometry(idArray, MAP_DATA, provinceMap) {
+export function computeGeometry(idArray, MAP_DATA, provinceMap, landBytes) {
   const W = MAP_DATA.MAP_W | 0;
   const H = MAP_DATA.MAP_H | 0;
   const provs = MAP_DATA.provinces || [];
@@ -69,38 +69,51 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
       console.warn(`[geometry] province ${i} (${p && p.name}) covers zero pixels in idArray`);
     }
   }
-  // The anchor sits on the cell's own ground (SPEC §199, forced by §232): a
-  // concave cell can put its raw area centroid in open water — measured the
-  // day the drawn borders let Thessalonica hold the whole Greek north, whose
-  // crescent wraps the Thermaic gulf and anchored six chapters' GREECE label
-  // in the sea. When the mean lands on id-0 ground (sea or void), move it to
-  // the cell's nearest own pixel, preferring one whose four neighbors are
-  // also its own so a one-pixel antialiased coastal bead can never become
-  // the anchor. A mean already on assigned ground keeps its exact value, so
-  // every compact cell — and every consumer of its centroid — is untouched.
+  // The anchor sits on the cell's OWN ground (SPEC §199, forced by §232): a
+  // concave cell can put its raw area centroid in open water or on a
+  // neighbor — measured the day the drawn borders let Thessalonica hold the
+  // whole Greek north, whose crescent wraps the Thermaic gulf and anchored
+  // six chapters' GREECE label in the sea. (The first cut of this snap fired
+  // only on id-0 water and missed the second boot: at a 4px warp the chunky
+  // gulf narrows let a neighbor's pixels bridge the mean's spot, so the
+  // pixel was no longer sea — just never Thessalonica's.) When the mean
+  // lands on anything that is not the cell itself, move it to the cell's
+  // nearest own pixel, preferring one whose EIGHT neighbors are also its
+  // own so an antialiased coastal bead ribbon can never become the anchor.
+  // A mean already on its own ground keeps its exact value, so a compact
+  // cell's centroid — and every consumer of it — is untouched.
   if (idArray && idArray.length >= W * H) {
     for (let i = 1; i <= N; i++) {
       if (!(areas[i] > 0) || !isActive(i)) continue;
       const c = centroids[i];
       const cx = Math.min(W - 1, Math.max(0, Math.round(c.x - 0.5)));
       const cy = Math.min(H - 1, Math.max(0, Math.round(c.y - 0.5)));
-      if (mappedId(idArray[cy * W + cx]) !== 0) continue;
+      // Own ground means the cell's own id on a FULL-land texel. A cell can
+      // own a bead bridge over water (Thessalonica owned both shores of the
+      // Thermaic narrows and the bead between), and a mean on that bridge
+      // is still a label in the sea.
+      const solid = (at) => !landBytes || landBytes[at] === 255;
+      if (mappedId(idArray[cy * W + cx]) === i && solid(cy * W + cx)) continue;
       const b = bbox[i];
       let bestAny = Infinity, ax = c.x, ay = c.y;
       let bestIn = Infinity, ix = c.x, iy = c.y;
-      for (let y = b.y0; y <= b.y1; y++) {
+      for (let y = Math.max(1, b.y0); y <= Math.min(H - 2, b.y1); y++) {
         const row = y * W;
-        for (let x = b.x0; x <= b.x1; x++) {
-          if (mappedId(idArray[row + x]) !== i) continue;
+        for (let x = Math.max(1, b.x0); x <= Math.min(W - 2, b.x1); x++) {
+          if (mappedId(idArray[row + x]) !== i || !solid(row + x)) continue;
           const dx = x + 0.5 - c.x;
           const dy = y + 0.5 - c.y;
           const d = dx * dx + dy * dy;
           if (d < bestAny) { bestAny = d; ax = x + 0.5; ay = y + 0.5; }
           if (d < bestIn
-            && x > 0 && mappedId(idArray[row + x - 1]) === i
-            && x + 1 < W && mappedId(idArray[row + x + 1]) === i
-            && y > 0 && mappedId(idArray[row - W + x]) === i
-            && y + 1 < H && mappedId(idArray[row + W + x]) === i) {
+            && mappedId(idArray[row + x - 1]) === i
+            && mappedId(idArray[row + x + 1]) === i
+            && mappedId(idArray[row - W + x]) === i
+            && mappedId(idArray[row + W + x]) === i
+            && mappedId(idArray[row - W + x - 1]) === i
+            && mappedId(idArray[row - W + x + 1]) === i
+            && mappedId(idArray[row + W + x - 1]) === i
+            && mappedId(idArray[row + W + x + 1]) === i) {
             bestIn = d; ix = x + 0.5; iy = y + 0.5;
           }
         }
