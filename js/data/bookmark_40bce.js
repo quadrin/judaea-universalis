@@ -182,17 +182,6 @@ export const BOOKMARK_40 = {
     },
   },
 
-  // SPEC §230: the neighbours' country at the resolution Judea is played at.
-  // Sixteen districts that have existed as cells since §225/§228 and were
-  // visible only in 1948. Their development comes out of the parents they were
-  // carved from (js/data/map_data.js), so no realm gains a point by the map
-  // being drawn finer around it.
-  activeProvinces: [
-    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
-    'Azraq', 'Suwayda', 'Mount Hermon',
-    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
-    'Nineveh', 'Kirkuk'],
-
   // The map speaks its era (SPEC §25): pre-Herodian, pre-Roman place names.
   provinceNames: {
     'Caesarea Maritima': "Straton's Tower", // Herod builds Caesarea decades later
@@ -291,16 +280,6 @@ export const BOOKMARK_40 = {
   // Political layer of July 40 BCE. Rome's Syria is torn: Parthia holds the
   // interior, Rome clings to Cilicia and the coast. Egypt is Cleopatra's.
   owners: {
-    // -- The §230 districts, each under the crown that holds its parent ------
-    // The year Pacorus rode to the sea: the Parthian tide holds the Damascene,
-    // the Beqaa and the Hermon, so the districts carved out of them ride with it.
-    'Arad': 'HER',          // with Adora
-    'Mount Hermon': 'PAR',  // with Panion
-    'Heliopolis': 'PAR',    // with Chalcis
-    'Douma': 'PAR',         // with Damascus
-    'Salamiyah': 'PAR',     // with Emesa
-    // …and the §230 cell on the Ammonite plateau: Malichus' ground
-    'Esbus': 'NAB',         // with Philadelphia
     // -- Herod (HER): Idumea, the desert forts, the southern coast ------------
     'Hebron': 'HER',
     'Adora': 'HER',

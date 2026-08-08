@@ -106,9 +106,9 @@ console.log('== the roads still run ==');
       if (u && u !== t) nb.get(t).add(u);
     }
   }
-  for (const [a, via, b] of [['Damascus', 'Douma', 'Palmyra'], ['Damascus', 'Douma', 'Emesa']]) {
-    ok(nb.get(a) && nb.get(a).has(via) && nb.get(via) && nb.get(via).has(b),
-      'the ' + a + '–' + b + ' road runs through ' + via);
+  for (const [a, b] of [['Damascus', 'Palmyra'], ['Damascus', 'Emesa']]) {
+    ok(nb.get(a) && nb.get(a).has(b),
+      'the ' + a + '–' + b + ' road runs direct — the Ghouta folds into Damascus (§234)');
   }
 }
 

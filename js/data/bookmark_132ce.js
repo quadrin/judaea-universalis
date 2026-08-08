@@ -137,16 +137,7 @@ export const BOOKMARK_132 = {
 
   // ...and Betar stands: the fortress village of the revolt's last stand
   // becomes its own place (it inherits Judean ownership from Emmaus).
-  // SPEC §230: the neighbours' country at the resolution Judea is played at.
-  // Sixteen districts that have existed as cells since §225/§228 and were
-  // visible only in 1948. Their development comes out of the parents they were
-  // carved from (js/data/map_data.js), so no realm gains a point by the map
-  // being drawn finer around it.
-  activeProvinces: ['Beit Shemesh',
-    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
-    'Azraq', 'Suwayda', 'Mount Hermon',
-    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
-    'Nineveh', 'Kirkuk'],
+  activeProvinces: ['Beit Shemesh'],
   provinceNames: {
     'Beit Shemesh': 'Betar',
     // The §230 districts under the names their own age used.
@@ -210,25 +201,6 @@ export const BOOKMARK_132 = {
   // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
   wonderTweaks: { Jerusalem: null },
   owners: {
-    // -- The §230 districts, each under the crown that holds its parent ------
-    // Trajan annexed the Nabataean kingdom in 106; by 132 the whole south and
-    // the Hauran are Provincia Arabia, so every district carved out of them is
-    // Roman ground. Arad rises with Adora and the rest of Idumea.
-    'Beersheba': 'ROM',     // with Oboda
-    'Arad': 'JUD',          // with Adora — the rising holds the south country
-    'Paran': 'ROM',         // with Aila
-    'Wadi Rum': 'ROM',      // with Aila
-    'Zoara': 'ROM',         // with Petra
-    'Shobak': 'ROM',        // with Petra
-    'Azraq': 'ROM',         // with Bostra, the legionary seat of Arabia
-    'Suwayda': 'ROM',       // with Bostra
-    'Mount Hermon': 'ROM',  // with Caesarea Philippi
-    // …and the five §230 cells south and east of it, Provincia Arabia entire
-    'Characmoba': 'ROM',    // with Medaba
-    'Auara': 'ROM',         // with Petra
-    'Elusa': 'ROM',         // with Oboda
-    'Dedan': 'ROM',         // with Hegra
-    'Sirhan': 'ROM',        // with Dumatha
     // -- The rising (JUD): the Judean hills and the rift edge ------------------
     'Hebron': 'JUD',
     'Adora': 'JUD',

@@ -63,14 +63,13 @@ console.log('== ancient eras fold the modern Negev into Nabataea ==');
 // it as its own Nabataean district — carved out of Aila, with Aila's
 // development, so nothing is created. Dimona, Mitzpe Ramon and Eilat are
 // twentieth-century towns and still fold away.
-const MODERN_NEGEV = ['Dimona', 'Mitzpe Ramon', 'Eilat'];
+const MODERN_NEGEV = ['Dimona', 'Mitzpe Ramon', 'Eilat', 'Paran'];
 const ancientMap = buildProvinceMapping(MAP_DATA, BOOKMARK_66);
 ok(ancientMap[idOf('Dimona')] === idOf('Oboda')
     && ancientMap[idOf('Mitzpe Ramon')] === idOf('Oboda')
+    && ancientMap[idOf('Paran')] === idOf('Aila')
     && ancientMap[idOf('Eilat')] === idOf('Aila'),
-  'the modern Negev cells collapse into Oboda and Aila, never into waste');
-ok(ancientMap[idOf('Paran')] === idOf('Paran'),
-  'and Paran stands on its own in 66 CE (SPEC §230)');
+  'the modern Negev cells collapse into Oboda and Aila, never into waste (§234 folds Paran again)');
 const ancient = initGame({
   DEFINES, MAP_DATA, geom: fakeGeom, bookmark: BOOKMARK_66, events: [],
   playerTag: 'JUD', rngSeed: 66, provinceMap: ancientMap,

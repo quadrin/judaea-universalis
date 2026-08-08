@@ -92,11 +92,6 @@ const SAS_LANDS = [
   // Syria, taken 610-613
   'Beroea', 'Antioch', 'Seleucia Pieria', 'Laodicea', 'Apamea', 'Emesa',
   'Chalcis', 'Damascus', 'Palmyra',
-  // SPEC §230: the districts of the Syrian conquest and of Mesopotamia, each
-  // with the province it was carved out of — the Beqaa with Chalcis, the
-  // Ghouta with Damascus, Salaminias with Emesa, Nineveh and Arrapha with
-  // Hatra and Arbela.
-  'Heliopolis', 'Douma', 'Salamiyah', 'Nineveh', 'Kirkuk',
 ];
 const JUD_LANDS = [
   // Benjamin of Tiberias' Galilee, in arms beside the Persian advance
@@ -105,10 +100,6 @@ const JUD_LANDS = [
 const GHA_LANDS = [
   // the phylarchate and the tribes it answers for
   'Bostra', 'Philadelphia', 'Medaba', 'Gerasa', 'Hegra', 'Dumatha', 'Tayma',
-  // SPEC §230: the Hauran and the Sirhan ride with Bostra, and the phylarchate's
-  // own country — the Decapolis interior, the Ammonite and Moabite plateaux, and
-  // the Hejaz road — rides with Gerasa, Philadelphia, Medaba, Hegra and Dumatha.
-  'Azraq', 'Suwayda', 'Esbus', 'Characmoba', 'Dedan', 'Sirhan',
 ];
 // Everything else on the map is the Empire's: Palestine, Phoenicia, Anatolia,
 // Cyprus, Egypt, and the Petra corridor.
@@ -123,13 +114,6 @@ const BYZ_LANDS = [
   'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
   'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Salamis', 'Paphos', 'Petra',
   'Oboda', 'Aila',
-  // SPEC §230: the districts of Palaestina Tertia and the Phoenician shore,
-  // each with the province it was carved out of. The Persian tide has not
-  // reached the Negev road or the coast north of Berytus.
-  'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
-  'Mount Hermon', 'Akkar', 'Batroun',
-  // …and the §230 cells the empire still keeps on the Negev-Arabah road.
-  'Auara', 'Elusa',
   // v5.0: the empire's west — Hellas, Crete, Cyrenaica, Upper Egypt
   'Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Halicarnassus',
   'Cyrene', 'Marmarica', 'Paraetonium', 'Syene', 'Berenice',
@@ -267,16 +251,6 @@ export const BOOKMARK_614 = {
     'Machaerus': 'Medaba', 'Masada': 'Engaddi',
   },
 
-  // SPEC §230: the neighbours' country at the resolution the Return is played
-  // at. Sixteen districts that have existed as cells since §225/§228 and were
-  // visible only in 1948. Their development comes out of the parents they were
-  // carved from (js/data/map_data.js), so no realm gains a point by the map
-  // being drawn finer around it.
-  activeProvinces: [
-    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
-    'Azraq', 'Suwayda', 'Mount Hermon',
-    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
-    'Nineveh', 'Kirkuk'],
 
   // The era's lens on the western tags (SPEC §139, §173).
   tagTweaks: {

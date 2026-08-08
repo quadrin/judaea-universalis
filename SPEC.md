@@ -16088,3 +16088,57 @@ the ground the §205/§228 desert cells hold under the standing exemption, and
 the subdivisions the districts draw inside their own parents — which are
 features. Gadara, Pella and Jericho sit against the retraced rift and carry
 a few points of honest residue for it.
+
+## 234. The districts withdraw to 1948 — no circles
+
+"I still see the circles," the user said, over a screenshot of a round little
+cell floating in the Hauran, and then gave the permission that settled it:
+"get rid of provinces if need be." The circles were the districts themselves.
+A cell carved INSIDE a bigger province is a closed loop around its own seed by
+construction — a weighted Voronoi bisector between an interior seed and the
+seed that surrounds it is an arc of a circle, and ±18 px of wobble does not
+make it a border, it makes it a wobbly circle. §230's retune said it and did
+not follow it far enough: a perfect circle is the shape of the weight formula,
+not of any country. No weight is right, because the shape is not the weight's
+fault; it is the interiority's.
+
+So the ancient chapters give the districts back, all of them:
+
+- The sixteen once-activated latents (the Negev and Arabah six, the Hauran and
+  Hermon three, the Beqaa and Damascene three, Arca and Botrys, Nineveh and
+  Arrapha) come off every ancient `activeProvinces` list and fold into their
+  parents again, exactly as §225/§228 first shipped them.
+- The six §230 cells — Esbus, Characmoba, Auara, Elusa, Dedan, Sirhan — become
+  latent under the provinces their ground and development came from, and join
+  1948's `activeProvinces` like every latent cell before them (smoke27's
+  invariant holds).
+- The base-development redistribution reverts entirely: thirteen §230 parents
+  and the six carve-parents take their §228 numbers back, so the ancient
+  chapters weigh exactly what they weighed before §229 existed — checked tag
+  by tag in all eight chapters — and 1948 pays its districts out of its own
+  devTweaks table, the §47 mechanism that never needed replacing.
+
+1948 keeps every district, because density is the point there and a map of
+small crowded cells reads as a map of small crowded countries, which is what
+1948 IS. The ancient chapters read the §228 map again, at the v5.4 warp phase
+§233 restored — big clean provinces under the oldest borders this map ever
+had. The era names, owners tables and §233 seed positions stay where they are:
+a district that folds costs nothing and is one `activeProvinces` line from
+returning if a future section earns it differently — cut along real edges,
+not around interior seeds.
+
+Two parent corrections rode along, both the §233 disease found elsewhere:
+Ma'alot's ground was measured against the re-phased raster and is GISCHALA's,
+not the Acre plain's (smoke31 caught it as a disjoint Ptolemais group), and
+Nahariya's seed sat on the antialiased beach pixel where §232's single-channel
+land mask reads sub-255 — the repair pass stripped the whole cell as detached,
+and the seed moves a kilometre inland. And one wall came down: the §232 land
+format pinched the Oxyrhynchus–Thebes contact out of the raster, stranding
+Upper Egypt, Nubia and the whole south off one pixel of Nile valley —
+`extraLinks` carries the river road now, which is what it is for. Both suites
+that were red on main — smoke31 and smoke104 — are green again.
+
+`smoke155` carries the withdrawal's contract: every district folds in every
+ancient chapter, the six are latent under their carve-parents and active in
+1948, every realm in every chapter opens on the development it always had, and
+the §228 roads are direct again.

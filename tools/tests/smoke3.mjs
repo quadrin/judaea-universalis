@@ -94,8 +94,8 @@ const EV66 = EVENTS_66.concat(GENERIC_EVENTS);
   // seven more pieces.
   // SPEC §232 gives Belgica its middle back: Atuatuca, one more Roman
   // province in 66 CE, its development carved from four cells Rome already
-  // held.
-  ok(rom && rom.provs === 177 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
+  // held. §234 folds the seven §230 districts back into their parents.
+  ok(rom && rom.provs === 170 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
   ok(agr && agr.overlord === 'ROM', 'client marked in ledger');
 
   console.log('== diplomatic mapmode + peace highlight ==');

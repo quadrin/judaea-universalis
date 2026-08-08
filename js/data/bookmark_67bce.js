@@ -143,17 +143,6 @@ export const BOOKMARK_67 = {
     },
   },
 
-  // SPEC §230: the neighbours' country at the resolution Judea is played at.
-  // Sixteen districts that have existed as cells since §225/§228 and were
-  // visible only in 1948. Their development comes out of the parents they were
-  // carved from (js/data/map_data.js), so no realm gains a point by the map
-  // being drawn finer around it.
-  activeProvinces: [
-    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
-    'Azraq', 'Suwayda', 'Mount Hermon',
-    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
-    'Nineveh', 'Kirkuk'],
-
   // The map speaks its era (SPEC §25): pre-Herodian, pre-Roman place names.
   provinceNames: {
     'Caesarea Maritima': "Straton's Tower", // Herod builds Caesarea decades later
@@ -271,20 +260,6 @@ export const BOOKMARK_67 = {
   // rump of Antiochus XIII; Egypt and Cyprus are Ptolemaic; Rome holds only
   // Cilicia and the Anatolian coast — until Pompey turns east by event.
   owners: {
-    // -- The §230 districts, each under the crown that holds its parent ------
-    // The base atlas is the 66 CE map; a district needs a line here only where
-    // its parent belonged to somebody else in the year of the brothers' war.
-    'Arad': 'HYR',          // with Adora
-    'Mount Hermon': 'SEL',  // with Panion
-    'Heliopolis': 'ITU',    // with Chalcis — the Ituraean tetrarchy
-    'Douma': 'NAB',         // with Damascus, which Aretas holds
-    'Salamiyah': 'SEL',     // with Emesa
-    'Akkar': 'SEL',         // with Tripolis
-    'Batroun': 'SEL',       // with Byblos
-    // …and the two §230 cells east of the Jordan, split between Aretas and
-    // Hyrcanus
-    'Esbus': 'NAB',         // with Philadelphia
-    'Characmoba': 'HYR',    // with Medaba
     // -- Hyrcanus (HYR): Idumea, the Shephelah, the coast, Samaria, Perea ------
     'Hebron': 'HYR',
     'Adora': 'HYR',

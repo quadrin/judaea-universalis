@@ -220,19 +220,6 @@ export const BOOKMARK_66 = {
     ],
   },
 
-  // SPEC §230: the neighbours' country at the resolution Judea is played at.
-  // Sixteen districts that have existed as cells since §225/§228 and were
-  // visible only in 1948. This chapter needs no `owners` line for any of them:
-  // the base atlas IS the 66 CE map, so each district was already entered
-  // under the crown that holds its parent. Their development comes out of
-  // those parents (js/data/map_data.js) — the Revolt opens on exactly the
-  // economies it always did.
-  activeProvinces: [
-    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
-    'Azraq', 'Suwayda', 'Mount Hermon',
-    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
-    'Nineveh', 'Kirkuk'],
-
   // Era name (SPEC §25): Flavia Neapolis is founded only in 72 CE.
   provinceNames: {
     'Neapolis': 'Shechem',

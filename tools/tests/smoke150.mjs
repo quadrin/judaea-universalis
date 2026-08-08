@@ -38,7 +38,7 @@ const NEW_CELLS = {
   Heliopolis: 'Chalcis',
   'Mount Hermon': 'Caesarea Philippi',
   Quneitra: 'Caesarea Philippi',
-  "Ma'alot": 'Ptolemais',
+  "Ma'alot": 'Gischala',  // §234: re-measured against the v5.4 raster
 };
 const byName = new Map(MAP_DATA.provinces.map((p, i) => [p.name, { p, id: i + 1 }]));
 
@@ -140,11 +140,11 @@ console.log('== the seven older chapters see nothing ==');
     }
     return nb;
   };
-  // SPEC §230 opened four of these ten in the ancient chapters — the Beqaa
-  // (Heliopolis), the Hermon, Arca and Botrys, all of them places the ancient
-  // world had names for. The other six are Ottoman and modern Lebanon and
-  // still fold away.
-  const OPENED_BY_230 = new Set(['Heliopolis', 'Mount Hermon', 'Akkar', 'Batroun']);
+  // SPEC §234: the ancient chapters gave the districts back — every carved
+  // cell reads as a Voronoi bubble inside its parent, and the user chose
+  // clean provinces over district count. All ten fold away everywhere but
+  // 1948 again, as §225 first shipped them.
+  const OPENED_BY_230 = new Set();
   for (const era of ERAS) {
     const id = era.bookmark.id;
     if (id === '1948ce') continue;
@@ -166,10 +166,9 @@ console.log('== the seven older chapters see nothing ==');
   // physically ran — so both now reach in two hops instead of one, and the
   // thing that mattered (that they reach at all) still holds.
   const anc = foldedFor(ERAS.find((e) => e.bookmark.id === '66ce').bookmark);
-  ok(anc.get('Damascus').has('Douma') && anc.get('Douma').has('Palmyra'),
-    'the Damascus–Palmyra road survives this section, through the Ghouta');
-  ok(anc.get('Damascus').has('Douma') && anc.get('Douma').has('Emesa'),
-    'and so does Damascus–Emesa');
+  ok(anc.get('Damascus').has('Palmyra'),
+    'the Damascus–Palmyra road survives this section (direct again — the Ghouta folds in, §234)');
+  ok(anc.get('Damascus').has('Emesa'), 'and so does Damascus–Emesa');
 }
 
 console.log('== the 1948 packages know the new districts are Lebanon ==');

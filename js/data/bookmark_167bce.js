@@ -211,18 +211,7 @@ export const BOOKMARK_167 = {
   // and Modi'in, the Hasmoneans' home village, stands as its own place
   // (it inherits the rebels' ownership from Lydda, its toparchy).
   mergeProvinces: { 'Masada': 'Engaddi', 'Machaerus': 'Medaba' },
-  // SPEC §230: the neighbours' country at the resolution Judea is played at.
-  // Sixteen districts that have existed as cells since §225/§228 and were
-  // visible only in 1948 — the Negev and the Arabah, the Hauran and the
-  // Hermon, the Beqaa and the Damascene, the Phoenician back-country, and
-  // Nineveh and Arrapha beyond the Tigris. Their development comes out of the
-  // parents they were carved from (js/data/map_data.js), so no realm gains a
-  // point of tax, production or manpower by being drawn finer.
-  activeProvinces: ['Modi\'in Hills',
-    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
-    'Azraq', 'Suwayda', 'Mount Hermon',
-    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
-    'Nineveh', 'Kirkuk'],
+  activeProvinces: ['Modi\'in Hills'],
 
   // The south country still swears by Qos (SPEC §210). The base atlas draws
   // Idumea Jewish because that is what it was by 66 CE, and it was that way
@@ -297,21 +286,6 @@ export const BOOKMARK_167 = {
   // Caesarea Mazaca) was lost to the dynasty at Apamea in 188 BCE, but no Attalid or
   // Cappadocian tag exists — it is folded into SEL per the scenario design.
   owners: {
-    // -- The §230 districts, each under the crown that holds its parent ------
-    // The base atlas is the 66 CE map, so a district whose parent was already
-    // Seleucid in that year needs no line here; these nine changed hands
-    // between Antiochus and Nero and must say so.
-    'Arad': 'SEL',          // with Adora
-    'Mount Hermon': 'SEL',  // with Panion
-    'Heliopolis': 'SEL',    // with Chalcis
-    'Douma': 'SEL',         // with Damascus
-    'Salamiyah': 'SEL',     // with Emesa
-    'Akkar': 'SEL',         // with Tripolis
-    'Batroun': 'SEL',       // with Byblos
-    'Nineveh': 'SEL',       // with Hatra — the east is still the king's
-    'Kirkuk': 'SEL',        // with Arbela
-    // …and the §230 cell on the Ammonite plateau, which is the king's too
-    'Esbus': 'SEL',         // with Philadelphia
     // -- Judea proper (SEL: the Akra garrison holds Jerusalem, fort intact) ---
     'Jerusalem': 'SEL',
     'Jericho': 'SEL',

@@ -146,13 +146,10 @@ console.log('== the seven older chapters see nothing ==');
     }
     return nb;
   };
-  // SPEC §230 activated five of these twenty-three in the ancient chapters
-  // (Nineveh, Kirkuk, Salamiyah, Douma, Suwayda, and Shobak and Wadi Rum off
-  // the Negev side). Those are provinces in every era now, on purpose. The
-  // REST — the Islamic-era districts of Iraq and the modern Syrian and
-  // Jordanian ones — still fold away, and that is what this holds.
-  const OPENED_BY_230 = new Set(['Nineveh', 'Kirkuk', 'Salamiyah', 'Douma',
-    'Suwayda', 'Shobak', 'Wadi Rum']);
+  // SPEC §234: the ancient chapters gave the districts back — all
+  // twenty-three fold away everywhere but 1948 again, as §228 first shipped
+  // them. The user chose clean provinces over district count.
+  const OPENED_BY_230 = new Set();
   for (const era of ERAS) {
     const id = era.bookmark.id;
     if (id === '1948ce') continue;
@@ -176,9 +173,9 @@ console.log('== the seven older chapters see nothing ==');
   // physically ran. §228 could not seat a cell east of Damascus without losing
   // the road entirely; §230 seats Douma ON it, so Damascus reaches Palmyra and
   // Emesa in two hops through the garden ring instead of one across a void.
-  for (const [a, via, b] of [['Damascus', 'Douma', 'Palmyra'], ['Damascus', 'Douma', 'Emesa']]) {
-    ok(anc.get(a) && anc.get(a).has(via) && anc.get(via) && anc.get(via).has(b),
-      '  the ' + a + '–' + b + ' road runs through ' + via + ' now, and still runs');
+  for (const [a, b] of [['Damascus', 'Palmyra'], ['Damascus', 'Emesa']]) {
+    ok(anc.get(a) && anc.get(a).has(b),
+      '  the ' + a + '–' + b + ' road is direct again (the Ghouta folds in, §234)');
   }
   // …and the whole thing, not just the roads worth naming: every folded
   // neighbour set has to be exactly what the parents had.

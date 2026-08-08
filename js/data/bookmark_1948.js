@@ -198,6 +198,9 @@ const TUR_1948_NORTH = ['Hadrianopolis', 'Byzantion', 'Nicaea', 'Smyrna',
 // bookmark. In 1948 they become real provinces: distinct borders, clicks,
 // movement nodes, labels, ownership, development and victory-count land.
 const MODERN_PROVINCES = [
+  // SPEC §234: the §230 districts withdraw to this chapter — latent everywhere
+  // else, active here where the density is the point.
+  'Esbus', 'Characmoba', 'Auara', 'Elusa', 'Dedan', 'Sirhan',
   'Safed', 'Nahariya', 'Afula', 'Hadera', 'Netanya', 'Herzliya', 'Kfar Saba',
   'Rishon LeZion', 'Rehovot', 'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya',
   'Ramallah', 'Bethlehem', 'Beit Shemesh', 'Kiryat Gat', 'Beersheba', 'Arad',
@@ -1041,6 +1044,17 @@ export const BOOKMARK_1948 = {
     'Damascus': { tax: 9, prod: 8, mp: 7 },   // …less the Ghouta (SPEC §228)
     'Beroea': { tax: 9, prod: 8, mp: 6 },         // Aleppo
     'Berytus': { tax: 9, prod: 9, mp: 5 },        // Beirut
+    // SPEC §234: the six withdrawn districts are subdivisions here, not new
+    // wealth — parent and child split the parent's old total, as every
+    // latent family has since §47.
+    'Hegra': { tax: 1, prod: 2, mp: 1 },
+    'Dumatha': { tax: 1, prod: 1, mp: 1 },
+    'Esbus': { tax: 1, prod: 1, mp: 1 },
+    'Characmoba': { tax: 1, prod: 1, mp: 0 },
+    'Auara': { tax: 1, prod: 1, mp: 0 },
+    'Elusa': { tax: 1, prod: 0, mp: 0 },
+    'Dedan': { tax: 1, prod: 1, mp: 0 },
+    'Sirhan': { tax: 1, prod: 0, mp: 0 },
     // §230 moved these four parents' BASE development into districts the
     // ancient chapters now carry (Mount Hermon, Heliopolis, Akkar, Batroun).
     // 1948 already paid for those districts out of its own table, so it pins
