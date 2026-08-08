@@ -1870,13 +1870,13 @@ const PROVINCES = [
   // one cell covered before. The one cell here with an ancient identity too large to file
   // under a modern district name, so it keeps the ancient one and 1948 shows
   // Baalbek over it — the same arrangement Caesarea Philippi has with Banias.
-  P('Heliopolis', 36.12, 33.95, 0.62, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
+  P('Heliopolis', 36.10, 33.88, 0.56, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
     { latentParent: 'Chalcis' }),
   // The Golan, told apart: the massif, and the plateau town the atlas kept
   // putting out in the Hauran.
-  P('Mount Hermon', 35.80, 33.37, 0.58, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
+  P('Mount Hermon', 35.77, 33.38, 0.56, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
     { latentParent: 'Caesarea Philippi' }),
-  P('Quneitra', 35.78, 33.10, 0.60, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Quneitra', 35.76, 33.10, 0.56, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Caesarea Philippi' }),
   // And the central Upper Galilee, which Gischala held alone from the Acre
   // plain to the Hula: Tarshiha and the villages of the Ma'alot ridge.
@@ -1950,7 +1950,7 @@ const PROVINCES = [
     { latentParent: 'Emesa' }),
   P('Qusayr', 36.55, 34.60, 0.60, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Emesa' }),
-  P('Douma', 36.55, 33.55, 0.75, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
+  P('Douma', 36.55, 33.55, 0.70, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
     { latentParent: 'Damascus' }),
   P('Suwayda', 36.62, 32.62, 0.68, 'NAB', 'hills', 'wine', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Bostra' }),
@@ -1961,7 +1961,7 @@ const PROVINCES = [
   // (Shobak, and Mudawwara on the Saudi line).
   P('Zarqa', 36.00, 31.99, 0.85, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 1, 1, 1, 0,
     { latentParent: 'Philadelphia' }),
-  P('Mafraq', 36.20, 32.35, 0.62, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Mafraq', 36.32, 32.42, 0.54, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Bostra' }),
   P('Ruwayshid', 38.75, 32.5, 1.70, 'WASTE', 'desert', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
