@@ -449,5 +449,8 @@ console.log('== the world still turns: a year of real months with a line running
   ok(Number.isFinite(t.treasury), 'and the treasury stays a number');
 }
 
-console.log(failures === 0 ? '\nsmoke140 OK' : '\nsmoke140 FAILED (' + failures + ')');
+// run-smoke.sh greps the last line for 'ALL PASS' — the one suite that said
+// 'OK' instead made every fully green run exit 1, and a wrapper that trusted
+// the exit code shipped two crashed suites behind that noise (§234).
+console.log(failures === 0 ? '\nsmoke140: ALL PASS' : '\nsmoke140 FAILED (' + failures + ')');
 process.exit(failures === 0 ? 0 : 1);
