@@ -20,7 +20,7 @@
 const CFG = {
   PAPER_ZOOM_LO: 0.55,   // below this zoom the map is full parchment
   PAPER_ZOOM_HI: 0.92,   // above this zoom the parchment is gone
-  WARP_AMP: 4.0,         // px of domain-warp wobble on province borders (SPEC §233)
+  WARP_AMP: 18.0,        // px of domain-warp wobble on province borders
   WARP_FREQ: 0.013,      // noise frequency for the warp
   JITTER_AMP: 1.35,      // sub-texel sampling wobble (map px) — melts the ID-texture staircase
   JITTER_FREQ: 0.2,      // wobble wavelength ~5 texels: smooth waves, not per-texel fray
@@ -127,10 +127,8 @@ void main(){
     // lines somebody drew.
     int reg = 0;
     if (uUseRegion == 1) reg = int(texelFetch(uRegion, ivec2(px), 0).r * 255.0 + 0.5);
-    // One shared domain warp for the whole pixel (NOT per seed) — a few px of
-    // organic wobble, no longer the 18px fray of the arc era (SPEC §233):
-    // borders waver like hand-inked lines while the weighted diagram stays
-    // globally consistent.
+    // One shared domain warp for the whole pixel (NOT per seed) — borders wobble
+    // organically while the weighted-Voronoi diagram stays globally consistent.
     vec2 wv = vec2(fbm2(px * uWarpFreq), fbm2(px * uWarpFreq + vec2(37.2, 91.7)));
     vec2 wp = px + (wv - 0.5) * 2.0 * uWarpAmp;
     float bd = 1e12;
@@ -939,14 +937,6 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     seedArr[i * 4 + 2] = (p && p.weight) || 1.0;
     seedArr[i * 4 + 3] = (p && regionOfCell.get(p.name)) || 0;
   }
-  // SPEC §233 tried an additive metric here (d − B·ln w, hyperbola borders,
-  // provably no closed discs) and measured the price: the metric IS the road
-  // network. Two hundred adjacencies churned — Masada lost Hebron, Damascus
-  // lost Palmyra, Rome marched to Seleucid Hyrcania around the Caspian when
-  // the Karakum wall thinned — and every one of them is somebody's marching
-  // route, event site, or story assertion. The ratio metric stays; the
-  // circles die where the eye actually meets them, under drawn borders
-  // (countryRegions), and the warp cut above kills the fray.
   const seedTex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, seedTex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.max(1, seedCount), 1,
@@ -1205,10 +1195,6 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
 
   return {
     idArray,
-    // The land-mask bytes ride along for computeGeometry's anchor snap
-    // (SPEC §233): a full-land texel is 255, an antialiased coastal bead is
-    // anything less, and the snap must never anchor a label on a bead.
-    landBytes,
 
     provIdAt(mapX, mapY) {
       const x = Math.min(W - 1, Math.max(0, Math.floor(mapX)));

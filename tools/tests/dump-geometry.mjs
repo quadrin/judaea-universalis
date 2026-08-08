@@ -65,7 +65,7 @@ const snapshot = await page.evaluate(async () => {
   const N = MAP_DATA.provinces.length;
   const identity = new Uint16Array(N + 1);
   for (let id = 0; id <= N; id++) identity[id] = id;
-  const geom = computeGeometry(window._renderer.idArray, MAP_DATA, identity, window._renderer.landBytes);
+  const geom = computeGeometry(window._renderer.idArray, MAP_DATA, identity);
   return {
     neighbors: geom.neighbors.map((s) => [...s]),
     centroids: geom.centroids.map((c) => (c ? [c.x, c.y] : null)),
@@ -110,7 +110,7 @@ const sinai = await page.evaluate(async () => {
   const N = MAP_DATA.provinces.length;
   const identity = new Uint16Array(N + 1);
   for (let id = 0; id <= N; id++) identity[id] = id;
-  const geom = computeGeometry(raster, MAP_DATA, identity, window._renderer.landBytes);
+  const geom = computeGeometry(raster, MAP_DATA, identity);
   const seed = MAP_DATA.provinces[rasterId - 1];
   const [sx, sy] = MAP_DATA.project(seed.lon, seed.lat);
   return {
