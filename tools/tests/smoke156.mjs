@@ -1,26 +1,26 @@
-// Headless regression — SPEC §231: the silhouettes are the map.
+// Headless regression — SPEC §231/§232: the silhouettes are the map, and the
+// map's phase is the v5.0 frame's.
 //
-// §225 and §228 held folded adjacency identical and let "area drift" go,
-// and the drift turned out to be the silhouettes of provinces those sections
-// never named: their child cells took ground from NEIGHBOURING families —
-// Douma from Batanea, Suwayda from Batanea, Mafraq (shipped at weight 1.30)
-// from Bostra and Philadelphia — and Batanea came out a claw, displayed
-// Gerasa an hourglass 2.3× its footprint. §231's rule: a carved district may
-// take ground only from its own fold-family, so a parent loses ground to its
-// own districts and never to another family's.
+// §231 found the §225/§228 children stealing neighbouring families' ground
+// and pulled them home. §232 found the older wound: §160's frame growth
+// translated every pixel and re-rolled the border wobble under unchanged
+// seeds — Gerasa's triangle died of noise phase, not of cartography. The
+// warp is anchored in the v5.0 frame's own coordinates now
+// (MAP_DATA.warpAnchor), Mafraq's fold-parent is re-measured against the
+// v5.4 raster (Bostra, not Gerasa — §228 measured it off the re-phased
+// raster), and the family-area constants below come from the v5.4 tree's
+// own committed snapshot, which is the oldest raster this map ever had.
 //
 // This suite holds the restoration without a browser, three ways:
-//   1. FAMILY AREAS. In the full-resolution snapshot, each §231 family's
-//      area (parent + its §225/§228/§230 children) matches the parent's
-//      pre-§225 area — constants baked from the §224 tree's own committed
-//      snapshot — within tolerance. Batanea, with no children, must match
-//      alone: the claw cannot come back without this failing.
-//   2. THE SEEDS STAY TRIMMED. No Levant child of §225/§228 carries a weight
+//   1. FAMILY AREAS. Each family's area (parent + its carved children)
+//      matches the parent's v5.4 area within tolerance. Batanea, with no
+//      children, must match alone: the claw cannot come back silently.
+//   2. THE SEEDS STAY TRIMMED. No carved Levant child carries a weight
 //      above 0.70 again. Mafraq and Qusayr shipped at 1.30; that class of
 //      regression is one careless edit away, and this names it.
 //   3. THE ROADS STILL RUN. Damascus reaches Palmyra and Emesa through the
-//      Ghouta in the folded 66 CE map — pulling Douma back inside the
-//      Damascus family was allowed to shrink it, not to sever it.
+//      Ghouta in the folded 66 CE map — containment was allowed to shrink
+//      the Ghouta, not to sever it.
 import { readFileSync } from 'fs';
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -40,40 +40,42 @@ ok(snap.neighbors.length === P.length + 1,
   'the geometry snapshot is current for this atlas ('
   + (snap.neighbors.length - 1) + ' vs ' + P.length + ' cells)');
 
-console.log('== the family areas match the pre-§225 map ==');
+console.log('== the family areas match the v5.4 map ==');
 {
-  // Pre-§225 areas, read from the §224 tree's committed geom-snapshot.json —
-  // immutable history, safe as constants.
+  // v5.4 areas, read from the pre-§160 tree's committed geom-snapshot.json —
+  // immutable history, safe as constants (§232).
   const PRE = {
-    'Batanea': 6704, 'Gadara': 1029, 'Gerasa': 2286, 'Philadelphia': 3920,
-    'Damascus': 9388, 'Caesarea Philippi': 1726, 'Chalcis': 3554,
-    'Emesa': 12387,
+    'Batanea': 6336, 'Gadara': 1197, 'Gerasa': 2324, 'Philadelphia': 4170,
+    'Damascus': 8742, 'Caesarea Philippi': 1935, 'Chalcis': 2326,
+    'Emesa': 13104,
   };
-  // family -> the §225/§228/§230 cells whose ground is that family's own.
+  // family -> the carved cells whose ground is that family's own. Mafraq is
+  // NOT under Gerasa: §232 re-measured its ground against the v5.4 raster and
+  // it is Bostra's, whose family the desert exemption covers.
   const KIDS = {
     'Batanea': [],
     'Gadara': [],
-    'Gerasa': ['Mafraq'],
+    'Gerasa': [],
     'Philadelphia': ['Zarqa', 'Esbus'],
     'Damascus': ['Douma'],
     'Caesarea Philippi': ['Mount Hermon', 'Quneitra'],
     'Chalcis': ['Heliopolis'],
     'Emesa': ['Salamiyah', 'Qusayr'],
   };
-  const TOL = 0.10; // warp jitter plus honest single-digit residue
+  const TOL = 0.12; // warp jitter, coastline redraws, honest small residue
   // Medaba is asserted alone: its child Characmoba deliberately reaches into
   // the exempt desert quadrant (§231), so the family SUM exceeds the old
   // parent by design — but the town's own cell must keep its core.
   const medaba = snap.areas[idOf('Medaba')] || 0;
-  ok(medaba >= 3414 * 0.5 && medaba <= 3414 * 1.05,
-    'Medaba keeps its core against its own district: ' + medaba + ' of pre-§225 3414');
+  ok(medaba >= 3973 * 0.5 && medaba <= 3973 * 1.05,
+    'Medaba keeps its core against its own district: ' + medaba + ' of v5.4 3973');
   for (const [fam, kids] of Object.entries(KIDS)) {
     let area = snap.areas[idOf(fam)] || 0;
     for (const k of kids) area += snap.areas[idOf(k)] || 0;
     const want = PRE[fam];
     const off = Math.abs(area - want) / want;
     ok(off <= TOL, fam + (kids.length ? ' + ' + kids.join(' + ') : '')
-      + ' = ' + area + ' vs pre-§225 ' + want + ' (' + (off * 100).toFixed(1) + '% off)');
+      + ' = ' + area + ' vs v5.4 ' + want + ' (' + (off * 100).toFixed(1) + '% off)');
   }
 }
 
@@ -81,7 +83,7 @@ console.log('== the seeds stay trimmed ==');
 {
   const TRIMMED = ['Douma', 'Suwayda', 'Mafraq', 'Qusayr', 'Salamiyah',
     'Quneitra', 'Mount Hermon', 'Heliopolis', 'Nabatieh', 'Bsharri',
-    'Batroun', 'Akkar', 'Chouf', 'Jounieh'];
+    'Batroun', 'Akkar', 'Chouf', 'Jounieh', "Ma'alot", 'Esbus', 'Elusa'];
   const fat = TRIMMED.filter((n) => {
     const p = P[idOf(n) - 1];
     return p && p.weight > 0.70 + 1e-9;

@@ -15794,3 +15794,53 @@ Regression contract: `smoke156` — the restored areas hold (Batanea, Gadara,
 Gerasa∪Mafraq, Philadelphia∪Zarqa within tolerance of their pre-§225 areas),
 the trimmed seeds stay trimmed (no §225/§228 Levant child above weight 0.70),
 and the §228 roads still run through the Ghouta.
+
+## 232. The warp is anchored — the map's phase is the v5.0 frame's
+
+"There was an even earlier shape," the user said, and there was. §231 restored
+the silhouettes to the §224 tree and the user's memory reached past it: in the
+v5.4 frame Gerasa had been a clean triangle and Batanea ran unbroken to the
+desert edge. Booting every epoch side by side found the wound, and it was not
+cartography. **Every seed in the quadrant is identical in every epoch** —
+position and weight, byte for byte, v5.4 to today.
+
+What changed was the noise. The border wobble is a warp field sampled at
+absolute PIXEL coordinates, and §160's frame growth moved the projection
+origin from (12°E, 42.5°N) to (11°W, 58°N) — a pure translation, since the
+density never changed at any growth — so every existing pixel changed address
+and every border re-rolled its jitter under unchanged seeds. For a province
+fifty pixels across, ±18 px of re-rolled wobble is not texture; it is the
+shape. Gerasa's triangle died of noise phase. §205 grew the frame east and
+south and kept the origin, so v5.x is the only other phase there has ever
+been.
+
+The fix is one anchor: `MAP_DATA.warpAnchor = project(12.0, 42.5)` — the old
+origin's position in the current projection — and the ID pass samples the
+wobble at `(px − anchor)`. The v5.0 phase returns for the whole map at once,
+and with it the shapes: measured before any touch-up, displayed 132 CE Gerasa
+scored Jaccard 0.802 against the v5.4 triangle itself, Batanea 0.883, Palmyra
+0.966. Frame growths after this section inherit the rule for free: grow east
+or south and nothing moves; move the origin and the anchor moves with it.
+
+Two consequences, both taken:
+
+- **Mafraq's fold-parent was measured off the wrong phase.** §228 sampled the
+  renderer's idArray and the ground under Mafraq's seed answered "Gerasa" —
+  because Gerasa's cell had drifted east under the re-phased warp. Against
+  the v5.4 raster the same ground is BOSTRA's, and folding Mafraq into Gerasa
+  was precisely the NE lobe on the triangle. The parent is corrected; the
+  change is dev-neutral, since folded cells count no development anywhere.
+- **The §231 containment was tuned under the wrong phase too.** Under the
+  restored phase the Levant children spilled again — Akkar into Aradus,
+  Esbus into Medaba, the Lebanese ridge cells over their crests — and one
+  trim round pulled them back. `smoke156` now carries the v5.4 family
+  constants, from the pre-§160 tree's own committed snapshot, which is the
+  oldest raster this map ever had: the baseline argument ends here because
+  there is nothing older to remember.
+
+What the anchor does NOT restore: borders against coastlines redrawn since
+(the lakes and the rift were retraced by hand in later frames, deliberately),
+the ground the §205/§228 desert cells hold under the standing exemption, and
+the subdivisions the districts draw inside their own parents — which are
+features. Gadara, Pella and Jericho sit against the retraced rift and carry
+a few points of honest residue for it.
