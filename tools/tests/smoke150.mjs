@@ -38,7 +38,7 @@ const NEW_CELLS = {
   Heliopolis: 'Chalcis',
   'Mount Hermon': 'Caesarea Philippi',
   Quneitra: 'Caesarea Philippi',
-  "Ma'alot": 'Gischala',  // §234: re-measured against the v5.4 raster
+  "Ma'alot": 'Ptolemais',
 };
 const byName = new Map(MAP_DATA.provinces.map((p, i) => [p.name, { p, id: i + 1 }]));
 

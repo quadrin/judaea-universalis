@@ -1881,9 +1881,7 @@ const PROVINCES = [
   // And the central Upper Galilee, which Gischala held alone from the Acre
   // plain to the Hula: Tarshiha and the villages of the Ma'alot ridge.
   P("Ma'alot", 35.28, 33.02, 0.55, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
-    // §234: parent re-measured against the v5.4 raster — the Tarshiha ridge
-    // was Gischala's ground, not the Acre plain's; §225 read the re-phased map.
-    { latentParent: 'Gischala' }),
+    { latentParent: 'Ptolemais' }),
 
   // --- v7.8 (SPEC §228): Jordan, Syria and Iraq at the same resolution ------
   // §225 gave Lebanon and the Golan thirteen districts where they had six.
