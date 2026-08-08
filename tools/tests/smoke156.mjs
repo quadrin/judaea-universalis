@@ -1,8 +1,8 @@
-// Headless regression — SPEC §231/§232: the silhouettes are the map, and the
+// Headless regression — SPEC §231/§233: the silhouettes are the map, and the
 // map's phase is the v5.0 frame's.
 //
 // §231 found the §225/§228 children stealing neighbouring families' ground
-// and pulled them home. §232 found the older wound: §160's frame growth
+// and pulled them home. §233 found the older wound: §160's frame growth
 // translated every pixel and re-rolled the border wobble under unchanged
 // seeds — Gerasa's triangle died of noise phase, not of cartography. The
 // warp is anchored in the v5.0 frame's own coordinates now
@@ -43,14 +43,14 @@ ok(snap.neighbors.length === P.length + 1,
 console.log('== the family areas match the v5.4 map ==');
 {
   // v5.4 areas, read from the pre-§160 tree's committed geom-snapshot.json —
-  // immutable history, safe as constants (§232).
+  // immutable history, safe as constants (§233).
   const PRE = {
     'Batanea': 6336, 'Gadara': 1197, 'Gerasa': 2324, 'Philadelphia': 4170,
     'Damascus': 8742, 'Caesarea Philippi': 1935, 'Chalcis': 2326,
     'Emesa': 13104,
   };
   // family -> the carved cells whose ground is that family's own. Mafraq is
-  // NOT under Gerasa: §232 re-measured its ground against the v5.4 raster and
+  // NOT under Gerasa: §233 re-measured its ground against the v5.4 raster and
   // it is Bostra's, whose family the desert exemption covers.
   const KIDS = {
     'Batanea': [],

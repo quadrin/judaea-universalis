@@ -92,7 +92,10 @@ const EV66 = EVENTS_66.concat(GENERIC_EVENTS);
   // Salamiyah, Arca and Botrys in Syria and Phoenice — and adds Esbus on the
   // Ammonite plateau. Rome's development is unchanged; it is carved into
   // seven more pieces.
-  ok(rom && rom.provs === 176 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
+  // SPEC §232 gives Belgica its middle back: Atuatuca, one more Roman
+  // province in 66 CE, its development carved from four cells Rome already
+  // held.
+  ok(rom && rom.provs === 177 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
   ok(agr && agr.overlord === 'ROM', 'client marked in ledger');
 
   console.log('== diplomatic mapmode + peace highlight ==');

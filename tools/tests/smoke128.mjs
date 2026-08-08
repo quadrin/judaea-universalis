@@ -208,7 +208,9 @@ const era66 = ERAS.find((e) => e.bookmark.id === '66ce');
 {
   const era1948 = ERAS.find((e) => e.bookmark.id === '1948ce');
   const { ctx, geom } = boot(era1948, 'ISR');
-  for (const nm of ['Britannia', 'Londinium', 'Eboracum', 'Deva', 'Lindum']) ctx.prov(nm).owner = 'ISR';
+  // §232 consolidated the island into Britannia; Londinium stays a city of its
+  // own and stays British, so the UK's home label still has ground to sit on.
+  for (const nm of ['Britannia']) ctx.prov(nm).owner = 'ISR';
   const parts = tagLabelParts(ctx, geom, MAP_DATA);
   const britain = parts.find((p) => p.tag === 'ISR' && p.region === 'Britain');
   ok(!!britain && britain.text === 'Israeli Britain', 'Israel in Britain is Israeli Britain: ' + (britain && britain.text));

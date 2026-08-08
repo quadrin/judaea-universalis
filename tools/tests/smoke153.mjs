@@ -47,7 +47,7 @@ const CELLS = {
   Douma: ['Damascus', 'SYR'],
   Suwayda: ['Bostra', 'SYR'],
   Zarqa: ['Philadelphia', 'JOR'],
-  // §232 re-measured the parent against the v5.4 raster — the ground §228's
+  // §233 re-measured the parent against the v5.4 raster — the ground §228's
   // post-§160 raster called Jerash's had been Bostra's before the warp
   // re-phased, and folding Mafraq into Gerasa was the NE lobe on the triangle.
   Mafraq: ['Bostra', 'JOR'],

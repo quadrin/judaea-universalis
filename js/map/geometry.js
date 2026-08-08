@@ -69,6 +69,47 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
       console.warn(`[geometry] province ${i} (${p && p.name}) covers zero pixels in idArray`);
     }
   }
+  // The anchor sits on the cell's own ground (SPEC §199, forced by §232): a
+  // concave cell can put its raw area centroid in open water — measured the
+  // day the drawn borders let Thessalonica hold the whole Greek north, whose
+  // crescent wraps the Thermaic gulf and anchored six chapters' GREECE label
+  // in the sea. When the mean lands on id-0 ground (sea or void), move it to
+  // the cell's nearest own pixel, preferring one whose four neighbors are
+  // also its own so a one-pixel antialiased coastal bead can never become
+  // the anchor. A mean already on assigned ground keeps its exact value, so
+  // every compact cell — and every consumer of its centroid — is untouched.
+  if (idArray && idArray.length >= W * H) {
+    for (let i = 1; i <= N; i++) {
+      if (!(areas[i] > 0) || !isActive(i)) continue;
+      const c = centroids[i];
+      const cx = Math.min(W - 1, Math.max(0, Math.round(c.x - 0.5)));
+      const cy = Math.min(H - 1, Math.max(0, Math.round(c.y - 0.5)));
+      if (mappedId(idArray[cy * W + cx]) !== 0) continue;
+      const b = bbox[i];
+      let bestAny = Infinity, ax = c.x, ay = c.y;
+      let bestIn = Infinity, ix = c.x, iy = c.y;
+      for (let y = b.y0; y <= b.y1; y++) {
+        const row = y * W;
+        for (let x = b.x0; x <= b.x1; x++) {
+          if (mappedId(idArray[row + x]) !== i) continue;
+          const dx = x + 0.5 - c.x;
+          const dy = y + 0.5 - c.y;
+          const d = dx * dx + dy * dy;
+          if (d < bestAny) { bestAny = d; ax = x + 0.5; ay = y + 0.5; }
+          if (d < bestIn
+            && x > 0 && mappedId(idArray[row + x - 1]) === i
+            && x + 1 < W && mappedId(idArray[row + x + 1]) === i
+            && y > 0 && mappedId(idArray[row - W + x]) === i
+            && y + 1 < H && mappedId(idArray[row + W + x]) === i) {
+            bestIn = d; ix = x + 0.5; iy = y + 0.5;
+          }
+        }
+      }
+      if (bestIn < Infinity) centroids[i] = { x: ix, y: iy };
+      else if (bestAny < Infinity) centroids[i] = { x: ax, y: ay };
+    }
+  }
+
   // Inactive fine cells deliberately have no sim geometry. Mirror the parent
   // so diagnostics and optional UI lookups remain safe without creating a node.
   for (let i = 1; i <= N; i++) {

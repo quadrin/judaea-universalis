@@ -326,6 +326,19 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
     // so content packages keep addressing 'Joppa' when the label reads Tel Aviv.
     if (p.canon && p.canon !== p.name) nameToId.set(p.canon, i);
   }
+  // A folded cell's name answers for the province that holds its ground
+  // (SPEC §232). The pixels, clicks and adjacency of a merged or latent cell
+  // already resolve to the parent (§47); its NAME did not, so any content
+  // addressed to a cell an era folds away — a cold-war card stirring
+  // 'Semnones' after Germany consolidates into one province — quietly hit
+  // nothing. Resolve through the same mapping the raster uses. Typos still
+  // miss: an unknown name maps to no base cell.
+  for (let i = 0; i < ((MAP_DATA && MAP_DATA.provinces) || []).length; i++) {
+    const src = MAP_DATA.provinces[i];
+    if (!src || !src.name || nameToId.has(src.name)) continue;
+    const target = provinceMap && provinceMap.length > i + 1 ? provinceMap[i + 1] : 0;
+    if (target && target !== i + 1 && game.provinces[target]) nameToId.set(src.name, target);
+  }
   const rngStart = (Number.isFinite(game.rngState) ? game.rngState : num(game.rngSeed, 1)) >>> 0;
   game.rngState = rngStart;
   const rng = createRng(rngStart, (state) => { game.rngState = state; });
@@ -3835,6 +3848,30 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
     const tmpCtx = { game, DEFINES, byId: (pid) => game.provinces[pid] || null };
     t.maxManpower = maxManpowerOf(tmpCtx, key);
     t.manpower = t.maxManpower;
+  }
+
+  // Anything standing on a cell this profile folds away moves with the
+  // ground (SPEC §232): the pixels joined the parent, so the units on them
+  // do too. An old 1948 save can hold a background AI column in a French
+  // cell that now IS France; stranding it on a null province would wedge
+  // every tick that walks the unit list.
+  const remapLoc = (pid) => {
+    const id = pid | 0;
+    if (!id || game.provinces[id]) return pid;
+    const target = activeMap[id] || 0;
+    return target && game.provinces[target] ? target : pid;
+  };
+  for (const book of [game.armies, game.fleets, game.airwings]) {
+    for (const u of Object.values(book || {})) {
+      if (!u) continue;
+      u.prov = remapLoc(u.prov);
+      if (Array.isArray(u.path) && u.path.length) {
+        u.path = u.path.map(remapLoc).filter((pid, i, a) => pid !== (i ? a[i - 1] : u.prov));
+      }
+    }
+  }
+  for (const b of game.battles || []) {
+    if (b && b.prov !== undefined) b.prov = remapLoc(b.prov);
   }
 
   if (!game.ui) game.ui = {};

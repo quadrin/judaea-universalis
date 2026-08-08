@@ -73,7 +73,8 @@ const SPAIN_ALL = SPAIN_ROMAN_167.concat(SPAIN_CELTIBERIA, SPAIN_LUSITANIA,
 
 // Gaul.
 const GAUL_BELGICA = ['Lutetia', 'Rotomagus', 'Samarobriva', 'Gesoriacum',
-  'Durocortorum', 'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Batavia'];
+  'Durocortorum', 'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Batavia',
+  'Atuatuca']; // §232: the civitas Tungrorum — Belgica has its middle back
 const GAUL_ARMORICA = ['Condate', 'Darioritum'];
 const GAUL_CENTRAL = ['Augustodunum', 'Lugdunum', 'Avaricum', 'Limonum',
   'Burdigala', 'Tolosa', 'Vesontio', 'Argentorate', 'Genava'];
@@ -552,7 +553,8 @@ const MAP_529 = deal({
     GAUL_NARBONENSIS),                         // Septimania: what Vouillé left of Gallia Gothica
   SUE: SPAIN_NORTHWEST,                        // the Suevic kingdom of Bracara, Arian and apart
   FRK: ['Lutetia', 'Rotomagus', 'Samarobriva', 'Gesoriacum', 'Durocortorum',
-    'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
+    'Augusta Treverorum', 'Atuatuca',          // §232: Austrasia's heart holds the Meuse too
+    'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
     'Tolosa', 'Burdigala', 'Limonum', 'Avaricum',
     'Chatti'],                                 // Hessian marches; Thuringia falls to Theuderic in 531
   BGD: ['Lugdunum', 'Augustodunum', 'Vesontio', 'Genava'], // Godomar II's kingdom, 534 its last year
@@ -676,7 +678,8 @@ const MAP_614 = deal({
     .concat(SPAIN_CELTIBERIA, SPAIN_LUSITANIA, SPAIN_NORTHWEST, // the Sueves annexed, 585
       ['Emporiae', 'Baleares'], GAUL_NARBONENSIS), // Septimania holds
   FRK: ['Lutetia', 'Rotomagus', 'Samarobriva', 'Gesoriacum', 'Durocortorum',
-    'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
+    'Augusta Treverorum', 'Atuatuca',          // §232: Austrasia still
+    'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
     'Tolosa', 'Burdigala', 'Limonum', 'Avaricum', 'Augustodunum', 'Lugdunum',
     'Vesontio', 'Genava', 'Massilia',          // Provence and Burgundy, Frankish since the 530s
     'Chatti', 'Augusta Vindelicorum'],         // Hesse; Alamannia and Raetia under the kings' ban
@@ -795,6 +798,12 @@ const MAP_1948 = deal({
   AFG: ['Artacoana', 'Phrada'],                // Herat and Farah: the kingdom's west
   PAK: ['Makuran'],                            // one year old (Gwadar itself stays the Sultan's until 1958)
   NLD: ['Batavia', 'Frisia'],
+  // §232: the Low Countries' missing pair. Belgium was on this map as raster
+  // spill from four neighbors — parts of France, the Netherlands and the
+  // occupied zones — and Luxembourg was Trier's ground; both are Benelux
+  // signatories with seats at every table 1948 is setting.
+  BEL: ['Atuatuca'],
+  LUX: ['Luxembourg'],
   GER: ['Colonia Agrippina', 'Mogontiacum', 'Augusta Treverorum',
     'Augusta Vindelicorum', 'Chatti', 'Teutoburgium', 'Semnones'], // the four zones, one map color
   AUT: ['Carnuntum', 'Virunum'],               // occupied too, Vienna to Klagenfurt
