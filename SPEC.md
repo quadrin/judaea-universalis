@@ -16264,9 +16264,42 @@ the army this season and teaches every wall still standing that surrender buys
 nothing, which is worth less than half as much at the table and two years of
 unrest behind the lines.
 
+### And where the Caliphate is not
+
+Measuring the strand turned up the opposite error one chapter earlier. **The
+Keepers, 529** was flying Rashidun green over Yathrib and Khaybar — in the
+reign of Justinian, forty-one years before Muhammad is born and ninety-three
+before the Hijra. It was not a dormant seed waiting to mean something either:
+529's package is `EVENTS_529 + WORLD + ROADS + ANTIQUE`, which carries no part
+of the conquest strand, so the Caliphate could never rise in that chapter under
+any play. RSH was not in its `activeTags`. The tag object was never even
+constructed — two provinces on the map were owned by a *string* with no court
+behind it.
+
+This is exactly the mistake §162 found in the Galilee and fixed one row higher
+in the same owners table: a chapter quietly asserting a polity that did not
+exist. §162's answer was that an entity which appears out of a real event is a
+truer thing than one that was simply always there, and the same answer applies
+here — the 614 chapter seeds the dormant Caliphate on its own home ground on
+purpose, because that is the chapter where it rises. In 529 it is only an
+anachronism.
+
+The two oases go back to the pre-Islamic Hijaz the rest of the atlas already
+agrees on. Every ancient chapter from 167 BCE through 132 CE gives them to the
+Nabataeans; by Justinian's reign the phylarchate holds the northern oases, and
+529 already has Hegra, Tayma and Dumatha Ghassanid — the very three the Ridda
+takes back off Ghassan ninety years later. Yathrib and Khaybar both border
+Ghassanid Hegra, so the Hijaz stays contiguous instead of gaining an exclave
+(Himyar, the other candidate, is a thousand kilometres south with waste in
+between). They are assigned by hand rather than added to `GHA_LANDS`, because
+that array also drives the Christian faith overlay: a phylarch's tax collector
+is not a bishop. Khaybar's farmers stay Jewish and Yathrib keeps the Arabian
+paganism it has in every other chapter.
+
 `smoke158` carries the contract: the diwan raises the force limit past the
 mustered army and deepens the muster rolls behind it, the four new campaigns
 exist and read the live map, `pressCampaign` writes the generational horizon
 onto a war it did not declare, the futuh pays only while the columns hold
-enemy ground — and pays the storm less than the treaty — and the claims cover
-the imperial theatre and not Judaea's hill country.
+enemy ground — and pays the storm less than the treaty — the claims cover the
+imperial theatre and not Judaea's hill country, and no chapter but the one
+where it rises puts the Caliphate on the map at all.

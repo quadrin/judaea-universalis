@@ -174,6 +174,12 @@ const SAS_LANDS = [
   'Singara', 'Arbela', 'Nisibis', 'Tigranocerta',
   'Caucasian Albania', 'Hyrcania',
 ];
+// The phylarchate's own ground, plus the northern Arabian oases Ghassan's
+// riders held for the empires — the same Hegra/Tayma/Dumatha the Ridda takes
+// off Ghassan ninety years later in the 614 chapter. Yathrib and Khaybar are
+// NOT on this list on purpose: this array also drives the Christian faith
+// overlay below, and the two Hijaz oases answer to the phylarch without
+// worshipping with him. They are assigned by hand further down.
 const GHA_LANDS = ['Bostra', 'Philadelphia', 'Medaba', 'Gerasa', 'Hegra', 'Dumatha', 'Tayma',
 ];
 
@@ -201,8 +207,28 @@ for (const n of GHA_LANDS) OWNERS[n] = 'GHA';
 // is a truer thing than one that was simply always there.
 for (const n of JUD_LANDS) OWNERS[n] = 'BYZ';
 for (const n of SAM_LANDS) OWNERS[n] = 'SAM';
-OWNERS['Yathrib'] = 'RSH';
-OWNERS['Khaybar'] = 'RSH';
+// And the same error §162 found in the Galilee, one row further down the
+// table: this chapter used to hand Yathrib and Khaybar to the RASHIDUN
+// CALIPHATE — in 529, when Muhammad is forty-one years from being born, the
+// Hijra is ninety-three years away, and the tag is not even in this chapter's
+// activeTags. It could never rise here either: the 529 package carries no part
+// of the conquest strand, so the two oases simply sat on the map in Rashidun
+// green, labelled for a polity that would not exist for a century, in the one
+// chapter that cannot ever explain them.
+//
+// The 614 chapter seeds the dormant Caliphate on its own home ground on
+// purpose (the movement's true home is on the map before the movement is).
+// That is a statement about the chapter where it rises. Here it is only an
+// anachronism, and it goes back to the pre-Islamic Hijaz the ancient chapters
+// already agree on — NAB holds these oases from 167 BCE through 132 CE, and
+// by Justinian's reign the phylarchate has the northern ones. Both towns
+// border Ghassanid Hegra, so the Hijaz stays contiguous rather than gaining an
+// exclave. What is IN them does not move: these two are set here, AFTER the
+// land lists and before the faith overlay reads them, so Khaybar's farmers
+// stay Jewish and Yathrib keeps the Arabian paganism it has in every ancient
+// chapter. A phylarch's tax collector is not a bishop.
+OWNERS['Yathrib'] = 'GHA';
+OWNERS['Khaybar'] = 'GHA';
 
 // ---- the map of faiths in the reign of Justinian ----------------------------
 const RELIGIONS = {};

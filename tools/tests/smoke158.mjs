@@ -257,5 +257,40 @@ console.log('\n§235.5 — the lands of the futuh, and the land that is not');
   }
 }
 
+// ── 7. The Caliphate is not on a map before the Caliphate exists ──────────
+console.log('\n§235.6 — no Caliphate before the Hijra');
+{
+  const { ERAS } = await import(R + '/js/data/compendium.js');
+  // 614 seeds the dormant tag on its own home ground on purpose — that is a
+  // statement about the chapter in which it rises. Every other chapter putting
+  // RSH on the map is an anachronism, and 529 was doing it: Yathrib and
+  // Khaybar flew Rashidun green in the reign of Justinian, forty-one years
+  // before Muhammad was born, in a chapter whose event package carries no part
+  // of the conquest strand and whose activeTags do not even list RSH.
+  for (const entry of ERAS) {
+    const bm = entry.bookmark;
+    const owners = bm.owners || {};
+    const held = Object.keys(owners).filter((n) => owners[n] === 'RSH');
+    if (bm.id === '614ce') {
+      ok(held.length > 0, `${bm.id}: the chapter of the rising seeds the dormant Caliphate (${held.join(',')})`);
+    } else {
+      ok(held.length === 0,
+        `${bm.id}: the Caliphate holds no ground` + (held.length ? ' — found ' + held.join(',') : ''));
+    }
+  }
+
+  // And what replaced it in 529 is the phylarchate that already holds the
+  // oases either side of it — contiguous, not an exclave — without converting
+  // anybody: the faith overlay is driven off GHA_LANDS, so these two are
+  // assigned by hand precisely to stay out of it.
+  const bm529 = ERAS.find((e) => e.bookmark.id === '529ce').bookmark;
+  ok(bm529.owners.Yathrib === 'GHA' && bm529.owners.Khaybar === 'GHA',
+    '529: the Hijaz oases answer to the phylarch instead');
+  ok(bm529.religions.Khaybar === 'judaism',
+    '529: and Khaybar\'s farmers are still Jewish');
+  ok(bm529.religions.Yathrib !== 'christianity',
+    '529: a phylarch\'s tax collector is not a bishop — Yathrib is not converted by the transfer');
+}
+
 console.log(failures ? 'FAILURES: ' + failures : 'ALL PASS');
 process.exit(failures ? 1 : 0);

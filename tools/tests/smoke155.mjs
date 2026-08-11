@@ -76,7 +76,13 @@ console.log('== no realm gained or lost a point anywhere ==');
     '40bce': { ROM: 1095, PAR: 343, ATG: 230, NAB: 92, HER: 68, PTO: 158 },
     '66ce': { ROM: 1719, PAR: 217, JUD: 140, NAB: 71, AGR: 31, ADI: 31 },
     '132ce': { ROM: 1874, PAR: 217, JUD: 68, NAB: 17 },
-    '529ce': { BYZ: 1082, SAS: 324, GHA: 53, SAM: 21 },
+    // 529's phylarchate weighs twelve more than 614's for one reason, and it
+    // is not a development change: §235 took Yathrib and Khaybar off the
+    // RASHIDUN CALIPHATE, which this chapter was flying over them forty-one
+    // years before Muhammad was born, and gave them to the Ghassanids who hold
+    // every oasis around them. In 614 those two are the dormant Caliphate's
+    // own home ground, so GHA is back to 53 there. No province's dev moved.
+    '529ce': { BYZ: 1082, SAS: 324, GHA: 65, SAM: 21 },
     '614ce': { BYZ: 1089, SAS: 610, GHA: 53, JUD: 43 },
     '1948ce': { ISR: 183, JOR: 173, EGY: 213, SYR: 187, IRQ: 119, LEB: 131, SAU: 67 },
   };
