@@ -194,12 +194,20 @@ console.log('== the conquest-era caliphate does not kneel ==');
   const mods = r.modifiers || [];
   ok(mods.some((m) => m && m.id === 'no_dominion_but_gods' && m.effects && m.effects.noSubjugation),
     'the awakening carries No Dominion but God\'s (noSubjugation)');
+  // §235 retuned these and extended the Ridda edge to the whole conquest
+  // generation (the old 120-month clock ran out at Nahavand with half the era
+  // still to fight). The contract is the shape, not the constants: an edge
+  // that is real and outlasts the campaigns, and a diwan that multiplies both
+  // the muster rolls and the force limit they are allowed to fill.
   const ridda = mods.find((m) => m && m.id === 'armies_of_the_ridda');
-  ok(!!ridda && ridda.months === 120 && ridda.effects.moraleMult === 1.15 && ridda.effects.disciplineMult === 1.08,
-    'the Ridda armies\' edge is real and lasts the first conquest decade');
+  ok(!!ridda && ridda.months >= 120
+    && ridda.effects.moraleMult > 1 && ridda.effects.disciplineMult > 1,
+  'the Ridda armies\' edge is real and lasts the conquest generation');
   const diwan = mods.find((m) => m && m.id === 'diwan_of_the_conquests');
-  ok(!!diwan && diwan.effects.manpowerMult === 2,
+  ok(!!diwan && diwan.effects.manpowerMult >= 2,
     'the diwan\'s misr system multiplies the muster rolls');
+  ok(!!diwan && diwan.effects.forceLimitMult > 1,
+    'and raises the force limit the amsar were built to hold (SPEC §235)');
   ok((r.manpower || 0) >= 30000, 'the awakening fills the manpower pool (' + r.manpower + ')');
 
   const war = declareWar(ctx, 'SAS', 'RSH', 'The Yoke War');
@@ -241,8 +249,12 @@ console.log('== the conquest-era caliphate does not kneel ==');
   ok(levies.trigger(ctx) === false, 'at peace, no summons rides');
   declareWar(ctx, 'RSH', 'BYZ', 'The Test Campaign');
   ok(levies.trigger(ctx) === true, 'at war with thinned columns and a full pool, the summons rides');
+  const poolBeforeSummons = r.manpower;
   levies.options[0].effects(ctx);
-  ok(r.manpower === 15000, 'the levies are drawn from the manpower pool');
+  // §235 raised the summons (and its price) to the scale of the conquest
+  // force limit: the tribes answer a THINNED army, not a destroyed one.
+  ok(r.manpower < poolBeforeSummons,
+    'the levies are drawn from the manpower pool (' + poolBeforeSummons + ' → ' + r.manpower + ')');
   ok(armiesOf(ctx, 'RSH').some((a) => a.name === 'Levies of the Summons'),
     'a fresh host stands at the staging oasis');
 }

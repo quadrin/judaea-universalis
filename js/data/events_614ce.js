@@ -181,14 +181,15 @@ function awakenCaliphate(ctx) {
   h.setRuler(ctx, 'RSH', {
     name: 'Abu Bakr', title: 'Successor to the Messenger', gov: 3, infl: 4, mar: 3, age: 59,
   });
-  h.adjust(ctx, 'RSH', { treasury: 320, manpower: 30000, stability: 2, legitimacy: 75, mar: 60 });
+  h.adjust(ctx, 'RSH', { treasury: 600, manpower: 45000, stability: 3, legitimacy: 80, mar: 60 });
   // The armies that broke the Ridda are the finest light force on earth:
   // higher morale, tighter discipline, and replacements that actually arrive.
-  // Runs through the whole first conquest decade — the historical edge that
-  // beat both empires was not a four-year enthusiasm.
+  // Runs through the whole conquest generation — the historical edge that
+  // beat both empires was not a four-year enthusiasm, and the old 120-month
+  // clock ran out at Nahavand with half the era still to fight.
   h.addTagModifier(ctx, 'RSH', {
-    id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 120,
-    effects: { moraleMult: 1.15, disciplineMult: 1.08, reinforceMult: 1.15 },
+    id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 240,
+    effects: { moraleMult: 1.25, disciplineMult: 1.2, reinforceMult: 1.25 },
   });
   // The conquest pays for the conquerors: ghanima and the diwan stipends
   // carry a field army far beyond what five oasis towns could ever fund —
@@ -197,9 +198,27 @@ function awakenCaliphate(ctx) {
   // the peninsula's tribes migrate into the garrison camps, so the muster
   // rolls run far past what the home oases' development could ever feed.
   // Runs through the conquest generation (to ~651, the Sasanian horizon).
+  //
+  // forceLimitMult is the correction of SPEC §235, and it is the whole reason
+  // the conquest used to fail. Force limit is (8 + dev × 0.15): on fourteen
+  // desert oases that is FIFTEEN regiments, while the campaign cards muster
+  // thirty-five. The state was paying stipends for an army it was not
+  // permitted to have — every surplus column deserted inside a year and
+  // charged the treasury on the way out, which is why the measured Caliphate
+  // sat pinned at exactly sixteen regiments from 635 to the end of the era
+  // and never took a single walled city. The amsar ARE the answer: Kufa,
+  // Basra, Fustat and Jabiya were garrison cities whose whole civic purpose
+  // was to hold the peninsula's tribes on the stipend rolls as a standing
+  // field army. That is a force limit institution, and it belongs here.
   h.addTagModifier(ctx, 'RSH', {
     id: 'diwan_of_the_conquests', name: 'The Diwan of the Conquests', months: 240,
-    effects: { maintMult: 0.5, incomeMult: 1.25, manpowerMult: 2 },
+    // manpowerMult 6 is the hijra to the amsar, and it is deliberately large
+    // against a base of oasis development: a nomad confederation's fighting
+    // strength is not a function of its farmland, and province dev is the only
+    // thing maxManpowerOf can see. Regen is maxManpower/60 per month, so the
+    // ceiling IS the rate — at the old figure the columns bled faster than the
+    // peninsula could answer and the pool sat at zero from 638 onward.
+    effects: { maintMult: 0.38, incomeMult: 1.55, manpowerMult: 6, forceLimitMult: 2.75 },
   });
   // The community that survived the Ridda does not kneel again — for the
   // conquest generation the Caliphate cannot be broken to a client kingdom
@@ -225,12 +244,14 @@ function awakenCaliphate(ctx) {
       makeMuslim(tayma);
     }
   }
+  // The territorial programme is filed the day the polity survives its founder.
+  claimTheFutuh(ctx);
   // Open the road before mustering: the field army stands at the northern
   // frontier the Ridda just won, not locked behind it.
   riddaSettlesTheNorth(ctx);
   h.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-    inf: 6, cav: 6, name: 'Army of the Ridda',
-    general: { name: 'Khalid ibn al-Walid', fire: 2, shock: 5, maneuver: 5 },
+    inf: 8, cav: 8, name: 'Army of the Ridda',
+    general: { name: 'Khalid ibn al-Walid', fire: 3, shock: 5, maneuver: 5 },
   });
   return true;
 }
@@ -304,6 +325,102 @@ function addWarscore(ctx, war, tag, amount) {
       : (war.defenders || []).indexOf(tag) >= 0 ? 'def' : null;
     if (side) war.eventScore[side] += amount;
   } catch (e) { warnOnce('addWarscore', e); }
+}
+
+// The lands of the futuh (SPEC §235). Claims are what the peace table reads to
+// tell a war of conquest apart from a border raid: a claimed province is priced
+// at claimDiscount instead of the full alien-faith rate, and the AI's treaty
+// mind ranks claims ahead of opportunistic land. The Caliphate's demand on
+// Syria, Mesopotamia, Egypt and the plateau was the most explicit territorial
+// programme any power in this chapter had, and it belongs on the tag.
+//
+// Judaea's own hill country is deliberately NOT on this list. The Caliphate
+// took Jerusalem in 638 and this chapter lets it try — but through its own war
+// (ev_p_reduction_of_holy_house), against walls the player is defending, and
+// at full price. The player's homeland is not discounted out from under them.
+const FUTUH_LANDS = [
+  // Syria and the Phoenician coast
+  'Damascus', 'Emesa', 'Bostra', 'Antioch', 'Tyre', 'Berytus', 'Laodicea',
+  'Seleucia Pieria', 'Batanea', 'Caesarea Philippi', 'Palmyra', 'Chalcis', 'Apamea',
+  // the desert road and its gates
+  'Petra', 'Aila', 'Oboda',
+  // Mesopotamia and the Sawad
+  'Seleucia-Ctesiphon', 'Babylon', 'Uruk', 'Charax', 'Nehardea', 'Hatra',
+  'Arbela', 'Edessa', 'Nisibis',
+  // the Iranian plateau
+  'Susa', 'Persepolis', 'Ecbatana', 'Gazaca', 'Hyrcania',
+  // Egypt
+  'Alexandria', 'Memphis', 'Pelusium', 'Thebes', 'Syene', 'Arsinoe',
+  'Oxyrhynchus', 'Myos Hormos', 'Berenice',
+];
+
+function claimTheFutuh(ctx) {
+  const r = ctx.game.tags.RSH;
+  if (!r) return;
+  if (!Array.isArray(r.claims)) r.claims = [];
+  for (const name of FUTUH_LANDS) {
+    const p = ctx.prov(name);
+    if (!p || p.impassable) continue;
+    const id = p.id | 0;
+    if (id && r.claims.indexOf(id) < 0) r.claims.push(id);
+  }
+}
+
+// Open the campaign war — or adopt the one already running (SPEC §235).
+//
+// Every conquest card used to carry its generational horizon on exactly one
+// path: `declareWar` returns the war, and the card writes settleMonths onto
+// it. But the Caliphate is very often NOT the one who declares. The empires
+// see the muster on their frontier and open the war themselves in 632, so by
+// 633 `warBetween` is already true, the card takes its no-op branch, and the
+// horizon is never written. The conquest of Iraq and the conquest of Syria
+// then settle on the DEFAULT three-year clock — both wars were over by 635 in
+// the measured runs, before Yarmouk and Qadisiyyah could even fire, which is
+// why the decisive days kept finding no war to swing. A war fought over the
+// same ground for the same reason is the same campaign whoever signed first.
+function pressCampaign(ctx, target, name, months) {
+  if (!target) return null;
+  let war = findWar(ctx.game, 'RSH', target);
+  if (!war) war = ctx.helpers.declareWar(ctx, 'RSH', target, name);
+  if (war) war.settleMonths = Math.max(months, Number(war.settleMonths) || 0);
+  return war;
+}
+
+// Is the conquest actually standing on this enemy's ground? (SPEC §235.)
+// The gate on every scripted victory below: a Caliphate that has been beaten
+// out of the theatre — or never reached it — does not get handed the battle
+// by a chronicle line. If its columns hold nothing of the enemy's, history's
+// famous day simply does not arrive.
+function pressingAgainst(ctx, enemy) {
+  if (!enemy) return false;
+  // The letters the courts answer to NOW (SPEC §135): a crown taken mid-era
+  // files its provinces under the new tag, and this chapter asks after the
+  // name it shipped with.
+  const foe = who(ctx, enemy);
+  const mine = who(ctx, 'RSH');
+  for (const p of ctx.game.provinces || []) {
+    if (p && !p.impassable && p.owner === foe && p.controller === mine) return true;
+  }
+  return false;
+}
+
+// The decisive-day swing (SPEC §235). Occupation warscore is measured as a
+// share of the enemy's WHOLE development — (occupiedDev / enemyDev) × 60 — so
+// against an empire of a hundred provinces, taking every city between Gaza and
+// Antioch is worth about six points, and the peace-table budget IS the
+// warscore. That arithmetic is correct for an ordinary border war and exactly
+// wrong for a conquest era: it is the reason the measured Caliphate overran
+// Syria, Palestine, Mesopotamia and the plateau in the simulation and then
+// handed all of it back at every single peace, era after era, owning fourteen
+// oases in 659. The great days carry the weight the chroniclers gave them —
+// through eventScore, the same side-bucket Beth Horon and the Temple use, and
+// still bought at the table rather than transferred by script.
+function decisiveDay(ctx, enemy, amount) {
+  if (!pressingAgainst(ctx, enemy)) return false;
+  const war = findWar(ctx.game, 'RSH', enemy);
+  if (!war) return false;
+  addWarscore(ctx, war, 'RSH', amount);
+  return true;
 }
 
 export const EVENTS_614 = [
@@ -1088,13 +1205,12 @@ export const EVENTS_614 = [
         if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
         else riddaSettlesTheNorth(ctx); // heal campaigns awakened before the road opened
         const target = ownerOf(ctx, ['Charax', 'Uruk', 'Babylon', 'Seleucia-Ctesiphon'], 'SAS');
-        if (target && !warBetween(ctx, 'RSH', target)) {
-          const war = ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of Iraq');
-          if (war) war.settleMonths = 84; // a generational campaign, not a three-year raid
-        }
+        // A generational campaign, not a three-year raid — and the horizon is
+        // written whether or not this card is the one that opened the war.
+        pressCampaign(ctx, target, 'The Conquest of Iraq', 84);
         ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-          inf: 8, cav: 5, name: 'Army of al-Muthanna',
-          general: { name: 'al-Muthanna ibn Haritha', fire: 2, shock: 4, maneuver: 4 },
+          inf: 12, cav: 8, name: 'Army of al-Muthanna',
+          general: { name: 'al-Muthanna ibn Haritha', fire: 3, shock: 5, maneuver: 5 },
         });
         ctx.helpers.chronicle(ctx, 'war', 'Arab columns move into Iraq against whoever holds the rivers; the desert edge becomes a front.');
       }),
@@ -1128,23 +1244,20 @@ export const EVENTS_614 = [
         if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
         else riddaSettlesTheNorth(ctx); // heal campaigns awakened before the road opened
         const target = ownerOf(ctx, ['Damascus', 'Bostra', 'Jerusalem', 'Emesa'], 'BYZ');
-        if (target && !warBetween(ctx, 'RSH', target)) {
-          const war = ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of the Levant');
-          if (war) war.settleMonths = 84; // Yarmouk and the fall of Syria take years, not one truce cycle
-        }
+        // Yarmouk and the fall of Syria take years, not one truce cycle.
+        pressCampaign(ctx, target, 'The Conquest of the Levant', 84);
         // The Ghassanid screen (Mu'tah's memory): if Ghassan still bars the
         // road at Bostra or Dumatha and no other war has already swept it in,
         // the columns must fight through it — a neutral client sitting on the
         // only gate out of Arabia would otherwise stop the entire campaign
         // without a battle.
-        if (alive(ctx, 'GHA') && target !== 'GHA' && !warBetween(ctx, 'RSH', 'GHA')
+        if (alive(ctx, 'GHA') && target !== 'GHA'
             && ['Bostra', 'Dumatha'].some((n) => { const p = ctx.prov(n); return p && p.owner === 'GHA'; })) {
-          const war = ctx.helpers.declareWar(ctx, 'RSH', 'GHA', 'The Conquest of the Levant');
-          if (war) war.settleMonths = 84;
+          pressCampaign(ctx, 'GHA', 'The Conquest of the Levant', 84);
         }
         ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-          inf: 10, cav: 5, name: 'Army of Syria',
-          general: { name: 'Abu Ubayda ibn al-Jarrah', fire: 3, shock: 3, maneuver: 4 },
+          inf: 14, cav: 8, name: 'Army of Syria',
+          general: { name: 'Abu Ubayda ibn al-Jarrah', fire: 3, shock: 4, maneuver: 5 },
         });
         ctx.helpers.chronicle(ctx, 'war', 'The Rashidun armies enter the Levant against the power that now holds Syria.');
       }),
@@ -1184,9 +1297,16 @@ export const EVENTS_614 = [
           // Khalid's famous ride from the Iraqi front: the mobile guard that
           // actually won the Yarmouk answers the concentration in kind.
           ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-            inf: 3, cav: 5, name: 'Khalid\'s Mobile Guard',
-            general: { name: 'Khalid ibn al-Walid', fire: 2, shock: 5, maneuver: 5 },
+            inf: 4, cav: 9, name: 'Khalid\'s Mobile Guard',
+            general: { name: 'Khalid ibn al-Walid', fire: 3, shock: 5, maneuver: 5 },
           });
+          // Six days on the Yarmouk plain destroyed the field army Rome had
+          // left in the East, and Syria was never contested again. If the
+          // columns are on Byzantine ground, the day counts for what it was.
+          if (decisiveDay(ctx, 'BYZ', 35)) {
+            ctx.helpers.chronicle(ctx, 'war',
+              'The Byzantine field army breaks on the Yarmouk; Heraclius rides north and does not come back for Syria.');
+          }
         } else {
           ctx.helpers.addTagModifier(ctx, 'RSH', {
             id: 'unopposed_levant', name: 'No Imperial Field Army', months: 12,
@@ -1194,6 +1314,52 @@ export const EVENTS_614 = [
           });
         }
         ctx.helpers.chronicle(ctx, 'war', 'The armies converge around the Yarmouk; history supplies the pressure, and the living map supplies the result.');
+      }),
+    }],
+  },
+  {
+    // Qadisiyyah (636) — Yarmouk's twin on the eastern front, and conspicuously
+    // absent from the chapter until §235: the Levant had its decisive day and
+    // Iraq had none, so the Persian war was left to be decided entirely by an
+    // occupation term that cannot decide it. Three days and a night at the
+    // desert's edge; Rustam dead, the imperial standard taken, and the Sawad
+    // open to the rivers.
+    id: 'ev_p_qadisiyyah',
+    title: 'The Bridge and the Standard',
+    worldLabel: 'The Persian field army is broken at Qadisiyyah',
+    desc: 'Rustam brings the army of the Sawad down to the last cultivated edge before '
+      + 'the desert, elephants and all, and offers the Arabs land or tribute to go home. '
+      + 'They ask for something he has no authority to give. The fighting runs three days '
+      + 'into a fourth, ends in a dust storm blowing off the waste into Persian faces, '
+      + 'and when it clears the commander of the empire is dead in the reeds and the '
+      + 'Derafsh Kaviani — the standard of the House of Sasan — is in a stranger\'s hands.',
+    forTag: 'both',
+    requiresWar: ['RSH', 'SAS'],
+    date: { y: 636, m: 11 },
+    world: true,
+    when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'SAS'),
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Three days and the night of the snarling',
+      tooltip: 'If the Caliphate\'s columns stand on Persian ground, the destruction of the field army swings the war decisively and the road to the rivers opens. If they have been driven off it, the day never comes.',
+      effects: guard('ev_p_qadisiyyah:0', (ctx) => {
+        if (decisiveDay(ctx, 'SAS', 35)) {
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -2, legitimacy: -20 });
+          ctx.helpers.addTagModifier(ctx, 'RSH', {
+            id: 'the_standard_taken', name: 'The Standard of the House of Sasan', months: 24,
+            effects: { moraleMult: 1.1, siegeBonus: 1 },
+          });
+          ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+            inf: 10, cav: 6, name: 'Army of Sa\'d',
+            general: { name: 'Sa\'d ibn Abi Waqqas', fire: 3, shock: 5, maneuver: 5 },
+          });
+          ctx.helpers.chronicle(ctx, 'war',
+            'Rustam is dead at Qadisiyyah and the standard of the House of Sasan is taken; the Sawad lies open to the rivers.');
+        } else {
+          ctx.helpers.chronicle(ctx, 'war',
+            'The armies face each other at the desert\'s edge, and this time the Persians hold the cultivated land.');
+        }
       }),
     }],
   },
@@ -1274,6 +1440,229 @@ export const EVENTS_614 = [
     }],
   },
   {
+    // Egypt (639–642), and the reason this card had to exist at all: with only
+    // the Iraq and Levant campaigns scripted, both wars settled inside a few
+    // years and NOTHING opened a third. The measured Caliphate spent the rest
+    // of the era sitting on its oases at full strength with nowhere to go —
+    // the conquest simply stopped in 636 (SPEC §235). History's answer is Amr
+    // ibn al-As, who crossed the isthmus with a column Umar thought too small,
+    // reduced the fortress of Babylon, and took the richest province Rome had
+    // left. The target is read off the live map, like every campaign card
+    // here: whoever actually holds the Nile now receives the column.
+    id: 'ev_p_egypt_campaign',
+    title: 'The Column to Egypt',
+    worldLabel: 'The Arab armies cross into Egypt',
+    desc: 'Amr ibn al-As asks leave to take Egypt with four thousand men, and is given '
+      + 'it grudgingly and then countermanded — the letter recalling him arrives after he '
+      + 'has crossed, which he takes to mean it does not apply. Beyond the isthmus lies '
+      + 'the grain of an empire, a Chalcedonian governor his Coptic subjects will not '
+      + 'die for, and a fortress at the apex of the Delta that has never been stormed.',
+    forTag: 'both',
+    date: { y: 640, m: 2 },
+    world: true,
+    // The column marches only when there is a Nile to march on: a live holder
+    // of Egypt, a Medina free to send it, and no wet ink in between.
+    when: (ctx) => caliphateCanRise(ctx)
+      && campaignWarPossible(ctx, ownerOf(ctx, ['Memphis', 'Pelusium', 'Alexandria', 'Thebes'], 'BYZ')),
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Let him keep going',
+      tooltip: 'The Caliphate declares war on the live holder of Egypt and fields Amr\'s column. No province is transferred by script — the Delta is taken or held in the simulation.',
+      effects: guard('ev_p_egypt_campaign:0', (ctx) => {
+        if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
+        const target = ownerOf(ctx, ['Memphis', 'Pelusium', 'Alexandria', 'Thebes'], 'BYZ');
+        pressCampaign(ctx, target, 'The Conquest of Egypt', 84);
+        ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+          inf: 12, cav: 7, name: 'Column of Amr ibn al-As',
+          general: { name: 'Amr ibn al-As', fire: 3, shock: 4, maneuver: 5 },
+        });
+        ctx.helpers.chronicle(ctx, 'war',
+          'Amr ibn al-As crosses into Egypt against whoever holds the Nile; the grain of the empire becomes a war aim.');
+      }),
+    }],
+  },
+  {
+    // Alexandria (642): the second-city of the Roman world changed hands by a
+    // negotiated capitulation — eleven months' truce, the garrison shipped
+    // out, no storm and no sack. The grain fleet that had fed Constantinople
+    // since Augustus stopped sailing, and the empire never got the province
+    // back on any lasting terms. The Egyptian front's decisive day.
+    id: 'ev_p_alexandria_falls',
+    title: 'The Grain Fleet Stops Sailing',
+    worldLabel: 'Alexandria capitulates',
+    desc: 'The patriarch negotiates what the garrison cannot hold: eleven months of '
+      + 'truce, the imperial troops to leave by sea with what they can carry, the city '
+      + 'not to be stormed. Rome\'s second city is handed over at the gate. In '
+      + 'Constantinople the bread ration is the news — the fleet that has fed the capital '
+      + 'since Augustus does not come north this year, and will not come again.',
+    forTag: 'both',
+    date: { y: 642, m: 9 },
+    world: true,
+    when: (ctx) => freeCaliphate(ctx) && !!findWar(ctx.game, 'RSH', 'BYZ'),
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Take the city at the gate',
+      tooltip: 'If the Caliphate\'s columns stand on Byzantine ground, the loss of Egypt swings the war decisively and the empire\'s grain income goes with it. If they never reached the Delta, the fleet sails as usual.',
+      effects: guard('ev_p_alexandria_falls:0', (ctx) => {
+        if (decisiveDay(ctx, 'BYZ', 30)) {
+          ctx.helpers.addTagModifier(ctx, 'BYZ', {
+            id: 'the_grain_fleet_stops', name: 'The Grain Fleet Stops Sailing', months: 120,
+            effects: { incomeMult: 0.85, manpowerMult: 0.9 },
+          });
+          ctx.helpers.adjust(ctx, 'RSH', { treasury: 200, legitimacy: 10 });
+          ctx.helpers.chronicle(ctx, 'fall',
+            'Alexandria capitulates at the gate; the grain fleet stops sailing, and Constantinople learns what it costs to lose Egypt.');
+        } else {
+          ctx.helpers.chronicle(ctx, 'war',
+            'Alexandria stands, its garrison unshipped and the grain fleet sailing north on schedule.');
+        }
+      }),
+    }],
+  },
+  {
+    // Nahavand (642) — fath al-futuh, the Victory of Victories. Yazdegerd's
+    // last general muster is broken, and after it Persia has no field army
+    // left anywhere: the plateau is taken city by city over the next decade
+    // against no coordinated defence. The old chapter jumped straight from
+    // Ctesiphon (637) to the dynastic horizon (651) with fourteen years and
+    // no campaign in between, which is precisely where a Sasanian rump used
+    // to quietly survive the era intact.
+    id: 'ev_p_nahavand',
+    title: 'The Victory of Victories',
+    worldLabel: 'The last Persian muster is broken on the plateau',
+    desc: 'The King of Kings calls the plateau to one final muster — the satrapies of '
+      + 'Media and Fars and everything east of them, the last army the House of Sasan '
+      + 'will ever put in a field. It meets the Arabs in the passes above Nahavand. What '
+      + 'is decided there is not a province but whether Persia still has a way of saying '
+      + 'no; every city that falls afterward falls to a siege, not to a battle.',
+    forTag: 'both',
+    date: { y: 642, m: 6 },
+    world: true,
+    // Only against a Persia that still has a plateau to muster from.
+    when: (ctx) => caliphateCanRise(ctx)
+      && campaignWarPossible(ctx, ownerOf(ctx, ['Ecbatana', 'Susa', 'Persepolis', 'Seleucia-Ctesiphon'], 'SAS')),
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Meet the muster in the passes',
+      tooltip: 'The Caliphate declares war on the live holder of the Iranian plateau and fields the army of the passes. A Persia that wins here keeps its dynasty; the battle is fought in the simulation.',
+      effects: guard('ev_p_nahavand:0', (ctx) => {
+        if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
+        const target = ownerOf(ctx, ['Ecbatana', 'Susa', 'Persepolis', 'Seleucia-Ctesiphon'], 'SAS');
+        // The plateau is taken city by city, not in one truce cycle.
+        pressCampaign(ctx, target, 'The Conquest of Persia', 96);
+        ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+          inf: 14, cav: 8, name: 'Army of the Passes',
+          general: { name: 'al-Nu\'man ibn Muqarrin', fire: 3, shock: 5, maneuver: 4 },
+        });
+        // The muster is real: whoever holds the plateau puts its last field
+        // army into the passes, and gets one season of it.
+        if (target) {
+          ctx.helpers.addTagModifier(ctx, target, {
+            id: 'last_muster_of_the_plateau', name: 'The Last Muster of the Plateau', months: 12,
+            effects: { moraleMult: 1.1, manpowerMult: 1.15 },
+          });
+        }
+        // fath al-futuh. After it Persia has no field army anywhere, and the
+        // plateau is taken city by city against no coordinated defence — but
+        // only for a Caliphate that already holds Persian ground to fight from.
+        if (decisiveDay(ctx, target, 35)) {
+          ctx.helpers.adjust(ctx, target, { stability: -2, legitimacy: -25 });
+          ctx.helpers.chronicle(ctx, 'war',
+            'Nahavand: the victory of victories. The last muster of the plateau is destroyed, and no Persian field army takes the ground again.');
+        } else {
+          ctx.helpers.chronicle(ctx, 'war',
+            'The muster holds the passes above Nahavand, and the plateau keeps its army for another season.');
+        }
+      }),
+    }],
+  },
+  {
+    // The standing pressure of the futuh (SPEC §235), and the answer to the
+    // arithmetic that made the whole era inert. Warscore from occupation is
+    // (occupiedDev / enemyDev) × 60 — a SHARE of everything the enemy owns
+    // anywhere. Against Byzantium that denominator is a hundred provinces from
+    // Carthage to the Caucasus, so the Caliphate could hold Damascus, Emesa,
+    // Tyre and the whole Palestinian coast at once and be paid nine points for
+    // it, against a Levantine province priced near thirty. It won every
+    // campaign in the simulation and could never afford to keep anything.
+    //
+    // That ratio is right for a border war and wrong for a conquest era, and
+    // the honest fix is not to rewrite it for every chapter but to say what is
+    // actually true here: these armies took cities every single year, and each
+    // city that fell made the next surrender easier. A card that pays only
+    // while the columns stand on enemy ground, and stops the moment they are
+    // driven off it, is history's pressure without history's guarantee.
+    id: 'ev_p_the_futuh',
+    title: 'The Cities Send Their Terms',
+    desc: 'Another season, another town that has done the arithmetic. The pattern is '
+      + 'known now from Gaza to the rivers: the garrison is offered terms, the notables '
+      + 'are offered their offices, the churches and fire-temples are offered their '
+      + 'walls, and the tax is offered as a number rather than a threat. Cities that '
+      + 'have been besieged by Rome and by Persia within living memory find the terms '
+      + 'startling, and send to ask whether they are meant seriously.',
+    forTag: 'RSH',
+    once: false,
+    cooldownMonths: 10,
+    minYear: 634,
+    maxYear: 661,
+    trigger: safeTrigger('ev_p_the_futuh', (ctx) => {
+      if (!freeCaliphate(ctx)) return false;
+      const t = ctx.game.tags.RSH;
+      // Only while the conquest is actually standing on somebody's ground.
+      return (t.atWarWith || []).some((e) => alive(ctx, e) && pressingAgainst(ctx, e));
+    }),
+    aiOption: 0,
+    // The conquest's own distinction, and a real choice: a town taken by
+    // treaty (sulh) keeps its land and pays the tax, and the next town down
+    // the road hears about it and sends its own delegation — that cascade is
+    // what moved the frontier as fast as it moved. A town taken by storm
+    // (anwatan) becomes booty, which pays the army this season and teaches
+    // every remaining wall that surrender buys nothing.
+    options: [
+      {
+        label: 'Write them the terms they have heard about',
+        tooltip: 'Capitulation (sulh): every enemy whose land the Caliphate\'s columns hold concedes ground at the table — +20 war score in each such war, and the next town surrenders more easily. A Caliphate driven off enemy soil gains nothing.',
+        effects: guard('ev_p_the_futuh:0', (ctx) => {
+          const t = ctx.game.tags.RSH;
+          if (!t || t.alive === false) return;
+          let any = false;
+          for (const enemy of (t.atWarWith || []).slice()) {
+            if (!alive(ctx, enemy)) continue;
+            if (decisiveDay(ctx, enemy, 20)) any = true;
+          }
+          if (any) {
+            ctx.helpers.chronicle(ctx, 'diplomacy',
+              'Another season of the futuh: the towns send to ask for terms before the columns arrive, and the terms are the same ones the last town got.');
+          }
+        }),
+      },
+      {
+        label: 'Take it by storm and divide the fifth',
+        tooltip: 'Conquest by force (anwatan): the town is booty — +150 talents and +1 legitimacy now, but only +8 war score, and the walls still standing have learned what surrender is worth (+1 unrest for two years).',
+        effects: guard('ev_p_the_futuh:1', (ctx) => {
+          const t = ctx.game.tags.RSH;
+          if (!t || t.alive === false) return;
+          let any = false;
+          for (const enemy of (t.atWarWith || []).slice()) {
+            if (!alive(ctx, enemy)) continue;
+            if (decisiveDay(ctx, enemy, 8)) any = true;
+          }
+          if (!any) return;
+          ctx.helpers.adjust(ctx, 'RSH', { treasury: 150, legitimacy: 1 });
+          ctx.helpers.addTagModifier(ctx, 'RSH', {
+            id: 'taken_by_storm', name: 'Taken by Storm', months: 24,
+            effects: { unrestAll: 1 },
+          });
+          ctx.helpers.chronicle(ctx, 'war',
+            'The town is carried by storm and the fifth is divided in the camp; the next wall down the road draws its own conclusions.');
+        }),
+      },
+    ],
+  },
+  {
     // The conquests' real engine was not one army but the well that refilled
     // them: every column lost in Iraq or Syria was answered by fresh tribal
     // levies out of the peninsula. While the conquest generation runs and the
@@ -1290,25 +1679,29 @@ export const EVENTS_614 = [
       + 'to the frontier for a place on the diwan before the next city falls.',
     forTag: 'RSH',
     once: false,
-    cooldownMonths: 14,
+    cooldownMonths: 10,
     minYear: 633,
-    maxYear: 651,
+    maxYear: 661,
+    // The ceiling is read against the conquest force limit, not against the
+    // five oases' own: at §235's muster a 12,000-man floor meant the summons
+    // only went out once the columns were already destroyed. The tribes
+    // answered a thinned army, not a dead one.
     trigger: safeTrigger('ev_p_tribal_levies', (ctx) =>
       freeCaliphate(ctx)
       && atWarWithLiveEnemy(ctx, 'RSH')
-      && totalMenOf(ctx, 'RSH') < 12000
+      && totalMenOf(ctx, 'RSH') < 30000
       && (ctx.game.tags.RSH.manpower || 0) >= 5000),
     aiOption: 0,
     options: [
       {
         label: 'Read the summons in every camp',
-        tooltip: 'The Caliphate: −5,000 manpower from the pool; a fresh host of 7 regiments musters at the desert\'s edge.',
+        tooltip: 'The Caliphate: −8,000 manpower from the pool; a fresh host of 14 regiments musters at the desert\'s edge.',
         effects: guard('ev_p_tribal_levies:0', (ctx) => {
           const r = ctx.game.tags.RSH;
           if (!r || r.alive === false) return;
-          r.manpower = Math.max(0, Math.round((r.manpower || 0) - 5000));
+          r.manpower = Math.max(0, Math.round((r.manpower || 0) - 8000));
           ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-            inf: 4, cav: 3, name: 'Levies of the Summons',
+            inf: 8, cav: 6, name: 'Levies of the Summons',
           });
           ctx.helpers.chronicle(ctx, 'war',
             'The tribes answer the call: fresh levies out of the peninsula remount the conquest\'s thinned columns.');
@@ -1316,13 +1709,13 @@ export const EVENTS_614 = [
       },
       {
         label: 'Call only the proven tribes',
-        tooltip: 'The Caliphate: −3,000 manpower; a smaller host of 4 veteran regiments — and the pool keeps its depth for the next campaign.',
+        tooltip: 'The Caliphate: −5,000 manpower; a smaller host of 8 veteran regiments — and the pool keeps its depth for the next campaign.',
         effects: guard('ev_p_tribal_levies:1', (ctx) => {
           const r = ctx.game.tags.RSH;
           if (!r || r.alive === false) return;
-          r.manpower = Math.max(0, Math.round((r.manpower || 0) - 3000));
+          r.manpower = Math.max(0, Math.round((r.manpower || 0) - 5000));
           ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-            inf: 2, cav: 2, name: 'Levies of the Summons',
+            inf: 4, cav: 4, name: 'Levies of the Summons',
           });
           ctx.helpers.chronicle(ctx, 'war',
             'Medina calls only the tribes it trusts: a smaller, harder column rides for the frontier.');
@@ -1386,11 +1779,11 @@ export const EVENTS_614 = [
         ctx.helpers.adjust(ctx, 'RSH', { stability: 1, legitimacy: 15, manpower: 6000 });
         ctx.helpers.addTagModifier(ctx, 'RSH', {
           id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 60,
-          effects: { moraleMult: 1.15, disciplineMult: 1.08, reinforceMult: 1.15 },
+          effects: { moraleMult: 1.25, disciplineMult: 1.2, reinforceMult: 1.25 },
         });
         ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-          inf: 6, cav: 5, name: 'Army of the Rising',
-          general: { name: 'Sa\'d ibn Abi Waqqas', fire: 2, shock: 4, maneuver: 4 },
+          inf: 10, cav: 8, name: 'Army of the Rising',
+          general: { name: 'Sa\'d ibn Abi Waqqas', fire: 3, shock: 5, maneuver: 5 },
         });
         ctx.helpers.chronicle(ctx, 'era',
           'No yoke but God\'s: the Caliphate repudiates the client bond of ' + ((lord && lord.name) || lordTag)

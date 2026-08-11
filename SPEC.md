@@ -16142,3 +16142,131 @@ that were red on main — smoke31 and smoke104 — are green again.
 ancient chapter, the six are latent under their carve-parents and active in
 1948, every realm in every chapter opens on the development it always had, and
 the §228 roads are direct again.
+
+## 235. The Rashidun century actually happens
+
+"Make the Rashidun Caliphate more OP in its bookmark." The reasonable first
+move was to measure what it was doing, and the measurement was worse than the
+request implied. Run the 614 chapter all-AI for forty-five years, twice, and
+the Caliphate ends its era owning **fourteen provinces** — the five oases it
+starts dormant with, plus the three the Ridda hands it — with two thousand men
+under arms, a manpower pool sitting at literal zero since 638, a treasury near
+bankruptcy, and not one of Damascus, Bostra, Emesa, Antioch, Jerusalem,
+Ctesiphon, Babylon or Alexandria in its hands. Byzantium finishes the same run
+with *more* provinces than it started. The chapter's third act carries "the
+Rashidun century to the Dome of the Rock in 691" and the chronicle dutifully
+narrates Yarmouk, the road to Ctesiphon and the southern gate of Jerusalem
+over a map on which nothing whatever has happened. The strand was not
+under-tuned. It was inert.
+
+Five things were wrong, and only the first is a balance number.
+
+**Force limit.** `forceLimitOf` is `(8 + dev × 0.15) × forceLimitMult`. On
+fourteen desert oases that is **fifteen regiments**, and the campaign cards
+muster thirty-five. The `diwan_of_the_conquests` modifier was already paying
+for the conquest — half maintenance, +25% income, double manpower — but it
+never touched the one ceiling that binds, so the state was funding stipends
+for an army it was not permitted to raise. Every surplus column deserted
+inside a year and charged the treasury on the way out: income −14 talents a
+month in 634, and from 635 to the end of the era the Caliphate sat pinned at
+*exactly sixteen regiments*, forever, whatever the events spawned. The amsar
+are the answer and they were always the answer — Kufa, Basra, Fustat and
+Jabiya were garrison cities whose civic purpose was to hold the peninsula's
+tribes on the stipend rolls as a standing field army. That is a force-limit
+institution. The diwan carries `forceLimitMult` now, and the muster runs to
+fifty-odd regiments instead of sixteen.
+
+**Manpower.** Regeneration is `maxManpower / 60` per month, so the ceiling *is*
+the rate, and the ceiling is read off province development — which is the one
+thing a nomad confederation's fighting strength has nothing to do with. The
+hijra to the amsar is a multiplier on a base that cannot see it; at ×2 the
+columns bled faster than the peninsula could answer and the pool flatlined at
+zero. It is ×6 now, and the measured pool runs 90,000–177,000 instead of 0.
+
+**The era stopped in 636.** Only two campaigns were ever scripted — Iraq in
+633, the Levant in 634 — and when they settled, nothing opened a third. The
+Caliphate spent the next twenty years at full strength with nowhere to go.
+Three of history's four decisive fronts simply did not exist in the chapter:
+**Qadisiyyah** (636), Yarmouk's twin on the eastern front, without which the
+Persian war was left to be decided by an occupation term that cannot decide
+it; **Egypt** (640), where Amr crossed against a countermanding letter and
+took the richest province Rome had left; and **Nahavand** (642), the victory
+of victories, after which Persia had no field army anywhere and the plateau
+fell city by city. The chapter jumped from Ctesiphon in 637 to the dynastic
+horizon in 651 with fourteen years and no campaign in between, which is
+exactly where a Sasanian rump used to quietly survive its own era. All four
+are cards now, and like every campaign card here they read the live map:
+whoever actually holds the Nile or the plateau receives the column.
+
+**The generational horizon was written on one path only.** Each campaign card
+set `settleMonths = 84` on the war *it declared* — but the Caliphate is very
+often not the one who declares. The empires see the muster on their frontier
+and open the war themselves in 632, so by 633 `warBetween` is already true,
+the card takes its no-op branch, and the horizon is never written. Both
+conquest wars then settled on the default three-year clock and were over by
+635 — before Yarmouk and Qadisiyyah could fire, which is why the decisive days
+kept finding no war to swing. `pressCampaign` adopts the war already running
+and writes the horizon onto it either way: a war fought over the same ground
+for the same reason is the same campaign whoever signed first.
+
+**And the arithmetic that made all of it moot.** Warscore from occupation is
+`(occupiedDev / enemyDev) × 60` — a share of everything the enemy owns
+*anywhere*. Against a Byzantium of a hundred-odd provinces that denominator
+runs from Carthage to the Caucasus, so the Caliphate could hold Damascus,
+Emesa, Tyre and the whole Palestinian coast simultaneously and be paid **nine
+points** for it, while a single Levantine province at the table costs near
+thirty — 0.9 per dev, ×1.25 for alien faith, ×1.25 again for falling outside
+the war goal. It won every campaign in the simulation and could never afford
+to keep one acre of it. That ratio is correct for a border war and wrong for a
+conquest era, and rewriting it for all eight chapters to fix one is the wrong
+trade. What the chapter says instead is the thing that is actually true here:
+these armies took cities *every year*, and each city that fell made the next
+surrender easier. `ev_p_the_futuh` pays a standing swing through `eventScore`
+— the same side-bucket Beth Horon and the Temple use — but only while the
+columns stand on enemy ground, and it stops the month they are driven off it.
+The great days (Yarmouk, Qadisiyyah, Nahavand, the capitulation of
+Alexandria) carry the weight the chroniclers gave them on the same gate. And
+the tag now files the claim its programme deserved: the lands of the futuh —
+Syria, the desert road, Mesopotamia, the plateau, Egypt — are claims from the
+day the polity survives its founder, which is what tells the peace table a war
+of conquest from a border raid.
+
+Two things this section deliberately does not do. It transfers **no province
+by script** — §72's rule stands, every city is still taken by siege and bought
+at the table, and a Caliphate beaten off enemy soil is paid nothing by any
+card here. And Judaea's own hill country is **not** on the claim list. The
+Caliphate took Jerusalem in 638 and this chapter still lets it try — through
+its own war, against walls the player is defending, at full price. The
+player's homeland is not discounted out from under them.
+
+Measured over the same forty-five years across four seeds: fourteen provinces
+everywhere becomes **nineteen, twenty-two, twenty-two and thirty**; two
+thousand men become thirty-six to forty-seven thousand; a manpower pool that
+was flat zero becomes 90,000–197,000; and a treasury of nineteen talents
+becomes five hundred to a thousand. The Caliphate ends the era holding Bostra
+and Babylon on every seed, and on the best of them Ctesiphon, Uruk, Tyre and
+Berytus as well, with Byzantium down seven provinces and Persia down twenty.
+It is a power the chapter has to be played against rather than a chronicle
+line about one.
+
+What it is *not* is a scripted sweep to the historical borders, and the spread
+across seeds is the point: the same era produces a Caliphate on the Sawad and
+a Caliphate stalled at the desert gates depending on who wins the field. That
+is the chapter working as designed — history supplies the pressure, and the
+living map supplies the result.
+
+The futuh keeps the conquest's own distinction as a real choice, because it
+was one: a town taken by treaty (*sulh*) keeps its land and pays the tax, and
+the next town down the road hears about it and sends its own delegation — that
+cascade is what moved the frontier as fast as it moved, and it is the option
+worth the most war score. A town taken by storm (*anwatan*) is booty: it pays
+the army this season and teaches every wall still standing that surrender buys
+nothing, which is worth less than half as much at the table and two years of
+unrest behind the lines.
+
+`smoke158` carries the contract: the diwan raises the force limit past the
+mustered army and deepens the muster rolls behind it, the four new campaigns
+exist and read the live map, `pressCampaign` writes the generational horizon
+onto a war it did not declare, the futuh pays only while the columns hold
+enemy ground — and pays the storm less than the treaty — and the claims cover
+the imperial theatre and not Judaea's hill country.

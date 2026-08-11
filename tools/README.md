@@ -1725,3 +1725,28 @@ carried are not the ones to read it by). The set gets SHORTER by three:
 
 Accepted as of §229: 167 PAR BLEEDING · 67 SEL DEAD + AED EXHAUSTED ·
 529 JUD DEAD · 1948 ETH BLEEDING · everything else clean.
+
+## §235 and the harness's blind spot
+
+`node tools/autorun.mjs 8` is **unchanged** by §235, in every chapter including
+the one it rewrites — the same anomaly set comes out of a stashed tree and a
+patched one. That is not luck and it is not a weak change: the Caliphate is a
+dormant tag until the Hijra cards wake it in 632, and an eight-year run of the
+614 chapter ends in 622. Nothing §235 touches has happened yet.
+
+Which is worth writing down, because it is also how the strand stayed broken
+for so long. The harness snapshots `tags` **once, at start, filtered to
+`alive`** — so RSH is not merely quiet in the 614 rows, it is *absent from
+them*, and has been in every balance reading this file has ever recorded. The
+run that found the bug had to be written by hand (track the dormant tag, then
+step to 659) and it reported a Caliphate pinned at exactly sixteen regiments
+with a manpower pool of zero, holding fourteen oases, while the printed table
+above said `614ce none`.
+
+So: a chapter whose central power wakes on a script is not measured by the
+default run, and a clean anomaly line is not evidence about it. Read §235's
+own numbers over forty-five years and four seeds — fourteen provinces on every
+seed becoming nineteen to thirty, two thousand men becoming thirty-six to
+forty-seven thousand, a pool of zero becoming 90,000–197,000 — and when a
+future section changes the conquest strand, measure it the same way rather
+than by the eight-year table.

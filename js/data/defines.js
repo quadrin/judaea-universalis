@@ -720,7 +720,16 @@ export const DEFINES = {
     RSH: {
       name: 'Rashidun Caliphate', adj: 'Rashidun', color: [38, 116, 72], religion: 'islam', culture: 'arab', capital: 'Hegra',
       description: 'The polity rising beyond the southern map edge: mobile, zealous, and entering an exhausted imperial world.',
-      ideas: { moraleMult: 1.1, manpowerMult: 1.1, reinforceMult: 1.08 },
+      // The army that beat both empires inside twenty years was not a better
+      // besieger or a richer state — it was faster, it did not need a supply
+      // line back to a capital, and it kept its cohesion after a lost field.
+      // The forceLimitMult is the piece the old numbers left out (SPEC §235):
+      // a polity organized AS an army carries more of one than its farmland
+      // has any right to.
+      ideas: {
+        moraleMult: 1.25, disciplineMult: 1.2, manpowerMult: 1.2,
+        reinforceMult: 1.15, forceLimitMult: 1.3,
+      },
     },
     // ---- 1948 CE: the War of Independence ----
     ISR: {
