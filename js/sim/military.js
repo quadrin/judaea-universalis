@@ -2258,9 +2258,20 @@ export function switchTagCore(ctx, from, to) {
   // pen it writes with — keeps answering to it.
   nt.lineage = [from].concat(Array.isArray(old.lineage) ? old.lineage : []).slice(0, 6);
   nt.formedFrom = from;
-  nt.name = def.name || to;
-  nt.color = Array.isArray(def.color) ? def.color.slice() : nt.color;
-  delete nt.flag; // a variant banner dies with the old identity — the new tag flies its own
+  // Through the chapter's lens, like every other seating of a court (SPEC
+  // §139, §236). `def` above is the raw definition and stays the test of
+  // whether the banner exists at all; the identity the new crown WEARS is
+  // whatever this chapter says that court looks like, which for every chapter
+  // that declares no tweak is the same object.
+  const era = tagDef(ctx, to);
+  nt.name = era.name || to;
+  nt.color = Array.isArray(era.color) ? era.color.slice() : nt.color;
+  // A variant banner dies with the old identity — the new tag flies its own,
+  // which is its chapter's if the chapter dresses it and the plain emblem if
+  // not. (A Galilee that proclaims Israel takes Israel's standard: the
+  // roundel was the Galilee's, and the Galilee is what it stopped being.)
+  if (typeof era.flag === 'string' && era.flag) nt.flag = era.flag;
+  else delete nt.flag;
   // The new crown brings its constitution (SPEC §25): a proclaimed republic
   // votes, a proclaimed kingdom crowns — and whatever the new banner's
   // constitution says about inheriting (SPEC §214) is applied here rather than

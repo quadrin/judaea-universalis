@@ -431,4 +431,56 @@ console.log('== the chain is dense and its ids are its own ==');
   'every card offers at least one answer, and every answer does something');
 }
 
+// ---------------------------------------------------------------------------
+// SPEC §237: the road to the crown ends at a crown. The chapter plays the
+// shared House of David pool like every antique chapter, so it can seat a son
+// of David — and until §237 the one thing that road exists for was gated to
+// three other chapters, so it ended nowhere. The gate itself is the balance:
+// nothing here is given, only made reachable.
+console.log('== §237: the Kingdom of Israel is proclaimable from the Galilee ==');
+{
+  const { FORMABLES } = await import(R + '/js/data/formables.js');
+  const { switchTagCore, livingTag } = await import(R + '/js/sim/military.js');
+  const crown = FORMABLES.find((f) => f.id === 'form_mli_jud');
+  ok(!!crown && crown.bookmarks.includes('351ce'),
+    'the chapter offers the crown of Israel (' + (crown ? crown.bookmarks.join(', ') : 'missing') + ')');
+  ok(BOOKMARK_351.integratedNames.MLI === 'JUD',
+    '  and a proclaimed Israel keeps the Galilee\'s Hebrew pen');
+  // The reason it is open: the chapter can actually seat the king the gate
+  // asks for. If the shared pool ever stops travelling with this chapter this
+  // assertion is the one that says so.
+  const seats = era351.events.filter((c) => /davidicThrone/.test(String(c.options && c.options
+    .map((o) => o.effects).join(' '))));
+  ok(seats.length >= 1,
+    '  because the chapter plays the road that seats a son of David ('
+    + seats.map((c) => c.id).join(', ') + ')');
+  // …and the ground the gate names is on this chapter's map, at this
+  // chapter's resolution. A heartland province the chapter merges away would
+  // make the crown quietly unreachable rather than hard.
+  const w = boot('JUD');
+  const heartland = ['Jerusalem', 'Hebron', 'Neapolis', 'Sepphoris', 'Tiberias', 'Adora'];
+  const missing = heartland.filter((n) => !w.ctx.prov(n));
+  ok(!missing.length, '  every province the crown names is seated ('
+    + (missing.join(', ') || 'all six') + ')');
+  // Live: the chapter keeps working under the new banner. Its missions and
+  // its victory contract are written against JUD, and a crown that broke them
+  // would strand the player in an unwinnable campaign at the best moment of
+  // their game.
+  const before = w.game.tags.JUD.name;
+  ok(switchTagCore(w.ctx, 'JUD', 'MLI') === true, 'the Galilee proclaims Israel');
+  ok(w.game.playerTag === 'MLI' && livingTag(w.ctx, 'JUD') === 'MLI',
+    '  the player sits in the new chair and JUD forwards to it');
+  ok(w.game.tags.MLI.name === 'Kingdom of Israel' && w.game.tags.MLI.flag !== 'GAL',
+    '  the roundel goes with the name it belonged to (' + before + ' → '
+    + w.game.tags.MLI.name + ')');
+  ok(w.ctx.helpers.controls(w.ctx, 'JUD', 'Sepphoris'),
+    '  the chapter\'s own missions still resolve against the living tag');
+  ok(eraIdeaGroupsFor(BOOKMARK_351, 'MLI', w.game.tags.MLI).length === 4,
+    '  and the curriculum follows the country through its lineage');
+  let threw = null;
+  try { BOOKMARK_351.checkVictory(w.ctx); } catch (e) { threw = e && e.message; }
+  ok(!threw && !w.game.over, '  the victory contract runs clean under the crown'
+    + (threw ? ' (' + threw + ')' : ''));
+}
+
 console.log(failures ? failures + ' FAILURES' : 'smoke158: ALL PASS');

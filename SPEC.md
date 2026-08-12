@@ -16310,3 +16310,47 @@ and an emblem are one identity; this section makes them travel together.
   letters, the two agree with each other, the shared definition still carries
   none of it, and a chapter with no lens seats Judaea with no override.
   `smoke158.mjs` holds the 351 half of it beside the chapter's own contract.
+
+## 237. The road to the crown ends at a crown
+
+Every antique chapter plays the shared House of David pool (§138): two cards,
+`ev_hd_the_house_that_is_not_davids` and `ev_hd_the_son_of_the_marriage`, which
+between them let a Jewish crown that is not David's acquire the one pedigree
+nobody in this civilisation argues with — and the second sets `davidicThrone`,
+which exists for exactly one purpose, which is to unlock the Kingdom of Israel.
+The compendium states the rule in its own words: the crown of Israel is the
+united monarchy and the united monarchy is David's, so every chapter that can
+proclaim it must also offer a road to the title.
+
+§235 shipped the reverse of that: the 351 chapter plays the pool, so it can
+seat a son of David, and `form_mli_jud` was gated to `66ce`, `132ce` and
+`614ce`, so there was nowhere to crown him. The chapter's own comment where
+the pen alias belongs argued the case — three towns and a stolen arms chest is
+no basis for a kingdom — and that argument is about the OPENING position, not
+about what eighty years of winning is allowed to become. 132 and 614 open the
+same way and both offer it.
+
+- **The gate is the balance.** Nothing is granted here; a road is unblocked.
+  The crown still wants a son of David on the throne, Jerusalem, Hebron,
+  Neapolis, Sepphoris, Tiberias and Adora owned AND controlled, twenty-five
+  provinces, twelve of them Jewish, no overlord, stability 2, legitimacy 85
+  and a peace to proclaim it in. All six heartland provinces are seated at
+  this chapter's resolution, so the gate is hard rather than impossible —
+  which is the distinction that matters, because an unreachable gate reads to
+  a player exactly like a bug.
+- **The pen travels with it**: `integratedNames.MLI: 'JUD'`, so a proclaimed
+  Israel keeps writing Tzippori and Beit She'an rather than reverting to the
+  provincial Greek.
+- **The crown is dressed by the chapter too.** `switchTagCore` built the new
+  court's name and colour from the raw definition and deleted any banner;
+  it now reads the same §139 lens every other seating of a court reads, which
+  is the identical object for every chapter that declares no tweak. A Galilee
+  that proclaims Israel therefore takes Israel's standard — the roundel was
+  the Galilee's, and the Galilee is what it has stopped being.
+
+- **Regression contract**: `smoke158.mjs` — the chapter offers the crown, it
+  plays the road that seats the king the gate asks for, all six heartland
+  provinces are on its map, and forming it live leaves the chapter working:
+  the player in the new chair, JUD forwarding to it, the chapter's own
+  missions still resolving through the living tag, the curriculum following
+  the country through its lineage, and the victory contract running clean.

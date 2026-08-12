@@ -287,12 +287,14 @@ export const BOOKMARK_351 = {
       'Tarichaea': 'Migdal', 'Ptolemais': 'Akko', 'Scythopolis': 'Beit She\'an',
       'Caesarea Maritima': 'Kesariya', 'Neapolis': 'Shechem', 'Joppa': 'Yafo',
     },
-    // No MLI alias: the greater crown is not offered in this chapter. The
-    // Kingdom of Israel wants Jerusalem, twenty-five provinces and a son of
-    // David on the throne, and a chapter that opens with three towns and a
-    // stolen arms chest has no road to it that would not be a fantasy — the
-    // same call §136 made for the Keepers. A future section that earns the
-    // crown here adds the alias with it.
+    // A proclaimed Kingdom of Israel keeps the Galilee's Hebrew pen (alias
+    // table). The crown IS offered here (SPEC §237): the chapter plays the
+    // shared House of David pool, so it can seat a son of David, and a
+    // chapter that can do that needs somewhere to crown him. Reaching it
+    // means holding Jerusalem and the heartland with twenty-five provinces
+    // and a peace — eighty years of winning from three towns and a stolen
+    // arms chest — which is the same road 132 and 614 walk.
+    MLI: 'JUD',
   },
 
   activeTags: ['ROM', 'JUD', 'SAS', 'ARM',

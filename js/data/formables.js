@@ -3146,7 +3146,16 @@ export const FORMABLES = [
       + 'Jerusalem for its seat and the Law for its charter. The crown of David — '
       + 'and the sceptre does not depart from Judah, so it is claimed in two courts: '
       + 'the field, and the genealogies.',
-    bookmarks: ['66ce', '132ce', '614ce'],
+    // 351 is on this list for the reason the compendium already gives: the
+    // crown of Israel is David's, so every chapter that can seat a son of
+    // David must have somewhere for him to be crowned. The rising plays the
+    // shared House of David pool like its neighbours — `ev_hd_the_son_of_the
+    // _marriage` sets `davidicThrone` — and without this line that road ended
+    // at a locked door. Nothing is given away by opening it: the gate below
+    // wants Jerusalem, the heartland, twenty-five provinces and a peace, and
+    // a chapter that opens with three towns and a stolen arms chest reaches
+    // that the same way 132 and 614 do, which is by winning for eighty years.
+    bookmarks: ['66ce', '132ce', '351ce', '614ce'],
     requires: [
       {
         label: 'A son of David on the throne',

@@ -1002,7 +1002,9 @@ static site, the zero dependencies, or the missing build step changes.
   Alpha and Sepphoris, on the light blue of the lake. The Keepers' chapter
   dresses the same court the same way — Judaea was struck off the map in 135,
   and a chapter that renames a country should not still be flying the other
-  one's menorah.
+  one's menorah. A Galilee that fights its way to Jerusalem may proclaim the
+  **Kingdom of Israel** like the risings of 66, 132 and 614: the chapter plays
+  the House of David road, so it can seat the king that crown asks for.
 
 ## Architecture
 

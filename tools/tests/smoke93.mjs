@@ -133,8 +133,10 @@ console.log('== the question reaches every chapter that can proclaim the crown =
     if (f.to !== 'MLI') continue;
     for (const b of (f.bookmarks || [])) chapters.add(b);
   }
-  ok(chapters.size === 6,
-    'MLI is formable in six chapters (' + [...chapters].sort().join(', ') + ')');
+  // Seven since §237 opened the crown to the rising of 351 — which plays the
+  // house of David like its neighbours, and had nowhere to crown him.
+  ok(chapters.size === 7,
+    'MLI is formable in seven chapters (' + [...chapters].sort().join(', ') + ')');
   const missing = [];
   for (const id of chapters) {
     const era = ERAS.find((e) => e.bookmark.id === id);
@@ -144,7 +146,7 @@ console.log('== the question reaches every chapter that can proclaim the crown =
     }
   }
   ok(!missing.length, 'and every one of them plays the house of David ('
-    + (missing.join(', ') || 'all six') + ')');
+    + (missing.join(', ') || 'all ' + chapters.size) + ')');
 }
 {
   const w = greatCrown('167bce', 'HAS', -120);
