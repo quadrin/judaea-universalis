@@ -16290,14 +16290,23 @@ and an emblem are one identity; this section makes them travel together.
   Luxembourg are the only other near neighbours and neither is ever on the same
   map, and the sea is darker than any of them in both the painted and the
   parchment modes.
+- **The letters.** The topbar strip and the start screen's card badge print
+  three letters beside the banner, and they were printing the ENGINE's three:
+  a Galilean roundel on the lake's blue, captioned JUD. Every other chapter
+  got away with it because the tag is an abbreviation of the name it displays
+  — JUD/Judaea, SAM/Samaria, ISR/Israel, HAS/Hasmonean — and the Galilee is
+  the first pair where it is not, which is exactly what §139 said would
+  happen. The lens takes an `abbr`; both chapters set `GAL`; a chapter that
+  sets none falls back to the tag, and every save, war, province and warscore
+  key stays filed under JUD, because those are not labels.
 - **Both chapters, one identity.** 351 seats it at Diocaesarea, because that is
   the town whose garrison was robbed and the only one the rising holds; 529
   seats it at Tiberias, because by then the academy is the whole polity. The
-  name, the banner and the colour are the same in both, which is what makes it
-  a country rather than a re-skin.
+  name, the banner, the colour and the letters are the same in both, which is
+  what makes it a country rather than a re-skin.
 
 - **Regression contract**: `smoke94.mjs` — the emblem exists, both chapters
-  seat the name, the banner, the lake's colour and their own seat, the two
-  agree with each other, the shared definition still carries neither a rename
-  nor a banner, and a chapter with no lens seats Judaea with no override.
+  seat the name, the banner, the lake's colour, their own seat and their own
+  letters, the two agree with each other, the shared definition still carries
+  none of it, and a chapter with no lens seats Judaea with no override.
   `smoke158.mjs` holds the 351 half of it beside the chapter's own contract.

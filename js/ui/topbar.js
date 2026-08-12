@@ -20,11 +20,16 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
 
   function build() {
     const tag = ctx.game.playerTag;
-    const def = (DEFINES.TAGS && DEFINES.TAGS[tag]) || {};
+    // Through the chapter's lens (SPEC §139, §236): the strip is an identity
+    // badge, not a debug readout, and in a chapter that seats JUD as Galilee
+    // the three letters beside a Galilean banner should be the Galilee's. The
+    // engine files everything under the tag either way — this is the label.
+    const def = ((ctx.tagDef && ctx.tagDef(tag)) || (DEFINES.TAGS && DEFINES.TAGS[tag])) || {};
     const live = ctx.game.tags && ctx.game.tags[tag];
     const dispName = (live && live.name) || def.name || tag;
+    const dispTag = (typeof def.abbr === 'string' && def.abbr) || tag;
     el.innerHTML = `
-      <button class="tb-flag" data-ref="flagBtn" data-tt="${esc(dispName)} — the realm panel" aria-label="Open the realm panel">${flagChip(tag, DEFINES, 28, false, ctx.game)}<span class="tb-flag-tag">${esc(tag)}</span></button>
+      <button class="tb-flag" data-ref="flagBtn" data-tt="${esc(dispName)} — the realm panel" aria-label="Open the realm panel">${flagChip(tag, DEFINES, 28, false, ctx.game)}<span class="tb-flag-tag">${esc(dispTag)}</span></button>
       <div class="tb-break" aria-hidden="true"></div>
       <div class="tb-item" data-ref="treasuryWrap">
         <span class="tb-ico">${icon('coins')}</span><span class="tb-v" data-ref="treasury">0</span>

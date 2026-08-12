@@ -589,6 +589,8 @@ export const BOOKMARK_351 = {
       name: 'Galilee', adj: 'Galilean',
       capital: 'Sepphoris',
       flag: 'GAL',
+      abbr: 'GAL',   // the letters on the strip; the engine still files it under JUD
+
       color: [124, 196, 214],
       description: 'The nation as the fourth century leaves it: an academy at Tiberias, '
         + 'villages on a lake, a patriarchate the emperor still writes to — and, this '

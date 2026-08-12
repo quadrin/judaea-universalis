@@ -187,6 +187,11 @@ console.log('== the banner travels with the name (SPEC §236) ==');
     '  on the lake\'s own light blue: ' + JSON.stringify(t && t.color));
     ok(tagDef(w.ctx, 'JUD').capital === seats[id],
       '  seated at ' + seats[id] + ', not Jerusalem');
+    // The topbar strip and the start screen's card badge print three letters
+    // beside the banner. They were printing the ENGINE's three letters, so a
+    // Galilean flag on a light blue field sat next to the word JUD.
+    ok(tagDef(w.ctx, 'JUD').abbr === 'GAL',
+      '  and the strip beside the banner reads GAL, not JUD');
   }
   // Both chapters dress the same court the same way — one identity, two eras.
   const a = boot('351ce', 'JUD').game.tags.JUD;
@@ -196,9 +201,11 @@ console.log('== the banner travels with the name (SPEC §236) ==');
   // …and the shared definition still knows nothing about any of it.
   ok(!DEFINES.TAGS.JUD.flag && DEFINES.TAGS.JUD.name === STATIC_JUD_NAME,
     'the static definition carries no banner and no rename (still ' + DEFINES.TAGS.JUD.name + ')');
-  const plain = boot('132ce', 'JUD').game.tags.JUD;
-  ok(plain.flag === null && plain.name === STATIC_JUD_NAME,
+  const plain = boot('132ce', 'JUD');
+  ok(plain.game.tags.JUD.flag === null && plain.game.tags.JUD.name === STATIC_JUD_NAME,
     'a chapter with no lens seats ' + STATIC_JUD_NAME + ' with no banner override');
+  ok(!tagDef(plain.ctx, 'JUD').abbr,
+    '  and no letters override either — the strip falls back to the tag');
   // The one surface that draws a court before a campaign exists: the start
   // screen builds its roster out of `tagDef`, so the chip takes a lens too.
   const { flagChip } = await import(R + '/js/ui/icons.js');

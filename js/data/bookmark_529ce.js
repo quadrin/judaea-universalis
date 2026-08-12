@@ -347,6 +347,7 @@ export const BOOKMARK_529 = {
       // that colour — Samaria's blue is darker and flatter, and the sea is
       // darker than both.
       flag: 'GAL',
+      abbr: 'GAL',   // the letters on the strip; the engine still files it under JUD
       color: [124, 196, 214],
       description: 'What is left of the nation, around a lake sixty miles north of the '
         + 'city it may not live in: the academy at Tiberias, the town that closed the '
