@@ -343,6 +343,17 @@ export const FLAGS = {
     MENORAH_LAMPS +
     `<path d="M12 16.9v1M12 17.9 9.3 20M12 17.9 14.7 20M12 17.9V20" fill="none" stroke="${FO}" stroke-width="2.5" stroke-linecap="round"/>` +
     `<path d="M12 16.9v1M12 17.9 9.3 20M12 17.9 14.7 20M12 17.9V20" fill="none" stroke="${FP}" stroke-width="1.3" stroke-linecap="round"/>`,
+  // The rival purple (SPEC §239): the vexillum — the square banner hung from
+  // a crossbar that a claimant's troops carried, with the wreath the army
+  // acclaimed him with over it. Not the aquila, which stays the legitimate
+  // Rome's, and not the labarum, which is the Christian empire's: this is the
+  // standard of a man whose whole title is that soldiers say so.
+  USR:
+    `<rect x="11.2" y="2.6" width="1.6" height="18.6" rx="0.8" ${ACC}/>` +
+    `<rect x="5.4" y="6.2" width="13.2" height="1.7" rx="0.85" ${ACC}/>` +
+    `<path d="M6.4 7.9h11.2v7.9l-1.9-1.4-1.9 1.4-1.8-1.4-1.9 1.4-1.9-1.4L6.4 15.8Z" ${SIL}/>` +
+    `<circle cx="12" cy="11.4" r="2.5" fill="none" stroke="${FG}" stroke-width="1.1"/>` +
+    `<circle cx="12" cy="4.4" r="1.5" ${ACC}/>`,
   // Galilee (SPEC §236): the zodiac roundel of the synagogue floors. Hammat
   // Tiberias, Beth Alpha and Sepphoris all laid one — twelve signs around a
   // wheel, in the century this chapter opens in, by a community with an

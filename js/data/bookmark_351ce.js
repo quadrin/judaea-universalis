@@ -199,7 +199,56 @@ for (const n of ['Seleucia-Ctesiphon', 'Ecbatana', 'Susa', 'Gazaca', 'Assur',
 // towns under two different empires.
 for (const n of ['Nehardea', 'Arbela']) RELIGIONS[n] = 'judaism';
 
+// The West that obeys Magnentius in the summer of 351 (SPEC §239): Britain,
+// Gaul with the Rhine, Spain, Italy with the islands, and Africa from
+// Tripolitania to the Ocean, whose prefect Anicetus declared for him.
+// Illyricum is NOT here — Vetranio submitted to Constantius at Naissus in
+// December 350, which is why Constantius can march at all — and neither is
+// Egypt or anything east of the Adriatic.
+const MAGNENTIUS_WEST = [
+  'Britannia',
+  // Gaul, the Rhine and Raetia
+  'Lutetia', 'Rotomagus', 'Samarobriva', 'Gesoriacum', 'Durocortorum',
+  'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
+  'Batavia', 'Atuatuca', 'Vesontio', 'Genava', 'Augusta Vindelicorum',
+  'Lugdunum', 'Augustodunum', 'Avaricum', 'Limonum', 'Condate', 'Darioritum',
+  'Burdigala', 'Tolosa', 'Narbo', 'Nemausus', 'Massilia',
+  // Spain
+  'Tarraco', 'Caesaraugusta', 'Barcino', 'Emporiae', 'Valentia', 'Numantia',
+  'Salmantica', 'Toletum', 'Carthago Nova', 'Corduba', 'Hispalis', 'Malaca',
+  'Gades', 'Emerita', 'Olisipo', 'Bracara', 'Asturica',
+  // Italy, Sicily and the islands
+  'Mediolanum', 'Genua', 'Bononia', 'Ravenna', 'Pisae', 'Ancona', 'Aquileia',
+  'Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus',
+  'Syracusae', 'Aleria', 'Caralis', 'Turris Libisonis', 'Baleares',
+  // Africa
+  'Carthago', 'Hadrumetum', 'Thysdrus', 'Tacape', 'Capsa', 'Theveste',
+  'Hippo Regius', 'Cirta', 'Saldae', 'Icosium', 'Caesarea Mauretaniae',
+  'Portus Magnus', 'Volubilis', 'Tingis', 'Sala', 'Atlas',
+  'Oea', 'Leptis Magna', 'Macomades',
+];
+
+// What Mursa costs him (SPEC §239): the September battle destroys the field
+// armies of both halves, and over the following year Italy, Africa and Spain
+// go over to Constantius. Gaul and Britain hold until Lugdunum.
+const MURSA_LOST = MAGNENTIUS_WEST.filter((n) => [
+  'Mediolanum', 'Genua', 'Bononia', 'Ravenna', 'Pisae', 'Ancona', 'Aquileia',
+  'Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus',
+  'Syracusae', 'Aleria', 'Caralis', 'Turris Libisonis', 'Baleares',
+  'Carthago', 'Hadrumetum', 'Thysdrus', 'Tacape', 'Capsa', 'Theveste',
+  'Hippo Regius', 'Cirta', 'Saldae', 'Icosium', 'Caesarea Mauretaniae',
+  'Portus Magnus', 'Volubilis', 'Tingis', 'Sala', 'Atlas',
+  'Oea', 'Leptis Magna', 'Macomades',
+  'Tarraco', 'Caesaraugusta', 'Barcino', 'Emporiae', 'Valentia', 'Numantia',
+  'Salmantica', 'Toletum', 'Carthago Nova', 'Corduba', 'Hispalis', 'Malaca',
+  'Gades', 'Emerita', 'Olisipo', 'Bracara', 'Asturica',
+].indexOf(n) >= 0);
+
 export const BOOKMARK_351 = {
+  // The two lists above travel with the chapter so the cards that undo the
+  // usurpation can name exactly what it held (SPEC §239).
+  usurperWest: MAGNENTIUS_WEST,
+  usurperMursaLoss: MURSA_LOST,
   id: '351ce',
   name: 'The Rising Against Gallus',
   startDate: { y: 351, m: 5, d: 1 },
@@ -1070,6 +1119,7 @@ export const BOOKMARK_351 = {
     // a hint costs nothing until the card that creates them fires, and
     // without one an empire that arrives holding a hundred provinces musters
     // to the default and rallies nowhere in particular.
+    USR: { rally: ['Mediolanum', 'Lugdunum'], targetRegiments: 30 },
     BYZ: { rally: ['Antioch', 'Byzantion'], targetRegiments: 34 },
     VAN: { rally: ['Hispalis', 'Carthago'], targetRegiments: 14 },
     VIS: { rally: ['Tolosa'], targetRegiments: 10 },
@@ -1102,10 +1152,6 @@ export const BOOKMARK_351 = {
       if (w) w.noNegotiation = true;
     } catch (e) { warnOnce('setup:persia', e); }
 
-    // Armenia is Rome's client and Shapur's objective — the reason the eastern
-    // war is fought where it is fought.
-    if (g.tags.ARM) g.tags.ARM.overlord = 'ROM';
-
     // --- Treasuries, manpower, stability. ---
     // Rome is rich and split: the eastern prefecture's revenues with the
     // eastern field army four weeks' march away in the wrong direction.
@@ -1120,6 +1166,60 @@ export const BOOKMARK_351 = {
     setOpinion(g, 'JUD', 'SAS', 40);   setOpinion(g, 'SAS', 'JUD', 20);
     setOpinion(g, 'ARM', 'ROM', 60);   setOpinion(g, 'ROM', 'ARM', 50);
     setOpinion(g, 'ARM', 'SAS', -120); setOpinion(g, 'SAS', 'ARM', -140);
+
+    // --- The other empire (SPEC §239) ---------------------------------------
+    // The chapter's whole premise is that Rome is fighting itself, and until
+    // now the map showed one Rome and a modifier saying otherwise. Magnentius
+    // has ruled the West since January 350: Britain, Gaul, Spain, Italy, and
+    // Africa, whose prefect declared for him. Constantius holds the East,
+    // Egypt and Illyricum — Vetranio submitted at Naissus the previous
+    // Christmas — and is marching west with the eastern field army, which is
+    // the reason there is a rising in the Galilee at all.
+    //
+    // The court is dissolved by `ev351w_magnentius_falls` in 353, and Mursa
+    // takes Italy, Africa and Spain off it in between. One tag, dressed for
+    // the man whose it is.
+    try {
+      const west = h.secedeTag(ctx, 'ROM', 'USR', {
+        provinces: MAGNENTIUS_WEST,
+        share: 0.42,
+        name: 'The Empire of Magnentius',
+        // Not the legitimate purple: the colour of the western field army's
+        // own standards, and unmistakable beside Constantius' red.
+        color: [128, 92, 156],
+        opinion: -200,
+        stability: 0,
+        legitimacy: 35,
+        ruler: {
+          name: 'Magnentius', title: 'Augustus in the West',
+          gov: 2, infl: 2, mar: 4, age: 48,
+        },
+      });
+      if (west) {
+        h.declareWar(ctx, 'ROM', 'USR', 'The War of the Two Purples');
+        const w = findWar(g, 'ROM', 'USR');
+        // Neither man can recognise the other and live; this ends at
+        // Lugdunum or it does not end.
+        if (w) w.noNegotiation = true;
+        setOpinion(g, 'ROM', 'USR', -200);
+        setOpinion(g, 'USR', 'ROM', -200);
+        h.addTagModifier(ctx, 'USR', {
+          id: 'the_army_that_acclaimed_him', name: 'The Army That Acclaimed Him', months: -1,
+          effects: { moraleMult: 1.08, manpowerMult: 0.9, legitimacyAdd: -0.1 },
+        });
+        h.spawnArmy(ctx, 'USR', 'Mediolanum', {
+          inf: 14, cav: 4, name: 'The Army of the West',
+          general: { name: 'Magnentius', fire: 3, shock: 3, maneuver: 2 },
+        });
+        h.spawnArmy(ctx, 'USR', 'Lugdunum', { inf: 6, name: 'The Gallic Levies' });
+      }
+    } catch (e) { warnOnce('setup:magnentius', e); }
+
+    // Armenia is Rome's client and Shapur's objective — the reason the eastern
+    // war is fought where it is fought. The collar goes on AFTER the western
+    // war is declared, or the rule that a client joins its overlord's wars
+    // marches Armenia into a civil war on the far side of Europe.
+    if (g.tags.ARM) g.tags.ARM.overlord = 'ROM';
 
     // --- Starting modifiers. ---
     // The window, and its length. Constantius takes the comitatus west in the

@@ -1759,6 +1759,28 @@ somebody else's provinces.
 The harness is unaffected at the default eight years: the arc's first card is
 dated 395 and `autorun 8` on this chapter stops in 359.
 
+## §239 — the rival purple, and one new accepted flag
+
+`smoke160.mjs` owns the civil-war courts: the `USR` banner (defined, emblemed,
+and seated by no chapter's roster), the `dissolveTagCore` primitive from both
+ends — ground, garrisons and treasury folded home, the civil war ended with
+the man who was fighting it, every OTHER war inherited by the survivor, the
+third party re-pointed at a country that exists, the letters forwarded, and a
+human chair moved rather than deleted — and then all five scripted civil wars
+played through: Magnentius (351, standing at chapter start), Vitellius (69),
+Palmyra (269), Carausius (286) and the Heraclii (608). Each one raises the
+court, holds ground, fights the government it is claiming from, and gives it
+all back when the card that settles it fires.
+
+**`351ce ROM: SNOWBALL` joins the accepted set**, and it is the scripted class
+the file already documents (Pompey, Gindarus): Rome opens this chapter holding
+111 provinces because Magnentius holds the other 80, and takes them back by
+card at Mursa and Lugdunum — 111→191 by 353, which is 1.7× and trips the
+threshold. It is the chapter's own history arriving on schedule. The other
+three chapters this section touches re-roll their seeded streams from the year
+the split fires (69, 269, 608) and come back inside the long-documented
+families: `66ce ADI: BLEEDING`, `132ce JUD: SNOWBALL`, `529ce JUD: DEAD`.
+
 `node tools/autorun.mjs 8 351ce` comes back with **no anomalies**. The shape of
 it is worth writing down: the all-AI rising neither dies nor grows — three
 provinces at the start and three at the end, an army ground down from six

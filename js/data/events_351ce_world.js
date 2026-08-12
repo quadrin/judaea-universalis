@@ -72,6 +72,18 @@ export const EVENTS_351_WORLD = [
           + 'reinforced again ("The West Settled", +10% reinforcement for 36 months).',
         effects: guard('ev351w_magnentius_falls:0', (ctx) => {
           const h = ctx.helpers;
+          // The court goes off the map with the man (SPEC §239). Gaul and
+          // Britain — whatever is left of the usurper's obedience — answer to
+          // Constantius from this month, the war between the two purples ends
+          // because one of them has stopped existing, and the tag is free for
+          // the next claimant a chapter needs it for.
+          if (alive(ctx, 'USR')) {
+            h.dissolveTag(ctx, 'USR', 'ROM', {
+              chronicle: 'Magnentius kills his family and then himself in a house at Lugdunum; '
+                + 'the provinces that obeyed him are Constantius\' again, and the western field '
+                + 'army is a memory with a paymaster.',
+            });
+          }
           if (alive(ctx, 'ROM')) {
             h.adjust(ctx, 'ROM', { stability: 1, manpower: 8000 });
             mod(ctx, 'ROM', 'the_west_settled', 'The West Settled', { reinforceMult: 1.1 }, 36);

@@ -341,6 +341,28 @@ export const EVENTS_132_WEST = [
         tooltip: 'Rome −10% naval power for 84 months ("The Lost Fleet") and −5 legitimacy; Britannia and Gesoriacum carry "The Empire of the Channel" (+2 unrest for 84 months). The coin is better silver than the legitimate mints\', and everyone weighs it.',
         effects: guard('ev2_eu_carausius:0', (ctx) => {
           const h = ctx.helpers;
+          // The first British state (SPEC §239): a fleet commander who was
+          // about to be executed for keeping the pirates' takings declares
+          // himself Augustus instead, and holds Britain and the Channel port
+          // for seven years because Rome has no navy to argue with. The
+          // island goes off the imperial map until the tetrarchy comes for it.
+          const carausius = h.secedeTag(ctx, 'ROM', 'USR', {
+            provinces: ['Britannia', 'Gesoriacum'],
+            share: 0.05,
+            name: 'The British Empire of Carausius',
+            color: [86, 132, 140],
+            opinion: -150,
+            stability: 1,
+            legitimacy: 40,
+            ruler: { name: 'Carausius', title: 'Augustus', gov: 2, infl: 3, mar: 3, age: 45 },
+          });
+          if (carausius) {
+            h.declareWar(ctx, 'ROM', 'USR', 'The British Secession');
+            h.addTagModifier(ctx, 'USR', {
+              id: 'the_fleet_of_the_channel', name: 'The Fleet of the Channel', months: -1,
+              effects: { navalMult: 1.25, moraleMult: 1.05 },
+            });
+          }
           if (alive(ctx, 'ROM')) {
             h.adjust(ctx, 'ROM', { legitimacy: -5 });
             h.addTagModifier(ctx, 'ROM', {
@@ -393,6 +415,16 @@ export const EVENTS_132_WEST = [
         tooltip: 'Rome +1 stability, +5 legitimacy, and "The Tetrarchic Order" (−10% administrative costs for 240 months). Mediolanum, Sirmium and Nicaea carry "The Travelling Court" (+10% tax for 120 months) — the government is wherever it pitches.',
         effects: guard('ev2_eu_tetrarchy:0', (ctx) => {
           const h = ctx.helpers;
+          // …and the quartered empire is what finally has enough Caesars to
+          // spare one for Britain (SPEC §239). Constantius takes Boulogne the
+          // year he is appointed and the island three years later; the court
+          // goes with the men who ran it.
+          if (ctx.game.tags.USR) {
+            h.dissolveTag(ctx, 'USR', 'ROM', {
+              chronicle: 'Carausius is murdered by his own treasurer and the island is taken '
+                + 'back by a Caesar the new system had to spare; Britain is Roman again.',
+            });
+          }
           if (alive(ctx, 'ROM')) {
             h.adjust(ctx, 'ROM', { stability: 1, legitimacy: 5 });
             h.addTagModifier(ctx, 'ROM', {

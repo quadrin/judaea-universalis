@@ -849,6 +849,76 @@ export const EVENTS_529_WORLD = [
   },
 
   // ── K17 · 610 ─────────────────────────────────────────────────────────────
+  // ── 608 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev529_w_africa_revolts',
+    title: 'The Grain Fleet Does Not Sail',
+    worldLabel: 'Africa refuses Phocas; the exarch\'s son takes Egypt',
+    desc: 'Secession conducted with an accountant\'s patience: the exarch of Africa stops '
+      + 'sending Phocas the grain and the taxes, and then stops pretending it is an '
+      + 'administrative delay. In 609 his nephew Nicetas takes Alexandria, which means the '
+      + 'capital\'s bread now belongs to the rebels, and the whole of Egypt and Africa is '
+      + 'governed from Carthage in the name of a family that has not yet said out loud what '
+      + 'it intends.\n\n'
+      + 'Constantinople has no fleet to send and no army to spare — the Persians are past '
+      + 'the Euphrates and the Avars are past the Danube — so for two years there are two '
+      + 'governments, and the one with the grain is winning.',
+    forTag: 'both',
+    decider: 'BYZ',
+    date: { y: 608, m: 4 },
+    world: true,
+    aiOption: 0,
+    historical: 'The Heraclii revolted in 608; Nicetas took Egypt in 609 and the grain shipments '
+      + 'to Constantinople stopped. Phocas fell in October 610.',
+    options: [
+      {
+        label: 'Two governments, and the one with the grain is winning',
+        tooltip: 'Africa and Egypt leave the Empire as the exarch\'s rising until Heraclius '
+          + 'takes the City. Byzantium: −1 stability and −10% income while it lasts.',
+        effects: guard('ev529_w_africa_revolts:0', (ctx) => {
+          const h = ctx.helpers;
+          // The rival purple (SPEC §239). The Heraclian revolt is the one
+          // civil war of this chapter that holds ground for years rather than
+          // an afternoon, and the ground it holds is the capital's food.
+          const rising = h.secedeTag(ctx, 'BYZ', 'USR', {
+            provinces: ['Carthago', 'Hadrumetum', 'Thysdrus', 'Tacape', 'Hippo Regius',
+              'Cirta', 'Caesarea Mauretaniae', 'Tingis', 'Oea', 'Leptis Magna',
+              'Alexandria', 'Pelusium', 'Rhinocolura', 'Athribis', 'Leontopolis',
+              'Memphis', 'Arsinoe', 'Oxyrhynchus', 'Thebes', 'Myos Hormos',
+              'Syene', 'Berenice', 'Cyrene', 'Marmarica', 'Paraetonium'],
+            share: 0.3,
+            name: 'The Exarch\'s Rising',
+            color: [140, 78, 66],
+            opinion: -140,
+            stability: 1,
+            legitimacy: 45,
+            ruler: {
+              name: 'Heraclius the Elder', title: 'Exarch of Africa',
+              gov: 3, infl: 3, mar: 3, age: 60,
+            },
+          });
+          if (rising) {
+            h.declareWar(ctx, 'BYZ', 'USR', 'The Rising of the Heraclii');
+            h.addTagModifier(ctx, 'USR', {
+              id: 'the_grain_and_the_purse', name: 'The Grain and the Purse', months: -1,
+              effects: { incomeMult: 1.1, navalMult: 1.15 },
+            });
+          }
+          if (alive(ctx, 'BYZ')) {
+            h.adjust(ctx, 'BYZ', { stability: -1 });
+            h.addTagModifier(ctx, 'BYZ', {
+              id: 'the_bread_is_theirs', name: 'The Bread Belongs to the Rebels', months: 36,
+              effects: { incomeMult: 0.9, unrestAll: 1 },
+            });
+          }
+          h.setFlag(ctx, 'africaInRevolt', true);
+          h.chronicle(ctx, 'era', 'Africa stops sending the grain and Egypt goes over with it; '
+            + 'for two years the Empire has two governments and the capital is hungry.');
+        }),
+      },
+    ],
+  },
+
   {
     id: 'ev529_w_heraclius',
     title: 'The Fleet From Carthage',
@@ -885,6 +955,19 @@ export const EVENTS_529_WORLD = [
         tooltip: 'Byzantium seats Heraclius: +10 legitimacy — the African fleet has delivered a reign that will be spent entirely on this decade\'s consequences. Four years from this coronation, Jerusalem falls.',
         effects: guard('ev529_w_heraclius:0', (ctx) => {
           const h = ctx.helpers;
+          // The rising wins (SPEC §239): the fleet that sailed from Carthage
+          // is the government now, so the court that held Africa and Egypt
+          // folds back into the Empire it has just taken over rather than
+          // being conquered out of it. The map shows one empire again, and
+          // the man on the throne is the one who was in revolt last month.
+          if (ctx.game.tags.USR) {
+            h.dissolveTag(ctx, 'USR', 'BYZ', {
+              winner: true,
+              chronicle: 'The African fleet takes the City, Phocas is handed over, and the '
+                + 'rebels are the government: Africa and Egypt come back into an empire that '
+                + 'is now theirs to lose.',
+            });
+          }
           if (alive(ctx, 'BYZ')) {
             h.setRuler(ctx, 'BYZ', { name: 'Heraclius', title: 'Emperor of the Romans', gov: 3, infl: 3, mar: 4, age: 35 });
             h.adjust(ctx, 'BYZ', { legitimacy: 10 });

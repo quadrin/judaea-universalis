@@ -165,6 +165,9 @@ export const DEFINES = {
     BTD: { aggression: 1.0, caution: 1.0 },
     SHB: { aggression: 0.9, caution: 1.1 },
     NSI: { aggression: 0.6, caution: 1.4 },
+    // A usurper fights: he has to win before the legitimate court can bring
+    // the eastern armies west, and he knows it (SPEC §239).
+    USR: { aggression: 1.2, caution: 0.8 },
     // The republic that walked out of the union (SPEC §105): the most
     // coup-prone state in the region, and the one most convinced it is owed
     // the Golan.
@@ -408,6 +411,8 @@ export const DEFINES = {
     KTR: 'diadem', BTD: 'davidic', SHB: 'dyarchy', NSI: 'nasi',
     HEZ: 'theocracy', // wilayat al-faqih, and a shura that chooses successors
     REB: 'tribal',
+    // A claimant rules by acclamation and holds it by the army (SPEC §239).
+    USR: 'monarchy',
     LST: 'company', PIR: 'company', // SPEC §217
     // -- the political west (SPEC §173) --
     // Carthage's suffetes and Massalia's timouchoi are elected; the Aedui
@@ -1434,6 +1439,26 @@ export const DEFINES = {
       name: 'Rebels', adj: 'Rebel', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',
       ideas: { moraleMult: 1.05 },
+    },
+    // The rival purple (SPEC §239). A civil war is not two countries: it is
+    // one country with two men claiming it, and for the months or years that
+    // lasts the map has to be able to say which provinces obey which. This is
+    // the banner those provinces fly — a real court with a treasury, an army
+    // and a war, raised by the card that raises the claim and dissolved by
+    // the card that settles it.
+    //
+    // It is deliberately generic and deliberately singular. Every chapter
+    // that has a civil war in it dresses this one tag for the man whose it is
+    // — Magnentius' West, Vitellius' Rome, Zenobia's Palmyra, Carausius'
+    // Britain, Heraclius' Africa — through `rebrandTag`, because a usurper is
+    // a name and a colour rather than a nation, and because no two of them
+    // are ever on the map at the same moment. The ideas are what a claimant
+    // actually has: the troops who acclaimed him, and nobody's confidence.
+    USR: {
+      name: 'The Rival Purple', adj: 'Usurper\'s', color: [150, 66, 104], religion: 'hellenism', culture: 'latin', capital: '',
+      description: 'A claim with an army behind it: the provinces that have decided the '
+        + 'purple is somebody else\'s, for as long as that lasts.',
+      ideas: { moraleMult: 1.08, incomeMult: 0.9, legitimacyAdd: -0.1 },
     },
     // The robbers' court (SPEC §217): the two states a rising can found if it
     // walks off the edge of the governed world and stops there. Neither is

@@ -41,6 +41,29 @@ function safeTrigger(key, fn) {
   };
 }
 
+// Ground that changes hands without a siege (SPEC §239): what a defeated
+// usurper loses in the year after the battle, province by province, and only
+// what he still holds.
+function handOver(ctx, names, from, to) {
+  const g = ctx.game;
+  const moved = [];
+  for (const name of names || []) {
+    const p = ctx.prov && ctx.prov(name);
+    if (!p || p.impassable || p.owner !== from) continue;
+    p.owner = to;
+    if (p.controller === from) p.controller = to;
+    if (p.siege && p.siege.by === from) p.siege = null;
+    moved.push(name);
+  }
+  for (const a of Object.values(g.armies || {})) {
+    if (!a || a.tag !== from) continue;
+    const p = g.provinces[a.prov];
+    if (p && p.owner === to) a.tag = to;
+  }
+  try { ctx.bus.emit('provinceOwner', {}); } catch (e) { /* headless */ }
+  return moved;
+}
+
 function alive(ctx, tag) {
   const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false);
@@ -422,6 +445,23 @@ export const EVENTS_351 = [
               id: 'the_dead_of_mursa', name: 'The Dead of Mursa', months: 60,
               effects: { reinforceMult: 0.88, moraleMult: 0.94 },
             });
+          }
+          // What the battle actually decides (SPEC §239). Magnentius keeps
+          // Gaul and Britain and holds them for two more years; Italy, Africa
+          // and Spain go over to the winner in the twelve months after the
+          // field armies bled out in the marshes, which is why the war takes
+          // until 353 and why it takes everything.
+          if (alive(ctx, 'USR')) {
+            const back = handOver(ctx, (ctx.bookmark || {}).usurperMursaLoss, 'USR', 'ROM');
+            if (back.length) {
+              h.addTagModifier(ctx, 'USR', {
+                id: 'the_west_deserts_him', name: 'The West Deserts Him', months: -1,
+                effects: { incomeMult: 0.8, manpowerMult: 0.8, legitimacyAdd: -0.2 },
+              });
+              h.chronicle(ctx, 'era', 'Italy, Africa and Spain declare for Constantius; '
+                + 'Magnentius is left with Gaul, Britain and the men who came out of the '
+                + 'marshes with him.');
+            }
           }
           h.setFlag(ctx, 'mursaFought', true);
           h.chronicle(ctx, 'era', 'Fifty thousand Roman soldiers are killed by Roman soldiers at '

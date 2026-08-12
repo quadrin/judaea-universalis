@@ -2526,6 +2526,138 @@ export function secedeTagCore(ctx, from, to, opts = {}) {
   return t;
 }
 
+// A court that stops existing, and the country it goes back into (SPEC §239).
+// `secedeTagCore` is how a state comes apart; this is how one is put back
+// together — the operation every scripted civil war has needed and none of
+// them had, so that a rival emperor could be a card and a modifier and never
+// a colour on the map.
+//
+// The whole of `from` folds into `into`: its ground, its garrisons, its
+// fleets, its treasury and its muster rolls. The wars go too — with one
+// exception that is the entire point. A war being fought BETWEEN the two of
+// them is the civil war itself, and it does not carry over into the state
+// that survives it; it ends when the loser stops existing, which is what
+// happened at Lugdunum, at Emesa and outside Bedriacum.
+//
+//   opts: { chronicle: 'a line for the book', winner: false }
+//
+// `winner: true` says the dissolving court is the one that WON — the usurper
+// who became the emperor. The ground still ends up under one banner and the
+// map still shows one country; what changes is the line in the chronicle and
+// the ruler left sitting on the throne, which the calling card handles,
+// because whose face is on the coin is a content question.
+//
+// Returns true when the court was dissolved.
+export function dissolveTagCore(ctx, from, into, opts = {}) {
+  const g = ctx.game;
+  const dying = g.tags[from];
+  const heir = g.tags[into];
+  if (!dying || !heir || from === into) return false;
+
+  const name = dying.name || from;
+
+  // The chair first: a human sitting in a court that is about to be deleted
+  // has to be moved before it is. No chapter ships this — the usurper courts
+  // are AI — but a court that can be dissolved by content can be dissolved
+  // out from under somebody, and deleting the player is not a thing this
+  // engine is allowed to do.
+  if (g.playerTag === from) g.playerTag = into;
+  if (Array.isArray(g.humanTags)) {
+    g.humanTags = Array.from(new Set(g.humanTags.map((t) => (t === from ? into : t))));
+  }
+
+  // The ground and everything standing on it.
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p) continue;
+    if (p.owner === from) p.owner = into;
+    if (p.controller === from) p.controller = into;
+    if (p.siege && p.siege.by === from) p.siege = null;
+    if (p.conversion && p.conversion.by === from) p.conversion = null;
+    if (p.integrating && p.integrating.by === from) p.integrating = null;
+  }
+  for (const id of Object.keys(g.armies || {})) {
+    const a = g.armies[id];
+    if (a && a.tag === from) a.tag = into;
+  }
+  for (const id of Object.keys(g.fleets || {})) {
+    const f = g.fleets[id];
+    if (f && f.tag === from) f.tag = into;
+  }
+  for (const id of Object.keys(g.airwings || {})) {
+    const w = g.airwings[id];
+    if (w && w.tag === from) w.tag = into;
+  }
+
+  heir.treasury = num(heir.treasury) + num(dying.treasury);
+  heir.manpower = num(heir.manpower) + num(dying.manpower);
+  heir.maxManpower = num(heir.maxManpower) + num(dying.maxManpower);
+
+  // The wars. The civil war ends with the court that was fighting it; every
+  // other war the dying court was in becomes the survivor's problem, which is
+  // exactly what a successor inherits.
+  const kept = [];
+  for (const w of g.wars || []) {
+    if (!w) continue;
+    const att = Array.isArray(w.attackers) ? w.attackers : [];
+    const def = Array.isArray(w.defenders) ? w.defenders : [];
+    const hasFrom = att.indexOf(from) >= 0 || def.indexOf(from) >= 0;
+    if (!hasFrom) { kept.push(w); continue; }
+    const civil = (att.indexOf(from) >= 0 && def.indexOf(into) >= 0)
+      || (def.indexOf(from) >= 0 && att.indexOf(into) >= 0);
+    w.attackers = att.filter((t) => t !== from);
+    w.defenders = def.filter((t) => t !== from);
+    if (w.warscore && typeof w.warscore[from] === 'number') delete w.warscore[from];
+    if (civil) continue; // the civil war dies with the man who was fighting it
+    // Every OTHER war it was in becomes the survivor's, which is what a
+    // successor inherits — and the inheritance has to happen before the
+    // empty-side test, because a usurper fighting Persia alone leaves an
+    // empty side precisely when there is a war to hand over.
+    if (w.attackers.indexOf(into) < 0 && w.defenders.indexOf(into) < 0) {
+      const side = att.indexOf(from) >= 0 ? w.attackers : w.defenders;
+      side.push(into);
+      const other = side === w.attackers ? w.defenders : w.attackers;
+      for (const enemy of other) {
+        const e = g.tags[enemy];
+        if (e && Array.isArray(e.atWarWith) && e.atWarWith.indexOf(into) < 0) e.atWarWith.push(into);
+        if (Array.isArray(heir.atWarWith) && heir.atWarWith.indexOf(enemy) < 0) heir.atWarWith.push(enemy);
+      }
+    }
+    if (!w.attackers.length || !w.defenders.length) continue; // nobody left to fight it
+    kept.push(w);
+  }
+  g.wars = kept;
+
+  // …and nobody is at war with a country that no longer exists.
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || !Array.isArray(t.atWarWith)) continue;
+    t.atWarWith = t.atWarWith.filter((x) => x !== from);
+  }
+  if (Array.isArray(heir.atWarWith)) {
+    heir.atWarWith = heir.atWarWith.filter((x) => x !== from && g.tags[x]);
+  }
+
+  // The forwarding address, exactly as a formed crown leaves one (SPEC §135):
+  // a card written against the usurper still finds the country afterwards.
+  if (!g.tagAliases || typeof g.tagAliases !== 'object') g.tagAliases = {};
+  g.tagAliases[from] = into;
+  for (const k of Object.keys(g.tagAliases)) {
+    if (g.tagAliases[k] === from) g.tagAliases[k] = into;
+  }
+  delete g.tagAliases[into];
+
+  freeBanner(ctx, from); // scrubs the alliances, the truce books and the tag itself
+
+  chronicle(ctx, 'era', opts.chronicle || (opts.winner
+    ? name + ' is the government now; the other purple is folded into it and the empire is one again.'
+    : name + ' is finished, and the provinces that obeyed it answer to '
+      + (heir.name || into) + ' again.'));
+  try { ctx.bus.emit('provinceOwner', {}); } catch (e) { /* headless */ }
+  try { ctx.bus.emit('tagSwitched', { from, to: into }); } catch (e) { /* headless */ }
+  return true;
+}
+
 // ---------------------------------------------------------------- generals
 // Period name pools keyed by DEFINES.CULTURES group (a hired general speaks
 // the recruiting court's tongue). ~8 names per group.

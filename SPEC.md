@@ -16418,3 +16418,62 @@ the entire point of the East, and of the two chapters that come after it.
   West shrinking monotonically and still holding Italy in 439; the East never
   loses a province to any of it; and an arc run over ground Rome no longer
   holds neither throws nor seats a kingdom on somebody else's provinces.
+
+## 239. The rival purple — the courts of a civil war
+
+A civil war is not two countries. It is one country with two men claiming it,
+and for the months or years that lasts the map has to be able to say which
+provinces obey which. The game had no way to say it: every scripted civil war
+in every chapter was a ruler swap and a modifier. Magnentius held nothing —
+the chapter whose entire premise is that Rome is fighting itself painted one
+Rome. Vitellius held nothing. Zenobia governed the Levant from the desert for
+five years without appearing on the political layer she governed.
+
+**`USR`, the Rival Purple.** One tag, deliberately generic and deliberately
+singular: a real court with a treasury, an army and a war, raised by the card
+that raises the claim and dissolved by the card that settles it, dressed each
+time for the man whose it is — the name, the colour and the ruler come from
+the card, because a usurper is a name and an army rather than a nation. No
+chapter seats it in `activeTags`; no two claimants are ever on the map at the
+same moment; and `secedeTag` refuses a banner somebody is already flying,
+which is the check that keeps that true.
+
+**`dissolveTagCore(ctx, from, into, opts)`** is the primitive that was missing
+— the counterpart of §105's secession. The whole of the dying court folds into
+the survivor: ground, garrisons, fleets, treasury, muster rolls. The wars
+divide in two: the war being fought BETWEEN them is the civil war itself and
+ends with the claimant, while every other war the court was in is inherited,
+because that is what a successor gets. Third parties are re-pointed at a
+country that exists, `tagAliases` forwards the letters home (§135), and
+`freeBanner` scrubs the truce books. `winner: true` says the dissolving court
+is the one that WON — Heraclius folding Africa back into an empire that is now
+his — which changes the chronicle line and nothing else, because whose face is
+on the coin is a content question.
+
+The five civil wars this ships with, one per card-pair, across four chapters:
+
+| chapter | the claim | raised | settled |
+|---|---|---|---|
+| 351 CE | The Empire of Magnentius | at chapter start | Lugdunum, 353 |
+| 66 CE | The Empire of Vitellius | the Four Emperors, Jan 69 | Vespasian, Jul 69 |
+| 132 CE | The Palmyrene Empire | Zenobia, 269 | Aurelian, 273 |
+| 132 CE | The British Empire of Carausius | 286 | the tetrarchy, 293 |
+| 529 CE | The Exarch's Rising | Africa refuses Phocas, 608 | Heraclius crowned, 610 |
+
+351 is the one that changes a chapter rather than decorating it. Its window —
+`the_empire_fights_itself`, thirty months of halved reinforcement — was the
+whole argument for why a rising in the Galilee had two years to become a
+country, and it was a number in a tooltip. Now Constantius holds 111 provinces
+and Magnentius holds 80, they are at war with each other with no negotiated
+exit, and Mursa takes Italy, Africa and Spain off the usurper without ending
+the war, exactly as the year after the battle did. Armenia's collar is fastened
+after that war is declared, or the rule that a client joins its overlord's wars
+marches Armenia into a civil war on the far side of Europe.
+
+- **Regression contract**: `smoke160.mjs` — the banner exists and no roster
+  flies it; the primitive folds ground, garrisons and treasury home, ends the
+  civil war, inherits every other war, re-points third parties, forwards the
+  letters and moves a human chair rather than deleting it; and all five arcs
+  raise a court that holds ground and fights, then give every province back
+  under one banner with no war left being fought by a country that does not
+  exist.

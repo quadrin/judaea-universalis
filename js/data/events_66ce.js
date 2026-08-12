@@ -142,6 +142,29 @@ function setOpinion(ctx, a, b, val) {
 
 const JUDEA_HILL_PROVINCES = ['Jerusalem', 'Emmaus', 'Lydda', 'Gadora', 'Hebron', 'Jericho'];
 
+// The West that acclaims Vitellius (SPEC §239): the Rhine legions' empire —
+// Germany, Gaul, Britain, Spain, Italy and Africa. The Danube declared for
+// Vespasian and is not here, and neither is anything east of the Adriatic:
+// the East is where the man besieging Jerusalem is, which is the whole reason
+// this year matters to this chapter.
+const VITELLIUS_WEST = [
+  'Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus', 'Syracusae',
+  'Mediolanum', 'Genua', 'Bononia', 'Ravenna', 'Pisae', 'Ancona', 'Aquileia',
+  'Aleria', 'Caralis', 'Turris Libisonis', 'Baleares', 'Britannia',
+  'Lutetia', 'Rotomagus', 'Samarobriva', 'Gesoriacum', 'Durocortorum',
+  'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
+  'Batavia', 'Atuatuca', 'Vesontio', 'Genava', 'Augusta Vindelicorum', 'Virunum',
+  'Lugdunum', 'Augustodunum', 'Avaricum', 'Limonum', 'Condate', 'Darioritum',
+  'Burdigala', 'Tolosa', 'Narbo', 'Nemausus', 'Massilia',
+  'Gades', 'Corduba', 'Hispalis', 'Malaca', 'Carthago Nova', 'Toletum',
+  'Emerita', 'Olisipo', 'Bracara', 'Asturica', 'Tarraco', 'Caesaraugusta',
+  'Valentia', 'Numantia', 'Salmantica', 'Barcino', 'Emporiae',
+  'Carthago', 'Hadrumetum', 'Thysdrus', 'Tacape', 'Capsa', 'Theveste',
+  'Hippo Regius', 'Cirta', 'Saldae', 'Icosium', 'Caesarea Mauretaniae',
+  'Portus Magnus', 'Volubilis', 'Tingis', 'Sala', 'Atlas',
+  'Oea', 'Leptis Magna', 'Macomades',
+];
+
 export const EVENTS_66 = [
 
   // ── 1 ─────────────────────────────────────────────────────────────────────
@@ -764,7 +787,32 @@ export const EVENTS_66 = [
         tooltip: 'Vitellius (1/1/1) holds the throne — for now. Rome: armies passive and reinforcements halved for 12 months. Judaea: -2 war exhaustion. The alt-history window is open — use it.',
         effects: guard('ev_year_of_four_emperors:0', (ctx) => {
           const h = ctx.helpers;
-          h.setRuler(ctx, 'ROM', { name: 'Vitellius', title: 'Emperor', gov: 1, infl: 1, mar: 1, age: 54 });
+          // The empire is two empires for eighteen months (SPEC §239), and
+          // the map says so: the Rhine legions' half acclaims Vitellius and
+          // the East keeps the man who is standing in front of Jerusalem.
+          // Whichever of them wins, the army besieging this player belongs to
+          // the winner — which is exactly why the year is worth a card.
+          const west = h.secedeTag(ctx, 'ROM', 'USR', {
+            provinces: VITELLIUS_WEST,
+            share: 0.45,
+            name: 'The Empire of Vitellius',
+            color: [142, 104, 60],
+            opinion: -200,
+            stability: -1,
+            legitimacy: 30,
+            ruler: { name: 'Vitellius', title: 'Emperor', gov: 1, infl: 1, mar: 1, age: 54 },
+          });
+          if (west) {
+            h.declareWar(ctx, 'ROM', 'USR', 'The Year of the Four Emperors');
+            h.addTagModifier(ctx, 'USR', {
+              id: 'the_rhine_legions', name: 'The Rhine Legions', months: -1,
+              effects: { moraleMult: 1.08, incomeMult: 0.85 },
+            });
+          } else {
+            // No west left to acclaim him: the old modelling stands, so the
+            // year still costs Rome its reinforcements.
+            h.setRuler(ctx, 'ROM', { name: 'Vitellius', title: 'Emperor', gov: 1, infl: 1, mar: 1, age: 54 });
+          }
           h.addTagModifier(ctx, 'ROM', {
             id: 'legions_look_west', name: 'The Legions Look West', months: 12,
             effects: { aiPassive: true, reinforceMult: 0.5 },
@@ -836,6 +884,18 @@ export const EVENTS_66 = [
         tooltip: 'Vespasian (4/3/5) rules with Titus as heir. Rome: +1 stability, +20 legitimacy, all passivity ends, and Titus (4/5/5) leads the army of Judaea.',
         effects: guard('ev_vespasian_emperor:0', (ctx) => {
           const h = ctx.helpers;
+          // Cremona settles it (SPEC §239): the Danube legions come over the
+          // Alps for Vespasian, Vitellius is dragged out of the palace, and
+          // the western half folds back into the empire the East is running.
+          // The court goes off the map — the war between them ends with the
+          // man, not with a treaty.
+          if (ctx.game.tags.USR) {
+            h.dissolveTag(ctx, 'USR', 'ROM', {
+              chronicle: 'Vitellius is killed on the Gemonian stairs and the West comes back '
+                + 'under the emperor the eastern armies made; the empire is one again, and it '
+                + 'belongs to the man outside Jerusalem.',
+            });
+          }
           h.adjust(ctx, 'ROM', { stability: 1, legitimacy: 20 });
           h.setRuler(ctx, 'ROM', { name: 'Vespasian', title: 'Emperor', gov: 4, infl: 3, mar: 5, age: 59 });
           h.setHeir(ctx, 'ROM', { name: 'Titus', gov: 3, infl: 3, mar: 5, age: 29 });

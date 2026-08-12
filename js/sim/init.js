@@ -11,7 +11,7 @@ import {
   isOffmapTag, armsSupplierOf, armsDealState, armsGate, isArsenal, armsMarketOn,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
-  retireAffinityCore, secedeTagCore,
+  retireAffinityCore, secedeTagCore, dissolveTagCore,
   allianceBarred, recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore, annulMarriageCore,
@@ -693,6 +693,12 @@ export const simHelpers = {
   // of its provinces leaves under its own banner. Returns the new tag or null.
   secedeTag(ctx, from, to, opts) {
     return secedeTagCore(ctx, L(ctx, from), to, opts);
+  },
+  // …and the court that stops existing (SPEC §239). The counterpart of the
+  // line above: a rival purple raised by one card is put out by another, and
+  // everything it held goes back into the country it came out of.
+  dissolveTag(ctx, from, into, opts) {
+    return dissolveTagCore(ctx, L(ctx, from), L(ctx, into), opts);
   },
   // Recognition (SPEC §96): a scripted peace may exchange the letters itself
   // — Sadat in the Knesset, the lawn in Washington — or tear them up again.

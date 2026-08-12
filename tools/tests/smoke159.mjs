@@ -24,6 +24,9 @@
 //   5. Rome survives all of it. The West is dismembered, not deleted — it
 //      still holds Italy in 439, which is what makes the arithmetic legible.
 //   6. And the East never collapses. That is what the East is for.
+//
+// The suite settles the chapter's own civil war before it starts (see `boot`):
+// this arc begins in 395 and Magnentius has been dead since 353.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -54,6 +57,14 @@ function boot(tag = 'JUD') {
     bus: { emit() {}, on() { return () => {}; } },
     bookmark: BOOKMARK_351, events, provinceMap,
   });
+  // The chapter opens in the middle of a civil war (SPEC §239): Magnentius
+  // holds Britain, Gaul, Spain, Italy and Africa in 351, and Constantius does
+  // not get them back until Lugdunum in 353. Every card in THIS arc is dated
+  // 395 or later, by which time the West has been one empire again for forty
+  // years — so the suite settles that war first and then asks its questions,
+  // rather than testing the division of 395 against the map of 351.
+  const fall = era351.events.find((c) => c && c.id === 'ev351w_magnentius_falls');
+  if (game.tags.USR && fall) fall.options[0].effects(ctx);
   return { game, ctx };
 }
 

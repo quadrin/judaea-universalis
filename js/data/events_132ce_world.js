@@ -106,6 +106,50 @@ function stirCities(ctx, names, id, name, months, effects) {
 // courier is the one departing from history — which is exactly the shape the
 // ledger should show.
 
+// Zenobia's empire at its height, 270-272 (SPEC §239): Syria, Phoenicia,
+// Palestine, Arabia, Egypt and the road up through Cilicia into Anatolia as
+// far as Ancyra. Only what Rome still holds goes over — a chapter in which
+// the Nasi's state took Judaea keeps it, and Palmyra takes what is left.
+const PALMYRENE_EMPIRE = [
+  'Palmyra', 'Antioch', 'Seleucia Pieria', 'Laodicea', 'Apamea', 'Emesa',
+  'Chalcis', 'Damascus', 'Beroea', 'Cyrrhus', 'Zeugma', 'Samosata',
+  'Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus',
+  'Caesarea Maritima', 'Dora', 'Ptolemais', 'Scythopolis', 'Pella', 'Gadara',
+  'Antipatris', 'Sebaste', 'Neapolis', 'Jerusalem', 'Joppa', 'Gaza',
+  'Ascalon', 'Azotus', 'Jamnia', 'Gerasa', 'Philadelphia', 'Bostra', 'Petra',
+  'Medaba', 'Oboda', 'Aila',
+  'Pelusium', 'Rhinocolura', 'Alexandria', 'Athribis', 'Leontopolis',
+  'Memphis', 'Arsinoe', 'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Syene',
+  'Berenice', 'Tarsus', 'Seleucia Trachea', 'Salamis', 'Paphos',
+  'Caesarea Mazaca', 'Tyana', 'Iconium', 'Ancyra',
+];
+
+// The rising itself happens whichever way the player answers it: the card's
+// two options are what the player's own state does about it, not whether
+// Zenobia takes the East.
+function raisePalmyra(ctx) {
+  const h = ctx.helpers;
+  if (ctx.game.tags.USR) return null;
+  const zen = h.secedeTag(ctx, 'ROM', 'USR', {
+    provinces: PALMYRENE_EMPIRE,
+    share: 0.35,
+    name: 'The Palmyrene Empire',
+    color: [196, 150, 62],
+    opinion: -160,
+    stability: 1,
+    legitimacy: 55,
+    ruler: { name: 'Zenobia', title: 'Augusta', gov: 4, infl: 4, mar: 3, age: 29 },
+  });
+  if (zen) {
+    h.declareWar(ctx, 'ROM', 'USR', 'The Palmyrene Secession');
+    h.addTagModifier(ctx, 'USR', {
+      id: 'the_caravan_cities', name: 'The Caravan Cities', months: -1,
+      effects: { incomeMult: 1.12, moraleMult: 1.05 },
+    });
+  }
+  return zen;
+}
+
 export const EVENTS_132_WORLD = [
 
   // ── W1 · 175 ──────────────────────────────────────────────────────────────
@@ -483,6 +527,7 @@ export const EVENTS_132_WORLD = [
         effects: guard('ev2_palmyra_rises:0', (ctx) => {
           const h = ctx.helpers;
           const me = ctx.game.playerTag;
+          raisePalmyra(ctx);
           h.adjust(ctx, me, { treasury: 100, manpower: 2500, legitimacy: -8 });
           stirCities(ctx, EAST, 'zenobias_peace', 'Zenobia\'s Peace', 48, { unrest: -1 });
           h.addTagModifier(ctx, me, {
@@ -499,6 +544,7 @@ export const EVENTS_132_WORLD = [
         effects: guard('ev2_palmyra_rises:1', (ctx) => {
           const h = ctx.helpers;
           const me = ctx.game.playerTag;
+          raisePalmyra(ctx);
           h.adjust(ctx, me, { treasury: -60, legitimacy: 10 });
           stirCities(ctx, EAST, 'palmyrene_levy', 'The Palmyrene Levy', 48, { unrest: 1 });
           h.chronicle(ctx, 'era', 'Palmyra takes the East and Aurelian takes it back; the cities that waited are remembered kindly.');
@@ -530,6 +576,15 @@ export const EVENTS_132_WORLD = [
         tooltip: 'Rome +12 legitimacy and +1 stability; Palmyra −8 development and +3 unrest for 120 months ("A Field of Columns"), and the desert silk road never recovers.',
         effects: guard('ev2_aurelian_palmyra:0', (ctx) => {
           const h = ctx.helpers;
+          // Immae, Emesa, and then the city itself (SPEC §239): the court
+          // that governed the Levant from the desert for five years stops
+          // existing, and everything it held is Rome's again.
+          if (ctx.game.tags.USR) {
+            h.dissolveTag(ctx, 'USR', 'ROM', {
+              chronicle: 'Aurelian beats Zenobia twice, takes her alive, and levels Palmyra; '
+                + 'the East is Roman again and the caravan city never trades another season.',
+            });
+          }
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 12, stability: 1 });
           const p = ctx.prov && ctx.prov('Palmyra');
           if (p && p.dev) {
