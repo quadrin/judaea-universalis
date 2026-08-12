@@ -16254,3 +16254,50 @@ what the century did while nobody in the Galilee could affect any of it.
   curriculum open at the rung the age starts on; the political map seating a
   Gothic Dacia, a single Iranian court, a post-Meroitic Nile and a Christian
   Aksum; and the victory contract answering at both ends.
+
+## 236. The banner travels with the name
+
+§139 gave a chapter a lens over a court it inherits: three letters outlive
+their century, the state under them does not, and `tagTweaks` lets 529 seat
+`JUD` as GALILEE at Tiberias without writing a word into the shared
+definition. §235 seated a second one — the rising of 351 is the same country
+two centuries earlier, and calling it Judaea would be the same error twice,
+since Judaea was struck off the map in 135 and the hill country around Aelia
+is a Christian province the Jews enter one day a year.
+
+What the lens did not carry was what the court LOOKS like. Both Galilees were
+flying Judaea's menorah on Judaea's deep blue, because `flagChip` reads
+`t.flag` and nothing was writing one, and because `color` reached the live tag
+only if the chapter said so and neither chapter had. A name, a seat, a colour
+and an emblem are one identity; this section makes them travel together.
+
+- **The engine.** `initGame` seeds `flag` off the same `tagDef` lens that
+  already seeds `name`, `color`, `religion` and `culture` — at all three places
+  a tag object is built (the opening roster, the §180 off-map seats, and the
+  backfill `reviveGame` runs for saves written before a court existed). A
+  chapter that names no flag seeds `null` and falls back to the tag's own
+  emblem, which is every chapter but two.
+- **The banner.** `FLAGS.GAL` is the zodiac roundel of the synagogue floors —
+  twelve signs around a wheel, a gold rim, a rosette at the hub. Hammat
+  Tiberias, Beth Alpha and Sepphoris all laid one in these centuries, which
+  makes it the one thing the Galilee of this period unmistakably made, and it
+  belongs to nobody else on this map: the menorah stays Judaea's, the lyre is
+  the House of David's, the anchor is Seleucid three times over, and the galley
+  under sail is the pirates'.
+- **The colour.** `[124, 196, 214]` — a light blue with the aqua in it, which
+  is the lake. It is the largest gap in the palette anywhere near that corner:
+  Samaria's blue is 60 away in RGB and both darker and flatter, Characene and
+  Luxembourg are the only other near neighbours and neither is ever on the same
+  map, and the sea is darker than any of them in both the painted and the
+  parchment modes.
+- **Both chapters, one identity.** 351 seats it at Diocaesarea, because that is
+  the town whose garrison was robbed and the only one the rising holds; 529
+  seats it at Tiberias, because by then the academy is the whole polity. The
+  name, the banner and the colour are the same in both, which is what makes it
+  a country rather than a re-skin.
+
+- **Regression contract**: `smoke94.mjs` — the emblem exists, both chapters
+  seat the name, the banner, the lake's colour and their own seat, the two
+  agree with each other, the shared definition still carries neither a rename
+  nor a banner, and a chapter with no lens seats Judaea with no override.
+  `smoke158.mjs` holds the 351 half of it beside the chapter's own contract.

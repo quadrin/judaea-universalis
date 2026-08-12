@@ -997,6 +997,12 @@ static site, the zero dependencies, or the missing build step changes.
   the Emperor's offer, what terms the bishops get, and who fills the
   patriarchate when Constantinople stops — and a victory condition that counts
   the provinces still keeping the Torah in 400 rather than the provinces held.
+  The court is seated as **Galilee**, at Diocaesarea, under a standard of its
+  own: the zodiac roundel of the synagogue floors at Hammat Tiberias, Beth
+  Alpha and Sepphoris, on the light blue of the lake. The Keepers' chapter
+  dresses the same court the same way — Judaea was struck off the map in 135,
+  and a chapter that renames a country should not still be flying the other
+  one's menorah.
 
 ## Architecture
 

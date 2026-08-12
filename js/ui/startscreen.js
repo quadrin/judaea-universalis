@@ -135,7 +135,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
         <div class="nation-card" data-tag="${esc(p.tag)}" tabindex="0"
              style="--tagc:${rgb(def.color)};--tagglow:${rgba(def.color, 0.45)}">
           <div class="nc-banner">
-            <span class="nc-shield">${flagChip(p.tag, DEFINES, 34)}<span class="nc-shield-tag">${esc(p.tag)}</span></span>
+            <span class="nc-shield">${flagChip(p.tag, DEFINES, 34, false, null, def)}<span class="nc-shield-tag">${esc(p.tag)}</span></span>
             <span class="nc-diff nc-diff-${esc(diff.toLowerCase().replace(/\s+/g, '-'))}">${esc(diff)}</span>
           </div>
           <div class="nc-body">

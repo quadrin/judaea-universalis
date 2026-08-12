@@ -261,6 +261,11 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       tag: key,
       name: d.name || key,
       color: Array.isArray(d.color) ? d.color.slice() : [128, 128, 128],
+      // The lens carries the banner too (SPEC §236). A chapter that renames a
+      // court and recolours it was still flying the static emblem, because
+      // `flagChip` reads `t.flag` and nothing was writing one; a name, a
+      // colour and an emblem are one identity and they now travel together.
+      flag: typeof d.flag === 'string' ? d.flag : null,
       religion: d.religion, culture: d.culture,
       alive: true,
       ai: key !== playerTag,
@@ -403,6 +408,7 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
         tag: key,
         name: d.name || key,
         color: Array.isArray(d.color) ? d.color.slice() : [128, 128, 128],
+        flag: typeof d.flag === 'string' ? d.flag : null, // SPEC §236
         religion: d.religion, culture: d.culture,
         alive: true, ai: key !== game.playerTag,
         treasury: 0, income: 0, expenses: 0, loans: 0,
@@ -3814,6 +3820,7 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       tag: key,
       name: d.name || key,
       color: Array.isArray(d.color) ? d.color.slice() : [128, 128, 128],
+      flag: typeof d.flag === 'string' ? d.flag : null, // SPEC §236
       religion: d.religion, culture: d.culture,
       alive: true,
       ai: true,

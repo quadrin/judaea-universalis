@@ -343,6 +343,21 @@ export const FLAGS = {
     MENORAH_LAMPS +
     `<path d="M12 16.9v1M12 17.9 9.3 20M12 17.9 14.7 20M12 17.9V20" fill="none" stroke="${FO}" stroke-width="2.5" stroke-linecap="round"/>` +
     `<path d="M12 16.9v1M12 17.9 9.3 20M12 17.9 14.7 20M12 17.9V20" fill="none" stroke="${FP}" stroke-width="1.3" stroke-linecap="round"/>`,
+  // Galilee (SPEC §236): the zodiac roundel of the synagogue floors. Hammat
+  // Tiberias, Beth Alpha and Sepphoris all laid one — twelve signs around a
+  // wheel, in the century this chapter opens in, by a community with an
+  // academy, a closed Talmud and no state at all. It is the one thing the
+  // Galilee of 529 unmistakably made, and it is nobody else's emblem on this
+  // map: JUD keeps the menorah for the seven chapters that turn on Jerusalem,
+  // and this is what those three letters look like when they mean Tiberias.
+  GAL:
+    `<circle cx="12" cy="12" r="9.1" ${SIL}/>` +
+    `<circle cx="12" cy="12" r="9.1" fill="none" stroke="${FG}" stroke-width="1.4"/>` +
+    `<path d="M12 8.5V3.6M13.8 9 16.2 4.7M15 10.2 19.3 7.8M15.5 12h4.9M15 13.8l4.3 2.4`
+    + `M13.8 15l2.4 4.3M12 15.5v4.9M10.2 15l-2.4 4.3M9 13.8 4.7 16.2M8.5 12H3.6`
+    + `M9 10.2 4.7 7.8M10.2 9 7.8 4.7" fill="none" stroke="${FO}" stroke-width="1.05" stroke-linecap="round"/>` +
+    `<circle cx="12" cy="12" r="3.5" ${ACC}/>` +
+    `<circle cx="12" cy="12" r="1.4" fill="${FP}" stroke="none"/>`,
   // Hasmoneans: crossed double cornucopiae of the prutot, pomegranate between.
   HAS:
     `<path d="M11.6 19.6C8 18.5 5.9 16 5.5 12.4c-.2-2 .4-3.8 1.8-5.4l2.2 1.9c-.9 1.2-1.2 2.6-.9 4.2.4 2.5 1.6 4.4 3.6 5.7Z" ${SIL}/>` +
@@ -1283,9 +1298,16 @@ function escText(s) {
 // Pass the live `game` to honor a realm's runtime identity: a revolution may
 // rebrand a state in place (t.flag names a FLAGS variant, t.name/t.color the
 // new style) — the Free Officers' republic flies EGY_REP over the same tag.
-export function flagChip(tag, DEFINES, size = 20, link = false, game = null) {
+// `lens` is a chapter's era definition for this court (SPEC §139, §236) for the
+// surfaces that draw a court BEFORE there is a game to read — the start
+// screen builds its roster out of `tagDef` and used to hand this function the
+// bare tag, so a chapter that seats JUD as Galilee on the lake's own blue
+// still showed Judaea's menorah on Judaea's deep blue in the one place a
+// player picks a chapter. A live game still wins over both.
+export function flagChip(tag, DEFINES, size = 20, link = false, game = null, lens = null) {
   const t = String(tag || '');
-  const def = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[t]) || {};
+  const base = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[t]) || {};
+  const def = lens && typeof lens === 'object' ? { ...base, ...lens } : base;
   const live = (game && game.tags && game.tags[t]) || null;
   const c = live && Array.isArray(live.color) && live.color.length >= 3 ? live.color
     : Array.isArray(def.color) && def.color.length >= 3 ? def.color : [110, 100, 82];
@@ -1294,7 +1316,7 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null) {
   // must fall back to the base emblem (or the text chip), never surface a
   // prototype-chain member as the SVG body.
   const own = (k) => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(FLAGS, k) ? FLAGS[k] : null);
-  const body = (live && own(live.flag)) || own(t);
+  const body = (live && own(live.flag)) || own(def.flag) || own(t);
   const dispName = (live && live.name) || def.name || t;
   const inner = body
     ? `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`

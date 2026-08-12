@@ -574,6 +574,26 @@ export const BOOKMARK_351 = {
   // The era's lens on the western tags (SPEC §139, §173): the fourth century's
   // own names for peoples the atlas files under older ones.
   tagTweaks: {
+    // The rising is not Judaea (SPEC §139, §236). Judaea was struck off the
+    // map in 135 and the hill country around Aelia is Christian Palaestina
+    // Prima; the nation moved north two centuries ago and everything this
+    // chapter is about happens between Sepphoris, Tiberias and the lake. So
+    // the three letters wear the name of the country they are actually in,
+    // the seat is the town the arms were taken in — a capital is read by the
+    // growth bonus, the AI's rally and the peace table, and Jerusalem in this
+    // chapter belongs to the Empire — and the banner is the Galilee's own:
+    // the zodiac roundel of the synagogue floors, on the light blue of the
+    // lake. The Keepers' chapter dresses the same court the same way, which
+    // is the point of a lens.
+    JUD: {
+      name: 'Galilee', adj: 'Galilean',
+      capital: 'Sepphoris',
+      flag: 'GAL',
+      color: [124, 196, 214],
+      description: 'The nation as the fourth century leaves it: an academy at Tiberias, '
+        + 'villages on a lake, a patriarchate the emperor still writes to — and, this '
+        + 'summer, a town with a cohort\'s weapons in it.',
+    },
     CAL: { name: 'The Picts', adj: 'Pictish', description: 'The people beyond the wall, under the name the panegyrists have used since 297.' },
     SUE: { name: 'The Alamanni', adj: 'Alamannic', description: 'The Suebic confederation on the far bank of the upper Rhine, whom both sides of the civil war are bidding for.' },
     GOT: { name: 'The Tervingi', adj: 'Gothic', description: 'The Goths of the Dacia Rome gave up eighty years ago: a judge, a treaty, and a Danube they cross when the treaty lapses.' },

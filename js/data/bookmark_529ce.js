@@ -338,6 +338,16 @@ export const BOOKMARK_529 = {
     JUD: {
       name: 'Galilee', adj: 'Galilean',
       capital: 'Tiberias',
+      // A court that is renamed and re-seated should not still be flying the
+      // other state's banner (SPEC §236). The menorah is Judaea's, and Judaea
+      // is a Christian province in this chapter; what the Galilee of these
+      // centuries actually made is the zodiac roundel on the synagogue floors
+      // at Hammat Tiberias, Beth Alpha and Sepphoris. The field is the lake:
+      // a light blue with the aqua in it, and nothing else on this map is
+      // that colour — Samaria's blue is darker and flatter, and the sea is
+      // darker than both.
+      flag: 'GAL',
+      color: [124, 196, 214],
       description: 'What is left of the nation, around a lake sixty miles north of the '
         + 'city it may not live in: the academy at Tiberias, the town that closed the '
         + 'Talmud, and a patriarchate the emperor let lapse.',

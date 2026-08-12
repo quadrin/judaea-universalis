@@ -108,6 +108,16 @@ console.log('== the chapter is registered, and it is the sixth ==');
     'the age runs from the comitatenses to the thematic pattern (7..11)');
   ok(BOOKMARK_351.generationHorizon === 430,
     '  and its undated cards stop belonging to anybody after 430');
+  // SPEC §236: the court is not Judaea here either. Judaea was struck off in
+  // 135 and the rising is a Galilean one, so the three letters wear the
+  // country's name, the lake's colour and the synagogue floors' emblem — and
+  // the seat is the town the arms were taken in, because a capital is read by
+  // growth, by the AI's rally and by the peace table.
+  const lens = BOOKMARK_351.tagTweaks.JUD;
+  ok(lens && lens.name === 'Galilee' && lens.flag === 'GAL',
+    'the court is seated as Galilee, under its own banner');
+  ok(lens && lens.capital === 'Sepphoris',
+    '  from Diocaesarea, which is the town the rising actually holds');
 }
 
 // ---------------------------------------------------------------------------

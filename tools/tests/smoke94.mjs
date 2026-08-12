@@ -1,9 +1,13 @@
 // Headless regression — SPEC §139: three letters outlive their century.
 //
-// `JUD` is Judaea in the seven chapters that turn on Jerusalem. In 529 it is
+// `JUD` is Judaea in the chapters that turn on Jerusalem. In 529 it is
 // GALILEE, seated at Tiberias, because Judaea by then is a Christian province
 // with no Jewish polity in it and the four towns that court actually holds are
-// all around the Sea of Galilee.
+// all around the Sea of Galilee. SPEC §235 seats a second one: the rising of
+// 351 is the same country two centuries earlier, seated at Diocaesarea, and
+// SPEC §236 gives both of them the banner and the colour that go with the
+// name — a court that is renamed and recoloured was still flying the other
+// state's emblem, because nothing wrote `t.flag`.
 //
 // The assertions here are the ones that rot silently:
 //
@@ -162,11 +166,56 @@ console.log('== it is a lens and never a write ==');
 }
 
 // ---------------------------------------------------------------------------
+// The chapters where the three letters wear another country's name. Both of
+// them are the Galilee, two centuries apart, and both are seated in it.
+const GALILEE_CHAPTERS = new Set(['351ce', '529ce']);
+
+console.log('== the banner travels with the name (SPEC §236) ==');
+{
+  const { FLAGS } = await import(R + '/js/ui/icons.js');
+  ok(typeof FLAGS.GAL === 'string' && FLAGS.GAL.length > 80,
+    'the Galilee has an emblem of its own in the flag table');
+  const seats = { '351ce': 'Sepphoris', '529ce': 'Tiberias' };
+  for (const id of GALILEE_CHAPTERS) {
+    const era = ERAS.find((e) => e.bookmark.id === id);
+    const w = boot(id, era.bookmark.playableTags[0].tag);
+    const t = w.game.tags.JUD;
+    ok(!!t && t.name === 'Galilee', id + ' seats the court as Galilee');
+    ok(!!t && t.flag === 'GAL', '  flying its own banner rather than Judaea\'s menorah');
+    ok(!!t && Array.isArray(t.color) && t.color[2] > t.color[1] && t.color[1] > t.color[0]
+      && t.color[0] >= 100 && t.color[2] >= 190,
+    '  on the lake\'s own light blue: ' + JSON.stringify(t && t.color));
+    ok(tagDef(w.ctx, 'JUD').capital === seats[id],
+      '  seated at ' + seats[id] + ', not Jerusalem');
+  }
+  // Both chapters dress the same court the same way — one identity, two eras.
+  const a = boot('351ce', 'JUD').game.tags.JUD;
+  const b = boot('529ce', 'SAM').game.tags.JUD;
+  ok(a.name === b.name && a.flag === b.flag && JSON.stringify(a.color) === JSON.stringify(b.color),
+    'and the two chapters agree about what the Galilee looks like');
+  // …and the shared definition still knows nothing about any of it.
+  ok(!DEFINES.TAGS.JUD.flag && DEFINES.TAGS.JUD.name === STATIC_JUD_NAME,
+    'the static definition carries no banner and no rename (still ' + DEFINES.TAGS.JUD.name + ')');
+  const plain = boot('132ce', 'JUD').game.tags.JUD;
+  ok(plain.flag === null && plain.name === STATIC_JUD_NAME,
+    'a chapter with no lens seats ' + STATIC_JUD_NAME + ' with no banner override');
+  // The one surface that draws a court before a campaign exists: the start
+  // screen builds its roster out of `tagDef`, so the chip takes a lens too.
+  const { flagChip } = await import(R + '/js/ui/icons.js');
+  const bm = ERAS.find((e) => e.bookmark.id === '529ce').bookmark;
+  const chip = flagChip('JUD', DEFINES, 34, false, null, tagDef({ DEFINES, bookmark: bm }, 'JUD'));
+  ok(chip.includes('124,196,214') && chip.includes(FLAGS.GAL.slice(0, 60)),
+    'the start screen\'s own chip flies the Galilee before there is a game to read');
+  const bare = flagChip('JUD', DEFINES, 34);
+  ok(bare.includes('36,82,158') && bare.includes(FLAGS.JUD.slice(0, 60)),
+    '  and the same chip with no lens is still Judaea\'s menorah on Judaea\'s blue');
+}
+
 console.log('== every other chapter that seats JUD is untouched ==');
 {
   for (const era of ERAS) {
     const b = era.bookmark;
-    if (b.id === '529ce') continue;
+    if (GALILEE_CHAPTERS.has(b.id)) continue; // these two ARE the lens
     if (!(b.activeTags || []).includes('JUD')) continue;
     const w = boot(b.id, (b.playableTags && b.playableTags[0] && b.playableTags[0].tag) || 'JUD');
     ok(w.game.tags.JUD && w.game.tags.JUD.name === STATIC_JUD_NAME,
