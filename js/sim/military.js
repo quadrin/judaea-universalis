@@ -2412,13 +2412,21 @@ export function secedeTagCore(ctx, from, to, opts = {}) {
 
   const share = clamp(num(opts.share, 0.35), 0, 1);
   const tech = parent.tech || {};
+  // A court that arrives by secession is dressed by the chapter like any
+  // other (SPEC §139, §236): `def` above is the raw definition and stays the
+  // test of whether the banner exists, `era` is what this chapter says that
+  // court is called and looks like — the same object wherever no tweak is
+  // declared. The 351 chapter needs it: what leaves Rome in January 395 is
+  // not "Byzantium", a word no one will use for a thousand years, but the
+  // Eastern Empire, and the tag is the same three letters either way.
+  const era = tagDef(ctx, to);
   const t = {
     tag: to,
-    name: opts.name || def.name || to,
+    name: opts.name || era.name || to,
     color: Array.isArray(opts.color) ? opts.color.slice()
-      : Array.isArray(def.color) ? def.color.slice() : [112, 118, 126],
-    religion: def.religion || (seat && seat.religion) || parent.religion,
-    culture: def.culture || (seat && seat.culture) || parent.culture,
+      : Array.isArray(era.color) ? era.color.slice() : [112, 118, 126],
+    religion: era.religion || (seat && seat.religion) || parent.religion,
+    culture: era.culture || (seat && seat.culture) || parent.culture,
     alive: true,
     ai: to !== g.playerTag,
     // What leaves with it: a share of the coin and the muster rolls, and the
@@ -2465,9 +2473,10 @@ export function secedeTagCore(ctx, from, to, opts = {}) {
       : { name: 'Revolutionary Command', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 },
     lineage: [from].concat(Array.isArray(parent.lineage) ? parent.lineage : []).slice(0, 6),
     formedFrom: from,
-    description: def.description || 'A state that left a union it had joined.',
+    description: era.description || 'A state that left a union it had joined.',
   };
   if (typeof opts.flag === 'string') t.flag = opts.flag;
+  else if (typeof era.flag === 'string' && era.flag) t.flag = era.flag;
   g.tags[to] = t;
 
   parent.treasury = num(parent.treasury) - t.treasury;

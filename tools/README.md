@@ -1743,6 +1743,22 @@ chain (that mapping is deliberately written twice), `smoke116` gained a forced
 world that pays all six of its roads, and `smoke119`, `smoke121` and `smoke129`
 took the chapter into their per-chapter tables.
 
+## §238 — the West comes apart
+
+`smoke159.mjs` owns the collapse arc (`events_351ce_collapse.js`): the eight
+dated cards registered once each, every province name in all four transfer
+lists resolving on the chapter's own map (a typo here does not throw — it
+silently leaves Egypt in the western Empire for ever), the line of 395 checked
+province by province from both sides, the war and its score following the
+ground east while a Gothic war stays west, the five courts arriving in order
+on ground of their own with the West shrinking monotonically and still holding
+Italy in 439, the East never losing a province to any of it, and the whole arc
+run over ground Rome no longer holds without throwing or seating a kingdom on
+somebody else's provinces.
+
+The harness is unaffected at the default eight years: the arc's first card is
+dated 395 and `autorun 8` on this chapter stops in 359.
+
 `node tools/autorun.mjs 8 351ce` comes back with **no anomalies**. The shape of
 it is worth writing down: the all-AI rising neither dies nor grows — three
 provinces at the start and three at the end, an army ground down from six

@@ -576,6 +576,40 @@ export const BOOKMARK_351 = {
   // The era's lens on the western tags (SPEC §139, §173): the fourth century's
   // own names for peoples the atlas files under older ones.
   tagTweaks: {
+    // The empire that comes out of the division (SPEC §238). What leaves Rome
+    // in January 395 is not "Byzantium" — a word nobody will use for a
+    // thousand years, and a name this game's own 529 and 614 chapters have
+    // every right to — but the Eastern Empire, which is what it called
+    // itself, what its enemies called it, and what it is to a Galilee that
+    // has to deal with it for the rest of this chapter. Same three letters,
+    // and `secedeTag` seats it through this lens like any other court.
+    BYZ: {
+      name: 'The Eastern Empire', adj: 'Eastern Roman',
+      capital: 'Byzantion',
+      description: 'Arcadius\' half: the richer one, the one with the walls, and — from the '
+        + 'moment Theodosius dies — the only government that has any say about Palestine.',
+    },
+    // The kingdoms the West is dismembered into. Each is on the map because a
+    // card put it there; the names are the era's own.
+    BRT: {
+      name: 'The Britons', adj: 'British',
+      description: 'The diocese that was told to see to its own defence, and did.',
+    },
+    VAN: {
+      name: 'The Vandals and Alans', adj: 'Vandal', capital: 'Hispalis',
+      description: 'The confederation that crossed a frozen river, drew lots for Spain, and is '
+        + 'two decades from owning the grain of the West.',
+    },
+    BGD: {
+      name: 'The Burgundians', adj: 'Burgundian', capital: 'Mogontiacum',
+      description: 'Federates on the Rhine: land in return for soldiers, from a government with '
+        + 'no soldiers of its own to put there.',
+    },
+    VIS: {
+      name: 'The Goths of Toulouse', adj: 'Gothic', capital: 'Tolosa',
+      description: 'Alaric\'s people, settled by treaty on the best ground in Gaul and paid in '
+        + 'the tax grain of the province they sit on.',
+    },
     // The rising is not Judaea (SPEC §139, §236). Judaea was struck off the
     // map in 135 and the hill country around Aelia is Christian Palaestina
     // Prima; the nation moved north two centuries ago and everything this
@@ -1032,6 +1066,15 @@ export const BOOKMARK_351 = {
     SAS: { rally: ['Seleucia-Ctesiphon', 'Arbela'], targetRegiments: 40 },
     JUD: { rally: ['Sepphoris'], targetRegiments: 12 },
     ARM: { rally: ['Tigranocerta'], targetRegiments: 8 },
+    // The courts the collapse seats (SPEC §238). None of them exists in 351;
+    // a hint costs nothing until the card that creates them fires, and
+    // without one an empire that arrives holding a hundred provinces musters
+    // to the default and rallies nowhere in particular.
+    BYZ: { rally: ['Antioch', 'Byzantion'], targetRegiments: 34 },
+    VAN: { rally: ['Hispalis', 'Carthago'], targetRegiments: 14 },
+    VIS: { rally: ['Tolosa'], targetRegiments: 10 },
+    BGD: { rally: ['Mogontiacum'], targetRegiments: 5 },
+    BRT: { rally: ['Britannia'], targetRegiments: 3 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

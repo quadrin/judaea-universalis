@@ -39,6 +39,7 @@ import { EVENTS_132_KOSIBA } from './events_132ce_kosiba.js';
 import { BOOKMARK_351 } from './bookmark_351ce.js';
 import { EVENTS_351 } from './events_351ce.js';
 import { EVENTS_351_WORLD } from './events_351ce_world.js';
+import { EVENTS_351_COLLAPSE } from './events_351ce_collapse.js';
 import { BOOKMARK_529 } from './bookmark_529ce.js';
 import { EVENTS_529 } from './events_529ce.js';
 import { EVENTS_529_WORLD } from './events_529ce_world.js';
@@ -131,7 +132,12 @@ export const ERAS = [
   // events_351ce.js so both packages keep the zero-import property their
   // headers promise, and so the registry stays the one place the pairing is
   // written down.
-  { bookmark: withPolitical(BOOKMARK_351), events: EVENTS_351.concat(EVENTS_351_WORLD, ANTIQUE) },
+  // The collapse package (SPEC §238) is the western half of this chapter's
+  // world spine: the five courts that come out of Rome between 395 and 439,
+  // on the map rather than in a modifier. It rides beside the world package
+  // for the same reason 132's three packages do — one chapter, one registry
+  // line, and every content file keeps its zero-import promise.
+  { bookmark: withPolitical(BOOKMARK_351), events: EVENTS_351.concat(EVENTS_351_WORLD, EVENTS_351_COLLAPSE, ANTIQUE) },
   // The Keepers (SPEC §136): the one chapter whose player is not Jewish. It
   // plays the shared antique pool like its neighbours — the omens belong to
   // anybody, and a Samaritan state large enough to conquer faces the same

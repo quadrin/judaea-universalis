@@ -5,8 +5,10 @@
 // the civil war ending, the church of the empire tearing itself apart over a
 // word, the philosopher on the Rhine and then on the throne, Amida, the peace
 // that gave away Nisibis, the Danube crossing, Adrianople, the edict that made
-// one creed the law, the synagogue at Callinicum, the division of 395, and the
-// morning the Goths were inside Rome.
+// one creed the law, the synagogue at Callinicum, and the morning the Goths
+// were inside Rome. The division of 395 opens the collapse package beside this
+// one (SPEC §238), because it is the first card of that arc rather than the
+// last of this one.
 //
 // Half of these are here because a chapter about a Jewish rising in a
 // Christianizing empire needs the empire's Christianization to be visible as
@@ -531,45 +533,6 @@ export const EVENTS_351_WORLD = [
           h.setFlag(ctx, 'callinicum', true);
           h.chronicle(ctx, 'era', 'The emperor orders a burned synagogue rebuilt at the arsonist\'s '
             + 'expense, and is talked out of it from his own pulpit.');
-        }),
-      },
-    ],
-  },
-
-  // ── 395 ────────────────────────────────────────────────────────────────────
-  {
-    id: 'ev351w_the_division',
-    title: 'The Empire Divided for the Last Time',
-    worldLabel: 'Theodosius dies; the Empire is divided between his sons and never rejoined',
-    desc: 'Theodosius dies at Milan in January, having ruled the whole Roman world for four '
-      + 'months, and leaves it to two boys: Arcadius, eighteen, in Constantinople, and '
-      + 'Honorius, ten, in Milan, each with a general behind the throne who despises the '
-      + 'other. The Empire has been divided administratively a dozen times. This one is not '
-      + 'repaired, and within a generation the two halves are conducting foreign policy '
-      + 'against each other.\n\n'
-      + 'For everybody east of the Adriatic the practical consequence is simple: the West is '
-      + 'no longer a source of soldiers, and Constantinople is on its own.',
-    forTag: 'both',
-    decider: 'ROM',
-    date: { y: 395, m: 1 },
-    world: true,
-    aiOption: 0,
-    historical: 'Theodosius died on 17 January 395. The Empire was never again ruled by one man.',
-    options: [
-      {
-        label: 'Two courts, two armies, one name',
-        tooltip: 'Rome: −1 stability and "The Halves Apart" (−10% manpower and −6% income, '
-          + 'permanent).',
-        effects: guard('ev351w_the_division:0', (ctx) => {
-          const h = ctx.helpers;
-          if (alive(ctx, 'ROM')) {
-            h.adjust(ctx, 'ROM', { stability: -1 });
-            mod(ctx, 'ROM', 'the_halves_apart', 'The Halves Apart',
-              { manpowerMult: 0.9, incomeMult: 0.94 });
-          }
-          h.setFlag(ctx, 'empireDivided', true);
-          h.chronicle(ctx, 'era', 'Theodosius dies and the Empire is divided between two boys, '
-            + 'which this time is permanent.');
         }),
       },
     ],

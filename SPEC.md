@@ -16354,3 +16354,67 @@ same way and both offer it.
   the player in the new chair, JUD forwarding to it, the chapter's own
   missions still resolving through the living tag, the curriculum following
   the country through its lineage, and the victory contract running clean.
+
+## 238. The West comes apart
+
+The 351 chapter runs to 430, which means it runs straight through the one
+political event of late antiquity everybody knows the name of, and the map had
+no way of showing it. §235 shipped the division of 395 as a modifier and a
+chronicle line — "The Halves Apart", −10% manpower — and the political layer
+went on painting one Rome from the Clyde to the Euphrates until the chapter
+ended. A chapter whose whole argument is that the fourth century is a different
+world from the second cannot ask the player to take that on trust while the map
+says otherwise.
+
+`events_351ce_collapse.js` is the western half of the chapter's world spine.
+Five courts come out of Rome, none of them invented:
+
+- **395 · BYZ**, the Eastern Empire. The prefectures of Oriens, Aegyptus,
+  Asiana, Pontica, Thracia and eastern Illyricum leave under Arcadius —
+  Pannonia, Dalmatia and Noricum stay western, which is what Stilicho spends
+  the next twelve years arguing about. From this month the government that
+  taxes Palestine, garrisons it and legislates about its Jews is a different
+  state from the one that rules Italy.
+- **410 · BRT**, the Britons: the rescript telling the cities to see to their
+  own defence, which is the only formal end Roman Britain ever got.
+- **411 · VAN**, the Vandals and Alans, by the lot Hydatius says they drew.
+  Rome keeps Tarraconensis, which is why every fifth-century western campaign
+  starts at the Ebro.
+- **413 · BGD**, the Burgundians at Worms — the arrangement the West makes over
+  and over, whose arithmetic is that the Empire buys an army by ceasing to
+  govern a province.
+- **418 · VIS**, the Goths of Toulouse: the first barbarian kingdom on Roman
+  soil that Rome itself signed for.
+
+…and then the same Vandals take the Mauretanias (429) and Carthage (439), at
+the races, in peacetime, and the grain fleet never sails for Rome again.
+
+**The war goes with the ground.** `secedeTag` deliberately hands the child none
+of the parent's wars — correct for Damascus in 1961, catastrophic here, where
+the war IS about the ground that just changed hands. A campaign at war with
+Rome in December 394 must be at war with Constantinople in January 395 with its
+war score intact; otherwise the division hands the player a free peace with the
+half that holds nothing they want. Wars whose other side is an eastern court
+(the rising, Persia, Armenia) move; a Gothic war on the Danube stays western.
+
+**Courts arrive dressed by the chapter** (§236): `secedeTagCore` now reads the
+same §139 lens `switchTagCore` does, so what leaves Rome in 395 is *the Eastern
+Empire* — a state that called itself Roman and would not hear the word
+Byzantium for a thousand years — rather than the name two later chapters have
+every right to. The lens also names the four western kingdoms.
+
+**What this package deliberately does not do**: invent a Hunnic court (Attila
+is 434–453 and the frame has no tag for him), move the Sueves into Gallaecia
+(SUE is seated as the Alamanni in this chapter, and renaming the Rhine
+confederation to fit a Spanish province would be a worse lie than leaving the
+northwest Vandal), or touch the East. **The East does not collapse.** That is
+the entire point of the East, and of the two chapters that come after it.
+
+- **Regression contract**: `smoke159.mjs` — every province name in all four
+  lists resolves on this chapter's map (a typo would silently leave Egypt
+  western for ever); the line of 395 is checked from both sides, province by
+  province; the war and its score follow the ground while a western war stays
+  west; the five courts arrive in order, each on ground of its own, with the
+  West shrinking monotonically and still holding Italy in 439; the East never
+  loses a province to any of it; and an arc run over ground Rome no longer
+  holds neither throws nor seats a kingdom on somebody else's provinces.
