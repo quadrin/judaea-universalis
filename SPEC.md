@@ -16142,3 +16142,115 @@ that were red on main — smoke31 and smoke104 — are green again.
 ancient chapter, the six are latent under their carve-parents and active in
 1948, every realm in every chapter opens on the development it always had, and
 the §228 roads are direct again.
+
+## 235. The rising nobody records, and the century that was the enemy
+
+The sixth chapter is the Jewish revolt of 351, and everything interesting about
+it is that it should not be a chapter at all. The sources give it a sentence
+and a half. Ammianus, who was in Syria at the time on Ursicinus' own staff,
+mentions it while explaining something else. Aurelius Victor gives it a clause,
+Jerome a line, Socrates and Sozomen a paragraph each written a century later by
+men with a case to make. Modern scholarship has spent forty years arguing the
+thing down from "the last Jewish revolt" to "a disturbance at Diocaesarea",
+and the archaeology mostly agrees with the deflation.
+
+It is a chapter because of the arithmetic, which nobody in Sepphoris knew.
+
+**The window is real and it is the whole design.** In March 351 Constantius II
+made his cousin Gallus Caesar of the East and went west with the field army to
+fight Magnentius. On 28 September at Mursa the two Roman armies destroyed each
+other — the costliest battle Romans ever fought against Romans, somewhere above
+fifty thousand dead, and Zosimus is close to right that Rome's strength never
+recovered. Shapur II had been over the border every summer for fourteen years
+and had besieged Nisibis three times. The eastern establishment in the summer
+of 351 was a twenty-five-year-old Caesar with a household, a frontier army that
+could not leave the frontier, and one very good general. A rising in the Galilee
+had, for about thirty months, the best strategic position any Jewish rising ever
+had, and it lasted one season because it was one town's arms-raid and had no
+government behind it.
+
+So the chapter opens with a robbery rather than a plan. `bookmark_351ce.js`
+deals the rising three provinces — Diocaesarea, Tarichaea, Gischala, thirty-two
+points of development — and gives **Tiberias to the Empire**, which is the
+single most important line in the file. The Patriarch of the Jews lives in
+Tiberias. He holds an honorary prefecture, a salary, the ordination of judges
+from Spain to Babylonia, the collection of the crown gold, and the proclamation
+of the new moon that the festivals of the whole scattered people run on. He is
+three miles from the rebel outposts and everything he has, he has because the
+Empire finds it convenient that somebody hold it. An owners table that handed
+the rising Tiberias would delete the chapter's first fork without failing
+anything else, which is why `smoke158` checks it by name.
+
+**The antagonist is `faithDrift`.** Every other chapter's enemy has an army.
+This one's is the fourth century: Constantine's building programme, the
+pilgrims, the endowments, the exemptions, and a legal code that removes one
+more thing every decade and grants nothing. The drift curve is centred on 300
+and runs the whole chapter whoever is winning the war; it dips to 45% for the
+twenty months Julian reigns and resumes, which is exactly what happened. The
+capstone mission accordingly counts **provinces that still keep the Torah**
+rather than provinces held: a Galilee that is still Jewish in 400 has beaten
+something no rising ever fought, and a Galilee that is merely occupied has not.
+
+**The forks are decisions, not conquests**, because that is what this century
+offered. Six of them:
+
+- **What he is called.** Socrates says they proclaimed a king; the Latin
+  chroniclers say only a leader. A diadem changes the category the Empire files
+  this under and gives every Jew from Antioch to Alexandria something to be for
+  or against; a captaincy keeps the affair in the drawer marked "governor
+  handles it" for another year, and a year is a year.
+- **The house down the shore.** Ask the Patriarch, and get the letters, the
+  courts and the money — and cost the office everything the Empire gave it. Or
+  leave him out of it, which is the historical road arrived at by silence: the
+  office survived 351, and institutions that endorse failed risings do not.
+- **The moon and the reckoning.** Hillel II is credited with fixing the calendar
+  by computation in 358/9. Publish the tables and the festivals of a scattered
+  people become indestructible — and this court becomes optional, permanently.
+  Keep the proclamation and the Land stays indispensable to everybody outside
+  it, on a thread that runs through this state's survival. It is the chapter's
+  schools quarrel as well as one of its forks (`moon_and_reckoning`), because
+  it is the one argument in Jewish late antiquity where both sides are right.
+- **The Emperor's offer.** Julian's Temple, in 363, arriving at a state instead
+  of at a memory. The 132 chapter asks the same question about the same mountain
+  in the same year; per §119 the two chapters do not know about each other, and
+  the flags are deliberately different ones so a campaign cannot answer one
+  chapter's fork out of the other's card.
+- **The bishops' terms.** A Jewish state that takes Caesarea or Aelia governs
+  Christians — bishops with correspondents in Antioch, basilicas built with
+  imperial money, congregations who have spent thirty years learning that the
+  government is theirs. `foreignPatron` makes that a live cost from the first
+  month it applies, and the settlement card is the only thing that ends it.
+- **The last Nasi.** Cod. Theod. XVI.8.22 strips Gamaliel VI of his rank in
+  415; the office lapses by 425 and its tax is taken over by the imperial
+  treasury in 429. The fork asks whether a Jewish government fills the office
+  itself, or moves its functions into a chancery first and lets it go.
+
+**What the chapter is not.** It is not a second 132. Bar Kokhba's chapter opens
+with a prepared state, a plan, hollowed hills and a mint; this one opens with a
+chest of somebody else's weapons and no administration at all — the opening
+modifiers say so in both directions (`the_arms_of_the_night`, and
+`no_administration` at +35% on the cost of governing). And it is not winnable in
+the way 66 or 132 are winnable: the victory contract is the Galilee entire by
+356, or simply still being a sovereign Jewish country in 364, after the one
+emperor who would have helped is dead and the law goes back to being written by
+men who think the state should not exist.
+
+The world package is the age on its own clock — Mursa, Magnentius at Lugdunum,
+the bishops made to sign at Milan, Strasbourg, seventy-three days at Amida, the
+army at Paris, the spear outside Samarra and the peace that gave away Nisibis,
+the Danube crossing, Adrianople, Cunctos Populos, the synagogue at Callinicum,
+the division of 395, and the gate opened at night in 410. Half of it is there
+because a chapter about a Jewish rising inside a Christianizing empire needs
+the Christianization to be events and not merely a curve; the other half is
+what the century did while nobody in the Galilee could affect any of it.
+
+- **Regression contract**: `smoke158.mjs` — the chapter registered and sorted
+  sixth in the carousel; three towns and Tiberias not among them; the map wearing
+  Aelia, Diocaesarea, Diospolis, Nicopolis and Constantinople, with a Christian
+  Aelia and a bare Mount; the window on Rome's books at month one with thirty
+  months on it and both wars running; the opening cards reaching a player; twelve
+  distinct fork markers, none of them 132's; the drift declared, resisted, and
+  dipping under Julian; the quarrel convening with both seats seated; the
+  curriculum open at the rung the age starts on; the political map seating a
+  Gothic Dacia, a single Iranian court, a post-Meroitic Nile and a Christian
+  Aksum; and the victory contract answering at both ends.

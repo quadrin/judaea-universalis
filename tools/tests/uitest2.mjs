@@ -14,7 +14,7 @@ const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 480000);
 
 async function pickBookmark(page, nameFrag) {
   await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     const cur = page.locator('.bm-card.current');
     const txt = (await cur.textContent()) || '';
     if (txt.includes(nameFrag)) { await cur.click(); return; }
@@ -39,10 +39,11 @@ await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 
-// Seven bookmark cards, chronological (the Kitos card retired in v5.1 —
-// this suite's stale nth(7) went with it, fixed in v5.4).
+// Nine bookmark cards, chronological (the Kitos card retired in v5.1 — this
+// suite's stale nth(7) went with it, fixed in v5.4 — and SPEC §235 added the
+// rising against Gallus between Bar Kokhba and the Keepers).
 const cards = await page.locator('.bm-card').count();
-ok(cards === 8, 'eight bookmark cards on the start screen: ' + cards);
+ok(cards === 9, 'nine bookmark cards on the start screen: ' + cards);
 const lastCard = (await page.locator('.bm-card').nth(cards - 1).textContent()) || '';
 ok(/Independence/.test(lastCard), 'last card is the War of Independence: ' + lastCard.slice(0, 60));
 

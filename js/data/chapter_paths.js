@@ -1031,6 +1031,175 @@ export const CHAPTER_PATHS = Object.freeze([
   }),
 
   Object.freeze({
+    id: '351ce',
+    title: 'The Rising Against Gallus',
+    // SPEC §235. The chapter runs to 429 — the year the crown gold of the
+    // whole Jewish world was redirected to the imperial treasury, because
+    // there was no longer anybody to send it to. Every fork here is about
+    // that end arriving, or not.
+    lastYear: 429,
+    forks: [
+      Object.freeze({
+        id: 'what_he_is_called',
+        question: 'A town has raised a man up. Is he a king, or the captain of a muster?',
+        roads: [
+          Object.freeze({
+            id: 'crowned', name: 'A King in Israel',
+            marker: 'patriciusCrowned', entry: 'ev351_what_he_is_called',
+            terminal: 'ev351_what_the_crown_was_worth',
+            historical: 'Socrates (HE II.33) says the Jews of Diocaesarea proclaimed a king '
+              + 'named Patricius; the Latin chroniclers say only that they made him leader.',
+            note: 'SPEC §235. The diadem, which every chancery in the world understands and '
+              + 'which changes the category the Empire files this under from disturbance to '
+              + 'usurpation. It ends thirty years on with the only thing a crown reliably '
+              + 'buys — a succession everybody in the country can name.',
+          }),
+          Object.freeze({
+            id: 'captain', name: 'Captain of the Muster',
+            marker: 'patriciusCaptain', entry: 'ev351_what_he_is_called',
+            terminal: 'ev351_the_captains_country',
+            note: 'SPEC §235. No diadem, no claim and nothing in writing: the Empire goes on '
+              + 'filing this as a police matter for another year, which is a year. It ends in '
+              + 'the constitution that grows out of not having a king — a council the Empire '
+              + 'cannot invite to Antioch and relieve of its escort.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_house_of_the_nasi',
+        question: 'The Patriarch lives three miles down the shore, in the Empire\'s city. '
+          + 'Is he asked?',
+        roads: [
+          Object.freeze({
+            id: 'blessed', name: 'The House Comes Over',
+            marker: 'nasiBlessed', entry: 'ev351_the_house_of_the_nasi',
+            terminal: 'ev351_the_house_that_chose',
+            note: 'SPEC §235. The letters, the courts, the ordinations and the crown gold of '
+              + 'every congregation on earth, brought inside a rising that has three towns. '
+              + 'It costs the office everything the Empire gave it, and ends with a '
+              + 'patriarchate that answers to Jews and reaches half the world it used to.',
+          }),
+          Object.freeze({
+            id: 'stood_aside', name: 'The House Stands Aside',
+            marker: 'nasiStoodAside', entry: 'ev351_the_house_of_the_nasi',
+            terminal: 'ev351_the_house_that_waited',
+            historical: 'The patriarchate survived 351, 352 and every emperor down to '
+              + 'Theodosius II. Institutions that endorse failed risings do not do that.',
+            note: 'SPEC §235. The historical road, arrived at by silence: the rising gets no '
+              + 'letters and no money, and the one Jewish institution emperors write to is '
+              + 'still standing sixty years later — on a floor that belongs to somebody else.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_calendar',
+        question: 'Is the moon proclaimed from the Land, or is the reckoning published to '
+          + 'everybody?',
+        roads: [
+          Object.freeze({
+            id: 'reckoning', name: 'The Reckoning Published',
+            marker: 'reckoningPublished', entry: 'ev351_the_fixed_calendar',
+            terminal: 'ev351_the_diaspora_keeps_its_own_time',
+            historical: 'Hillel II is credited with fixing the calendar by computation in '
+              + '358/9; the shift from proclamation to reckoning happens in this century '
+              + 'whoever made it.',
+            note: 'SPEC §235. The insurance policy that worked: the festivals of a scattered '
+              + 'people become independent of any court, any road and any state. It ends where '
+              + 'insurance always ends, with the thing it insured against no longer mattering '
+              + '— including this country.',
+          }),
+          Object.freeze({
+            id: 'moon', name: 'The Moon From the Land',
+            marker: 'moonKept', entry: 'ev351_the_fixed_calendar',
+            terminal: 'ev351_the_courts_of_the_land',
+            note: 'SPEC §235. The witnesses, the confirmation and the messengers kept in the '
+              + 'hands of a court sitting in this country, which is the single most powerful '
+              + 'thing the Land does for everybody outside it — and a thread that runs through '
+              + 'this state\'s survival. It ends fifty years on with the centre still holding, '
+              + 'because there was still a state to hold it.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_emperors_offer',
+        question: 'A pagan emperor offers to rebuild the House, to spite the Christians. '
+          + 'Is the stone laid?',
+        roads: [
+          Object.freeze({
+            id: 'stone_laid', name: 'The Stone Is Laid',
+            marker: 'julianStoneLaid', entry: 'ev351_the_stone_is_laid',
+            terminal: 'ev351_the_fire_in_the_foundations',
+            historical: 'Julian ordered the work in 363 and Alypius began it; Ammianus '
+              + 'XXIII.1.3 reports the fires in the foundations that stopped it.',
+            note: 'SPEC §235. Imperial money, an imperial architect, and an emperor with '
+              + 'twenty months to live. The 132 chapter asks this same question of the same '
+              + 'mountain and the two chapters do not know about each other (§119); this one '
+              + 'asks it of a state that would have to keep what it built.',
+          }),
+          Object.freeze({
+            id: 'offer_declined', name: 'Not On This Authority',
+            marker: 'julianOfferDeclined', entry: 'ev351_the_stone_is_laid',
+            terminal: 'ev351_what_declining_bought',
+            note: 'SPEC §235. The refusal, on the ground that the House was never the '
+              + 'Emperor\'s to grant. It ages better than any other decision of the sixties '
+              + 'and it is still a bare mountain, and both of those go on being true together.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_bishops_terms',
+        question: 'A Jewish state now governs Christian cities. On what terms?',
+        roads: [
+          Object.freeze({
+            id: 'settled', name: 'Terms In Writing',
+            marker: 'bishopsSettled', entry: 'ev351_the_bishops_terms',
+            terminal: 'ev351_the_two_congregations',
+            note: 'SPEC §235. The endowments left alone, the pilgrim roads open, the clergy '
+              + 'exempt — and in exchange the churches stop being an imperial party inside '
+              + 'the borders. The nearest real analogue is the Church of the East under the '
+              + 'Sasanians, which is the same bargain seen from the other side.',
+          }),
+          Object.freeze({
+            id: 'unsettled', name: 'Assessed Like Anybody Else',
+            marker: 'bishopsRefused', entry: 'ev351_the_bishops_terms',
+            terminal: 'ev351_the_law_of_the_other_side',
+            note: 'SPEC §235. The exemptions end and the treasury fills, and the bishops write '
+              + 'to Antioch by the next post. It ends in the Theodosian Code: the fourth '
+              + 'century\'s answer to a Jewish question was always a rescript, and the '
+              + 'examples in it come from here.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_last_nasi',
+        question: 'The Empire is taking the patriarchate apart by rescript. Is the office '
+          + 'filled anyway, or does the state inherit its work?',
+        roads: [
+          Object.freeze({
+            id: 'office_kept', name: 'The Office Filled',
+            marker: 'officeKept', entry: 'ev351_the_last_nasi',
+            terminal: 'ev351_the_office_after_the_office',
+            note: 'SPEC §235. A Nasi seated in the Land by a Jewish government rather than '
+              + 'lapsing through imperial inattention. The office reaches less of the world '
+              + 'and holds it on its own authority, which is the whole chapter in one '
+              + 'appointment.',
+          }),
+          Object.freeze({
+            id: 'office_lapsed', name: 'The Courts Inherit',
+            marker: 'officeLapsed', entry: 'ev351_the_last_nasi',
+            terminal: 'ev351_the_courts_inherit',
+            historical: 'The patriarchate lapsed by 425 and its tax was taken over by the '
+              + 'imperial treasury in 429. Nothing inherited its functions in the Land.',
+            note: 'SPEC §235. The office allowed to end, with everything it did moved into a '
+              + 'chancery and a court first. Less venerable than what it replaced and '
+              + 'considerably harder to abolish by rescript.',
+          }),
+        ],
+      }),
+    ],
+  }),
+
+  Object.freeze({
     id: '529ce',
     title: 'The Keepers',
     // SPEC §136 shipped the opening chain — 529–531, the statute to the

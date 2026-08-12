@@ -2,13 +2,14 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
-An EU4-style grand-strategy game set in the ancient Near East. Eight bookmarks,
+An EU4-style grand-strategy game set in the ancient Near East. Nine bookmarks,
 every one played from an Israelite side:
 **The Maccabean Revolt, 167 BCE** (Hasmonean Judaea),
 **The Judaean Civil War, 67 BCE** (Hyrcanus, Aristobulus, or Adiabene),
 **Herod's Rise, 40 BCE** (Herod, Antigonus, or Adiabene),
 **The Great Revolt, 66 CE** (Judaea, Agrippa II's kingdom, or Adiabene),
 **The Bar Kokhba Revolt, 132 CE** (Judaea or Adiabene),
+**The Rising Against Gallus, 351 CE** (the Galilee, while the Empire fights itself),
 **The Keepers, 529 CE** (Samaria under Justinian),
 **The Persian Gambit, 614 CE** (the Return),
 and **The War of Independence, 1948** (Israel).
@@ -69,14 +70,16 @@ static site, the zero dependencies, or the missing build step changes.
   the 1948 chapter every established country plays as one province under its
   own name, while the theatre keeps the districts the war is fought in.
 - A political west — and, beyond the Euphrates and the cataracts, a political
-  east and south — in every chapter: eight per-era maps seat some 77 courts
+  east and south — in every chapter: nine per-era maps seat some 77 courts
   on the ground beyond the original theater. Carthage, Masinissa's Numidia
   and the Arverni hegemony in 167 BCE; Kush under its warrior queens, the
   Periplus' own cast of 66 CE (Zoscales' Aksum, Charibael's Himyar-and-Saba,
   Eleazus' frankincense kingdom), Sakastan and Greco-Bactria on the Helmand;
-  the Ostrogoths, Vandals, Franks and Moorish kings in 529 (Justinian no
-  longer holds an Italy he hadn't reconquered yet — and Kaleb of Aksum holds
-  the Yemen he took four years before); the Avar khaganate and the Sclaveni
+  the Tervingi in the Dacia Rome gave up, the Alamanni on the far Rhine bank
+  and a post-Meroitic Nile in 351; the Ostrogoths, Vandals, Franks and
+  Moorish kings in 529 (Justinian no longer holds an Italy he hadn't
+  reconquered yet — and Kaleb of Aksum holds the Yemen he took four years
+  before); the Avar khaganate and the Sclaveni
   in 614; Stalin's Europe in 1948, Paris to Moscow under their 1948 names,
   with Haile Selassie's Ethiopia, the Imam's Yemen and one-year-old Pakistan
   at the map's new edges. Every one is a living AI court — convening,
@@ -386,7 +389,7 @@ static site, the zero dependencies, or the missing build step changes.
   Zeal of Phinehas and, eventually, The Greek Art of War; the Seleucid king
   answers with The Royal Cities and The Seleucid Phalanx; the Fourth Philosophy
   faces the Flavian Method, the Keepers' Torah faces Justinian's Codex, and the
-  People in Arms faces the Arab Legion — fifty-one groups across the eight
+  People in Arms faces the Arab Legion — seventy groups across the nine
   chapters, three tiers each, bought with the ladder's own point, with locked
   cards that tell you exactly which rung opens them ("Unlocked at The Third
   Wall (8)") — and they are read where they are bought: the Ideas block sits
@@ -397,7 +400,7 @@ static site, the zero dependencies, or the missing build step changes.
   era's named art, and take up its ideas.
 - **The mission tree shows the roads not taken.** Every playable side's tree
   now carries the chapter's alternate-history forks as standing hypotheticals —
-  forty-five spectral medallions across the eight chapters naming the pages
+  eighty-two spectral medallions across the nine chapters naming the pages
   history never wrote (a Jewish king seated at Antioch, the coast subjugated,
   the eagle refused, the House that stood, the Levant without a Lebanon), each
   desc teaching exactly what state of the world makes those cards arrive, each
@@ -804,7 +807,7 @@ static site, the zero dependencies, or the missing build step changes.
   own payoff (coin, men, ministries and a modifier that says what this kingdom
   is FOR) plus a fresh mission chain addressed to the new identity.
 - **The crown speaks in the age it was crowned in.** The Kingdom of Israel can
-  be proclaimed in six of the eight chapters, and it used to read the same four
+  be proclaimed in six of the nine chapters, and it used to read the same four
   missions in all of them. Those four are still the spine — settle the crown,
   muster the kingdom, hold the land of the twelve, build rather than merely
   hold — but each chapter now hangs three of its own off the crowning: finish
@@ -976,6 +979,24 @@ static site, the zero dependencies, or the missing build step changes.
   the proclamation had just retired. The tree now leaves the panel when the
   realm does, and a new crown that brings no chain keeps the one you were
   already working, accomplishments and all.
+- **The Rising Against Gallus, 351 CE.** A ninth chapter, and the only one
+  whose antagonist has no army. In the spring of 351 Constantius II went west
+  with the field army to fight a usurper, left the East to a twenty-five-year-
+  old cousin, and lost fifty thousand Roman soldiers to other Roman soldiers at
+  Mursa in September; Shapur II was over the border every summer. In the middle
+  of that window a garrison at Diocaesarea — Sepphoris — was disarmed in the
+  night and a man named Patricius was raised up, and the whole affair lasted one
+  season and got a sentence and a half in Ammianus. You get three towns, a chest
+  of stolen weapons, no government at all, and thirty months before the Empire
+  is free again. The Patriarch of the Jews lives three miles down the shore in
+  the Empire's own city and has everything to lose; the real enemy is the fourth
+  century itself, running as a conversion curve that no battle touches and that
+  dips only for the twenty months Julian reopens the temples and offers to
+  rebuild the Temple. Six forks — what the man is called, whether the Patriarch
+  answers, who keeps the calendar after Hillel's tables exist, what to do about
+  the Emperor's offer, what terms the bishops get, and who fills the
+  patriarchate when Constantinople stops — and a victory condition that counts
+  the provinces still keeping the Torah in 400 rather than the provinces held.
 
 ## Architecture
 

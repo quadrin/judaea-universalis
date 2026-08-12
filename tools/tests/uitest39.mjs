@@ -11,7 +11,7 @@ const OUT = (process.env.JU_OUT || '/tmp') + '/';
 
 async function pickBookmark(page, nameFrag) {
   await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     const cur = page.locator('.bm-card.current');
     const txt = (await cur.textContent()) || '';
     if (txt.includes(nameFrag)) { await cur.click(); return; }

@@ -150,7 +150,7 @@ console.log('== §188 audit: for all bookmarks, every era idea is paid by a ladd
       }
     }
   }
-  ok(chapters === 8, 'eight chapters checked: ' + chapters);
+  ok(chapters === 9, 'nine chapters checked: ' + chapters);
   ok(!empty.length, 'every playable side of every chapter has a curriculum to show'
     + (empty.length ? ' (none: ' + empty.join(', ') + ')' : ''));
   ok(!bad.length, groups + ' era-idea slots, all of them unlocked and paid by a printed ladder'

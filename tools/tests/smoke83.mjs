@@ -39,6 +39,7 @@ const SOURCES = {
   '132ce': ['events_132ce.js', 'events_132ce_faith.js', 'events_132ce_world.js',
     'events_132ce_west.js', 'events_132ce_galilee.js', 'events_132ce_redemption.js',
     'events_132ce_endure.js', 'events_132ce_house.js', 'events_132ce_kosiba.js'],
+  '351ce': ['events_351ce.js', 'events_351ce_world.js'],
   '529ce': ['events_529ce.js', 'events_529ce_world.js', 'events_529ce_roads.js'],
   '614ce': ['events_614ce.js', 'events_614ce_persia.js', 'events_614ce_west.js',
     'events_614ce_third.js', 'events_614ce_power.js', 'events_614ce_david.js'],

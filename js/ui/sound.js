@@ -495,7 +495,7 @@ export function initSound(bus, getGame) {
   // Which age sings (SPEC §48): by bookmark, falling back to the year.
   const STYLE_BY_BOOKMARK = {
     '167bce': 'lyre', '67bce': 'lyre', '40bce': 'lyre', '66ce': 'lyre',
-    '132ce': 'klezmer', '614ce': 'klezmer',
+    '132ce': 'klezmer', '351ce': 'klezmer', '614ce': 'klezmer',
     '1948ce': 'hora',
   };
 

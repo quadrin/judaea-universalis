@@ -33,7 +33,7 @@ await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
-for (let i = 0; i < 8; i++) {
+for (let i = 0; i < 12; i++) {
   const card = page.locator('.bm-card.current');
   if (/Great Revolt/.test((await card.textContent()) || '')) { await card.click(); break; }
   await page.locator('.ss-next').click();

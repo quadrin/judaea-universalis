@@ -519,6 +519,85 @@ const MAP_132 = deal({
 ]);
 
 // ---------------------------------------------------------------------------
+// 351 CE — the world Constantius is not looking at.
+// Two hundred and twenty years after Hadrian's map, and three things on it have
+// changed permanently. Dacia is Gothic: Aurelian pulled the province out in 271
+// and the Tervingi hold it under a treaty and a judge, with the old Greek
+// Pontic outposts of Tyras and Olbia gone with it. Persia is Sasanian and has
+// been since 224, which means one court now answers for everything from the
+// Euphrates to the Indus approaches — Ardashir's house took Parthia's ground
+// and then Sakastan, the Makran and the Oman shore that Shapur II's Arabian
+// campaigns cleared in the 320s. And Meroe is finished: Ezana's inscription
+// describes campaigning against the Noba in the ruins of it about now, so the
+// Nile kingdoms are the post-Meroitic ones and the Blemmyes hold the
+// Dodekaschoinos that Diocletian handed over in 298.
+//
+// The rest is the empire, entire, from the Wall to the cataracts — and split
+// down the middle by its own civil war for the two years this chapter opens
+// in. Ammianus XIV-XXI, Zosimus II, and the Notitia's frontier commands are
+// the spine.
+// ---------------------------------------------------------------------------
+
+const MAP_351 = deal({
+  ROM: AFRICA_PUNIC.concat(AFRICA_NUMID, AFRICA_MASAESYLI, AFRICA_MOOR,
+    SPAIN_ALL, GAUL_ALL, ITALY_NORTH, ITALY_ISLES, BRITAIN,
+    DANUBE_ILLYRIA, DANUBE_PANNONIA, DANUBE_MOESIA, DANUBE_THRACE,
+    ['Naissus', 'Tomis']),                     // Scythia Minor is still a province
+  GRM: ['Garama'],
+  CAL: CALEDONIA, HIB: HIBERNIA,
+  // The Tervingi in the Dacia Rome gave up, and the Pontic coast that went
+  // with it: Tyras and Olbia are archaeologically finished by the 340s.
+  GOT: DACIA.concat(['Tyras', 'Olbia']),
+  GEP: ['Gothiscandza'],                       // the Vistula country the Goths left
+  // The Rhine confederations under the names the fourth century uses for them.
+  SUE: ['Semnones', 'Boiohaemum'],             // the Alamanni and the Suebi behind them
+  FRK: ['Teutoburgium'],                       // the Franks of the lower Rhine and the Weser
+  FRS: ['Frisia'], CHA: ['Chatti'],
+  SAX: ['Cimbria'],                            // the Saxons Rome is already building a fort coast against
+  SCN: ['Scandia', 'Selandia'], AES: ['Aestii'],
+  BOS: PONTIC_GREEK,                           // the Bosporan kings, Rome's clients to the end
+  SCY: ['Tauria', 'Scythia'],
+  SRM: STEPPE_FAR,
+  VEN: ['Venedia'],
+  // -- the east and south (SPEC §205) --
+  SAS: IRAN_SE.concat(IRAN_NE, IRAN_PARTHYENE, IRAN_SAKASTAN, IRAN_MAKRAN, OMAN_CELLS),
+  CHO: ['Chorasmia'],
+  NOB: ['Napata', 'Meroe', 'Soba'],            // the post-Meroitic kingdoms
+  BLM: ['Blemmyae', 'Dodekaschoinos'],         // ceded by Diocletian in 298 and held ever since
+  AXM: AKSUM_CORE,                             // Ezana, with a cross on the coinage
+  HMY: YEMEN_HIMYAR.concat(YEMEN_SABA, HADRAMAWT), // "king of Saba, dhu-Raydan and Hadramawt"
+  WASTE: ['Gaetulia', 'Borysthenia', 'Rha', 'Hyperborea', 'Ripaea',
+    ...OXUS_STEPPE, ...ARABIA_INNER, ...HORN_PORTS, ...HORN_INTERIOR,
+    ...SAHEL, ...GUINEA_W],
+}, [
+  // The frontier in 351 is nearly everything with a river on it, and the field
+  // armies that would have relieved it are killing each other in Pannonia.
+  'Colonia Agrippina', 'Mogontiacum', 'Argentorate', 'Batavia',
+  'Britannia',
+  ...DANUBE_PANNONIA, ...DANUBE_MOESIA, 'Tomis',
+  'Atlas',
+  ...IRAN_NE,                                  // the Chionite marches, from 353 onward
+], faiths('christianity',
+  // The fourth century at its midpoint, not at its end. Christianity holds the
+  // cities and the sees and is the emperor's own religion; it does not yet hold
+  // the countryside of Gaul, Britain, Spain or the Danube, and this map does
+  // not pretend it does — Martin of Tours is a generation away and the word
+  // paganus means what it says. What is dealt here is the ground where the
+  // church was demonstrably the majority institution by 350: Africa, where
+  // the Donatist schism is a mass movement; the great Italian and Illyrian
+  // sees the councils of these very years are held in; Corduba, whose bishop
+  // advised Constantine; and Ezana's Aksum, two centuries ahead of its
+  // neighbours.
+  AFRICA_PUNIC, AFRICA_NUMID,
+  ['Mediolanum', 'Aquileia', 'Ravenna'],
+  ['Corduba', 'Hispalis', 'Tarraco', 'Emerita'],
+  ['Lugdunum', 'Augusta Treverorum', 'Narbo'],
+  ['Sirmium', 'Serdica', 'Naissus', 'Singidunum'],
+  ['Chersonesus'],
+  AKSUM_CORE,
+));
+
+// ---------------------------------------------------------------------------
 // 529 CE — year two of Justinian, four years before Belisarius sails.
 // The chapter's owners table handed the emperor Italy, Sicily and Tripolitania
 // he does not hold until 533-540: Athalaric's Ostrogoths rule Italy, Dalmatia,
@@ -895,6 +974,7 @@ export const POLITICAL_MAPS = {
   '40bce': MAP_40,
   '66ce': MAP_66,
   '132ce': MAP_132,
+  '351ce': MAP_351,
   '529ce': MAP_529,
   '614ce': MAP_614,
   '1948ce': MAP_1948,

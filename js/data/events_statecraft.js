@@ -197,6 +197,11 @@ const SEATS = {
   '132ce:JUD': { strict: 'sages', worldly: 'captains', soldiers: 'captains' },
   '132ce:ROM': { strict: 'senate', worldly: 'people', soldiers: 'legions' },
   '132ce:ADI': { strict: 'proselytes', worldly: 'caravans', soldiers: 'riders' },
+  // The rising against Gallus (SPEC §235): the academies keep the Law, the
+  // Patriarch's house keeps the accounts and the correspondence, and the men
+  // who took the garrison's arms are the army there is.
+  '351ce:JUD': { strict: 'schools', worldly: 'nasi', soldiers: 'armed' },
+  '351ce:ROM': { strict: 'court', worldly: 'cities', soldiers: 'army' },
   '529ce:SAM': { strict: 'priesthood', worldly: 'council', soldiers: 'crowned' },
   '529ce:BYZ': { strict: 'church', worldly: 'landowners', soldiers: 'army' },
   // The kingdom beyond the strait (SPEC §208): the House of Yazan guards the

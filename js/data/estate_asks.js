@@ -132,6 +132,19 @@ export const ESTATE_ASKS = {
     { kind: 'men', name: 'The Fighting Bands Gather', text: 'Every district that armed in secret sends what it armed.' },
     { kind: 'zeal', name: 'The Oath of the Deliverance', text: 'Men fighting for the end of an exile do not count odds.' },
   ],
+  // 351 CE — the rising's three parties (SPEC §235).
+  armed: [
+    { kind: 'men', name: 'The Chest Is Opened Again', text: 'The men who went over the wall for the garrison\'s weapons know where every one of them went afterwards.' },
+    { kind: 'zeal', name: 'The Ones With Nothing to Go Back To', text: 'Whatever this state settles for, they are on the list. They fight like men who have read it.' },
+  ],
+  nasi: [
+    { kind: 'coin', name: 'The Crown Gold Is Diverted', text: 'The apostoloi bring in a collection from Spain to Babylonia, and this year it does not go to the house.' },
+    { kind: 'counsel', name: 'The Patriarch\'s Correspondents', text: 'A century of letters to emperors, governors and every congregation on earth, put at the crown\'s disposal for one season.', point: 'infl' },
+  ],
+  schools: [
+    { kind: 'calm', name: 'The Courts Sit in the Villages', text: 'A bench within a day\'s walk settles what a garrison would otherwise have to.' },
+    { kind: 'blessing', name: 'The Houses Give Their Sanction', text: 'The masters put their names to it, and a country that has argued for three centuries stops arguing for a year.' },
+  ],
   exilarch: [
     { kind: 'coin', name: 'The Exilarchate Remits', text: 'The house of the exile taxes a dispersion the crown cannot reach, and this year it remits.' },
     { kind: 'counsel', name: 'The Word From Ctesiphon', text: 'The exilarch\'s standing at the eastern court opens doors no envoy of ours could knock on.', point: 'infl' },

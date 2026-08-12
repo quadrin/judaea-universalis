@@ -249,6 +249,18 @@ function expectAllDone(g, bookmark, tags, label) {
   expectAllDone(game, era('132ce').bookmark, ['JUD', 'ADI'], '132ce');
 }
 
+{ // 351 CE — every road of the rising is proved by a marker, because every
+  // one of its six forks is a decision rather than a conquest: the name, the
+  // Patriarch, the calendar, Julian's offer, the bishops, and the office.
+  const { game, ctx } = booted.get('351ce');
+  Object.assign(game.flags, {
+    patriciusCrowned: true, nasiBlessed: true, reckoningPublished: true,
+    julianStoneLaid: true, bishopsSettled: true, officeKept: true,
+  });
+  pump(ctx, 120);
+  expectAllDone(game, era('351ce').bookmark, ['JUD'], '351ce');
+}
+
 { // 529 CE — the mountain, the letter, and the Taheb; the client court's
   // roads (SPEC §208) read the Keepers' own markers from the far end of
   // the one sea, so the same forced world pays them — plus the 556 rising

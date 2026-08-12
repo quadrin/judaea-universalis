@@ -1169,6 +1169,289 @@ export const QUARRELS = {
   },
 
   // ══════════════════════════════════════════════════════════════════════
+  // 351 CE — the quarrel this chapter is actually about (SPEC §235).
+  // Every other chapter's argument is about what the Law requires. This one is
+  // about who is entitled to say so, and it is between the two institutions
+  // that both survived the Temple: the Patriarch's house, which holds the
+  // ordinations, the collection and the proclamation of the moon, and the
+  // academies, which hold the Law itself and are being interrupted.
+  //
+  // The moon is the sharpest form of it. Until this century the calendar of
+  // every Jewish community on earth ran on a message from a court sitting in
+  // this country — witnesses examined, the month declared, messengers sent —
+  // which made the Land indispensable to everybody outside it in the most
+  // literal possible way. The tables exist; the arithmetic has not been hard
+  // for two hundred years. Publishing them makes the festivals indestructible
+  // and makes this court optional, and both halves of that sentence are true
+  // at the same time. Hillel II is credited with doing it in 358/9.
+  // ══════════════════════════════════════════════════════════════════════
+  moon_and_reckoning: {
+    id: 'moon_and_reckoning',
+    title: 'The Moon and the Reckoning',
+    hi: {
+      seat: 'nasi',
+      name: 'The Reckoning',
+      effects: { incomeMult: 1.12, legitimacyAdd: 0.2, manpowerMult: 0.92, unrestAll: 0.4 },
+      text: '+12% income, +0.2 legitimacy a month, −8% manpower, +0.4 unrest',
+      blurb: 'The house computes, publishes and corresponds, and the Jewish world runs on its '
+        + 'tables from Spain to the Tigris. It is the widest reach any Jewish institution has '
+        + 'ever had, and it is administered from an office rather than assembled from a '
+        + 'countryside — which is exactly what the countryside says about it.',
+    },
+    lo: {
+      seat: 'schools',
+      name: 'The Courts of the Land',
+      effects: { legitimacyAdd: 0.35, unrestAll: -0.6, growthMult: 1.06, incomeMult: 0.9 },
+      text: '+0.35 legitimacy a month, −0.6 unrest, +6% growth, −10% income',
+      blurb: 'Witnesses, examination, declaration, messengers: the month is proclaimed by a '
+        + 'court sitting in this country, and every festival kept anywhere is kept because of '
+        + 'it. Nothing binds a scattered people to a place more tightly, and nothing is more '
+        + 'obviously going to break the first time this place stops having a court.',
+    },
+    mid: 'The house has the tables and has not published them, the courts still send messengers '
+      + 'and have stopped being certain they arrive, and both institutions are describing the '
+      + 'arrangement to visitors as temporary.',
+    states: {
+      concord: {
+        name: 'The Letters and the Benches Agree',
+        blurb: 'The house collects and corresponds, the academies rule and ordain, and each '
+          + 'signs what the other has settled — the arrangement of the good years, which the '
+          + 'sources describe mostly by recording the years it broke down.',
+      },
+      breachHi: {
+        name: 'The Apostoloi Ride Without Rulings',
+        blurb: 'The collection goes out and the correspondence goes out and the academies have '
+          + 'stopped confirming any of it, so the letters carry a seal and no Law behind it.',
+      },
+      breachLo: {
+        name: 'The Benches Rule and Nobody Carries It',
+        blurb: 'The courts go on ruling into a country with no post: the decisions are sound, '
+          + 'they are made in the right places, and outside the Galilee nobody has heard one '
+          + 'in two years.',
+      },
+      schism: {
+        name: 'Two Calendars',
+        blurb: 'Somewhere between the Euphrates and the Nile a congregation is keeping the Day '
+          + 'of Atonement on a date the next congregation regards as a Tuesday. That is what '
+          + 'this argument was always going to produce if both sides won it.',
+      },
+    },
+    crises: {
+      hi: {
+        id: 'hananiah',
+        title: 'The East Declares Its Own Leap Year',
+        text: 'Hananiah, who is a nephew of Rabbi Joshua and a considerable scholar, has been '
+          + 'intercalating the year in Babylonia. He has the competence to do it. He does not, '
+          + 'this court holds, have the standing — the year is added where the Land is, and it '
+          + 'has been for as long as there has been anybody to add it.\n\n'
+          + 'The messengers who have been sent to stop him are carrying an argument, not an '
+          + 'order, because there is no order to carry: the Euphrates is a frontier and the man '
+          + 'on the far side of it has an academy, a following, and the patronage of the '
+          + 'Exilarch. What the messengers are actually to say is the question in the room.',
+        options: [
+          {
+            label: 'Tell them: build your own altar, sing your own song',
+            tooltip: 'The tradition\'s own sentence, delivered to a scholar\'s face in front of '
+              + 'his students, and it worked. Costs 45 influence. The academies +20, the house '
+              + '−12, and the reading swings to the courts of the Land.',
+            cost: { infl: 45 }, lo: 20, hi: -12, push: -3,
+            flag: 'hananiahRecalled',
+            chronicle: 'The Land tells Babylonia to build its own altar and sing its own song, '
+              + 'and Babylonia backs down — this time.',
+          },
+          {
+            label: 'Send him the tables instead',
+            tooltip: 'The quarrel is settled by making it unnecessary: the computation goes east '
+              + 'in writing. +200 talents of Babylonian goodwill; the house +18, the academies '
+              + '−15, and the reading swings to the reckoning.',
+            treasury: 200, hi: 18, lo: -15, push: 3,
+            flag: 'tablesSentEast',
+            chronicle: 'The tables are sent to Babylonia, which ends the quarrel and the '
+              + 'necessity of the Land in the same post.',
+          },
+        ],
+      },
+      lo: {
+        id: 'the_messenger',
+        title: 'The Messengers Did Not Arrive',
+        text: 'A letter has come from the congregation at Caesarea in Cappadocia, and it is '
+          + 'polite in the way of a document written three times. They kept the Passover on the '
+          + 'day their own reckoning gave, because no messenger came, because the roads between '
+          + 'here and there have soldiers on them. They would like guidance. They would also '
+          + 'like it understood that they will do the same next year in the same '
+          + 'circumstances.\n\n'
+          + 'This is the failure the whole system was always going to have, and it has now '
+          + 'happened in writing, to a community that can read, at a distance the argument '
+          + 'cannot pretend does not exist.',
+        options: [
+          {
+            label: 'Rule that they were right to keep it',
+            tooltip: 'The court concedes the case and keeps the principle. Costs 40 governance. '
+              + 'The academies +16, the house −10, and the reading swings to the courts.',
+            cost: { gov: 40 }, lo: 16, hi: -10, push: -2,
+            flag: 'cappadociaExcused',
+            chronicle: 'The court rules that a congregation cut off from the messengers keeps '
+              + 'the festival on its own reckoning, and does not say what happens if the roads stay shut.',
+          },
+          {
+            label: 'Publish the tables and end the question',
+            tooltip: 'Costs 50 influence and settles it for a thousand years: +8% income from '
+              + 'congregations that no longer depend on a road. The house +18, the academies '
+              + '−16, and the reading swings hard to the reckoning.',
+            cost: { infl: 50 }, hi: 18, lo: -16, push: 3,
+            flag: 'tablesPublished',
+            chronicle: 'The tables are published to end an argument about one Passover in '
+              + 'Cappadocia, and the calendar stops needing anybody\'s roads.',
+          },
+          {
+            label: 'Send the messengers again, with an escort',
+            tooltip: 'No ruling and a real cost: 80 talents, −3 to both houses, and the same '
+              + 'letter arrives next year from somewhere further away.',
+            treasury: -80, hi: -3, lo: -3,
+            chronicle: 'The messengers go out again with an escort, which is an answer to this '
+              + 'year and not to the question.',
+          },
+        ],
+      },
+    },
+    rulings: [
+      {
+        id: 'intercalation',
+        name: 'Who Adds the Month',
+        question: 'Is the leap year declared by the Patriarch\'s house, or by a court of three '
+          + 'sitting in the Land?',
+        source: 'y. Sanhedrin 1:2 and the Hananiah affair (b. Berakhot 63a-b): the right to '
+          + 'intercalate is contested between the Nasi and the courts throughout the period.',
+        cost: { infl: 35 },
+        hi: {
+          label: 'The house declares it',
+          name: 'The Nasi\'s Year',
+          text: 'One decision, one signature, one date everywhere: +10% income, +0.15 legitimacy a month',
+          effects: { incomeMult: 1.1, legitimacyAdd: 0.15 },
+          push: 3,
+          blurb: 'The year is added by the office that corresponds with the world, which is the '
+            + 'only body that can make one date stick in nine provinces and two empires.',
+        },
+        lo: {
+          label: 'A court of three, in the Land',
+          name: 'The Court\'s Year',
+          text: 'Slower, and unanswerable: −0.6 unrest everywhere, +0.2 legitimacy a month',
+          effects: { unrestAll: -0.6, legitimacyAdd: 0.2 },
+          push: -3,
+          blurb: 'Three judges, in a named place, with witnesses in front of them. It cannot be '
+            + 'done by letter and that is exactly what recommends it.',
+        },
+      },
+      {
+        id: 'ordination',
+        name: 'The Laying On of Hands',
+        question: 'May the Patriarch ordain alone, and may the court ordain without him?',
+        source: 'b. Sanhedrin 5a-b: at first each ordained his own pupils; then it was decreed '
+          + 'that neither the Nasi nor the court might ordain without the other.',
+        cost: { gov: 35 },
+        hi: {
+          label: 'The house ordains, and the courts confirm',
+          name: 'Ordination From the Chair',
+          text: 'A judiciary appointed from one address: −8% cost of governing, +8% income',
+          effects: { adminMult: 0.92, incomeMult: 1.08 },
+          push: 2,
+          blurb: 'Every judge from Antioch to Alexandria holds his seat from the same hand, '
+            + 'which makes an administration out of what was a scattering of scholars.',
+        },
+        lo: {
+          label: 'Neither without the other',
+          name: 'The Two Consents',
+          text: 'The compromise the Talmud actually records: +0.25 legitimacy a month, −0.4 unrest',
+          effects: { legitimacyAdd: 0.25, unrestAll: -0.4 },
+          push: -2,
+          blurb: 'The chair may not appoint alone and the benches may not appoint alone, so '
+            + 'every judge in the country is somebody both institutions could live with.',
+        },
+      },
+      {
+        id: 'crownGold',
+        name: 'What the Apostoloi Collect',
+        question: 'Does the crown gold keep the house, or endow the study houses?',
+        source: 'The aurum coronarium and the patriarchal apostoloi are documented from both '
+          + 'sides — Cod. Theod. XVI.8.14 and XVI.8.29, and the rabbinic complaints about '
+          + 'collectors.',
+        cost: { treasury: 60 },
+        hi: {
+          label: 'It keeps the house and its post',
+          name: 'The Purse of the Chair',
+          text: 'The correspondence, the escorts, the embassies: +12% income',
+          effects: { incomeMult: 1.12 },
+          push: 3,
+          blurb: 'A worldwide institution costs money to be worldwide with, and the collection '
+            + 'is the only revenue in Jewish life that arrives from outside the province.',
+        },
+        lo: {
+          label: 'It endows the benches',
+          name: 'The Purse of the Houses',
+          text: 'Students fed, scribes paid, a redaction finished: +6% growth, +0.2 legitimacy a month',
+          effects: { growthMult: 1.06, legitimacyAdd: 0.2 },
+          push: -3,
+          blurb: 'The money is spent on the thing the money is collected in the name of, which '
+            + 'the academies consider an argument and the house considers a slogan.',
+        },
+      },
+      {
+        id: 'theRank',
+        name: 'The Imperial Codicils',
+        question: 'Does the Patriarch hold the honorary prefecture the Empire offers him?',
+        source: 'Cod. Theod. XVI.8.8, 11 and 22: the patriarchs held illustrious rank and were '
+          + 'stripped of it by rescript in 415.',
+        cost: { infl: 40 },
+        hi: {
+          label: 'Take the rank, and the protection with it',
+          name: 'Vir Illustris',
+          text: 'An office the Empire has to notice before it acts against: +10% income, +0.15 legitimacy a month',
+          effects: { incomeMult: 1.1, legitimacyAdd: 0.15 },
+          push: 2,
+          blurb: 'The rank is not a vanity. It is standing in a legal system, and for sixty '
+            + 'years it is the only standing any Jew in the Empire has.',
+        },
+        lo: {
+          label: 'Refuse it. The chair is not theirs to dignify',
+          name: 'No Codicils',
+          text: 'Nothing to withdraw, and nothing to be withdrawn from: −0.5 unrest, +8% morale',
+          effects: { unrestAll: -0.5, moraleMult: 1.08 },
+          push: -2,
+          blurb: 'An office that owes the Empire nothing cannot be demoted by rescript, which '
+            + 'is the argument the academies make and the one 415 vindicates.',
+        },
+      },
+      {
+        id: 'theExemption',
+        name: 'The Students and the Levy',
+        question: 'Are the men of the study houses taken by the muster?',
+        source: 'The exemption of scholars from the levy and the corvée is argued about in '
+          + 'every generation of the Palestinian material, and settled in none of them.',
+        cost: { mar: 35 },
+        hi: {
+          label: 'Every man of age',
+          name: 'The Muster Takes All',
+          text: 'A country of villages fields what it has: +12% manpower, +5% reinforcement',
+          effects: { manpowerMult: 1.12, reinforceMult: 1.05 },
+          push: 2,
+          blurb: 'The house holds that a state which is destroyed will not be consoled by the '
+            + 'quality of its surviving scholarship.',
+        },
+        lo: {
+          label: 'The benches keep their men',
+          name: 'The Houses Exempt',
+          text: 'What survives a defeat: −0.7 unrest, +0.25 legitimacy a month, −6% manpower',
+          effects: { unrestAll: -0.7, legitimacyAdd: 0.25, manpowerMult: 0.94 },
+          push: -2,
+          blurb: 'The academies hold that a people which loses a war and keeps its schools has '
+            + 'lost a war, and one which loses both has lost everything, and they have two '
+            + 'centuries of evidence.',
+        },
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
   // 529 CE — the Samaritan chapter's own quarrel, which is not the Jewish one.
   // Baba Rabba, two centuries before this chapter opens, divided the land into
   // districts and set seven hakhamim over them — three of them laymen, in a

@@ -48,9 +48,10 @@ console.log('== the ask book is complete and well-formed ==');
     'and the fallback pair is a valid pair too');
 
   // Every party every bookmark seats has its OWN words — the fallback is for
-  // chapters not yet written, not for the eight that are.
+  // chapters not yet written, not for the nine that are.
   const files = ['bookmark_167bce.js', 'bookmark_67bce.js', 'bookmark_40bce.js', 'bookmark_66ce.js',
-    'bookmark_132ce.js', 'bookmark_529ce.js', 'bookmark_614ce.js', 'bookmark_1948.js'];
+    'bookmark_132ce.js', 'bookmark_351ce.js', 'bookmark_529ce.js', 'bookmark_614ce.js',
+    'bookmark_1948.js'];
   const missing = new Set();
   for (const f of files) {
     const m = await import(R + '/js/data/' + f);
@@ -59,7 +60,7 @@ console.log('== the ask book is complete and well-formed ==');
       for (const d of list || []) if (d && d.id && !ESTATE_ASKS[d.id]) missing.add(d.id);
     }
   }
-  ok(!missing.size, 'every seated party of all eight chapters is authored'
+  ok(!missing.size, 'every seated party of all nine chapters is authored'
     + (missing.size ? ' (missing: ' + [...missing].join(', ') + ')' : ''));
 }
 

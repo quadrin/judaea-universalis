@@ -36,6 +36,9 @@ import { EVENTS_132_REDEMPTION } from './events_132ce_redemption.js';
 import { EVENTS_132_ENDURE } from './events_132ce_endure.js';
 import { EVENTS_132_HOUSE } from './events_132ce_house.js';
 import { EVENTS_132_KOSIBA } from './events_132ce_kosiba.js';
+import { BOOKMARK_351 } from './bookmark_351ce.js';
+import { EVENTS_351 } from './events_351ce.js';
+import { EVENTS_351_WORLD } from './events_351ce_world.js';
 import { BOOKMARK_529 } from './bookmark_529ce.js';
 import { EVENTS_529 } from './events_529ce.js';
 import { EVENTS_529_WORLD } from './events_529ce_world.js';
@@ -120,6 +123,15 @@ export const ERAS = [
   // The west package is the spine's other frontier — Abritus, Adrianople,
   // the frozen Rhine and the sack of 410, arriving on the same clock.
   { bookmark: withPolitical(BOOKMARK_132), events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, EVENTS_132_WEST, EVENTS_132_GALILEE, EVENTS_132_REDEMPTION, EVENTS_132_ENDURE, EVENTS_132_HOUSE, EVENTS_132_KOSIBA, ANTIQUE) },
+  // The rising against Gallus (SPEC §235): the chapter whose antagonist is a
+  // century rather than an army. Its own chain runs 351–429 — the arms, the
+  // Patriarch, the calendar and Julian's offer — and the world package beside
+  // it is the age's own calendar on the age's own clock, from Mursa to the
+  // morning the Goths were inside Rome. Concatenated HERE rather than inside
+  // events_351ce.js so both packages keep the zero-import property their
+  // headers promise, and so the registry stays the one place the pairing is
+  // written down.
+  { bookmark: withPolitical(BOOKMARK_351), events: EVENTS_351.concat(EVENTS_351_WORLD, ANTIQUE) },
   // The Keepers (SPEC §136): the one chapter whose player is not Jewish. It
   // plays the shared antique pool like its neighbours — the omens belong to
   // anybody, and a Samaritan state large enough to conquer faces the same

@@ -22,7 +22,7 @@ let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  PASS', msg); else { failures++; console.error('  FAIL', msg); } };
 async function pickBookmark(nameFrag) {
   await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     const current = page.locator('.bm-card.current');
     if (((await current.textContent()) || '').includes(nameFrag)) { await current.click(); return; }
     await page.locator('.ss-next').click();

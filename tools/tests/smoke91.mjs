@@ -71,11 +71,11 @@ function boot(tag, { bus, y, m } = {}) {
 }
 
 // ---------------------------------------------------------------------------
-console.log('== the chapter is registered and it is the eighth ==');
+console.log('== the chapter is registered and it is the seventh ==');
 {
   ok(!!era529, 'the era registry carries 529ce');
-  ok(ERAS.indexOf(era529) === 5,
-    '  in chronological order, between the Bar Kokhba revolt and the Persian conquest');
+  ok(ERAS.indexOf(era529) === 6,
+    '  in chronological order, between the rising against Gallus and the Persian conquest');
   const ids = ERAS.map((e) => e.bookmark.id);
   const years = ERAS.map((e) => e.bookmark.startDate.y);
   ok(years.every((y, i) => i === 0 || y > years[i - 1]),

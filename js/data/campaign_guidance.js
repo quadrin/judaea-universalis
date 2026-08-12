@@ -209,6 +209,42 @@ export const CAMPAIGN_GUIDANCE = {
       ],
     },
   },
+  '351ce': {
+    JUD: {
+      system: 'A stolen armoury, and a window that closes',
+      opening: [
+        'Take the lake shore and the valley road before the province is told; Tiberias is a '
+          + 'political problem before it is a military one.',
+        'Decide early what the rising is — a king, a captain, or the Patriarch\'s business — '
+          + 'because Ursicinus arrives in the spring either way.',
+        'Do not hold what cannot be relieved. The hills keep an army alive; the towns are '
+          + 'what the Empire burns to make its point.',
+      ],
+      clocks: [
+        { y: 351, m: 10, label: 'Mursa — the Empire kills its own field army' },
+        { y: 352, m: 4, label: 'Ursicinus comes down from Antioch' },
+        { y: 353, m: 8, label: 'The civil war ends and the comitatus is free again' },
+        { y: 358, m: 9, label: 'The calendar can be fixed by computation — or kept' },
+        { y: 363, m: 3, label: 'An emperor offers to rebuild the Temple' },
+        { y: 415, m: 10, label: 'The rescript that takes the patriarchate apart' },
+      ],
+    },
+    ROM: {
+      system: 'Two frontiers, one army, and a Caesar nobody trusts',
+      opening: [
+        'The Galilee is a police action; Persia is the war. Do not spend the eastern field '
+          + 'army on the first before the second is settled.',
+        'Hold the road net — Caesarea, Scythopolis, Ptolemais — and the hills can wait.',
+        'Every month the civil war lasts is a month the East is fighting on garrisons.',
+      ],
+      clocks: [
+        { y: 351, m: 10, label: 'Mursa is won, and paid for' },
+        { y: 355, m: 1, label: 'Gallus is executed; the East has no government' },
+        { y: 359, m: 10, label: 'Amida — seven legions in one summer' },
+        { y: 363, m: 6, label: 'The peace that gives away Nisibis' },
+      ],
+    },
+  },
   '529ce': {
     SAM: {
       system: 'Four hills, a statute, and a mountain you cannot hold',

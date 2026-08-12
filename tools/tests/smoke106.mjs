@@ -81,6 +81,7 @@ console.log('== the Temple gate: where the office existed, and only there ==');
   const EXPECT = {
     '167bce': true, '67bce': true, '40bce': true, '66ce': true,
     '132ce': false, // the House is down; only `altarRaised` puts it back
+    '351ce': false, // …and still down in 351: Julian's offer is a fork, not a start
     '529ce': true, // the Samaritan High Priesthood is a continuous line
     '614ce': false, // …until `altarRestored`
     '1948ce': false, // REGRESSION: there is no Temple and no High Priest in 1948

@@ -14,7 +14,7 @@ const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 480000);
 
 async function pickBookmark(page, nameFrag) {
   await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     const cur = page.locator('.bm-card.current');
     const txt = (await cur.textContent()) || '';
     if (txt.includes(nameFrag)) { await cur.click(); return; }
@@ -40,7 +40,7 @@ await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 
 const cards = await page.locator('.bm-card').count();
-ok(cards === 8, 'eight bookmark cards: ' + cards);
+ok(cards === 9, 'nine bookmark cards: ' + cards);
 const c2 = (await page.locator('.bm-card').nth(1).textContent()) || '';
 ok(/Civil War/.test(c2) && /67 BCE/.test(c2), 'second card is the 67 BCE civil war');
 // SPEC §93 replaced the export/import file buttons with the shelf — "six
@@ -68,6 +68,8 @@ const expectedRosters = [
   ['HER', 'ATG', 'ADI'],
   ['JUD', 'AGR', 'ADI'],
   ['JUD', 'ADI'],
+  ['JUD'],          // SPEC §235, the rising against Gallus: one chair, and the
+                    // Empire keeps a full court it is never offered
   ['SAM', 'HMY'],
   ['JUD'],
   ['ISR'],

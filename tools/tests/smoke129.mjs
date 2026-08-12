@@ -122,7 +122,7 @@ for (const e of ERAS) {
 const PRINCIPALS = [
   ['167bce', 'HAS', 29], ['67bce', 'HYR', 29], ['67bce', 'ARI', 29],
   ['40bce', 'HER', 26], ['40bce', 'ATG', 25], ['66ce', 'JUD', 27],
-  ['66ce', 'AGR', 25], ['132ce', 'JUD', 28], ['529ce', 'SAM', 24],
+  ['66ce', 'AGR', 25], ['132ce', 'JUD', 28], ['351ce', 'JUD', 26], ['529ce', 'SAM', 24],
   ['614ce', 'JUD', 29], ['1948ce', 'ISR', 26],
 ];
 for (const [id, tag, n] of PRINCIPALS) {

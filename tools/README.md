@@ -1725,3 +1725,31 @@ carried are not the ones to read it by). The set gets SHORTER by three:
 
 Accepted as of §229: 167 PAR BLEEDING · 67 SEL DEAD + AED EXHAUSTED ·
 529 JUD DEAD · 1948 ETH BLEEDING · everything else clean.
+
+## §235 — the sixth chapter, and what the harness says about it
+
+`smoke158.mjs` owns The Rising Against Gallus (351 CE): the chapter registered
+and sorted sixth in the carousel, the three-town start with Tiberias left in
+the Empire's hands, the era signposts (Aelia, Diocaesarea, Diospolis,
+Nicopolis, Constantinople), the thirty-month window on Rome's books at month
+one, both wars running, the twelve fork markers and their distinctness from
+132's, the fourth century declared as a drift that dips under Julian, the moon
+and the reckoning convening with both seats seated, and the victory contract
+answering at both ends.
+
+Three existing suites gained the chapter rather than a new file, because they
+are the places the game counts itself: `smoke83` learned which files carry the
+chain (that mapping is deliberately written twice), `smoke116` gained a forced
+world that pays all six of its roads, and `smoke119`, `smoke121` and `smoke129`
+took the chapter into their per-chapter tables.
+
+`node tools/autorun.mjs 8 351ce` comes back with **no anomalies**. The shape of
+it is worth writing down: the all-AI rising neither dies nor grows — three
+provinces at the start and three at the end, an army ground down from six
+thousand to almost nothing, a treasury that never leaves the low double digits,
+and both opening wars settled by the ordinary AI peace path within the window.
+That is the chapter working. The rising has no economy to snowball with and no
+government to spiral into debt with, and the interesting failure modes it does
+have — the towns burned, the century converting the province out from under a
+Jewish state — belong to a human's decisions and to `faithDrift`, neither of
+which an eight-year all-AI run exercises.

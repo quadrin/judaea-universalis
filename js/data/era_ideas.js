@@ -371,6 +371,85 @@ export const ERA_IDEA_GROUPS = {
     ],
   },
 
+  // ---- 351 CE, The Rising Against Gallus -----------------------------------
+  the_stolen_armoury: {
+    name: 'The Stolen Armoury', icon: 'spears', point: 'mar',
+    unlock: { ladder: 'mar', level: 7 },
+    desc: 'A cohort\'s equipment, taken in one night, and everything a country of villages can '
+      + 'learn from having it.',
+    tiers: [
+      { name: 'The Chest Divided', desc: 'Sixty swords is sixty men who are worth mustering: +10% manpower.', effects: { manpowerMult: 1.1 } },
+      { name: 'The Village Smithies', desc: 'Ploughshares run the other way too, once somebody has seen the pattern: +8% reinforcement.', effects: { reinforceMult: 1.08 } },
+      { name: 'The Pattern Copied', desc: 'Oval shield, weighted javelin, the drill that goes with them — copied off the men who dropped them: +6% army strength.', effects: { milPowerMult: 1.06 } },
+    ],
+  },
+  the_apostoloi: {
+    name: 'The Patriarch\'s Post', icon: 'note', point: 'infl',
+    unlock: { ladder: 'infl', level: 8 },
+    desc: 'The apostoloi ride from this country to every congregation on earth, carrying '
+      + 'rulings, ordinations, the date of the festivals — and a collection.',
+    tiers: [
+      { name: 'The Crown Gold', desc: 'A tax nobody levies and everybody pays: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Letters of Ordination', desc: 'A judge is a judge because this court says so, in Spain as in Babylonia: +0.2 legitimacy a month.', effects: { legitimacyAdd: 0.2 } },
+      { name: 'The World\'s Address', desc: 'One place the Jews of the world can be written to, and it is here: +10% trade.', effects: { tradeMult: 1.1 } },
+    ],
+  },
+  the_houses_of_study: {
+    name: 'The Houses of Study', icon: 'scroll', point: 'gov',
+    unlock: { ladder: 'gov', level: 9 },
+    desc: 'Tiberias, Sepphoris, Lydda and Caesarea: an administration that took three centuries '
+      + 'to build and is currently being written down in a hurry.',
+    tiers: [
+      { name: 'The Court of Three', desc: 'Every village within a day of a court that can rule: −0.5 unrest everywhere.', effects: { unrestAll: -0.5 } },
+      { name: 'The Ruling Written Down', desc: 'A precedent is cheaper than a magistrate: −10% cost of governing.', effects: { adminMult: 0.9 } },
+      { name: 'The Redaction', desc: 'The tractate finished instead of abandoned, and a people that can be governed out of a book: +0.2 legitimacy a month, +5% growth.', effects: { legitimacyAdd: 0.2, growthMult: 1.05 } },
+    ],
+  },
+  the_terraced_hills: {
+    name: 'The Terraced Hills', icon: 'mountain', point: 'mar',
+    unlock: { ladder: 'mar', level: 10 },
+    desc: 'The Galilee fought as the Galilee: broken ground, short marches, and villages that '
+      + 'know which wadi comes out where.',
+    tiers: [
+      { name: 'The Wadis Known', desc: 'Ground fought over since Josephus, by the people who farm it: +1 to hill-country defence.', effects: { hillDefBonus: 1 } },
+      { name: 'The Short March', desc: 'Nobody in this army is more than two days from a threshing floor that will feed them: −15% maintenance.', effects: { maintMult: 0.85 } },
+      { name: 'The Walled Village', desc: 'Cisterns, a tower and a granary in every third settlement: +1 siege bonus, +6% morale.', effects: { siegeBonus: 1, moraleMult: 1.06 } },
+    ],
+  },
+  the_two_fronts_purse: {
+    name: 'The Two Fronts', icon: 'scales', point: 'gov',
+    unlock: { ladder: 'gov', level: 8 },
+    desc: 'The eastern prefecture\'s art: financing a Persian war and a civil war out of the '
+      + 'same assessment, and losing neither.',
+    tiers: [
+      { name: 'The Assessment Recut', desc: 'The indiction reissued and collected in kind where the coin has gone: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Annona Militaris', desc: 'An army fed off the province it stands in: −10% maintenance.', effects: { maintMult: 0.9 } },
+      { name: 'The Comitatus', desc: 'A field army that exists to be moved, and a frontier army that exists to be where it is: +6% discipline.', effects: { disciplineMult: 1.06 } },
+    ],
+  },
+  the_limes_and_the_law: {
+    name: 'The Limes and the Law', icon: 'walls', point: 'mar',
+    unlock: { ladder: 'mar', level: 9 },
+    desc: 'Diocletian\'s frontier as Constantius inherited it: forts a day apart, roads behind '
+      + 'them, and a rescript for everything else.',
+    tiers: [
+      { name: 'The Strata Diocletiana', desc: 'The desert road with a fort on every stage of it: +1 to hill-country defence.', effects: { hillDefBonus: 1 } },
+      { name: 'The Limitanei', desc: 'Soldiers who farm the ground they garrison, cheap and immovable: −12% maintenance.', effects: { maintMult: 0.88 } },
+      { name: 'The Siege Train Kept', desc: 'The engines at Antioch, maintained between emergencies by men who expect one: +1 siege bonus.', effects: { siegeBonus: 1 } },
+    ],
+  },
+  the_endowed_church: {
+    name: 'The Endowed Church', icon: 'shrine', point: 'infl',
+    unlock: { ladder: 'infl', level: 9 },
+    desc: 'The century\'s real instrument in this province: land, exemptions, basilicas on '
+      + 'purchased ground, and a clergy on the imperial post.',
+    tiers: [
+      { name: 'The Basilicas Built', desc: 'Imperial money in stone, on the sites the pilgrims are told to visit: +6% conversion.', effects: { convertMult: 1.06 } },
+      { name: 'The Exemptions', desc: 'A clergy that pays no tax and owes no service is the cheapest administration ever devised: −8% cost of governing.', effects: { adminMult: 0.92 } },
+      { name: 'The Pilgrim Road', desc: 'Every road to Aelia paved by somebody with a reason to use it: +10% trade, +0.1 legitimacy a month.', effects: { tradeMult: 1.1, legitimacyAdd: 0.1 } },
+    ],
+  },
+
   // ---- 529 CE, The Keepers -------------------------------------------------
   mountain_of_blessing: {
     name: 'The Mountain of Blessing', icon: 'altar', point: 'infl',
@@ -744,6 +823,10 @@ export const ERA_IDEAS_BY_BOOKMARK = {
     JUD: ['method_of_the_caves', 'prince_of_israel', 'sages_sanction', 'redemption_mint'],
     ROM: ['hadrians_peace', 'provincia_restituta', 'expedita_army'],
     ADI: ['proselyte_crown', 'gulf_road_custom', 'riders_of_arbela'],
+  },
+  '351ce': {
+    JUD: ['the_stolen_armoury', 'the_apostoloi', 'the_houses_of_study', 'the_terraced_hills'],
+    ROM: ['the_two_fronts_purse', 'the_limes_and_the_law', 'the_endowed_church'],
   },
   '529ce': {
     SAM: ['mountain_of_blessing', 'villages_of_the_hills', 'keepers_law', 'baba_rabbas_inheritance'],

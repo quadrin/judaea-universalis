@@ -118,7 +118,8 @@ console.log('== the gate: the quarrel arrives when the houses do ==');
   const EXPECT = {
     '167bce': false, // the Hasideans and the Hellenizers hold this court until 140
     '67bce': true, // both brothers seat both houses from the first month
-    '40bce': false, '66ce': false, '132ce': false, '529ce': false, '614ce': false, '1948ce': false,
+    '40bce': false, '66ce': false, '132ce': false, '351ce': false, '529ce': false,
+    '614ce': false, '1948ce': false,
   };
   for (const era of ERAS) {
     const id = era.bookmark.id;
@@ -385,6 +386,7 @@ console.log('== §201: every chapter has its own quarrel, and every quarrel is r
     '40bce': { tag: 'HER', quarrel: 'fence_and_gate' },
     '66ce': { tag: 'JUD', quarrel: 'sacrifice_for_caesar' },
     '132ce': { tag: 'JUD', quarrel: 'star_and_schools' },
+    '351ce': { tag: 'JUD', quarrel: 'moon_and_reckoning' },
     '529ce': { tag: 'SAM', quarrel: 'mountain_and_book' },
     '614ce': { tag: 'JUD', quarrel: 'altar_and_academy' },
     '1948ce': { tag: 'ISR', quarrel: 'status_quo' },
