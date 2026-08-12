@@ -501,8 +501,25 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
       // must keep it. Comparing against the STATIC name is what tells the two
       // apart without a flag to get out of step.
       const era = tagDef({ DEFINES, bookmark }, key);
-      const stat = ((DEFINES.TAGS || {})[key] || {}).name;
+      const base = (DEFINES.TAGS || {})[key] || {};
+      const stat = base.name;
       if (era.name && (!t.name || t.name === stat)) t.name = era.name;
+      // The banner and the colour heal on the same terms (SPEC §236). A save
+      // written before the chapter declared them carries the static pair, and
+      // that is the case worth healing — otherwise a campaign begun the day
+      // before the section shipped keeps Judaea's menorah on Judaea's blue for
+      // the rest of its life, with the panel beside it saying Galilee. The
+      // same discipline as the name: a court that chose its own face in play —
+      // a revolution's variant standard, a colour set by `rebrandTag` — has
+      // written over the top and keeps what it chose.
+      if (typeof era.flag === 'string' && era.flag && !t.flag) t.flag = era.flag;
+      const sameAsStatic = Array.isArray(t.color) && Array.isArray(base.color)
+        && t.color.length >= 3 && base.color.length >= 3
+        && t.color[0] === base.color[0] && t.color[1] === base.color[1]
+        && t.color[2] === base.color[2];
+      if (Array.isArray(era.color) && era.color.length >= 3 && (!t.color || sameAsStatic)) {
+        t.color = era.color.slice(0, 3);
+      }
       applyReformsToTag(DEFINES, t, key);
     }
   } catch (e) { console.warn('[sim/init] modifier rebuild failed:', e); }

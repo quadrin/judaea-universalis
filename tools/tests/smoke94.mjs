@@ -290,6 +290,22 @@ console.log('== a stale save heals; a court that renamed itself does not ==');
   'a court that chose its own name keeps it across a load');
   ok(DEFINES.TAGS.JUD.name === STATIC_JUD_NAME,
     'and three revivals later the shared definition is still untouched');
+
+  // SPEC §236: the face heals with the name, or a campaign begun the day
+  // before the section shipped keeps Judaea's menorah on Judaea's blue for
+  // ever — with the panel beside it saying Galilee. Reported from a save.
+  const legacy = reload((s2) => {
+    s2.tags.JUD.name = STATIC_JUD_NAME;
+    delete s2.tags.JUD.flag;
+    s2.tags.JUD.color = DEFINES.TAGS.JUD.color.slice();
+  });
+  ok(legacy.tags.JUD.flag === 'GAL', 'a save from before the banner loads flying it');
+  ok(JSON.stringify(legacy.tags.JUD.color) === JSON.stringify([124, 196, 214]),
+    '  and on the lake\'s colour rather than Judaea\'s');
+  // A court that chose its own face in play keeps it, exactly as with the name.
+  const chosen = reload((s2) => { s2.tags.JUD.flag = 'MLI'; s2.tags.JUD.color = [1, 2, 3]; });
+  ok(chosen.tags.JUD.flag === 'MLI' && JSON.stringify(chosen.tags.JUD.color) === '[1,2,3]',
+    'a court that chose its own standard in play keeps it across a load');
 }
 
 // ---------------------------------------------------------------------------
