@@ -16580,3 +16580,89 @@ years afterwards gets its own key.
   realm alive; the Keepers' package names its own tags rather than the player's
   chair; the three gated cards retire on the road that contradicts them; and no
   card in the section touches the seeded stream.
+
+## 241. The other side of the line
+
+§240 filled each chapter's thin decades with the realm's own business. It left
+the other half of the same hole open, and the hole has a shape: this game knows
+two scales and almost nothing in between. There is the empire — Antioch, Rome,
+Ctesiphon, Constantinople, in the world packages — and there is the realm, in
+the chain and in §240. What a small country actually spends its diplomacy on is
+neither: it is the six or eight courts whose border you can walk to.
+
+Counted before this section, the ring was almost absent. Petra appears in the
+Maccabean chapter twice in a hundred and seven years. The Decapolis has one
+card. Chalcis, Emesa, Commagene, Osrhoene, Hatra and Palmyra between them have
+four cards in nine chapters, and three of those are the empires annexing them.
+The desert confederations that dominate the eastern frontier from the third
+century to the seventh — and that produce, eventually, the power that takes the
+whole region — appear nowhere at all until 614.
+
+`events_<era>_neighbours.js` is that ring, chapter by chapter: ninety-seven
+dated cards about what is on the other side of each border and what this court
+does about it.
+
+| chapter | cards | span |
+|---|---|---|
+| 167 BCE | 10 | 147–64 BCE |
+| 67 BCE | 10 | 65–28 BCE |
+| 40 BCE | 10 | 38 BCE – 44 CE |
+| 66 CE | 10 | 68–127 |
+| 132 CE | 17 | 145–430 |
+| 351 CE | 10 | 353–431 |
+| 529 CE | 10 | 531–607 |
+| 614 CE | 10 | 621–699 |
+| 1948 | 10 | 1951–1997 |
+
+**Placement is measured, not aesthetic.** Every card is seated in the thinnest
+decade still available in its chapter after §240. 132 gets seventeen because it
+had twenty decades under three cards and three decades with none; 1948 gets ten
+because it had none under five. The section's own claim is arithmetic and the
+suite checks it: after §241, every decade with real room inside a chapter's
+playable window — five years or more of it — carries at least two dated cards,
+across all nine chapters and all eighty-six such decades. The rule exempts the
+edge decades from the count, because a decade with one legal year in it cannot
+be asked for two cards and a rule that pretended otherwise would be a lie
+rather than an invariant. The first draft of this section made exactly that
+claim; the suite refused it, and the refusal found a genuinely empty decade in
+132 as well.
+
+**The register is deliberately different from §240's.** Those cards are the
+state deciding what it is — a book, a calendar, a law, a school. These are the
+state discovering what it is surrounded by, and the answer changes: the Tyrian
+mint that strikes the Temple's own coin, Gabinius' five councils, the man at
+Chalcis who shelters anybody's fugitives for a price, five hundred Babylonian
+horse-archers looking for a frontier to hold, Hatra's double wall, the belt of
+buffer kingdoms and the thirty years in which both empires dismantle all of it,
+Mavia's cavalry and the bishop she took as her peace terms, the phylarch who is
+the real government of the eastern approaches, the abna who stop being a
+garrison and become a caste, and an armistice line drawn with a grease pencil
+whose mark was sixty metres wide on the ground.
+
+**It obeys §240's five rules unchanged**: dated and never triggered; nothing
+drawn from the seeded stream; addressed to whoever is playing except in the
+Keepers' chapter, where the cards name `SAM` or `HMY` and their effects name
+the same tag; and every card carries `historical:`, which enrols all ninety-seven
+in §89's ledger.
+
+**Two collisions this section had to be stopped from making**, both of the kind
+that fails silently. `queensPeace` is the 167 chapter's marker for Salome
+Alexandra's reign and gates its royal century, so Mavia's card takes
+`saracenQueensPeace` instead. And auditing the ring turned up one the previous
+section had already made: §240's calendar card at 429 reused the modifier id
+`the_reckoning_published`, which §235's card of 358 hangs on the realm
+*permanently* — and `addTagModifier` replaces by id, so a campaign that
+published the reckoning in 358 and answered the 429 card would have had the
+chapter's own standing modifier quietly overwritten by a weaker one. It is now
+`the_calendar_table`. Both are fixed and both are checked.
+
+- **Regression contract**: `smoke162.mjs` — all nine packages registered in
+  their own chapter and nowhere else, appended after the years package and
+  before the shared pools; every card dated inside its chapter's span, uniquely
+  identified across the whole registry, carrying a historical line and a
+  recorded course that indexes an option that exists; every option of every
+  card runs clean against a booted campaign and leaves the realm alive; the
+  Keepers' package names its own tags from both ends; no option advances the
+  seeded stream; no modifier id in either new section collides with any other
+  package the same chapter plays (1,851 ids scanned); and the decade-coverage
+  claim above holds for all nine chapters.

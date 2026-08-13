@@ -12,17 +12,20 @@ import { EVENTS_167_REPUBLIC } from './events_167bce_republic.js';
 import { EVENTS_167_AFTER } from './events_167bce_after.js';
 import { EVENTS_167_EMPIRE } from './events_167bce_empire.js';
 import { EVENTS_167_YEARS } from './events_167bce_years.js';
+import { EVENTS_167_NEIGHBOURS } from './events_167bce_neighbours.js';
 import { BOOKMARK_67 } from './bookmark_67bce.js';
 import { EVENTS_67 } from './events_67bce.js';
 import { EVENTS_67_WORLD } from './events_67bce_world.js';
 import { EVENTS_67_AFTER } from './events_67bce_after.js';
 import { EVENTS_67_YEARS } from './events_67bce_years.js';
+import { EVENTS_67_NEIGHBOURS } from './events_67bce_neighbours.js';
 import { BOOKMARK_40 } from './bookmark_40bce.js';
 import { EVENTS_40 } from './events_40bce.js';
 import { EVENTS_40_WORLD } from './events_40bce_world.js';
 import { EVENTS_40_ALTERNATES } from './events_40bce_alternates.js';
 import { EVENTS_40_BRIDGE } from './events_40bce_bridge.js';
 import { EVENTS_40_YEARS } from './events_40bce_years.js';
+import { EVENTS_40_NEIGHBOURS } from './events_40bce_neighbours.js';
 import { BOOKMARK_66 } from './bookmark_66ce.js';
 import { EVENTS_66 } from './events_66ce.js';
 import { EVENTS_66_WORLD } from './events_66ce_world.js';
@@ -30,6 +33,7 @@ import { EVENTS_66_AFTER } from './events_66ce_after.js';
 import { EVENTS_66_NATION } from './events_66ce_nation.js';
 import { EVENTS_66_SETTLEMENT } from './events_66ce_settlement.js';
 import { EVENTS_66_YEARS } from './events_66ce_years.js';
+import { EVENTS_66_NEIGHBOURS } from './events_66ce_neighbours.js';
 import { BOOKMARK_132 } from './bookmark_132ce.js';
 import { EVENTS_132 } from './events_132ce.js';
 import { EVENTS_132_FAITH } from './events_132ce_faith.js';
@@ -41,16 +45,19 @@ import { EVENTS_132_ENDURE } from './events_132ce_endure.js';
 import { EVENTS_132_HOUSE } from './events_132ce_house.js';
 import { EVENTS_132_KOSIBA } from './events_132ce_kosiba.js';
 import { EVENTS_132_YEARS } from './events_132ce_years.js';
+import { EVENTS_132_NEIGHBOURS } from './events_132ce_neighbours.js';
 import { BOOKMARK_351 } from './bookmark_351ce.js';
 import { EVENTS_351 } from './events_351ce.js';
 import { EVENTS_351_WORLD } from './events_351ce_world.js';
 import { EVENTS_351_COLLAPSE } from './events_351ce_collapse.js';
 import { EVENTS_351_YEARS } from './events_351ce_years.js';
+import { EVENTS_351_NEIGHBOURS } from './events_351ce_neighbours.js';
 import { BOOKMARK_529 } from './bookmark_529ce.js';
 import { EVENTS_529 } from './events_529ce.js';
 import { EVENTS_529_WORLD } from './events_529ce_world.js';
 import { EVENTS_529_ROADS } from './events_529ce_roads.js';
 import { EVENTS_529_YEARS } from './events_529ce_years.js';
+import { EVENTS_529_NEIGHBOURS } from './events_529ce_neighbours.js';
 import { BOOKMARK_614 } from './bookmark_614ce.js';
 import { EVENTS_614 } from './events_614ce.js';
 import { EVENTS_614_PERSIA } from './events_614ce_persia.js';
@@ -59,6 +66,7 @@ import { EVENTS_614_THIRD } from './events_614ce_third.js';
 import { EVENTS_614_POWER } from './events_614ce_power.js';
 import { EVENTS_614_DAVID } from './events_614ce_david.js';
 import { EVENTS_614_YEARS } from './events_614ce_years.js';
+import { EVENTS_614_NEIGHBOURS } from './events_614ce_neighbours.js';
 import { BOOKMARK_1948 } from './bookmark_1948.js';
 import { EVENTS_1948 } from './events_1948.js';
 import { EVENTS_1948_REGION } from './events_1948_region.js';
@@ -68,6 +76,7 @@ import { EVENTS_1948_LEVANT } from './events_1948_levant.js';
 import { EVENTS_1948_QUESTION } from './events_1948_question.js';
 import { EVENTS_1948_GULF } from './events_1948_gulf.js';
 import { EVENTS_1948_YEARS } from './events_1948_years.js';
+import { EVENTS_1948_NEIGHBOURS } from './events_1948_neighbours.js';
 import { GENERIC_EVENTS } from './events_generic.js';
 import { EVENTS_MARGINALIA } from './events_marginalia.js';
 import { EVENTS_ANNEX } from './events_annexation.js';
@@ -123,6 +132,12 @@ function withPolitical(bookmark) {
 // actually played on. They ride at the END of each chain and before the shared
 // pools, for §223's reason — every card that was offered its month before this
 // section is offered it in the same order afterwards.
+// …and the ring around it (SPEC §241). §240 filled each chapter's thin decades
+// with its own institutions; this is the other half of the same hole — the
+// courts a courier can reach in three days, which the world packages (empires)
+// and the years packages (the realm) both step over. `events_<era>_neighbours.js`
+// rides after the years package for §223's reason: everything offered its month
+// before this section is still offered it in the same order.
 export const ERAS = [
   // The Maccabean chapter carries the royal century beside it (SPEC §106):
   // the wars of Alexander Jannaeus and the nine years of Salome Alexandra.
@@ -130,10 +145,10 @@ export const ERAS = [
   // continued): Macedonia, Numantia, the Gracchi, the Cimbri, the Social
   // War, Sulla and Spartacus — the century in which Rome became the thing
   // the next chapter opens on.
-  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_YEARS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_YEARS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, ANTIQUE) },
   // 132's chain is three packages (SPEC §104): the revolt itself, the
   // Christian thread that runs beside it, and the world spine to 425. They
   // are concatenated HERE rather than inside events_132ce.js so that every
@@ -141,7 +156,7 @@ export const ERAS = [
   // so the registry stays the one place the pairing is written down.
   // The west package is the spine's other frontier — Abritus, Adrianople,
   // the frozen Rhine and the sack of 410, arriving on the same clock.
-  { bookmark: withPolitical(BOOKMARK_132), events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, EVENTS_132_WEST, EVENTS_132_GALILEE, EVENTS_132_REDEMPTION, EVENTS_132_ENDURE, EVENTS_132_HOUSE, EVENTS_132_KOSIBA, EVENTS_132_YEARS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_132), events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, EVENTS_132_WEST, EVENTS_132_GALILEE, EVENTS_132_REDEMPTION, EVENTS_132_ENDURE, EVENTS_132_HOUSE, EVENTS_132_KOSIBA, EVENTS_132_YEARS, EVENTS_132_NEIGHBOURS, ANTIQUE) },
   // The rising against Gallus (SPEC §235): the chapter whose antagonist is a
   // century rather than an army. Its own chain runs 351–429 — the arms, the
   // Patriarch, the calendar and Julian's offer — and the world package beside
@@ -155,7 +170,7 @@ export const ERAS = [
   // on the map rather than in a modifier. It rides beside the world package
   // for the same reason 132's three packages do — one chapter, one registry
   // line, and every content file keeps its zero-import promise.
-  { bookmark: withPolitical(BOOKMARK_351), events: EVENTS_351.concat(EVENTS_351_WORLD, EVENTS_351_COLLAPSE, EVENTS_351_YEARS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_351), events: EVENTS_351.concat(EVENTS_351_WORLD, EVENTS_351_COLLAPSE, EVENTS_351_YEARS, EVENTS_351_NEIGHBOURS, ANTIQUE) },
   // The Keepers (SPEC §136): the one chapter whose player is not Jewish. It
   // plays the shared antique pool like its neighbours — the omens belong to
   // anybody, and a Samaritan state large enough to conquer faces the same
@@ -169,17 +184,17 @@ export const ERAS = [
   // The world package (SPEC §104's rule) is the age's own calendar — the
   // successions Justinian's court never scripted, from Gelimer's coup to
   // Heraclius' fleet, ending exactly where the roads package picks up.
-  { bookmark: withPolitical(BOOKMARK_529), events: EVENTS_529.concat(EVENTS_529_WORLD, EVENTS_529_ROADS, EVENTS_529_YEARS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_529), events: EVENTS_529.concat(EVENTS_529_WORLD, EVENTS_529_ROADS, EVENTS_529_YEARS, EVENTS_529_NEIGHBOURS, ANTIQUE) },
   // The west package is the same century seen from Toledo, Paris and the
   // Danube — Sisebut's edict to the Seventeenth Council, with Whitby and
   // the Bulgars between.
-  { bookmark: withPolitical(BOOKMARK_614), events: EVENTS_614.concat(EVENTS_614_PERSIA, EVENTS_614_WEST, EVENTS_614_THIRD, EVENTS_614_POWER, EVENTS_614_DAVID, EVENTS_614_YEARS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_614), events: EVENTS_614.concat(EVENTS_614_PERSIA, EVENTS_614_WEST, EVENTS_614_THIRD, EVENTS_614_POWER, EVENTS_614_DAVID, EVENTS_614_YEARS, EVENTS_614_NEIGHBOURS, ANTIQUE) },
   // 1948's chain carries the region's own quarrels beside it (SPEC §105):
   // Suez as a crisis rather than a headline, the union coming apart, Eli
   // Cohen, Tehran in 1979, and the northern border it produced. The cold
   // war package is the superpowers' own weather — Berlin to the flag
   // coming down — that the chapter's arms deals and aliyah waves hang from.
-  { bookmark: withPolitical(BOOKMARK_1948), events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_COLDWAR, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, EVENTS_1948_YEARS, SHARED) },
+  { bookmark: withPolitical(BOOKMARK_1948), events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_COLDWAR, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, EVENTS_1948_YEARS, EVENTS_1948_NEIGHBOURS, SHARED) },
 ];
 
 // The shared pool by itself (the wiki's "omens and incidents" page tells it

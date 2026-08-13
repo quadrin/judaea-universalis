@@ -720,11 +720,16 @@ export const EVENTS_351_YEARS = [
     options: [
       {
         label: 'Publish the rules of the reckoning and let the calendar need nobody',
-        tooltip: '+18 governance points and "The Reckoning Published" (+8% income, −0.8 unrest everywhere) for forty years. Nobody can abolish an office that is a table of numbers.',
+        tooltip: '+18 governance points and "The Calendar Table" (+8% income, −0.8 unrest everywhere) for forty years. Nobody can abolish an office that is a table of numbers.',
         effects: guard('struck:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, P(ctx), { gov: 18 });
-          mod(ctx, 'the_reckoning_published', 'The Reckoning Published', { incomeMult: 1.08, unrestAll: -0.8 }, 480);
+          // Its own modifier id, for the same reason as the flag below: §235's
+          // card of 358 hangs a PERMANENT `the_reckoning_published` on the
+          // realm, and addTagModifier replaces by id — reusing it here would
+          // silently overwrite the chapter's own standing modifier with this
+          // card's shorter, weaker one.
+          mod(ctx, 'the_calendar_table', 'The Calendar Table', { incomeMult: 1.08, unrestAll: -0.8 }, 480);
           // NOT `reckoningPublished` — that is §235's own marker for the card
           // of 358, and it gates a mission check and a later trigger. This is
           // the same act seventy years later and under a different roof; it

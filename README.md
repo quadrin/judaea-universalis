@@ -274,6 +274,24 @@ static site, the zero dependencies, or the missing build step changes.
   the transit camps; and the month the shekel stopped meaning anything. Each is a real
   choice with a printed price, and each records what the record actually did, so a
   campaign that answers differently gets the road not taken written into its ledger.
+- **The other side of the line.** The same audit turned up the second half of the
+  hole: the game knew two scales, the empire and the realm, and almost nothing in
+  between. Petra appeared in the Maccabean chapter twice in a hundred and seven
+  years; Chalcis, Emesa, Commagene, Osrhoene, Hatra and Palmyra had four cards
+  between them across nine chapters, three of which were the empires annexing
+  them. Every chapter now carries a **neighbours** package too — ninety-seven more
+  dated cards about the courts a courier can reach in three days. The Tyrian mint
+  that strikes the Temple's own coin; Gabinius replacing one national council with
+  five; the priest-king at Chalcis who shelters anybody's fugitives for a price;
+  five hundred Babylonian horse-archers looking for a frontier to hold; Hatra's
+  double wall, which two emperors failed against; the belt of buffer kingdoms and
+  the thirty years in which both empires quietly dismantle all of it; Mavia's
+  cavalry and the bishop she took as her peace terms; the abna who stop being a
+  garrison and become a caste; and an armistice line drawn with a grease pencil
+  whose mark was sixty metres wide on the ground. Placement is arithmetic rather
+  than taste: every decade with real room in a chapter's window now carries at
+  least two dated cards, and a regression suite refuses the claim if it stops
+  being true.
 - **A crown can be taken from the court that wore it.** Forming a nation used to require a
   banner nobody had *ever* flown, which quietly reserved every crown on the map for the
   court that started with it — beat that court out of existence and its name sat in the
