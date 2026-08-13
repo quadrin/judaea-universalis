@@ -86,6 +86,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // because every lever in this panel calls refresh() the moment it fires and
   // anything derived from the DOM would be clobbered by the next rebuild.
   let tab = DEFAULT_TAB;
+  // Which bulk refit has been armed (SPEC §244): '' | 'army' | 'fleet'. The
+  // two-tap idiom §218 and §222 use — refitting the whole host is a large sum
+  // leaving the treasury on one click, and the outliner deliberately makes you
+  // decide one army at a time.
+  let refitArmed = '';
   // How many accomplishments are sitting ready to claim (SPEC §229). The
   // Missions tab wears the count, because a reward that waits for a click is
   // a reward a player can walk past for a decade if nothing says it is there.
@@ -238,6 +243,21 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('shield', 'icon-k')}Armies</span><span class="pp-v" data-ref="armies"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
       </div>
+      <!-- What the realm has under arms (SPEC §244). This tab was three
+           numbers and two read-only cards — manpower, a regiment count, war
+           exhaustion, the patterns we muster as, and the works in the shops.
+           Every other question a commander actually asks was answerable only
+           one army at a time in the outliner: where the fleet is, how many
+           wings are up, who has no general, what is still armed to last age's
+           pattern. Supply was answerable nowhere at all: getSupplyStatus was
+           a sim query with no reader anywhere in the UI.
+           Player's realm only: a foreign court's supply lines and empty
+           commands are not things an ambassador reads off a card. -->
+      <div class="pp-build hidden" data-ref="hostBlock" data-tab="war">
+        <div class="pp-build-title" data-ref="hostTitle">What We Have Under Arms</div>
+        <div class="np-techs" data-ref="hostState"></div>
+        <div class="pp-build-grid" data-ref="hostActs"></div>
+      </div>
       <!-- What the host is made of (SPEC §204): the patterns its three arms
            are raised to, the military rungs that unlock the next ones, and
            who sells it the aircraft and armor it cannot forge (§181). All
@@ -310,6 +330,48 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (tb) {
         const id = tb.dataset.tabGo;
         if (id && id !== tab) { tab = id; refreshTabs(); el.scrollTop = 0; }
+        return;
+      }
+      // Refit the whole host or the whole fleet (SPEC §244): armed on the
+      // first tap, paid on the second, disarmed by five seconds of not being
+      // pressed again — and by pressing the OTHER one, so an armed army refit
+      // cannot be paid by a stray click meant for the fleet.
+      const refit = e.target.closest('[data-refit]');
+      if (refit) {
+        if (!actions) return;
+        const which = refit.dataset.refit;
+        if (refitArmed !== which) {
+          refitArmed = which;
+          setTimeout(() => { if (refitArmed === which) { refitArmed = ''; refresh(); } }, 5000);
+          refresh();
+          return;
+        }
+        refitArmed = '';
+        const g = ctx && ctx.game;
+        if (g && which === 'army' && typeof actions.modernizeArmy === 'function') {
+          // Only the ones that CAN. modernizeArmy answers a refusal with a
+          // toast, so ordering the whole host would bury the successes under
+          // a failure notice for every army that was already up to date. The
+          // eligible ids are snapshotted before any order goes out: each refit
+          // spends from the same treasury, so asking mid-loop would be asking
+          // a question the earlier orders have already changed.
+          const eligible = Object.values(g.armies || {})
+            .filter((a) => a && a.tag === g.playerTag)
+            .filter((a) => {
+              const aa = typeof actions.getArmyActions === 'function' && actions.getArmyActions(a.id);
+              return !!(aa && aa.canModernize);
+            })
+            .map((a) => a.id);
+          for (const id of eligible) {
+            try { actions.modernizeArmy(id); } catch (err) { warnOnce('np-refit-army', err); }
+          }
+        } else if (which === 'fleet' && typeof actions.modernizeFleet === 'function') {
+          const navy = (typeof actions.getNavy === 'function' && actions.getNavy()) || { fleets: [] };
+          for (const f of (navy.fleets || []).filter((x) => x && x.canModernize)) {
+            try { actions.modernizeFleet(f.id); } catch (err) { warnOnce('np-refit-fleet', err); }
+          }
+        }
+        refresh();
         return;
       }
       const act = e.target.closest('[data-act]');
@@ -843,6 +905,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshDiplomacy(g, t, tag, self);
     refreshTech(t, self);
     refreshPrograms(self);
+    refreshHostState(self);
     refreshLedger(self);
     refreshReforms(t, self);
     refreshEraIdeas(t, self);
@@ -1848,6 +1911,117 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
 
   // The works of one's own (SPEC §213), directly under How We Muster: the
   // chapter's roster of named weapon systems this realm can develop at home.
+  // What the realm has under arms (SPEC §244), and the two levers that act on
+  // all of it at once. Every line hides itself when it has nothing to say, so
+  // a Maccabean host with no fleet, no wings, no supply trouble and nothing
+  // obsolete sees the block disappear entirely rather than read four zeroes.
+  function refreshHostState(self) {
+    if (!refs.hostState) return;
+    const g = ctx && ctx.game;
+    const call = (name, ...args) => {
+      if (!actions || typeof actions[name] !== 'function') return null;
+      try { return actions[name](...args); } catch (e) { warnOnce('np-host-' + name, e); return null; }
+    };
+    if (!self || !g) {
+      refs.hostBlock.classList.toggle('hidden', true);
+      setHtml(refs.hostState, '');
+      setHtml(refs.hostActs, '');
+      return;
+    }
+    const me = g.playerTag;
+    const mine = Object.values(g.armies || {}).filter((a) => a && a.tag === me);
+    // The per-army questions the outliner asks one army at a time.
+    let refitN = 0, refitCost = 0, refitTo = '', headless = 0, canCommand = 0;
+    const hungry = [];
+    for (const a of mine) {
+      const aa = call('getArmyActions', a.id);
+      if (aa && aa.canModernize) { refitN++; refitCost += aa.modernizeCost | 0; refitTo = aa.newGenName || refitTo; }
+      if (!a.general) { headless++; if (aa && aa.canHire) canCommand++; }
+      // Supply is traced live and is the reason this block exists: an army
+      // out of supply is bleeding and the panel never said so.
+      const sup = call('getSupplyStatus', a.id);
+      if (sup && !sup.ok && !sup.exempt) hungry.push(sup);
+    }
+    const navy = call('getNavy') || { fleets: [] };
+    const fleets = Array.isArray(navy.fleets) ? navy.fleets : [];
+    const wings = call('getAirWings') || [];
+    const fleetRefit = fleets.filter((f) => f && f.canModernize);
+    const fleetCost = fleetRefit.reduce((s, f) => s + (f.modernizeCost | 0), 0);
+
+    const rows = [];
+    const line = (tt, html) => rows.push(`<div class="np-tech-unit" data-tt="${esc(tt)}">${html}</div>`);
+    if (fleets.length) {
+      const ships = fleets.reduce((s, f) => s + (f.ships | 0), 0);
+      const aboard = fleets.reduce((s, f) => s + (f.aboardMen | 0), 0);
+      const sailing = fleets.filter((f) => f && f.sailing).length;
+      line('Hulls of war, and what they are carrying. A fleet at sea cannot embark, refit or be reinforced until it makes port.'
+        + (aboard ? '\n\nMen aboard are out of supply reach and cannot fight until they land.' : ''),
+      `At sea: <b>${fleets.length}</b> ${fleets.length === 1 ? 'fleet' : 'fleets'}, ${ships} ${ships === 1 ? 'ship' : 'ships'}`
+        + (sailing ? ` <span class="peace-dim">— ${sailing} under way</span>` : '')
+        + (aboard ? ` <span class="peace-dim">— ${fmtMen(aboard)} men aboard</span>` : ''));
+    }
+    if (navy.merchantCount) {
+      line('Civilian hulls (SPEC §58): they pay a trade income from your shipyard harbors and are not warships.',
+        `Merchantmen: <b>${navy.merchantCount}</b>`
+        + (navy.merchantActive ? ` <span class="peace-dim">— ${navy.merchantActive} berthed and earning</span>` : ''));
+    }
+    if (wings.length) {
+      const led = wings.filter((w) => w && w.leader).length;
+      line('Squadrons at their airfields (SPEC §29). Wings cover battles within reach, slow hostile columns, and are destroyed on the ground if their field falls.',
+        `In the air: <b>${wings.length}</b> ${wings.length === 1 ? 'wing' : 'wings'}`
+        + (led < wings.length ? ` <span class="peace-dim">— ${wings.length - led} without a commander</span>` : ''));
+    }
+    if (hungry.length) {
+      // Name the worst rather than listing them: the panel is a summary, and
+      // the outliner is where an individual host is dealt with.
+      const worst = hungry.slice().sort((a, b) => (b.months | 0) - (a.months | 0))[0];
+      const why = (worst && (worst.reasonText || worst.penaltyText)) || 'The supply line is cut.';
+      line('An army out of supply bleeds men every month and fights worse for it (SPEC §82). '
+        + 'March it back onto a friendly road, or take the ground that feeds it.\n\n' + why,
+      `<span class="neg">Out of supply: <b>${hungry.length}</b> of ${mine.length}</span>`
+        + (worst && worst.months ? ` <span class="peace-dim">— worst ${worst.months} month${worst.months === 1 ? '' : 's'}</span>` : ''));
+    }
+    if (headless) {
+      line('A general adds pips to every phase of a battle (SPEC §31). One costs 50 martial points.'
+        + (canCommand ? '' : '\n\nThere are not enough martial points to commission one right now.'),
+      `Without a general: <b>${headless}</b> of ${mine.length}`
+        + (canCommand ? ` <span class="peace-dim">— ${canCommand} could be commissioned now</span>` : ''));
+    }
+    if (refitN || fleetRefit.length) {
+      const bits = [];
+      if (refitN) bits.push(`${refitN} ${refitN === 1 ? 'army' : 'armies'}`);
+      if (fleetRefit.length) bits.push(`${fleetRefit.length} ${fleetRefit.length === 1 ? 'fleet' : 'fleets'}`);
+      line('These are armed to a pattern the ladders have moved past. Re-equipping is paid in talents and is not compulsory — '
+        + 'an old pattern still fights, just worse than what it could be.',
+      `On an older pattern: <b>${bits.join(' and ')}</b>`
+        + (refitTo ? ` <span class="peace-dim">— ${esc(refitTo)} is available</span>` : ''));
+    }
+
+    // The levers. Two taps each (the idiom §218 and §222 use): the first arms
+    // the button and names the bill, the second pays it. Refitting the whole
+    // host is a large sum leaving the treasury on one click, and the outliner
+    // makes you decide army by army for a reason.
+    const acts = [];
+    if (refitN) {
+      const armed = refitArmed === 'army';
+      acts.push(`<button class="pp-build-btn${armed ? ' pp-build-sure' : ''}" data-refit="army"
+        data-tt="${esc('Re-equip every army that can be, in one order — the same refit the outliner offers one at a time.'
+        + '\nTotal: ' + refitCost + ' talents.' + (armed ? '\n\nTap again to pay it.' : ''))}">${icon('bricks')}<span>${armed
+    ? `Pay ${refitCost} talents?` : `Refit the host — ${refitN}, ${refitCost} talents`}</span></button>`);
+    }
+    if (fleetRefit.length) {
+      const armed = refitArmed === 'fleet';
+      acts.push(`<button class="pp-build-btn${armed ? ' pp-build-sure' : ''}" data-refit="fleet"
+        data-tt="${esc('Re-rig every fleet that can be, in one order.'
+        + '\nTotal: ' + fleetCost + ' talents.' + (armed ? '\n\nTap again to pay it.' : ''))}">${icon('ship')}<span>${armed
+    ? `Pay ${fleetCost} talents?` : `Refit the fleet — ${fleetRefit.length}, ${fleetCost} talents`}</span></button>`);
+    }
+
+    setHtml(refs.hostState, rows.join(''));
+    setHtml(refs.hostActs, acts.join(''));
+    refs.hostBlock.classList.toggle('hidden', !rows.length && !acts.length);
+  }
+
   // A locked card is the §179 dark slab, saying what opens it (a rung of the
   // military ladder, and whatever the shops must deliver first); an open one
   // carries the price and one button; one in the shops carries its months and

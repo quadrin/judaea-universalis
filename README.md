@@ -1075,6 +1075,21 @@ static site, the zero dependencies, or the missing build step changes.
   that half-works. And a guest is shown the terms before it sits down, printing
   only what the host has moved off the default.
 
+- **What we have under arms.** The realm panel's Host tab — Defence, in 1948 —
+  was three numbers and two read-only cards. Everything else a commander wants
+  to know could only be got one army at a time by clicking each host in the
+  outliner: where the fleet is, how many wings are up, who has no general, what
+  is still armed to the pattern before last. One question was answerable
+  nowhere at all — whether anything is **out of supply**, which is the single
+  condition that costs men every month it goes unnoticed; the sim had always
+  been able to answer it and nothing on screen ever asked. The tab now opens
+  with the whole host in five lines, each of which hides itself when it has
+  nothing to say, so a Maccabean realm with no navy and no air force sees the
+  block vanish rather than read four zeroes. And it carries two levers the
+  outliner cannot: **refit the host** and **refit the fleet**, re-equipping
+  everything that can be in one order — armed on the first tap and paid on the
+  second, with the bill named both times.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

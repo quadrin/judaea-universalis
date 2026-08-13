@@ -16832,3 +16832,67 @@ reload instead.
   disconnect handler; the panel carries all four controls; Begin sends them;
   the payload echoes them; the guest prints only the non-defaults; `MP_PROTO`
   is bumped; and every class the new markup emits has a rule in the stylesheet.
+
+## 244. What we have under arms
+
+The Host tab — Defence, in 1948 — was three numbers and two read-only cards:
+manpower, a regiment count against the force limit, war exhaustion, the
+patterns the three arms muster as, and the works in the shops. Everything else
+a commander actually wants to know was answerable only one army at a time, in
+the outliner, by clicking each host in turn: where the fleet is, how many wings
+are up, which armies have no general, what is still armed to the pattern before
+last. One of those questions was answerable *nowhere*: `getSupplyStatus` had
+been a sim query with no reader anywhere in the UI, and an army out of supply
+is the one condition that costs men every month it goes unnoticed.
+
+So the tab gains a block, **What We Have Under Arms** — the whole host in five
+lines, and the two levers that act on all of it at once.
+
+| Line | Says | Appears when |
+| --- | --- | --- |
+| At sea | fleets, hulls, how many under way, men aboard | the realm has a fleet |
+| Merchantmen | civilian hulls, how many berthed and earning | it has any |
+| In the air | wings, how many without a commander | the chapter has reached them |
+| Out of supply | how many hosts, and the worst one's months | any host is starving |
+| Without a general | how many, and how many could be commissioned now | any command is empty |
+| On an older pattern | armies and fleets that could refit, and to what | anything is obsolete |
+
+**Every line hides itself, and so does the block.** A Maccabean host has no
+fleet, no wings, no merchantmen and nothing obsolete; printing four zeroes at
+it would be worse than printing nothing. The block disappears entirely rather
+than stand empty — the same rule §175 applied to the tabs themselves, one level
+down.
+
+**The two levers are bulk refits**, and they are the reason the block is not
+just a readout: *Refit the host* and *Refit the fleet* re-equip everything that
+can be, in one order, where the outliner makes you decide army by army. They
+are armed on the first tap and paid on the second (§218's idiom, and §222's),
+because this is a large sum leaving the treasury on a single click, and the
+button names the bill both times.
+
+**The refit orders only what can be refitted, and decides that before it
+spends.** `modernizeArmy` answers a refusal with a toast, so ordering the whole
+host would bury every success under a failure notice for every army already up
+to date — at the start of the Maccabean chapter that is *both* of them. The
+eligible set is snapshotted before the first order goes out, because each refit
+spends from the same treasury the next one is tested against, and asking
+mid-loop would be asking a question the earlier orders had already changed. If
+the money runs out partway the remaining refits refuse and say so, which is the
+honest outcome and the one the total on the button was there to prevent.
+
+**The player's own realm only.** A foreign court's supply lines and empty
+commands are not things an ambassador reads off a card — the same line the
+works-in-the-shops block already draws.
+
+- **Regression contract**: `smoke165.mjs` — `getSupplyStatus` answers for a
+  real army with all five fields the block reads, both its gates are booleans,
+  and a nonexistent army answers null rather than throwing; `getArmyActions`
+  carries a finite refit cost and whether a general can be commissioned;
+  `getNavy` and `getAirWings` answer with lists; a Maccabean realm has no wings
+  so that line never renders, and 1948 names the tab Defence while 167 BCE
+  leaves it the Host; every line sits behind its own emptiness test and the
+  block hides with neither line nor lever; the refit filters on `canModernize`
+  and snapshots the eligible set before ordering; the first tap arms, it
+  disarms after five seconds, and the second disarms before it spends so a
+  double-fire cannot pay twice; the block is gated to the player's own realm;
+  and every class the new markup emits has a rule in the stylesheet.
