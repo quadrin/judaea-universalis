@@ -1,4 +1,4 @@
-// js/map/mapmodes.js — per-province color lookups for the six mapmodes. SPEC §5.4.
+// js/map/mapmodes.js — per-province color lookups for the mapmodes. SPEC §5.4.
 //
 // Flags bitfield contract (shared with js/map/renderer.js — keep in sync):
 //   bit0 (1)  = diagonal stripes of `secondary` over primary (occupation)
@@ -35,6 +35,43 @@ const DIA_COLD = [92, 118, 156];
 const DIA_WARM = [212, 168, 56];
 const DIA_SHUT = [138, 128, 112];   // a window that has closed
 const DIA_OURS = [236, 226, 196];   // the community is inside our own borders
+// Structures mode (SPEC §242): what has actually been raised on the ground.
+// A province is painted for the KIND of work that speaks for it, not for how
+// many it has, because the kinds are what a player is looking for — a shipyard
+// and a granary are not two units of the same thing. The count only shades it.
+const STRUCT_NONE = [222, 214, 190];  // ground with nothing standing on it
+const STRUCT_PALE = [238, 232, 212];  // the floor the kind-hues ramp up from
+const STRUCT_SITE = [232, 196, 92];   // scaffolding: a work is going up here
+const STRUCT_IDLE = [120, 120, 120];  // the works stand in somebody else's hands
+const STRUCT_OTHER = [128, 122, 110]; // a catalog key this palette has not met
+// Seven hues, chosen to survive the PALE end of the ramp rather than to look
+// separated at full strength. Most provinces that carry anything carry exactly
+// one thing, so the shade a single work paints is the shade the mode is mostly
+// read at, and two hues that are 130 apart at full colour can be 50 apart once
+// both are seven-tenths of the way back to parchment. Hence: a stone gray that
+// is warm and dark rather than blue (a slate one drifts into the shipyard's
+// blue as it pales), a green that is green rather than olive (an olive one
+// drifts into the market's gold), and a shipyard blue rather than a teal.
+// The suite holds the floor at 60 of L1 separation between any two.
+const STRUCT_COLORS = {
+  wonder: [168, 44, 96],
+  airfield: [196, 78, 40],
+  shipyard: [28, 116, 158],
+  walls: [96, 92, 84],
+  market: [212, 168, 36],
+  granary: [88, 146, 58],
+  shrine: [116, 74, 168],
+};
+// Which work speaks for a province when several stand. A wonder first: it is
+// the thing the province IS. Then the two gated works, which are the rarest
+// and decide the most — where a realm may raise hulls and wings at all — then
+// the fortification, then the three ordinary works of the economy underneath.
+// `wonder` is not a build order; it rides here because the ranking is about
+// what stands on the ground, and the Temple stands on the ground.
+const STRUCT_RANK = ['wonder', 'airfield', 'shipyard', 'walls', 'market', 'granary', 'shrine'];
+// The two entries that are reached without a catalog key behind them.
+const STRUCT_WONDER_RANK = STRUCT_RANK.indexOf('wonder');
+const STRUCT_WALLS_RANK = STRUCT_RANK.indexOf('walls');
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -94,6 +131,7 @@ const MODE_PARAMS = {
   diplomatic: { relief: 0.35, flat: 0 },
   estates: { relief: 0.3, flat: 0 },
   diaspora: { relief: 0.3, flat: 0 },
+  structures: { relief: 0.3, flat: 0 },
 };
 
 // Diplomatic mode palette (colors relative to the player).
@@ -353,6 +391,71 @@ export function computeMapmodeColors(ctx, mode) {
               fl |= 1;
             }
           }
+        }
+        break;
+      }
+      // What stands on the ground (SPEC §242). Buildings were a thing you
+      // could only see by clicking a province you already owned — the panel
+      // asks the sim for `getBuildInfo`, which returns null for anybody
+      // else's ground — so the works of every other court on the map were
+      // invisible, and your own were a memory test. This mode reads the
+      // province state directly, for everyone, and answers the three
+      // questions the panel could not: what is here, how much of it, and
+      // what is going up.
+      case 'structures': {
+        const list = Array.isArray(p.buildings) ? p.buildings : [];
+        // A fortress is a structure whether a build order raised it or the
+        // map was drawn with it standing — SPEC §58 seeds the Akra, Masada
+        // and a dozen more, and no `walls` order was ever given for them.
+        // Counted ONCE: a province that has built its walls already carries
+        // its fortification in the list, and adding the fort again would
+        // shade it as though it had raised two works instead of one.
+        const fortOnly = (p.fort | 0) > 0 && list.indexOf('walls') < 0;
+        // The great works count too, and they are not static scenery: a
+        // chapter can raise the Dome, and three chapters can rebuild the
+        // Temple. `holy` deliberately does not count — Gerizim is a mountain,
+        // and this mode is about what was BUILT on the ground, not what the
+        // ground is. Jerusalem carries both and is spoken for by the Temple.
+        const wonder = p.wonder ? 1 : 0;
+        const n = list.length + (fortOnly ? 1 : 0) + wonder;
+        if (!n) {
+          // Nobody's ground keeps its own colour rather than reading like a
+          // settled province that has simply built nothing: the difference
+          // between empty desert and an undeveloped town is the difference
+          // between land you cannot build on and land you should.
+          cA = p.owner === 'WASTE' ? wasteColor : STRUCT_NONE;
+        } else {
+          let best = wonder ? 'wonder' : (fortOnly ? 'walls' : null);
+          let bestRank = wonder ? STRUCT_WONDER_RANK : (fortOnly ? STRUCT_WALLS_RANK : 99);
+          for (const k of list) {
+            let r = STRUCT_RANK.indexOf(k);
+            if (r < 0) {
+              warnOnce('bld:' + k, `unknown building "${k}" on ${p.name}`);
+              r = 98;
+            }
+            if (r < bestRank) { bestRank = r; best = k; }
+          }
+          const base = STRUCT_COLORS[best] || STRUCT_OTHER;
+          // One work must already read as its OWN kind. Most provinces that
+          // have anything have exactly one thing, so a ramp starting at the
+          // parchment would paint almost the whole built world seven shades of
+          // pale and the mode would answer none of its three questions. One
+          // work lands most of the way to its hue; four fill it. The count is
+          // the mode's SECOND question, and it is shaded rather than hued
+          // because of it — a narrow band buys the kinds their separation.
+          cA = lerp3(STRUCT_PALE, base, 0.78 + 0.22 * Math.min(1, (n - 1) / 3));
+        }
+        // The site takes the stripe over the occupation, and pulses, because
+        // it is the one fact in this mode that is about to change. Where
+        // there is no site, the stripe carries its usual meaning — and here
+        // it is not decoration: a work only works for the court that holds
+        // the province (`buildingWorks`), so an occupied market pays nobody.
+        if (p.construction) {
+          cB = STRUCT_SITE;
+          fl |= 1 | 4;
+        } else if (n && p.owner !== 'WASTE' && p.controller && p.controller !== p.owner) {
+          cB = STRUCT_IDLE;
+          fl |= 1;
         }
         break;
       }

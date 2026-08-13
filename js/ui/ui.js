@@ -25,6 +25,7 @@ const MAPMODES = [
   { id: 'unrest', ico: icon('flame'), name: 'Unrest' },
   { id: 'estates', ico: icon('scales'), name: 'Estates — which party of the court holds this ground' },
   { id: 'diaspora', ico: icon('diaspora'), name: 'The Dispersion — where the communities are, how large, and how they regard this crown' },
+  { id: 'structures', ico: icon('structures'), name: 'Structures — what stands on this ground, and what is going up' },
 ];
 
 function buildMapmodeBar(bar, bus) {

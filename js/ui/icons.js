@@ -34,6 +34,19 @@ export const ICONS = {
     '<circle cx="20.4" cy="14.6" r="0.95"/>' +
     '<circle cx="15.6" cy="17.4" r="0.95"/>' +
     '<circle cx="19.4" cy="19.8" r="0.95"/>',
+  // Structures (SPEC §242): a built town in elevation — a hall, a house under
+  // its roof, a tower. Deliberately NOT `walls` (one crenellated curtain) or
+  // `bricks` (Development's course pyramid, already in this bar): the mode is
+  // about the several kinds of work that stand on a province, so the emblem
+  // has to be several kinds of building rather than one of them.
+  structures:
+    '<path d="M2.6 20.5h18.8"/>' +
+    '<path d="M3.8 20.5v-6.2h4v6.2"/>' +
+    '<path d="M3.8 17h4"/>' +
+    '<path d="M10 20.5v-8.6l2.5-2.3 2.5 2.3v8.6"/>' +
+    '<path d="M11.6 20.5v-3.4h1.8v3.4"/>' +
+    '<path d="M17.6 20.5V5.9h3.2v14.6"/>' +
+    '<path d="M17.6 10h3.2M17.6 14.4h3.2"/>',
   // Terrain: mountain ridge
   mountain:
     '<path d="M3.5 19 9 8.5l3.5 6.3"/>' +

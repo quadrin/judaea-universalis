@@ -4,6 +4,7 @@ import { icon, flagChip, unitIcon } from './icons.js';
 import { unlockedGen, cappedGen, navalGenName } from '../data/tech.js';
 import { ARM, armGenName } from '../data/units.js';
 import { communityLabel } from '../sim/population.js';
+import { buildingFace } from '../sim/military.js';
 
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
 const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine', shipyard: 'shipyard', airfield: 'plane' };
@@ -873,6 +874,36 @@ const RISING_LABELS = {
     let info = null;
     if (actions && typeof actions.getBuildInfo === 'function') {
       try { info = actions.getBuildInfo(provId); } catch (e) { warnOnce('getBuildInfo', e); info = null; }
+    }
+    // Somebody else's ground (SPEC §242). getBuildInfo answers only for a
+    // province we own AND control, so the works of every other court on the
+    // map were unreadable here — and the structures mapmode now paints them,
+    // which would leave a player looking at a colour with nowhere to look it
+    // up. Read the province's own state instead and show the same chips
+    // without the build grid: what stands there is not a secret, and raising
+    // something there is not on offer. The block still hides itself where
+    // there is nothing to say, so foreign provinces do not sprout an empty
+    // "Nothing yet built" row across the whole map.
+    if (!info && ctx && ctx.game) {
+      try {
+        const p = ctx.game.provinces && ctx.game.provinces[provId];
+        const built = p && Array.isArray(p.buildings) ? p.buildings : [];
+        if (p && !p.impassable && (built.length || p.construction)) {
+          const ot = ctx.game.tags && ctx.game.tags[p.owner];
+          const marTech = (ot && ot.tech && ot.tech.mar) | 0;
+          const cdef = p.construction ? (DEFINES.BUILDINGS || {})[p.construction.key] : null;
+          info = {
+            built: built.slice(),
+            constructing: p.construction ? {
+              key: p.construction.key,
+              // Under the face of ITS owner's age, not ours (SPEC §52).
+              name: (cdef && buildingFace(cdef, marTech).name) || p.construction.key,
+              monthsLeft: p.construction.monthsLeft | 0,
+            } : null,
+            options: [],
+          };
+        }
+      } catch (e) { warnOnce('foreignWorks', e); info = null; }
     }
     refs.buildBlock.classList.toggle('hidden', !info);
     if (!info) return;

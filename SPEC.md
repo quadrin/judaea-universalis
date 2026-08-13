@@ -16666,3 +16666,92 @@ chapter's own standing modifier quietly overwritten by a weaker one. It is now
   seeded stream; no modifier id in either new section collides with any other
   package the same chapter plays (1,851 ids scanned); and the decade-coverage
   claim above holds for all nine chapters.
+
+## 242. What stands on the ground
+
+The game has had buildings since §58 and no way to look at them. The only door
+into a province's works is the province panel, and the panel asks the sim for
+`getBuildInfo`, which returns `null` for any province the player does not both
+own and control. So the works of every other court on the map were invisible —
+you could not see where Egypt kept its runways or which of Rome's harbors was
+a working shipyard — and your own were a memory test, one click per province,
+across a realm that by mid-campaign is thirty of them.
+
+This section adds the eleventh mapmode. It answers three questions in one
+glance, in that order of priority:
+
+**What is here.** The province is painted for the KIND of work that speaks for
+it, out of seven: a wonder, an airfield, a shipyard, a fortification, a market,
+a granary, a shrine. Kind rather than count, because the kinds are what a
+player is actually looking for — a shipyard and a granary are not two units of
+the same substance, and a mode that painted them the same hue in different
+shades would answer none of these questions. Where several works stand, the
+ranking decides: a wonder first, because it is what the province *is*; then the
+two tech- and coast-gated works, which are the rarest on the map and the ones
+that decide where a realm may raise hulls and wings at all; then the
+fortification; then the three ordinary works of the economy underneath.
+
+**How much of it.** The count shades the hue it does not choose. One work lands
+at 0.78 of the way from parchment to full colour and four fill it. The band is
+deliberately narrow: most provinces that carry anything carry exactly one
+thing, so the single-work shade is the shade the mode is mostly read at, and
+every point of ramp spent on the count is a point of separation taken away from
+the kinds. The palette is chosen to survive that pale end rather than to look
+separated at full strength — a warm dark stone rather than a slate (a slate
+drifts into the shipyard's blue as it pales), a green rather than an olive (an
+olive drifts into the market's gold). The suite holds the floor at 60 of L1
+separation between any two kinds at the palest shade the mode can show, and 100
+between any kind and bare ground.
+
+**What is going up.** A province with a work under construction is striped in
+scaffolding gold and pulses — the one fact in this mode that is about to
+change. It is striped whether or not anything stands there yet, because an
+empty province with a site is exactly the thing a player wants to find. Where
+there is no site the stripe carries its usual meaning: gray for works standing
+in somebody else's hands, which is not decoration — a building only works for
+the court that holds the province (`buildingWorks`), so an occupied market pays
+nobody.
+
+**Two things count that are not build orders.** A fortress is a structure
+whether an order raised it or the map was drawn with it standing: §58 seeds the
+Akra, Masada, Dura-Europos and thirteen more, and no `walls` order was ever
+given for any of them. A mode that read only `buildings` would have painted
+Masada as bare hill. It is counted *once* — a province that has built its walls
+already carries its fortification in the list, and adding the fort again would
+shade it as though it had raised two works. And the great works count: the
+Temple, the Library, Petra. These are not static scenery — a chapter can raise
+the Dome and three can rebuild the Temple — so the mode reads the live field.
+In 167 BCE Jerusalem is painted for the Temple; in 1948 it falls back to its
+fortification, and the map carries the loss rather than quietly forgetting the
+Temple was ever there. `holy` deliberately does not count: Gerizim is a
+mountain, and this mode paints what was built on the ground, not what the
+ground is.
+
+**And the panel now answers for anybody's ground.** A mapmode whose colours can
+only be decoded on the tenth of the map you own is half a mapmode. The province
+panel's Buildings block falls back to reading the province's own state when
+`getBuildInfo` declines — the same chips and the same construction row, without
+the build grid, under the face of *its owner's* age rather than ours (§52).
+The block still hides itself where there is nothing to say, so foreign
+provinces do not sprout an empty "Nothing yet built" row across the map.
+
+**What the mode makes visible is thin, and that is the honest reading.** A
+chapter opens with between twelve and twenty-eight provinces carrying anything
+at all, most of them fortresses. It stays thin for a foreign court all campaign,
+because the AI builds only shipyards (§invasion's port-seeking) and airfields —
+it never raises a market, a granary, a wall or a shrine. That is a fact about
+the AI, not about this mode, and it is now a fact you can see.
+
+- **Regression contract**: `smoke163.mjs` — the mode is registered in
+  `MODE_PARAMS`, in the UI's mapmode bar, and with an icon that exists and is
+  not another mode's glyph; it computes on the bare `{game, DEFINES}` context
+  two suites build, and the other ten modes still compute; the palette is read
+  out of the module rather than copied, and no two kinds collapse into each
+  other at the pale end of the ramp or into bare ground; distinct works take
+  distinct hues and the ranking picks the right one where several stand; a
+  foreign court's runway is painted; a fortress is painted and is counted once;
+  a wonder speaks for its province, is read live, and a holy mountain is not a
+  work; the site stripes and pulses, the occupation stripes gray, and the site
+  wins where both are true; wasteland keeps its own colour; an unknown catalog
+  key warns rather than throwing; every key in `DEFINES.BUILDINGS` has a hue
+  and a place in the ranking; and all nine chapters open with something to say.

@@ -1041,6 +1041,24 @@ static site, the zero dependencies, or the missing build step changes.
   **Kingdom of Israel** like the risings of 66, 132 and 614: the chapter plays
   the House of David road, so it can seat the king that crown asks for.
 
+- **What stands on the ground.** The game has had buildings since the first
+  slice and no way to look at them: the only door into a province's works was
+  the panel, and the panel refused to open for any province you did not both own
+  and control. So you could not see where Egypt kept its runways or which of
+  Rome's harbors was a working shipyard, and your own thirty provinces were a
+  memory test one click deep. There is now a **structures** mapmode. It paints
+  each province for the *kind* of work that speaks for it — a wonder, an
+  airfield, a shipyard, a fortification, a market, a granary, a shrine, in that
+  order of rank — shades it for how many works stand, and stripes it in
+  scaffolding gold, pulsing, wherever something is going up. Fortresses count
+  even where no build order raised them, which is how Masada gets on the map,
+  and the great works count and are read live: Jerusalem is painted for the
+  Temple in 167 BCE, falls back to its citadel in 1948, and lights up again for
+  any chapter that rebuilds it. The panel now answers for anybody's ground, so
+  every colour on the map can be looked up. One thing the mode makes plain that
+  nobody had noticed: an AI court never builds a market, a granary, a wall or a
+  shrine all campaign — only shipyards and airfields.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free
