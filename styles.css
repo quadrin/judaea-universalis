@@ -2882,6 +2882,24 @@ html, body {
   background: rgba(255, 252, 240, 0.75);
   border-color: var(--gold);
 }
+/* The table's terms (SPEC §243): the same two-way switch, sitting in an
+   .mp-row beside its label instead of spanning the panel on its own. */
+.mp-modes.mp-inline { flex: 1 1 auto; margin: 0; min-width: 0; }
+.mp-modes.mp-inline .mp-mode { padding: 5px 6px; font-size: 12px; }
+/* And how they read from the guest's side: only the terms that are not the
+   default appear, so this block is usually absent entirely. */
+.mp-terms {
+  margin: 10px 0 2px;
+  padding: 8px 10px;
+  border: 1px solid rgba(43, 32, 21, 0.25);
+  border-left: 3px solid var(--gold-dim);
+  border-radius: 3px;
+  background: rgba(255, 252, 240, 0.3);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.mp-terms b { display: block; margin-bottom: 3px; color: var(--ink); font-variant: small-caps; letter-spacing: 0.06em; }
+.mp-term { padding: 2px 0; }
 .mp-adv {
   display: block;
   margin: 10px auto 0;

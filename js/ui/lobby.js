@@ -26,7 +26,9 @@ const MAX_GUESTS = 3;
 // Bumped whenever the multiplayer protocol or lobby flow changes. A host and a
 // guest on different builds (one tab loaded before a deploy) otherwise glitch
 // silently — with this they get told to reload instead.
-const MP_PROTO = 3;
+// 4: §243's terms ride the lobby payload, and a guest's clock press can now be
+// refused by the host — a guest on 3 would see the press bounce with no idea why.
+const MP_PROTO = 4;
 const BUILD = 'v1.10.0';
 const POLL_MS = 1500;       // how often the host asks the room for an answer
 const POLL_GIVE_UP_MS = 900000; // the room's own lifetime; stop asking after it
@@ -49,6 +51,13 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
   let hostSaveId = '';
   let hostSave = null;       // resolved {game, entry}
   let hostSaveError = '';
+  // The terms the table plays under (SPEC §243). The challenge is the same
+  // dial the start screen offers a solo player and multiplayer simply never
+  // had — every campaign hosted before this section ran on Normal whatever
+  // anybody wanted. The three house rules default to what the game already
+  // did, so a host who changes nothing gets the table they had.
+  let hostChallenge = 'normal';
+  let hostTable = { guestClock: true, cardWaits: true, pauseOnDrop: false };
   let inviteCode = '';       // short room code, cloud flow
   let manualCode = '';       // long JU1. blob, hand-carried flow
   let pollTimer = null;
@@ -196,6 +205,10 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
       shared: mine === hostTag, // beside the host, or a throne of your own
       hostTag,
       hostName: chairName(hostTag),
+      // The terms, so a guest can read what it is sitting down to before it
+      // does (SPEC §243). A save's challenge is the save's, not the panel's.
+      challenge: usingSave() ? '' : hostChallenge,
+      table: { ...hostTable },
       players: [{ who: 'Host', tag: hostTag, name: chairName(hostTag) }]
         .concat(hostPeers.map((g, i) => {
           const tag = seatOf(g);
@@ -266,6 +279,49 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
       : '<div class="mp-hint">Opening the save…</div>'}`;
   }
 
+  // The Table block (SPEC §243): the terms, then the house rules. Each is a
+  // pair of buttons rather than a checkbox, because "the world waits" and "the
+  // world runs on" are two positions a table argues about — a ticked box would
+  // make one of them the absence of the other and hide what it does.
+  //
+  // The challenge is asked ONLY of a new campaign. A save carries the dial it
+  // was played on, and re-asking would either lie (the buttons say Normal
+  // while a Veteran world loads) or quietly re-tune an AI mid-campaign.
+  const RULES = [
+    { key: 'guestClock', label: 'The clock',
+      on: ['Anyone may set it', 'Any player can pause the world and change its speed.'],
+      off: ['Yours alone', 'Only you pause the world or change its speed; a guest\'s press is refused and they are told so.'] },
+    { key: 'cardWaits', label: 'A card on the table',
+      on: ['The world waits', 'Nobody starts the clock while a dispatch is still unanswered at another chair.'],
+      off: ['The world runs on', 'The months keep turning while somebody reads. Faster, and you can be run over mid-decision.'] },
+    { key: 'pauseOnDrop', label: 'If a player drops',
+      off: ['Their nation carries on', 'The AI takes the throne they left and the world keeps running.'],
+      on: ['The world pauses', 'Everything stops the moment a connection goes, so the table can decide what to do about it.'] },
+  ];
+  function tableHtml() {
+    const challenge = hostMode === 'save' ? '' : `
+      <div class="mp-row"><label>The challenge</label>
+        <div class="mp-modes mp-inline">
+          <button class="mp-mode${hostChallenge === 'normal' ? ' on' : ''}" data-chal="normal"
+            data-tt="The rival courts play by the same numbers you do.">Normal</button>
+          <button class="mp-mode${hostChallenge === 'hard' ? ' on' : ''}" data-chal="hard"
+            data-tt="Veteran: every rival court fights and earns like a hardened power — AI discipline +5%, AI income &amp; manpower +25%.">Veteran</button>
+        </div></div>`;
+    const rules = RULES.map((r) => {
+      // `on` is whichever button sets the flag true, wherever it is written in
+      // the pair — `pauseOnDrop` reads naturally with its false side first.
+      const isOn = !!hostTable[r.key];
+      const btn = (val, spec) => `<button class="mp-mode${isOn === val ? ' on' : ''}"
+        data-rule="${r.key}" data-val="${val ? '1' : '0'}" data-tt="${esc(spec[1])}">${esc(spec[0])}</button>`;
+      const first = r.key === 'pauseOnDrop' ? btn(false, r.off) + btn(true, r.on) : btn(true, r.on) + btn(false, r.off);
+      return `<div class="mp-row"><label>${esc(r.label)}</label><div class="mp-modes mp-inline">${first}</div></div>`;
+    }).join('');
+    return challenge + rules
+      + `<div class="mp-hint">${hostMode === 'save'
+        ? 'The challenge comes with the save — it is played on the dial it was begun on.'
+        : 'These are yours to set, and they hold for the whole campaign.'}</div>`;
+  }
+
   // The Players block. Each guest gets a seat picker: beside the host, or any
   // other standard the chapter offers (SPEC §216). One throne in the chapter
   // means no picker at all — there is nothing to choose between.
@@ -303,6 +359,8 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
         <button class="mp-mode${hostMode === 'save' ? ' on' : ''}" data-hostmode="save">Continue a save</button>
       </div>` : ''}
       ${campaignHtml()}
+      <div class="peace-sec">The table</div>
+      ${tableHtml()}
       <div class="peace-sec">Players</div>
       ${playersHtml(seats)}
       ${hostPeers.length && seats.length > 1 ? `<div class="mp-hint">${sharedChair()
@@ -328,6 +386,18 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
       hostMode = next;
       // Leaving the save behind restores the picked chapter's own throne.
       if (hostMode === 'new') { hostSave = null; hostSaveError = ''; }
+      renderHost();
+      hostBroadcastLobby();
+    }));
+    // The terms (SPEC §243). Both re-render and re-broadcast: a guest waiting
+    // in the lobby is shown what it is about to sit down to.
+    el.querySelectorAll('[data-chal]').forEach((b) => b.addEventListener('click', () => {
+      hostChallenge = b.dataset.chal === 'hard' ? 'hard' : 'normal';
+      renderHost();
+      hostBroadcastLobby();
+    }));
+    el.querySelectorAll('[data-rule]').forEach((b) => b.addEventListener('click', () => {
+      hostTable = { ...hostTable, [b.dataset.rule]: b.dataset.val === '1' };
       renderHost();
       hostBroadcastLobby();
     }));
@@ -395,7 +465,12 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
       started = true;
       stopPolling();
       el.classList.add('hidden');
-      onHostStart(hostEntry(), hostTag, ready, usingSave() ? hostSave : null);
+      // A save is played on the dial it was begun on, so the challenge is
+      // sent only for a new campaign — see tableHtml.
+      onHostStart(hostEntry(), hostTag, ready, usingSave() ? hostSave : null, {
+        difficulty: usingSave() ? null : hostChallenge,
+        table: { ...hostTable },
+      });
     });
   }
 
@@ -681,6 +756,24 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
     status('Joining the host…');
   }
 
+  // What the host has set, read from the guest's side (SPEC §243). Only the
+  // terms that are NOT the default are printed: a guest joining an ordinary
+  // table should see nothing here, and the one line that appears when a host
+  // has changed something is the line worth reading. A host on an old build
+  // sends no `table` at all, and the block simply stays empty.
+  function guestTermsHtml() {
+    if (!guestLobby) return '';
+    const t = guestLobby.table || null;
+    const terms = [];
+    if (guestLobby.challenge === 'hard') terms.push('Veteran — the rival courts fight and earn like hardened powers.');
+    if (t && t.guestClock === false) terms.push('The host keeps the clock: only they pause it or change the speed.');
+    if (t && t.cardWaits === false) terms.push('The world does not wait for a card — the months turn while somebody is still reading.');
+    if (t && t.pauseOnDrop === true) terms.push('If anyone drops, the world stops until the table says otherwise.');
+    if (!terms.length) return '';
+    return `<div class="mp-terms"><b>The terms</b>${terms.map((s) =>
+      `<div class="mp-term">${esc(s)}</div>`).join('')}</div>`;
+  }
+
   function renderGuestInfo() {
     const wrap = el && el.querySelector('[data-ref="pickwrap"]');
     if (!wrap || !guestLobby) return;
@@ -702,6 +795,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
       ${others}
       ${guestLobby.resumed ? `<div class="mp-hint">A campaign already under way — you are joining it
         as it stands, in ${esc(guestLobby.resumed)}.</div>` : ''}
+      ${guestTermsHtml()}
       <div class="mp-hint">Waiting for the host to begin…</div>`;
   }
 

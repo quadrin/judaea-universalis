@@ -245,6 +245,20 @@ async function boot() {
     if (MP_QUERY_RE.test(m.name) || typeof actions[m.name] !== 'function') return;
     const g = ctx.game;
     if (!guest || !g.tags[guest.tag]) return;
+    // The clock, if the host is keeping it (SPEC §243). Refused HERE rather
+    // than hidden on the guest's screen, because the guest applies pause and
+    // speed optimistically on its own mirror — so the press has to be answered
+    // or it reads as a control that half-works. The next snapshot puts the
+    // mirror straight; the toast says why it moved back.
+    if (g.table && g.table.guestClock === false && (m.name === 'togglePause' || m.name === 'setSpeed')) {
+      guest.peer.send({ t: 'toast', items: [{
+        title: 'The host keeps the clock',
+        text: 'Only the host pauses this world or changes its speed.',
+        type: 'info',
+      }] });
+      mp.snapDirty = true; // and the mirror is corrected on the next tick
+      return;
+    }
     // An ANSWER runs under the chair the card was dealt to, not under the
     // hand that clicked it (SPEC §216). For a court's own decision those are
     // the same chair. For world history and a foreign court's notice — which
@@ -308,9 +322,15 @@ async function boot() {
               actions.chooseEventOption(pe.instanceId, Number.isFinite(pe.optIdx) ? pe.optIdx : 0);
             }
           }
+          // The table may have asked for the world to stop when this happens
+          // (SPEC §243), so the rest of it can decide whether to carry on or
+          // put the campaign back on the shelf and wait for them.
+          const stops = ctx && ctx.game.table && ctx.game.table.pauseOnDrop && !ctx.game.paused;
+          if (stops) { ctx.game.paused = true; bus.emit('pause', true); }
           bus.emit('notify', {
             title: 'A player has left',
-            text: (left && left.name ? left.name + ' reverts' : 'Their nation reverts') + ' to the AI.',
+            text: (left && left.name ? left.name + ' reverts' : 'Their nation reverts') + ' to the AI.'
+              + (stops ? ' The world stands still until you start it again.' : ''),
             type: 'bad',
           });
           if (!mp.guests.length) mp.role = null; // the campaign carries on solo
@@ -462,14 +482,23 @@ async function boot() {
   // receive that world instead of a fresh one and join it mid-flight. Note
   // that reviveGame deliberately collapses a save back to a solo campaign, so
   // the human seats below are re-established after it, not before.
-  function startMultiplayerHost(entry, hostTag, guests, resumed) {
+  function startMultiplayerHost(entry, hostTag, guests, resumed, terms) {
     const activeProvinceMap = applyMapProfile(entry.bookmark);
+    const table = (terms && terms.table) || null;
     const game = resumed ? resumed.game : initGame({
       DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events,
       playerTag: hostTag, rngSeed: (Date.now() % 2147483647) || 1,
       provinceMap: activeProvinceMap,
+      // The challenge the host actually picked (SPEC §243). This was simply
+      // never passed: multiplayer read the dial off the host panel that did
+      // not have one, so every hosted campaign was played on Normal.
+      difficulty: (terms && terms.difficulty) || 'normal',
+      table,
     });
     if (resumed) game.playerTag = hostTag;
+    // A resumed world keeps its own challenge — it is the one the campaign was
+    // begun on — but the house rules are the TABLE's, and this is a new table.
+    if (resumed && table) game.table = { ...(game.table || {}), ...table };
     // The lobby's seating, checked against the world that actually exists: a
     // throne this campaign has no tag for seats its guest beside the host
     // rather than nowhere at all (SPEC §216).

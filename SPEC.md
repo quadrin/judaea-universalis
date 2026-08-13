@@ -16755,3 +16755,80 @@ the AI, not about this mode, and it is now a fact you can see.
   wins where both are true; wasteland keeps its own colour; an unknown catalog
   key warns rather than throwing; every key in `DEFINES.BUILDINGS` has a hue
   and a place in the ranking; and all nine chapters open with something to say.
+
+## 243. The terms of the table
+
+The host panel had one thing to decide and three ways to say it: which chapter,
+which throne, and who sits where. Everything else about the campaign was
+decided for the table by the code. The clearest symptom was a bug rather than
+an absence: the start screen has offered a Normal/Veteran dial since §21, and
+`startMultiplayerHost` called `initGame` without `difficulty` — so *every*
+campaign anyone had ever hosted played on Normal, whatever the host wanted, and
+nothing anywhere said so. A host who had beaten the chapter solo on Veteran and
+invited three friends to something harder got something easier.
+
+So the panel gains a section, **The table**, with the dial it should always have
+had and three house rules — the questions a group sharing one world has to
+answer and a single player never does.
+
+| Term | Default | The other position |
+| --- | --- | --- |
+| The challenge | Normal | Veteran — AI discipline +5%, AI income and manpower +25% |
+| The clock | Anyone may set it | Yours alone |
+| A card on the table | The world waits | The world runs on |
+| If a player drops | Their nation carries on | The world pauses |
+
+**Every default is the game exactly as it was.** This is the contract the
+section is built on and the one the suite locks hardest. A solo campaign, a
+save made before this section, a host who touches nothing, and a `table` that
+arrives off the wire malformed all land on the same three rules the code has
+always played by. Three new branches into the sim are only safe on those terms.
+`normalizeTable` is where it is enforced: anything that is not the explicit
+boolean which *moves* a rule falls back to that rule's default, and every value
+out is a real boolean. Each default is also the safe side of its own rule —
+waiting rather than running someone over mid-decision, and not freezing the
+world on a hiccup.
+
+**Only one of the rules belongs to the sim.** `cardWaits` relaxes §216's rule
+that nobody starts the clock while a dispatch sits unanswered at another human
+chair. It is left ON by default because being run over while you read is the
+worse of the two failures, and a game whose `table` is missing entirely — an
+in-flight snapshot from an older host — falls back to waiting rather than to
+running on. The other two are the host's own and never reach `js/sim/`.
+
+**`guestClock` is refused at the choke point, not hidden on the guest's
+screen.** Every guest order passes through `hostRunGuestCommand`, and that is
+where a clock command dies when the host is keeping the clock. It cannot be
+enforced on the guest instead: a guest applies pause and speed *optimistically*
+to its own mirror before the host ever hears about it (§216, because a round
+trip reads as a dropped press), so hiding the control would leave a key that
+half-works and a mirror that silently snaps back. The refusal sends the guest a
+toast and marks the snapshot dirty, so the press is answered and the mirror is
+corrected.
+
+**A save keeps its own challenge; the table's rules are the table's.** A
+campaign lifted off the shelf is played on the dial it was begun on — re-asking
+would either lie to the host or quietly re-tune an AI mid-campaign — so the
+challenge buttons step aside in save mode exactly as the chapter and throne
+selects already do. The house rules are asked anyway: they are about the people
+at this table, not about the world on the shelf.
+
+**And a guest can read the terms before it sits down.** The lobby payload
+carries them, and the guest's side prints only what the host has moved off the
+default — so an ordinary table shows nothing at all, and the one line that does
+appear is the one worth reading. `MP_PROTO` goes to 4: a guest on the old build
+would watch its clock press bounce with no idea why, and now gets told to
+reload instead.
+
+- **Regression contract**: `smoke164.mjs` — the three defaults are the game as
+  it was, at `initGame`, through `reviveGame` on a pre-§243 save, and through
+  `normalizeTable` on partial and malformed input; the challenge reaches the
+  sim and an AI court measurably earns more on Veteran while the player's own
+  numbers are untouched; `startMultiplayerHost` passes both the difficulty and
+  the table; `cardWaits` gates the clock in both positions, leaves a solo
+  campaign alone, and defaults to waiting when the table is missing;
+  `guestClock` is checked inside `hostRunGuestCommand`, by command name, before
+  the order runs, and tells the guest; the drop rule is honoured in the
+  disconnect handler; the panel carries all four controls; Begin sends them;
+  the payload echoes them; the guest prints only the non-defaults; `MP_PROTO`
+  is bumped; and every class the new markup emits has a rule in the stylesheet.

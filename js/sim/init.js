@@ -205,14 +205,39 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
   return out;
 }
 
+// The table's house rules (SPEC §243). Three questions a group of people
+// sharing one world has to answer and a single player never does, so all three
+// default to EXACTLY what the game did before they existed — a solo campaign
+// and every save made before this section behave identically, and the host
+// panel is where they are decided.
+//
+// `guestClock` and `pauseOnDrop` are host-side rules and only the host acts on
+// them; they live here anyway so they ride the snapshot and a guest could be
+// shown the terms it is playing under.
+export const TABLE_DEFAULTS = {
+  guestClock: true,   // a guest may pause and set the speed, not only the host
+  cardWaits: true,    // the clock will not start while a card sits at another chair
+  pauseOnDrop: false, // the world pauses when a player's connection goes
+};
+export function normalizeTable(game) {
+  const t = (game && game.table) || {};
+  game.table = {
+    guestClock: t.guestClock !== false,
+    cardWaits: t.cardWaits !== false,
+    pauseOnDrop: t.pauseOnDrop === true,
+  };
+  return game.table;
+}
+
 // ------------------------------------------------------------------ initGame
-export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed, provinceMap, difficulty }) {
+export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed, provinceMap, difficulty, table }) {
   const start = (bookmark && bookmark.startDate) || { y: 66, m: 6, d: 1 };
   const game = {
     bookmarkId: (bookmark && bookmark.id) || '66ce',
     playerTag,
     difficulty: difficulty === 'hard' ? 'hard' : 'normal', // veteran AI bonuses (resolveTagMult)
     humanTags: [playerTag], // multiplayer adds guest tags; every human tag has ai:false
+    table: { ...TABLE_DEFAULTS, ...(table || {}) }, // the house rules (SPEC §243)
     over: false, result: null,
     date: { y: start.y, m: start.m, d: start.d },
     speed: 2, paused: true,
@@ -1570,7 +1595,13 @@ export function gameActions(ctx) {
       // the other's decision. Our own open card already blocks the key and
       // the button, and in a solo campaign there is no other chair, so this
       // is a multiplayer rule that costs a single campaign nothing.
-      if (g.paused) {
+      //
+      // It is also a rule a table may not want (SPEC §243): a group that would
+      // rather nobody's reading freezes the world turns it off in the host
+      // panel, and the clock runs while a card is still open elsewhere. Left
+      // ON by default, because being run over while you read is the worse of
+      // the two failures and it is what the game has always done.
+      if (g.paused && (!g.table || g.table.cardWaits !== false)) {
         const waiting = (g.pendingEvents || []).find((pe) => pe
           && pe.forTag !== g.playerTag && isHumanChair(g, pe.forTag));
         if (waiting) {
@@ -3917,6 +3948,7 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.rngState)) saved.rngState = saved.rngSeed;
   if (!saved.truces) saved.truces = {};
   if (saved.difficulty !== 'hard') saved.difficulty = 'normal'; // pre-difficulty saves
+  normalizeTable(saved); // pre-§243 saves get the rules the game already played by
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
   if (!saved.armsDeals || typeof saved.armsDeals !== 'object') saved.armsDeals = {}; // pre-§181 saves
   // The powers beyond the map are retired (SPEC §180): drop the standings

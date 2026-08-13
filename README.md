@@ -1059,6 +1059,22 @@ static site, the zero dependencies, or the missing build step changes.
   nobody had noticed: an AI court never builds a market, a granary, a wall or a
   shrine all campaign — only shipyards and airfields.
 
+- **The terms of the table.** The multiplayer host screen decided three things —
+  chapter, throne, seating — and the code decided everything else on the table's
+  behalf. One of those decisions was a bug: the start screen has offered a
+  Normal/Veteran dial for a long time and the host screen never did, so *every*
+  campaign anyone had ever hosted quietly played on Normal, however hard the
+  host wanted it. The panel now has a **table** section with that dial and three
+  house rules: whether a guest may work the clock or the host keeps it, whether
+  the world waits while somebody reads a dispatch at another chair or the months
+  turn anyway, and whether a player dropping stops the world. Every default is
+  the game exactly as it was, so a solo campaign and an old save notice nothing.
+  The host keeping the clock is refused where a guest's order actually arrives
+  rather than hidden on their screen — a guest applies pause and speed to its
+  own mirror before the host hears about it, so a hidden control would be a key
+  that half-works. And a guest is shown the terms before it sits down, printing
+  only what the host has moved off the default.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free
