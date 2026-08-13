@@ -335,5 +335,5 @@ console.log('== §242 · 8 it says something on every chapter\'s map ==');
   }
 }
 
-console.log(failures ? failures + ' FAILURES' : 'ALL PASS');
+console.log(failures ? failures + ' FAILURES' : 'smoke163: ALL PASS');
 process.exit(failures ? 1 : 0);

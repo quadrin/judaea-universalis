@@ -194,7 +194,10 @@ console.log('== the dispersion is a mapmode ==');
   ok(/diaspora: \{ relief:/.test(MAPMODES_SRC),
     'and it is registered in MODE_PARAMS — without this the button silently draws the political map');
   const modes = [...UI.matchAll(/\{ id: '([a-z]+)', ico:/g)].map((m) => m[1]);
-  ok(modes.length === 10, 'ten mapmodes: ' + modes.join(', '));
+  // Eleven since §242 added the works on the ground. This count is here to
+  // catch a mode DROPPED from the bar, not to forbid new ones — bump it when
+  // you add one, and check the new mode is registered in MODE_PARAMS too.
+  ok(modes.length === 11, 'eleven mapmodes: ' + modes.join(', '));
   ok(icon('diaspora').length > 40, 'the icon renders (a typo would give an empty but working button)');
 
   const N = MAP_DATA.provinces.length;
@@ -263,12 +266,13 @@ console.log('== the dispersion is a mapmode ==');
   ok((babFlags & 2) === 0, 'while Babylon, which outlasts everything, is not');
 
   // Every other mapmode still works — the precompute must be guarded.
-  for (const m of ['political', 'terrain', 'religion', 'culture', 'development', 'unrest', 'estates', 'trade', 'diplomatic']) {
+  for (const m of ['political', 'terrain', 'religion', 'culture', 'development',
+    'unrest', 'estates', 'trade', 'diplomatic', 'structures']) {
     const out = computeMapmodeColors(bare, m);
     if (out && out.primary.length === (N + 1) * 4) continue;
     ok(false, m + ' still computes');
   }
-  ok(true, 'and the other nine mapmodes are unaffected');
+  ok(true, 'and the other ten mapmodes are unaffected');
 }
 
 console.log(failures ? failures + ' FAILURES' : 'ALL PASS');
