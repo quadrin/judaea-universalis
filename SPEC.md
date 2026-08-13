@@ -16870,14 +16870,27 @@ are armed on the first tap and paid on the second (§218's idiom, and §222's),
 because these are large sums leaving the treasury on a single click, and the
 button names the bill both times.
 
-**The third lever is the one that exists on day one.** At a chapter's start
-date nothing is obsolete yet — both refits are hidden, and the first draft of
-this block shipped with no buttons at all on the screen a player actually opens
-first. *Commission commanders* fills every empty command the martial points can
-pay for, best-used first: the armies that fight the battles, then the fleets,
-then the squadrons. It names how many it will actually fill rather than how
-many stand empty, because the points buy a fixed number and promising more
-would be a lie the toasts then have to correct.
+**The third lever is the one that is on screen from the start.** At a
+chapter's start date nothing is obsolete yet — both refits hide themselves, and
+the first draft of this block therefore rendered its lines and no buttons at
+all on the screen a player opens first. *Commission commanders* fills every
+empty command the martial points can pay for, best-used first: the armies that
+fight the battles, then the fleets, then the squadrons. It names how many it
+will actually fill rather than how many stand empty, because the points buy a
+fixed number and promising more would be a lie the toasts then have to correct.
+
+It is *present* from the first day rather than usable from it: every chapter
+opens with a martial pool of zero, so the button starts disabled and says so —
+what the lever is, what a commission costs, and what the crown has. That is
+still the difference that matters against the refits, which do not appear at
+all for as long as the ladders take. Three things the first draft got wrong
+there, none of which the regression suite could have caught and all of which a
+browser did on the first run: the label read *"Commission commanders — 4, 0
+pts"*, which promises four commissions for nothing; the disabled button armed
+anyway; and the armed label then offered to *"Spend 0 martial points"*. The
+count is now named beside a price only when there is a price, and the handler
+refuses a disabled lever before it arms, which is what every other button in
+this panel already did.
 
 **It picks the empty seats itself.** `hireGeneral` does *not* check whether a
 general is already in post — it overwrites the one there and charges the fifty
@@ -16911,7 +16924,10 @@ works-in-the-shops block already draws.
   block hides with neither line nor lever; the refit filters on `canModernize`
   and snapshots the eligible set before ordering; nothing is refittable at a
   start date while commands do stand empty, which is why commissioning is the
-  lever that carries the block on day one; `hireGeneral` is shown to charge
+  lever that carries the block at the start; every chapter opens below the
+  price of one commission, so the button is disabled there — it cannot be
+  armed while nothing is affordable, its label never names a count beside a
+  zero price, and the handler refuses a disabled lever before arming; `hireGeneral` is shown to charge
   twice for an army that already has a general, so the lever is proved to
   filter on the empty seat rather than on the sim's gate, across all three
   arms, capped by what the points buy and read once before spending; the panel

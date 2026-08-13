@@ -1092,7 +1092,9 @@ static site, the zero dependencies, or the missing build step changes.
   the first tap and paid on the second, with the bill named both times. The
   third is there because the first two are not: nothing is obsolete at a
   chapter's start date, so a block with only the refits had no buttons at all
-  on the screen a player opens first.
+  on the screen a player opens first. It starts disabled — every chapter opens
+  with an empty martial pool — and says what it is and what a commission costs
+  until the crown can afford one.
 
 ## Architecture
 

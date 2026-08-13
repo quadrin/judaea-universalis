@@ -172,6 +172,33 @@ console.log('== §244 · 3b commissioning is the lever that exists on day one ==
   ok(/canHireLeader: !w\.leader && num\(g\.tags\[g\.playerTag\]\.points && g\.tags\[g\.playerTag\]\.points\.mar\) >= 50/.test(initSrc),
     'and a wing commander');
 
+  // Every chapter opens with an EMPTY martial pool, so the commission button
+  // is present and disabled at every start date. Three things the first draft
+  // got wrong there, all found by a browser and none by this file:
+  //   the label read "Commission commanders — 4, 0 pts", which promises four
+  //   commissions for nothing; the disabled button armed anyway; and the armed
+  //   label then offered to "Spend 0 martial points".
+  for (const era of ERAS) {
+    const b = boot(era.bookmark.id);
+    const pts = (b.game.tags[b.tag].points && b.game.tags[b.tag].points.mar) | 0;
+    ok(pts < 50, `${era.bookmark.id} opens below the price of one commission (${pts} pts)`);
+  }
+  const render = /if \(commands\.length\) \{[\s\S]*?\n    \}/.exec(NP);
+  ok(!!render, 'the commission button is rendered');
+  ok(render && /const armed = refitArmed === 'cmd' && afford > 0;/.test(render[0]),
+    'it cannot be armed while nothing is affordable');
+  ok(render && /const label = afford\s*\n?\s*\? \(armed \?/.test(render[0]),
+    'and the label branches on affordability rather than falling back to the empty count');
+  ok(render && !/afford \|\| commands\.length/.test(render[0]),
+    'so it never names a count beside a zero price — "4, 0 pts" reads as four for free');
+  ok(render && /class="pp-build-btn\$\{afford \? '' : ' disabled'\}/.test(render[0]),
+    'and it is disabled when the crown cannot pay');
+  const handlerSrc = /const refit = e\.target\.closest\('\[data-refit\]'\);[\s\S]*?\n        refresh\(\);\n        return;\n      \}/.exec(NP);
+  ok(handlerSrc && /classList\.contains\('disabled'\)/.test(handlerSrc[0]),
+    'the handler refuses a disabled lever — every other button in the panel checks this');
+  ok(handlerSrc && handlerSrc[0].indexOf("classList.contains('disabled')") < handlerSrc[0].indexOf('refitArmed = which'),
+    'and refuses it BEFORE it arms, so a disabled button never reaches the second tap');
+
   // The handler picks empty seats and caps by what the points buy.
   const handler = /const refit = e\.target\.closest\('\[data-refit\]'\);[\s\S]*?\n        refresh\(\);\n        return;\n      \}/.exec(NP);
   ok(handler && /!a\.general/.test(handler[0]) && /!f\.admiral/.test(handler[0]) && /!w\.leader/.test(handler[0]),

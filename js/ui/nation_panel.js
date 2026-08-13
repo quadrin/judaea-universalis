@@ -343,7 +343,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       // cannot be paid by a stray click meant for the fleet.
       const refit = e.target.closest('[data-refit]');
       if (refit) {
-        if (!actions) return;
+        // A disabled lever must not arm either. Every other button in this
+        // panel checks this; without it the commission button — disabled at
+        // every chapter's start, when the martial pool is zero — armed on the
+        // first tap and offered to spend nothing on the second.
+        if (!actions || refit.classList.contains('disabled')) return;
         const which = refit.dataset.refit;
         if (refitArmed !== which) {
           refitArmed = which;
@@ -2050,7 +2054,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // buy a fixed number of commissions and promising more than that would be
     // a lie the toasts would then have to correct.
     if (commands.length) {
-      const armed = refitArmed === 'cmd';
+      // Armed only when there is something to arm. Every chapter opens with a
+      // martial-point pool of zero, so at a start date this button is present
+      // and disabled — which is the point of showing it: it says the lever
+      // exists and what it costs, months before the crown can afford it.
+      const armed = refitArmed === 'cmd' && afford > 0;
       const short = commands.length - afford;
       const tt = afford
         ? 'Commission a commander for every empty command we can pay for, best-used first: '
@@ -2058,12 +2066,17 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           + `\n${afford} of ${commands.length} at ${CMD_COST} martial points each — ${afford * CMD_COST} in all.`
           + (short ? `\nThe other ${short} must wait for the points.` : '')
           + (armed ? '\n\nTap again to commission them.' : '')
-        : `${commands.length} ${commands.length === 1 ? 'command stands' : 'commands stand'} empty, and there are not `
-          + `${CMD_COST} martial points to fill even one.`;
+        : `${commands.length} ${commands.length === 1 ? 'command stands' : 'commands stand'} empty. `
+          + `A commission costs ${CMD_COST} martial points and the crown has ${points}; `
+          + 'the pool fills every month.';
+      // The label must not promise what the purse cannot pay. Naming the empty
+      // count beside a zero price reads as "commission four for nothing".
+      const label = afford
+        ? (armed ? `Spend ${afford * CMD_COST} martial points?`
+          : `Commission commanders — ${afford}, ${afford * CMD_COST} pts`)
+        : `${commands.length} ${commands.length === 1 ? 'command' : 'commands'} empty — ${CMD_COST} pts each`;
       acts.push(`<button class="pp-build-btn${afford ? '' : ' disabled'}${armed ? ' pp-build-sure' : ''}" data-refit="cmd"
-        data-tt="${esc(tt)}">${icon('helmet')}<span>${armed
-    ? `Spend ${afford * CMD_COST} martial points?`
-    : `Commission commanders — ${afford || commands.length}, ${(afford || 0) * CMD_COST} pts`}</span></button>`);
+        data-tt="${esc(tt)}">${icon('helmet')}<span>${label}</span></button>`);
     }
     if (refitN) {
       const armed = refitArmed === 'army';
