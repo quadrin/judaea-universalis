@@ -16477,3 +16477,106 @@ marches Armenia into a civil war on the far side of Europe.
   raise a court that holds ground and fights, then give every province back
   under one banner with no war left being fought by a country that does not
   exist.
+
+## 240. The decades the chain skips
+
+Every chapter in this game is a crisis and then a long tail. The crisis gets
+forty dated cards in a decade; the tail gets one every five years, and the tail
+is where a campaign spends most of its life. Counted before this section: the
+Maccabean chapter runs a hundred and seven years and spends fifty-one of its
+seventy dated cards on the first twenty. The crown's chapter has fifty-five and
+forty-nine of them fall before Herod dies, leaving the whole Julio-Claudian
+century as a corridor a campaign walks down in silence. The Bar Kokhba chapter
+is three hundred years long and averages one card every five years after 140.
+The Great Revolt's own chain stops in 96 and §122 picks it up again at 98, with
+the sixty years in between — the years the nation actually rebuilt itself in —
+holding four cards.
+
+§152 named this problem and answered half of it: the statecraft pool, twelve
+repeatable cards banded by how large the realm has grown rather than by year,
+so a campaign that outruns its sources still has something to answer. That is
+the right instrument for *a* realm and the wrong one for *this* realm in *this*
+century. It cannot know that it is 339 and a slave law has just made every
+Jewish estate in the country unworkable, or that it is 1985 and the currency
+has stopped meaning anything.
+
+`events_<era>_years.js` is the other half: one package per chapter, a hundred
+and twelve dated cards, seated where each chain is thinnest.
+
+| chapter | cards | span |
+|---|---|---|
+| 167 BCE | 13 | 159–71 BCE |
+| 67 BCE | 12 | 62–26 BCE |
+| 40 BCE | 13 | 33 BCE – 48 CE |
+| 66 CE | 12 | 73–128 |
+| 132 CE | 12 | 185–418 |
+| 351 CE | 12 | 366–429 |
+| 529 CE | 14 | 534–604 |
+| 614 CE | 12 | 618–697 |
+| 1948 | 12 | 1949–1999 |
+
+**What they are about.** Not the war and not the empire's calendar — those are
+the chain's and the world package's, and duplicating either would have been the
+easy way to fill a decade. These are the years' own business: the high
+priesthood standing empty for seven years, the second altar in Egypt, the case
+argued before Ptolemy over which mountain God chose, Gabinius replacing one
+national council with five, the thirty thousand sold at the lake, the oath six
+thousand men would not swear, the tomb opened to pay for a building programme,
+a city founded on a graveyard, the doorkeeper taken off the study house, the
+majority that overruled a voice from heaven, the couriers who carried a
+calendar from the Galilee to the Rhône, the slave law that ended Jewish
+agriculture, the wheel with the sun at its hub on a synagogue floor, the
+commandment about Gerizim that is in one Torah and not the other, the head of
+the exile confirmed by a caliph, the transit camps, and the month the shekel
+stopped meaning anything.
+
+**Five rules the package obeys.**
+
+- **Dated, never triggered.** A card in this section fires because it is that
+  year, not because a condition became true — which is what makes it fill a
+  decade rather than pile onto whatever the player is already doing. Dated
+  cards are also exempt from §121's generation horizon, which is how the 132
+  chapter's package can legitimately run to 418.
+- **Nothing drawn from the stream.** No card here declares `chance` and none
+  declares `roll: true`, so the seeded stream is never touched by the fact that
+  the package exists. What does move is the world these cards make: a realm
+  that spent ninety talents on the Alexandrians in 415 has ninety fewer, and
+  everything the AI decides after that draws differently. That is the ordinary
+  consequence of adding content and §228 already writes it down.
+- **Addressed to whoever is playing** — `forTag: 'player'` in eight chapters,
+  so the effects land on the chair that answered the card and no §135
+  forwarding is needed. The Keepers' chapter is the exception and it is the
+  instructive one: it seats two chairs, so its cards name `SAM` or `HMY`
+  explicitly and their effects name the same tag. A card whose audience is not
+  the player resolves silently inside the sim, and `playerTag` in the effects
+  body would have moved Himyar's ledger when Samaria answered a question about
+  its own priesthood.
+- **A road the campaign might not be on retires** (§75). Three cards presume a
+  world their chapter can fail to produce — the sicarii of Cyrene, the
+  half-shekel with nowhere to go and Hadrian's withdrawn permission all
+  presume the House fell — and each carries a `when` gate reading the chapter's
+  own flag. On the Second Kingdom road they retire into the divergence ledger
+  instead of firing into a world with an altar still standing.
+- **Every card carries `historical:`**, which enrols all hundred and twelve in
+  §89's ledger without `major: true` — so a player who answers them differently
+  from the record gets the road not taken written down, and a player who does
+  not is never told they agreed.
+
+**One flag is shared on purpose and one was renamed to avoid it.**
+`davidsTombOpened` is set by the 40 BCE card as well as by 167's, because
+§85's doctrine table already reads that key and the act is identical — a crown
+opening the sepulchre of the founder to pay a bill, which moves the zeal needle
+the same way whoever does it. The 351 package's calendar card deliberately does
+*not* set `reckoningPublished`: that is §235's marker for the card of 358 and
+it gates a mission check and a later trigger, so publishing the tables seventy
+years afterwards gets its own key.
+
+- **Regression contract**: `smoke161.mjs` — all nine packages are registered,
+  in the right chapters, appended after the chapter's own chain and before the
+  shared pools; every card is dated, windowed inside its chapter, uniquely
+  identified across the whole registry, and carries a historical line and a
+  recorded course that indexes an option that exists; the option effects of
+  every card in every package run clean against a booted campaign and leave the
+  realm alive; the Keepers' package names its own tags rather than the player's
+  chair; the three gated cards retire on the road that contradicts them; and no
+  card in the section touches the seeded stream.

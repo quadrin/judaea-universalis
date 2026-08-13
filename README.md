@@ -257,6 +257,23 @@ static site, the zero dependencies, or the missing build step changes.
   screen alone, where campaigns are chosen rather than fought.
 - Mortal rulers with heirs, regencies and succession crises; mission trees per playable
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
+- **The decades the chain skips.** Every chapter is a crisis and then a long tail, and
+  the tail is where a campaign spends most of its life: the Maccabean chapter puts
+  fifty-one of its seventy dated cards in its first twenty years, the crown's chapter
+  puts forty-nine of fifty-five before Herod dies, and 132 runs three centuries on one
+  card every five years. Each of the nine now carries its own thin-decade package —
+  a hundred and twelve dated cards seated where the chain runs out, and about the
+  years' own business rather than the war or the empire's calendar. The high
+  priesthood standing empty for seven years; the second altar in Egypt; Gabinius
+  replacing one national council with five; the oath six thousand men would not swear;
+  a capital founded on a graveyard; the morning the doorkeeper was taken off the study
+  house; the majority that overruled a voice from heaven; the couriers who carried a
+  calendar from the Galilee to the Rhône; the slave law that ended Jewish agriculture;
+  the wheel with the sun at its hub on a synagogue floor; the commandment about Gerizim
+  that is in one Torah and not the other; the head of the exile confirmed by a caliph;
+  the transit camps; and the month the shekel stopped meaning anything. Each is a real
+  choice with a printed price, and each records what the record actually did, so a
+  campaign that answers differently gets the road not taken written into its ledger.
 - **A crown can be taken from the court that wore it.** Forming a nation used to require a
   banner nobody had *ever* flown, which quietly reserved every crown on the map for the
   court that started with it — beat that court out of existence and its name sat in the
