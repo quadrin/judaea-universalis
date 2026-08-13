@@ -77,6 +77,11 @@ const TABS = [
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
 ];
 const DEFAULT_TAB = 'crown';
+// What one commission costs in martial points (SPEC §244). The sim charges it
+// in three places — hireGeneral, hireAdmiral, hireWingLeader — and gates all
+// three on the same number; this is the panel's copy for pricing the bulk
+// lever before it spends. smoke165 holds the two in step.
+const CMD_COST = 50;
 
 export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick, onProvinceClick }) {
   let ctx = null;
@@ -348,7 +353,27 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         }
         refitArmed = '';
         const g = ctx && ctx.game;
-        if (g && which === 'army' && typeof actions.modernizeArmy === 'function') {
+        if (g && which === 'cmd') {
+          // Only the EMPTY commands, and only as many as the points buy.
+          // hireGeneral does not check for a general already in post — it
+          // would replace one and charge for the privilege — so the empty
+          // seats are picked here, and the count is capped before the first
+          // order because every commission spends from the same pool.
+          const me = g.playerTag;
+          const seats = [].concat(
+            Object.values(g.armies || {}).filter((a) => a && a.tag === me && !a.general)
+              .map((a) => ({ fn: 'hireGeneral', id: a.id })),
+            (((typeof actions.getNavy === 'function' && actions.getNavy()) || {}).fleets || [])
+              .filter((f) => f && !f.admiral).map((f) => ({ fn: 'hireAdmiral', id: f.id })),
+            ((typeof actions.getAirWings === 'function' && actions.getAirWings()) || [])
+              .filter((w) => w && !w.leader).map((w) => ({ fn: 'hireWingLeader', id: w.id })),
+          );
+          const pts = ((g.tags[me] && g.tags[me].points && g.tags[me].points.mar) | 0);
+          for (const s of seats.slice(0, Math.floor(pts / CMD_COST))) {
+            if (typeof actions[s.fn] !== 'function') continue;
+            try { actions[s.fn](s.id); } catch (err) { warnOnce('np-commission', err); }
+          }
+        } else if (g && which === 'army' && typeof actions.modernizeArmy === 'function') {
           // Only the ones that CAN. modernizeArmy answers a refusal with a
           // toast, so ordering the whole host would bury the successes under
           // a failure notice for every army that was already up to date. The
@@ -1947,6 +1972,20 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const wings = call('getAirWings') || [];
     const fleetRefit = fleets.filter((f) => f && f.canModernize);
     const fleetCost = fleetRefit.reduce((s, f) => s + (f.modernizeCost | 0), 0);
+    // Every empty command, in the order a commander would fill them: the
+    // armies that fight the battles, then the fleets, then the squadrons.
+    // Filtered on the EMPTY seat rather than on the sim's `canHire`, which
+    // only asks whether the points are there — hireGeneral does not check for
+    // a general already in post and would cheerfully replace one for 50.
+    const emptyFleets = fleets.filter((f) => f && !f.admiral);
+    const emptyWings = (wings || []).filter((w) => w && !w.leader);
+    const commands = [].concat(
+      mine.filter((a) => !a.general).map((a) => ({ kind: 'army', id: a.id })),
+      emptyFleets.map((f) => ({ kind: 'fleet', id: f.id })),
+      emptyWings.map((w) => ({ kind: 'wing', id: w.id })),
+    );
+    const points = ((g.tags[me] && g.tags[me].points && g.tags[me].points.mar) | 0);
+    const afford = Math.min(commands.length, Math.floor(points / CMD_COST));
 
     const rows = [];
     const line = (tt, html) => rows.push(`<div class="np-tech-unit" data-tt="${esc(tt)}">${html}</div>`);
@@ -1954,11 +1993,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const ships = fleets.reduce((s, f) => s + (f.ships | 0), 0);
       const aboard = fleets.reduce((s, f) => s + (f.aboardMen | 0), 0);
       const sailing = fleets.filter((f) => f && f.sailing).length;
+      const noAdm = fleets.filter((f) => f && !f.admiral).length;
       line('Hulls of war, and what they are carrying. A fleet at sea cannot embark, refit or be reinforced until it makes port.'
         + (aboard ? '\n\nMen aboard are out of supply reach and cannot fight until they land.' : ''),
       `At sea: <b>${fleets.length}</b> ${fleets.length === 1 ? 'fleet' : 'fleets'}, ${ships} ${ships === 1 ? 'ship' : 'ships'}`
         + (sailing ? ` <span class="peace-dim">— ${sailing} under way</span>` : '')
-        + (aboard ? ` <span class="peace-dim">— ${fmtMen(aboard)} men aboard</span>` : ''));
+        + (aboard ? ` <span class="peace-dim">— ${fmtMen(aboard)} men aboard</span>` : '')
+        + (noAdm ? ` <span class="peace-dim">— ${noAdm} without an admiral</span>` : ''));
     }
     if (navy.merchantCount) {
       line('Civilian hulls (SPEC §58): they pay a trade income from your shipyard harbors and are not warships.',
@@ -2002,6 +2043,28 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // host is a large sum leaving the treasury on one click, and the outliner
     // makes you decide army by army for a reason.
     const acts = [];
+    // Commissioning is the one lever that is there from the first day of a
+    // chapter: nothing is obsolete yet at a start date, so both refits are
+    // hidden, and a tab whose only options appear decades in is a tab with no
+    // options. The button names how many it will actually fill — the points
+    // buy a fixed number of commissions and promising more than that would be
+    // a lie the toasts would then have to correct.
+    if (commands.length) {
+      const armed = refitArmed === 'cmd';
+      const short = commands.length - afford;
+      const tt = afford
+        ? 'Commission a commander for every empty command we can pay for, best-used first: '
+          + 'the armies that fight the battles, then the fleets, then the squadrons.'
+          + `\n${afford} of ${commands.length} at ${CMD_COST} martial points each — ${afford * CMD_COST} in all.`
+          + (short ? `\nThe other ${short} must wait for the points.` : '')
+          + (armed ? '\n\nTap again to commission them.' : '')
+        : `${commands.length} ${commands.length === 1 ? 'command stands' : 'commands stand'} empty, and there are not `
+          + `${CMD_COST} martial points to fill even one.`;
+      acts.push(`<button class="pp-build-btn${afford ? '' : ' disabled'}${armed ? ' pp-build-sure' : ''}" data-refit="cmd"
+        data-tt="${esc(tt)}">${icon('helmet')}<span>${armed
+    ? `Spend ${afford * CMD_COST} martial points?`
+    : `Commission commanders — ${afford || commands.length}, ${(afford || 0) * CMD_COST} pts`}</span></button>`);
+    }
     if (refitN) {
       const armed = refitArmed === 'army';
       acts.push(`<button class="pp-build-btn${armed ? ' pp-build-sure' : ''}" data-refit="army"

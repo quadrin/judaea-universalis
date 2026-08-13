@@ -1085,10 +1085,14 @@ static site, the zero dependencies, or the missing build step changes.
   been able to answer it and nothing on screen ever asked. The tab now opens
   with the whole host in five lines, each of which hides itself when it has
   nothing to say, so a Maccabean realm with no navy and no air force sees the
-  block vanish rather than read four zeroes. And it carries two levers the
+  block vanish rather than read four zeroes. And it carries three levers the
   outliner cannot: **refit the host** and **refit the fleet**, re-equipping
-  everything that can be in one order — armed on the first tap and paid on the
-  second, with the bill named both times.
+  everything that can be in one order, and **commission commanders**, filling
+  every empty command the martial points will pay for. All three are armed on
+  the first tap and paid on the second, with the bill named both times. The
+  third is there because the first two are not: nothing is obsolete at a
+  chapter's start date, so a block with only the refits had no buttons at all
+  on the screen a player opens first.
 
 ## Architecture
 

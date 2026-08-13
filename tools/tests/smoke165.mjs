@@ -130,6 +130,58 @@ console.log('== §244 · 3 the bulk refit orders only what can be refitted ==');
     `${stuck.length} of ${mine.length} armies cannot refit at the chapter's start — each would have toasted a refusal`);
 }
 
+console.log('== §244 · 3b commissioning is the lever that exists on day one ==');
+{
+  // The reason this lever is here at all: at a chapter's start date nothing is
+  // obsolete, so BOTH refits are hidden, and a tab whose only options appear
+  // decades in is a tab with no options.
+  const { game, actions } = boot('1948ce');
+  const mine = myArmies(game);
+  const refittable = mine.filter((a) => {
+    const aa = actions.getArmyActions(a.id);
+    return aa && aa.canModernize;
+  });
+  ok(refittable.length === 0,
+    'nothing is refittable at a start date — the refit levers are hidden there');
+  const empty = mine.filter((a) => !a.general);
+  ok(empty.length > 0,
+    `${empty.length} of ${mine.length} commands stand empty at the start, so this lever does appear`);
+
+  // The hazard the panel filters around: hireGeneral does NOT check whether a
+  // general is already in post. It overwrites and charges anyway, so a bulk
+  // lever that ordered every army would replace good generals for 50 points.
+  const led = mine.find((a) => a.general) || mine[0];
+  const t = game.tags[game.playerTag];
+  t.points.mar = 500;
+  actions.hireGeneral(led.id);
+  const first = led.general && led.general.name;
+  const before = t.points.mar;
+  actions.hireGeneral(led.id);
+  ok(t.points.mar === before - 50,
+    'hireGeneral charges again for an army that already has a general — it does not refuse');
+  ok(!!first, 'and replaces the one in post, which is why the panel filters on the empty seat itself');
+
+  // The price the panel quotes matches the price the sim charges, in all three.
+  const NPSRC = NP;
+  ok(/const CMD_COST = 50;/.test(NPSRC), 'the panel prices a commission at 50 martial points');
+  const gate = /< 50\) out\.whyHire/.test(readFileSync(R + '/js/sim/init.js', 'utf8'));
+  ok(gate, 'and the sim gates hireGeneral on the same 50');
+  const initSrc = readFileSync(R + '/js/sim/init.js', 'utf8');
+  ok(/canHireAdmiral: !f\.admiral && num\(g\.tags\[me\]\.points && g\.tags\[me\]\.points\.mar\) >= 50/.test(initSrc),
+    'as it gates an admiral');
+  ok(/canHireLeader: !w\.leader && num\(g\.tags\[g\.playerTag\]\.points && g\.tags\[g\.playerTag\]\.points\.mar\) >= 50/.test(initSrc),
+    'and a wing commander');
+
+  // The handler picks empty seats and caps by what the points buy.
+  const handler = /const refit = e\.target\.closest\('\[data-refit\]'\);[\s\S]*?\n        refresh\(\);\n        return;\n      \}/.exec(NP);
+  ok(handler && /!a\.general/.test(handler[0]) && /!f\.admiral/.test(handler[0]) && /!w\.leader/.test(handler[0]),
+    'the lever orders only genuinely empty commands, across all three arms');
+  ok(handler && /slice\(0, Math\.floor\(pts \/ CMD_COST\)\)/.test(handler[0]),
+    'and takes only as many as the martial points actually buy');
+  ok(handler && handler[0].indexOf('const pts') < handler[0].indexOf('for (const s of seats'),
+    'the pool is read once, before the first commission spends from it');
+}
+
 console.log('== §244 · 4 armed before paid, and our own realm only ==');
 {
   ok(/let refitArmed = '';/.test(NP), 'the panel tracks which refit is armed');
