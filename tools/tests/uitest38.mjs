@@ -220,7 +220,9 @@ console.log('== the chapter and the patterns follow the same rule (SPEC §204) =
     const mar = rows.find((r) => r.querySelector('[data-tech="mar"]'));
     return mar ? (mar.querySelector('.np-tech-head') || {}).dataset.tt || '' : '';
   });
-  ok(/musters/.test(marTip) && /Host|Defence/.test(marTip),
+  // The tab it points at is Defense in every chapter since §245; it was Host
+  // here and Defence in 1948 when this line was written.
+  ok(/musters/.test(marTip) && /Defense/.test(marTip),
     '  but the military card still says what the next rung musters, and where to look');
 
   await page.locator('#nation-panel .np-tab[data-tab-go="war"]').click();
