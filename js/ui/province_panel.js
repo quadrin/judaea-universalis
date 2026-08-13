@@ -434,7 +434,7 @@ const RISING_LABELS = {
     const terr = (DEFINES.TERRAINS || {})[p.terrain];
     setText(refs.terrain, (terr && terr.name) || titleCase(p.terrain));
     refs.terrainRow.dataset.tt = terr
-      ? `Move cost ×${terr.moveCost != null ? terr.moveCost : 1} · Defence +${terr.defBonus || 0} · Attrition ${terr.attrition || 0}`
+      ? `Move cost ×${terr.moveCost != null ? terr.moveCost : 1} · Defense +${terr.defBonus || 0} · Attrition ${terr.attrition || 0}`
       : titleCase(p.terrain);
     const hab = (DEFINES.HABITATION || {})[p.habitation];
     setText(refs.habitation, (hab && hab.name) || titleCase(p.habitation) || 'Rural');

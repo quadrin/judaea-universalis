@@ -10029,8 +10029,8 @@ of 13 or lower — pattern 3 at best — so no cataphract, no dragoon and no
 seed of the seven tuned campaigns can see any of this arithmetic.
 
 The recruit buttons carry the gate and say why when it is shut ("no arms
-supplier — win an arsenal court's favor first"); the Host tab names your
-supplier and its temperature; the supplier's court panel carries the
+supplier — win an arsenal court's favor first"); the Defense tab (the Host, at
+the time this was written — §245) names your supplier and its temperature; the supplier's court panel carries the
 agreement chip with the full terms in the tooltip.
 
 - **Regression contract**: `smoke113` — the market gates wings and armor
@@ -12050,14 +12050,16 @@ muster as, the milestone strip of rungs and the patterns each unlocks (with
 its doctrine in the tooltip), and §181's arms pipeline — who sells this realm
 the aircraft and armor it cannot forge. Those are facts about the **army**.
 They move to the Host under **How We Muster** (a title that reads in every
-century, which "the host" does not — 1948 calls the tab Defence), below the
+century, which "the host" does not — 1948 called the tab Defence then, and
+§245 has since made it Defense in every chapter), below the
 host's own three numbers, in the order a player reads them: what we muster as
 now, which rungs muster the next, and where the metal comes from.
 
 What a buyer needs at the moment of buying stays at the ladder. The military
 card's tooltip gains one line — *Military 9 musters Legionaries — the patterns
 are under Host* — naming the tab in **that chapter's own word for it**
-(`uiTerms.tabWar`, so 1948 reads *under Defence*). That is the §203 rule about
+(`uiTerms.tabWar`, so 1948 read *under Defence*; since §245 every chapter reads
+*under Defense*, and the pointer still resolves the same way). That is the §203 rule about
 banners pointing at other tabs honoured rather than broken: the pointer is one
 clause inside a tooltip that already had to say what the next rung costs, not
 a section whose answer lives elsewhere.
@@ -16835,7 +16837,8 @@ reload instead.
 
 ## 244. What we have under arms
 
-The Host tab — Defence, in 1948 — was three numbers and two read-only cards:
+The Host tab — Defence, in 1948, and Defense in all nine since §245 — was
+three numbers and two read-only cards:
 manpower, a regiment count against the force limit, war exhaustion, the
 patterns the three arms muster as, and the works in the shops. Everything else
 a commander actually wants to know was answerable only one army at a time, in
@@ -16919,8 +16922,8 @@ works-in-the-shops block already draws.
   and a nonexistent army answers null rather than throwing; `getArmyActions`
   carries a finite refit cost and whether a general can be commissioned;
   `getNavy` and `getAirWings` answer with lists; a Maccabean realm has no wings
-  so that line never renders, and 1948 names the tab Defence while 167 BCE
-  leaves it the Host; every line sits behind its own emptiness test and the
+  so that line never renders, and every chapter names the tab the same thing
+  (§245); every line sits behind its own emptiness test and the
   block hides with neither line nor lever; the refit filters on `canModernize`
   and snapshots the eligible set before ordering; nothing is refittable at a
   start date while commands do stand empty, which is why commissioning is the
@@ -16935,3 +16938,41 @@ works-in-the-shops block already draws.
   disarms after five seconds, and the second disarms before it spends so a
   double-fire cannot pay twice; the block is gated to the player's own realm;
   and every class the new markup emits has a rule in the stylesheet.
+
+
+## 245. Defense, in every century
+
+The realm panel's fifth tab was the **Host**, and 1948 alone re-dressed it as
+**Defence**. Of the five things that chapter renames, that was the odd one:
+Crown/State, Court/Cabinet, Missions/Objectives and World/Abroad each mark a
+real difference between a throne and a republic — a state has no crown, a
+cabinet is not a court — while Host and Defence are two words for the same
+thing. A Maccabean army and a modern general staff are both what the tab is
+about.
+
+So the tab is **Defense** in all nine chapters, and no bookmark overrides it.
+`uiTerms.tabWar` still exists and is still read — a chapter that some day wants
+its own word can have one — there is simply nothing left pointing at it, which
+is exactly what happened to `tabCoin` when §203 named the Technology tab after
+its ladders instead of after the purse that pays for them.
+
+**What is lost and what is bought.** The loss is real and worth naming: *Host*
+is the better word for a Hasmonean army, and this game spends a great deal of
+effort on speaking each century's own language. What it buys is that a player
+who learns where the fleet, the supply lines and the empty commands live in one
+chapter still knows where they live in the next — and the tab now carries §244's
+levers, which is a thing you go looking for rather than a label you read once.
+
+Two spellings became one with it. The panel now says *Defense*, and so does the
+province panel's terrain line, which had been printing *Defence* beside it; the
+codebase's own prose is otherwise American throughout (color, harbor,
+modernize). The historical proper nouns are untouched and stay British where
+the record has them that way: the Arab League's **Joint Defence Council** and
+Syria's **Defence Companies** are names, not descriptions.
+
+- **Regression contract**: `smoke165.mjs` — the tab is labelled Defense, no
+  chapter's `uiTerms` re-dresses it, and no fallback anywhere in the panel
+  still says Host. `smoke131.mjs` holds that 1948 keeps only the dresses that
+  still mark a difference; `smoke132.mjs` holds that the military ladder's
+  pointer still names the tab in the chapter's own word for it, and that there
+  is no longer an override for it to find.

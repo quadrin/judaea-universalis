@@ -28,7 +28,8 @@
 //      line go with it; and a foreign court's one line goes there too.
 //   3. THE LADDER STILL SAYS WHAT IT BUYS. The military card's tooltip names
 //      the pattern the next rung musters and points at the Host in the
-//      chapter's own word for that tab (`uiTerms.tabWar` — Defence in 1948).
+//      chapter's own word for that tab (`uiTerms.tabWar`, which since §245 is
+//      Defense in every chapter — no bookmark overrides it any more).
 //   4. ONE FETCH, AND NOTHING WENT BLANK. `getTech()` is still called once a
 //      pass for both hosts; the patterns block hides when there is nothing to
 //      draw; Crown and the Host both keep an anchor that renders in every
@@ -141,11 +142,13 @@ console.log('== the ladder still says what the next rung buys ==');
 {
   ok(/Military \$\{info\.unit\.nextAt\} musters \$\{info\.unit\.nextInf\}/.test(PANEL),
     'the military card names the pattern the next rung musters');
-  ok(/uiTerms\) \|\| \{\}\)\.tabWar \|\| 'Host'/.test(PANEL),
-    'and points at the Host in the chapter\'s own word for that tab');
+  ok(/uiTerms\) \|\| \{\}\)\.tabWar \|\| 'Defense'/.test(PANEL),
+    'and points at the tab in the chapter\'s own word for it');
+  // Which is now the same word in every chapter (SPEC §245) — the pointer
+  // still reads a chapter's override, there is simply no longer one to read.
   const w1948 = (ERAS.find((e) => e.bookmark.id === '1948ce') || {}).bookmark;
-  ok(w1948 && w1948.uiTerms && w1948.uiTerms.tabWar === 'Defence',
-    '  which in 1948 is Defence: ' + (w1948 && w1948.uiTerms && w1948.uiTerms.tabWar));
+  ok(w1948 && w1948.uiTerms && !w1948.uiTerms.tabWar,
+    '  and 1948 no longer overrides it, so every chapter says Defense');
   // The line is only on the ladder that musters anything.
   ok(/r\.key === 'mar' && info\.unit && info\.unit\.nextAt != null/.test(PANEL),
     'only the military ladder says it, and only while a newer pattern exists');

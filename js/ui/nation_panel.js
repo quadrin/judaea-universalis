@@ -32,7 +32,8 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // is ever detached mid-press (SPEC §132).
 //
 // `term` is the key in the chapter's `uiTerms` (SPEC §52) — 1948 says Cabinet
-// where antiquity says Court, and Defence where this says Host.
+// where antiquity says Court. It no longer re-dresses this tab: Defense reads
+// in every century, and §245 made it the label all nine chapters wear.
 //
 // A tab that would be empty does not appear: `tabHasContent` asks the DOM,
 // after the refresh has set every section's `hidden`, whether this tab has
@@ -72,7 +73,14 @@ const TABS = [
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'What history asks of this realm: the chapter it is living through, and the mission tree branch by branch with what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, their favor and their ground, the advisors, what is brewing, and the decisions in your gift.' },
   { id: 'tech', label: 'Technology', term: 'tabTech', tt: 'The ladders and the silver that buys them: treasury, debt, the three levels, the world’s way of doing things, and the ideas of the age those rungs unlock.' },
-  { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, how hard the fighting has worn the realm, the patterns it musters as, and who supplies them.' },
+  // Defense in every chapter (SPEC §245). This tab used to be the Host, with
+  // 1948 alone re-dressing it — the one tab whose two names said the same
+  // thing, where the other four re-dressings (Crown/State, Court/Cabinet,
+  // Missions/Objectives, World/Abroad) each mark a real difference between a
+  // throne and a republic. A Maccabean army and a modern general staff are
+  // both the thing this tab is about, and one word for it means a player who
+  // learns the panel in one chapter still knows it in the next.
+  { id: 'war', label: 'Defense', term: 'tabWar', tt: 'The army: manpower, regiments, how hard the fighting has worn the realm, the patterns it musters as, and who supplies them.' },
   { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads, and whose reading of the Law the realm administers.' },
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
 ];
@@ -1883,7 +1891,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       // one line, and names the tab in that chapter's own word for it.
       const musters = r.key === 'mar' && info.unit && info.unit.nextAt != null
         ? `\nMilitary ${info.unit.nextAt} musters ${info.unit.nextInf} — the patterns are under `
-          + (((ctx.bookmark && ctx.bookmark.uiTerms) || {}).tabWar || 'Host') + '.'
+          + (((ctx.bookmark && ctx.bookmark.uiTerms) || {}).tabWar || 'Defense') + '.'
         : '';
       return `<div class="np-techrow">
         <div class="np-tech-head" data-tt="${esc(head + musters)}">${icon(TECH_ICONS[r.key] || 'scroll', 'icon-k')}<b>${esc(r.name)}</b>${era}<span class="np-tech-lvl">${r.level}</span></div>

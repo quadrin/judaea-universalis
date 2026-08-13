@@ -92,9 +92,12 @@ console.log('== the tab is named for the ladders, not for the purse ==');
   ok(!stale.length, 'no bookmark carries the retired tabCoin term'
     + (stale.length ? ' (' + stale.join(', ') + ')' : ''));
   const b1948 = ERAS.find((e) => e.bookmark.id === '1948ce');
-  ok(b1948 && b1948.bookmark.uiTerms && b1948.bookmark.uiTerms.tabWar === 'Defence'
+  // tabWar went the same way as tabCoin, for the same reason (SPEC §245): the
+  // two words meant the same thing. The dresses that remain each mark a real
+  // difference between a throne and a republic.
+  ok(b1948 && b1948.bookmark.uiTerms && !b1948.bookmark.uiTerms.tabWar
     && b1948.bookmark.uiTerms.tabWorld === 'Abroad',
-    '1948 keeps the dresses it still needs: Defence, Abroad');
+    '1948 keeps the dresses it still needs, and no longer re-dresses the war tab');
 }
 
 // ---------------------------------------------------------------------------

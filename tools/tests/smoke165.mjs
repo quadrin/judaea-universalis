@@ -87,13 +87,16 @@ console.log('== §244 · 2 every line hides itself where it has nothing to say =
   const anc = boot('167bce');
   ok(anc.actions.getAirWings().length === 0,
     'a Maccabean realm has no air wings, so that line never renders');
-  // And the tab's own term changes with the chapter (SPEC §52).
-  const era48 = ERAS.find((e) => e.bookmark.id === '1948ce').bookmark;
-  const era167 = ERAS.find((e) => e.bookmark.id === '167bce').bookmark;
-  ok(era48.uiTerms && era48.uiTerms.tabWar === 'Defence',
-    '1948 calls the tab Defence');
-  ok(!era167.uiTerms || !era167.uiTerms.tabWar,
-    'while 167 BCE leaves it as the Host');
+  // The tab is Defense in every chapter (SPEC §245) — no chapter re-dresses
+  // it, and nothing anywhere still falls back to the old word.
+  ok(/\{ id: 'war', label: 'Defense', term: 'tabWar'/.test(NP),
+    'the tab is labelled Defense');
+  for (const era of ERAS) {
+    const t = era.bookmark.uiTerms || {};
+    ok(!t.tabWar, `${era.bookmark.id} does not re-dress it`);
+  }
+  ok(!/\|\| 'Host'\)/.test(NP),
+    'and no fallback anywhere in the panel still says Host');
 
   // The block itself is wired to vanish rather than render empty.
   const fn = /function refreshHostState\([\s\S]*?\n  \}/.exec(NP);

@@ -324,10 +324,16 @@ export const BOOKMARK_1948 = {
     // The tab used to be Coin here and Economy there, two dresses for the
     // purse; it is named for the ladders now, and a 1948 cabinet and a
     // Hasmonean court call those the same thing.
+    //
+    // Defense is the second (SPEC §245). This chapter used to say Defence
+    // where the rest said Host, and that was the one re-dressing whose two
+    // words meant the same thing — a Maccabean army and a modern general
+    // staff are both what the tab is about. It is Defense everywhere now, so
+    // there is nothing here to override; the four below each still mark a
+    // real difference between a throne and a republic.
     tabCrown: 'State',
     tabMissions: 'Objectives',
     tabCourt: 'Cabinet',
-    tabWar: 'Defence',
     tabWorld: 'Abroad',
   },
   doctrineAxes: {
