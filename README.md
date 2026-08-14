@@ -159,6 +159,25 @@ static site, the zero dependencies, or the missing build step changes.
   the old master keeps its capital, remembers the loss, and plots reconquest. Liberation
   earns no infamy. The same congress can transfer one of the enemy's direct client kingdoms
   to you intact — its land, ruler and army survive while its tribute and war duty change hands.
+- **The old names.** The states you could pull out of an empire used to be a fallen court or
+  a formula — the *Greek State of Straton's Tower*, the *Aramean State of Babylon* — which is
+  an honest description of a census category and a poor description of the ground. Between
+  those two answers there is now a third: **twenty-nine countries this map really carried**,
+  each with the provinces that make it that country. Hold the war score, catch the enemy
+  sitting on all of them, and the treaty raises the old name again — **Phoenicia** out of
+  Tyre and Sidon, **Philistia**, **Idumaea**, **Moab**, **Ammon**, **Aram**, **Palmyra**,
+  **Emesa**, **the Decapolis**, **Assyria**, **Babylonia**, **Elam**, **Media**, **Persis**,
+  **Cilicia**, **Cappadocia**, **Galatia**, the **Ionian** and **Hellenic** leagues,
+  **Bithynia**, **Macedon**, **Cyprus**, **Crete**, **Cyrenaica**, a pharaonic **Egypt** —
+  and, in 1948, **Kurdistan**, **Assyria** again, the **Alawite State**, the
+  **Jabal al-Druze** and the **Hejaz**. Each asks for a century that fits (no Kurdistan in
+  167 BCE, no Moab in 1948), a war score scaled to its ambition (25 for a coastal league,
+  50 for Babylon), one connected piece of land, and never the enemy's own capital. What
+  rises is a real court — its own banner, adjective, constitution and founding ideas, a
+  named ruler from its own era's name pool, and the faith of its own ground, so a Phoenicia
+  raised from a Byzantine Tyre is Christian and one raised from a Seleucid Tyre is not. The
+  ones just out of reach are shown too, dimmed, with the reason in the row: *they do not hold
+  Sidon*; *the war has not gone far enough: 30% of 35%*.
 - **The chancery has only so many envoys.** A standing bond is an establishment, not a
   purchase: every alliance, guarantee, royal marriage, subsidy and client kingdom takes one
   of your realm's seats (four, plus influence technology, plus a ruler who is good at this).

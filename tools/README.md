@@ -1791,3 +1791,33 @@ government to spiral into debt with, and the interesting failure modes it does
 have — the towns burned, the century converting the province out from under a
 Jewish state — belong to a human's decisions and to `faithDrift`, neither of
 which an eight-year all-AI run exercises.
+
+`smoke166.mjs` and `uitest52.mjs` own §246's old names. The headless suite is
+mostly a *catalog validator*, and deliberately so: `js/data/revivals.js` names
+provinces, cultures, faiths, constitutions, name pools and idea keys in
+strings, and nothing at runtime can tell a typo from a province that simply
+changed hands — the row just never appears, in silence. So every core and land
+is checked to be a real map cell, every reference to resolve, no tag to collide
+with the 142 in `DEFINES.TAGS`, and no two countries to claim the same core
+(the invariant the core-outranks-a-land arbitration rests on, without which
+Assyria deletes Kurdistan by being two lines higher in the file).
+
+The second contract is the one that caught a real bug during the section:
+**every chapter must be able to raise something**. Cores are checked against
+each bookmark's own `buildProvinceMapping`, because a core that is a LATENT
+cell outside 1948 — Nineveh folds into Hatra, Characmoba into Medaba — is a
+country that cannot be raised in seven of nine chapters and says nothing about
+it. Assyria was written with Nineveh and now asks for Assur and Arbela, which
+exist in all nine.
+
+`uitest52.mjs` is the browser half: the congress on a beaten Seleucid empire
+lists *Restore Phoenicia* beside the culture buckets, marked and carrying its
+historical case in the tooltip; at +28 war score it moves to the dimmed block
+below with the reason in the row, where a forced click moves no total; and at
++100 ticking it prices the treaty, burns its six provinces solid on the map,
+and signing puts Phoenicia on the board under a suffete. Screenshots land in
+`JU_OUT` as `ju-246-peace-table.png` and `ju-246-after.png`.
+
+Neither runner's numbers move: revivals are a peace-table term a human takes,
+and the AI does not originate releases, so `node tools/autorun.mjs 8` is
+untouched by the section — the accepted anomaly families above stand unchanged.

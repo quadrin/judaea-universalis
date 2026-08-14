@@ -2675,6 +2675,20 @@ html, body {
   flex: none;
 }
 .peace-off { opacity: 0.45; }
+/* The old names (SPEC §246). A release that raises a country this ground
+   really carried is a different KIND of term from a culture bucket set free,
+   and the row says so before the tooltip is opened: a gold edge on the ones
+   that are on the table, and a dimmed block below for the ones the war has
+   not yet earned — with the reason in the row rather than hidden in a hover,
+   because a term you cannot take is only useful if you know what it wants. */
+.peace-revival { border-left: 2px solid var(--gold); padding-left: 6px; }
+/* Deeper than .peace-provs' 180px: this is the list that got long. */
+.peace-releases { max-height: 236px; }
+.peace-locked { margin-top: 6px; border-top: 1px dotted rgba(85, 69, 46, 0.35); padding-top: 4px; }
+.peace-locked > .peace-dim { padding: 2px 0 2px; font-style: italic; }
+.peace-locked .peace-prov { cursor: default; }
+.peace-locked .peace-prov-name { font-weight: 600; }
+.peace-locked .peace-prov-cost { color: var(--ink-soft); }
 /* Directed spoils: the per-province "cede to" client picker on the leader's table. */
 .peace-to {
   flex: none;

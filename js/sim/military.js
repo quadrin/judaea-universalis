@@ -19,6 +19,9 @@ import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
 import { axisOf } from './doctrine.js';
+// The old names (SPEC §246): countries this map really carried, offered at the
+// peace table when the enemy holds all the ground that makes one. Pure data.
+import { revivalsAt, revivalByTag } from '../data/revivals.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -2252,6 +2255,11 @@ export function switchTagCore(ctx, from, to) {
   if (fallen) freeBanner(ctx, to);
   const nt = JSON.parse(JSON.stringify(old));
   nt.tag = to;
+  // The founding ideas of a court born at a peace table (SPEC §246) belong to
+  // THAT name. `to` is in the catalog by the test above, so its own entry is
+  // what applyReformsToTag will read — and a stale `baseIdeas` riding across
+  // the switch would stand in for a catalogued banner that declares none.
+  delete nt.baseIdeas;
   // The crown is new; the country is not (SPEC §102). A formed nation
   // remembers the tags it was, so the era's content addressed to its
   // predecessor — the estates that convene, the objectives the age sets, the
@@ -5433,12 +5441,230 @@ function releaseRow(ctx, tag, ids, kind, extra) {
     provNames: ids.map((id) => { const q = ctx.byId(id); return q ? q.name : null; }).filter(Boolean),
     dev,
     cost: Math.max(PEACE.releaseCostMin, Math.round(dev * PEACE.releaseCostPerDev)),
+    // What an old name brings with it (SPEC §246): the court's own adjective,
+    // ideas, ruler and blurb, carried on the row because these tags are not in
+    // DEFINES.TAGS and `ensureReleasedCourt` has nowhere else to read them.
+    adj: (extra && extra.adj) || def.adj || null,
+    ideas: (extra && extra.ideas) || null,
+    govType: (extra && extra.govType) || null,
+    ruler: (extra && extra.ruler) || null,
+    description: (extra && extra.description) || null,
+    basis: (extra && extra.basis) || null,
+    minWs: extra && Number.isFinite(extra.minWs) ? extra.minWs : 0,
   };
 }
 
-// Force them to free nations (EU4-style, widened in SPEC §76):
+// ─────────────────────────────────────────────────────────────────────────────
+// The old names (SPEC §246).
+//
+// Between the historical court that owned the ground when the era opened and
+// the culture-and-faith bucket of last resort sits a third answer, and it is
+// the one a congress would actually reach for: the country that IS there.
+// Tyre and Sidon in one hand is not a Greek State of Somewhere, it is
+// Phoenicia, and every man at the table knows the word.
+//
+// The requirement is deliberately shaped so the list stays short and the
+// answer stays legible. A revival asks for its CORES — two provinces, usually,
+// occasionally one or three — every one of them in the enemy's hands right
+// now. Its `lands` are swept up with them where the enemy holds those too and
+// silently skipped where it does not, so Phoenicia arrives with as much of the
+// coast as the war has actually put on the table and never fails to arrive
+// because Aradus changed hands in 143.
+//
+// Three gates besides the ground:
+//   * the century — `from`/`to` on the definition, against the game's own
+//     year, because Moab is not a proposal anyone makes in 1948 and Kurdistan
+//     is not one anybody makes in 167 BCE;
+//   * the war score, per definition — this is about ambition rather than
+//     price. What the land is worth is already priced by development like
+//     every other release; `minWs` is how badly the loser has to be losing
+//     before a congress will sit and resurrect a kingdom;
+//   * the ordinary release rules, unchanged — never the enemy's capital,
+//     never a war participant, never us, and one connected piece of land.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Every non-capital province the enemy holds, keyed by the canon name the
+// definitions are written in. A chapter that re-labels Sebaste as Shechem has
+// renamed the LABEL, not the ground (SPEC §139), so the canon key is what is
+// indexed — and the enemy's own seat is left out of the index entirely, which
+// is the "dismember, never behead" rule applied once instead of at every
+// lookup. Built once per call: twenty-nine definitions naming two hundred
+// provinces between them would otherwise walk the map two hundred times.
+function enemyHeldIndex(ctx, enemyTag, capital) {
+  const g = ctx.game;
+  const held = new Map();
+  const seat = new Set();
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== enemyTag) continue;
+    const key = p.canon || p.name;
+    if (capital && key === capital) { seat.add(key); continue; }
+    if (!held.has(key)) held.set(key, i);
+  }
+  return { held, seat };
+}
+
+// What stands between this revival and the table, in the order a player would
+// ask it. Returns '' when nothing does.
+function revivalBlock(ctx, def, war, byTag, enemyTag, idx, myWs) {
+  const g = ctx.game;
+  if (def.tag === byTag || def.tag === enemyTag) {
+    return 'That is our own quarrel, not a nation to be freed.';
+  }
+  if (war.attackers.indexOf(def.tag) >= 0 || war.defenders.indexOf(def.tag) >= 0) {
+    return 'They are already in this war and settle their own terms.';
+  }
+  const t = g.tags[def.tag];
+  if (t && t.alive && t.overlord) return (t.name || def.name) + ' wears somebody\'s collar already.';
+  const seatOf = def.cores.filter((n) => idx.seat.has(n));
+  if (seatOf.length) {
+    return 'Their own capital stands at ' + seatOf.join(', ')
+      + ' — a crown may be dismembered, not beheaded.';
+  }
+  const missing = def.cores.filter((n) => !idx.held.has(n));
+  if (missing.length) return 'They do not hold ' + missing.join(', ') + '.';
+  if (num(myWs) < num(def.minWs)) {
+    return 'The war has not gone far enough: ' + Math.round(num(myWs))
+      + '% of ' + def.minWs + '% needed to raise a kingdom.';
+  }
+  return '';
+}
+
+// The rows themselves. `assigned` is the set of provinces an earlier pass has
+// already spoken for: a historical court's own homeland outranks a revival of
+// a name nobody has worn in four centuries, so those provinces are taken out
+// of the revival's hands rather than promised to two treaties at once. Cores
+// are unique across the whole list by construction (smoke166 holds it), so two
+// revivals can never fight over the province that makes one of them itself.
+function revivalRows(ctx, war, byTag, enemyTag, assigned, capital, myWs) {
+  const g = ctx.game;
+  const idx = enemyHeldIndex(ctx, enemyTag, capital);
+  const era = revivalsAt(g.date && g.date.y);
+  // A CORE OUTRANKS A LAND, whoever is earlier in the file. Kirkuk and
+  // Sulaymaniyah are what makes Kurdistan Kurdistan and are merely more of
+  // Assyria's plain; without this, Assyria — two entries above — would sweep
+  // them up as `lands` and Kurdistan could never be raised at all. Cores are
+  // unique across the list (smoke166 holds it), so this reservation is total:
+  // no province in it is claimed as a core by more than one country.
+  const spokenFor = new Map();
+  for (const def of era) {
+    for (const name of def.cores) {
+      const id = idx.held.get(name);
+      if (id) spokenFor.set(id, def.tag);
+    }
+  }
+  const out = [];
+  const locked = [];
+  // Every road out of this loop that is not a row ends here, with a reason. A
+  // country that is neither offered nor listed has vanished, and a mechanic
+  // that can make twenty-nine countries disappear without saying anything is
+  // the thing this section is most at risk of being.
+  const block = (def, held, reason) => {
+    // Only the ones a player could plausibly reach are worth showing: the
+    // ground is already theirs and the score is short, or one province is.
+    // Everything else is a list of countries that happen to exist — and a
+    // one-core revival whose one core they do not hold is exactly that, so
+    // the enemy must be standing on something before the name is mentioned.
+    if (held < 1 || held < def.cores.length - 1) return;
+    // What the prize is worth, for the ranking below and for the tooltip: the
+    // development of everything this country would take that the enemy has.
+    // Not run through §109's contiguity — this row is never a treaty term, and
+    // the number is here to say which refusals are worth a player's attention.
+    let dev = 0;
+    for (const name of def.cores.concat(def.lands || [])) {
+      const id = idx.held.get(name);
+      if (id) dev += devTotal(ctx.byId(id) || {});
+    }
+    locked.push({
+      tag: def.tag, name: def.name, origin: 'revival',
+      minWs: def.minWs, basis: def.basis, reason, dev: Math.round(dev),
+      cores: def.cores.slice(), coresHeld: held,
+    });
+  };
+  for (const def of era) {
+    const why = revivalBlock(ctx, def, war, byTag, enemyTag, idx, myWs);
+    const held = def.cores.filter((n) => idx.held.has(n)).length;
+    if (why) { block(def, held, why); continue; }
+    const ids = [];
+    for (const name of def.cores.concat(def.lands || [])) {
+      const id = idx.held.get(name);
+      if (!id || assigned.has(id) || ids.indexOf(id) >= 0) continue;
+      const owner = spokenFor.get(id);
+      if (owner && owner !== def.tag) continue; // somebody else's core
+      ids.push(id);
+    }
+    // A core an earlier pass already promised elsewhere takes the whole
+    // revival off the table: half of Phoenicia is not Phoenicia. Same answer
+    // when §109's contiguity check cannot fit the cores into one country —
+    // two provinces with a shared name and a sea between them are not one.
+    const coreIds = def.cores.map((n) => idx.held.get(n));
+    if (!coreIds.every((id) => ids.indexOf(id) >= 0)) {
+      block(def, held, 'Its country is already promised elsewhere at this table.');
+      continue;
+    }
+    const piece = contiguousRelease(ctx, def.tag, ids);
+    if (!piece.length || !coreIds.every((id) => piece.indexOf(id) >= 0)) {
+      block(def, held, def.cores.join(' and ') + ' do not touch — there is no one country to raise.');
+      continue;
+    }
+    for (const id of piece) assigned.add(id);
+    const seat = ctx.byId(coreIds[0]) || ctx.byId(piece[0]);
+    const existing = g.tags[def.tag];
+    out.push(releaseRow(ctx, def.tag, piece, existing && existing.alive ? 'return' : 'restore', {
+      name: def.name,
+      origin: 'revival',
+      culture: def.culture,
+      // The faith of the ground, unless the state is confessional by
+      // definition — Phoenicia raised in 529 CE is Christian because Tyre is.
+      religion: def.religion || (seat && seat.religion),
+      color: def.color,
+      capitalId: coreIds[0] || piece[0],
+      adj: def.adj,
+      ideas: def.ideas,
+      govType: def.govType,
+      description: def.description,
+      basis: def.basis,
+      minWs: def.minWs,
+      ruler: revivedRuler(def, coreIds[0] || piece[0]),
+    }));
+  }
+  return { out, locked };
+}
+
+// Who is put on the throne. Deterministic, like every other seat this file
+// fills: the same campaign replayed, reloaded or mirrored to a guest raises
+// the same man in the same town.
+function revivedRuler(def, seatId) {
+  const pool = GENERAL_NAMES[def.names] || GENERAL_NAMES.hellenic;
+  const h = stableStateHash(String(def.tag) + '|' + String(seatId || 0));
+  return {
+    name: (pool.length ? pool[h % pool.length] : null) || ('The ' + (def.title || 'Council')),
+    title: def.title || 'Council',
+    gov: 1 + (h % 3), infl: 1 + ((h >>> 3) % 3), mar: 1 + ((h >>> 6) % 3), age: 38 + (h % 22),
+  };
+}
+
+// The old names a congress could be talked into but this one cannot yet —
+// shown at the table so the ladder is visible rather than guessed at. These
+// rows are display only and are deliberately kept OUT of `releasable`, so a
+// hand-edited deal naming one prices and applies nothing.
+//
+// Read off the SAME pass that built the offer, never a second one of its own.
+// The offer's pass starts with an `assigned` set the historical courts have
+// already filled, and a revival whose core went to a restored court in that
+// first pass is neither offered NOR blocked by anything `revivalBlock` can
+// see — so an independent recomputation would call it offered, strike it from
+// the locked list, and the country would appear nowhere at all. Exactly the
+// silent-disappearance failure the rest of this section is written against.
+export function lockedRevivals(ctx, war, byTag, enemyTag) {
+  return releaseTable(ctx, war, byTag, enemyTag).locked;
+}
+
+// Force them to free nations (EU4-style, widened in SPEC §76 and §246):
 //   * a dead historical court can be restored;
 //   * a living non-belligerent court can have its old homeland returned;
+//   * a country this map really carried can be raised again where the enemy
+//     holds every province that makes it that country (SPEC §246);
 //   * land with no surviving historical claimant can become a new cultural
 //     state. This last path does NOT require a country to have existed at the
 //     bookmark opening, or to have been conquered during the present game.
@@ -5446,9 +5672,18 @@ function releaseRow(ctx, tag, ids, kind, extra) {
 // resolved in favor of the historical court, and a crown always keeps its own
 // capital — liberation may dismember an empire, not behead it.
 export function releasableNations(ctx, war, byTag, enemyTag) {
+  return releaseTable(ctx, war, byTag, enemyTag).rows;
+}
+
+// The whole table in one pass: what can be freed, and — for the old names
+// alone (SPEC §246) — what is close enough to be worth showing that it cannot.
+// `getPeaceInfo` calls this once and takes both halves; the two exported
+// readers above are thin wrappers, because the halves have to agree.
+function releaseTable(ctx, war, byTag, enemyTag) {
   const g = ctx.game;
   const out = [];
-  if (!war || !enemyTag) return out;
+  let locked = [];
+  if (!war || !enemyTag || !g.tags[enemyTag]) return { rows: out, locked };
   const enemy = g.tags[enemyTag];
   const enemyDef = tagDef(ctx, enemyTag);
   const capital = enemyDef.capital || (enemy && enemy.dynamicCapital) || null;
@@ -5475,6 +5710,26 @@ export function releasableNations(ctx, war, byTag, enemyTag) {
     const t = g.tags[tag];
     out.push(releaseRow(ctx, tag, ids, t && t.alive ? 'return' : 'restore'));
   }
+
+  // The old names (SPEC §246), between the two abstractions that were already
+  // here: a country the ground itself remembers, where the enemy holds all of
+  // what makes it one and the war has gone far enough to discuss it.
+  const myWs = Math.round(num(war.warscore && war.warscore[byTag]));
+  const revived = revivalRows(ctx, war, byTag, enemyTag, assigned, capital, myWs);
+  for (const row of revived.out) out.push(row);
+  // Closest first, then biggest: the ones whose ground is already entirely
+  // theirs before the ones a province away, the cheapest threshold before the
+  // dearest, and — among names that tie on both, which most of them do —
+  // Phoenicia's six towns before Media's one. Capped, because a beaten empire
+  // is near a great many countries and this is meant to show a ladder rather
+  // than a gazetteer; without the dev tiebreak the cap was decided by the
+  // alphabet, and the alphabet does not know which refusals matter.
+  const offered = new Set(revived.out.map((r) => r.tag));
+  locked = revived.locked
+    .filter((r) => !offered.has(r.tag))
+    .sort((a, b) => (b.coresHeld - b.cores.length) - (a.coresHeld - a.cores.length)
+      || a.minWs - b.minWs || b.dev - a.dev || a.name.localeCompare(b.name))
+    .slice(0, 4);
 
   // The rest of the enemy's non-capital territory is divisible into cultural
   // states. Culture + faith is the durable identity: it survives owner
@@ -5535,7 +5790,7 @@ export function releasableNations(ctx, war, byTag, enemyTag) {
     }));
   }
   out.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
-  return out;
+  return { rows: out, locked };
 }
 
 // An enemy's direct clients can be reassigned at the full congress. This is a
@@ -5800,7 +6055,12 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     whyNotUnifyCrown = 'They stand under a protection that is not at this table — '
       + ((g.tags[et.overlord] && g.tags[et.overlord].name) || et.overlord) + ' answers for them.';
   } else canUnifyCrown = true;
-  const releasable = (separate || exit) ? [] : releasableNations(ctx, war, byTag, enemyLeader)
+  // One pass for both halves of the release section (SPEC §246): what can be
+  // freed, and the old names close enough to be worth naming that they cannot.
+  const releaseHalves = (separate || exit)
+    ? { rows: [], locked: [] }
+    : releaseTable(ctx, war, byTag, enemyLeader);
+  const releasable = releaseHalves.rows
     .map((row) => {
       const adj = goalReleaseAdjustment(ctx, war, byTag, row.provIds);
       return {
@@ -5873,6 +6133,10 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     // peace cannot redraw another crown's map — releases wait for the full
     // congress, like subjugation — and a withdrawing junior frees no one.
     releasable,
+    // The old names this table cannot quite reach (SPEC §246) — one province
+    // short, or one bad month short of the score. Display only: they are kept
+    // out of `releasable` so a hand-edited deal naming one buys nothing.
+    releasableLocked: releaseHalves.locked,
     releaseCostPerDev: PEACE.releaseCostPerDev,
     // Direct clients on the enemy side may be transferred only at the full
     // congress. A separate court cannot trade another sovereign's bond, and a
@@ -6515,7 +6779,11 @@ function ensureReleasedCourt(ctx, row, templateTag) {
     if (row.releaseIdentity && !t.releaseIdentity) t.releaseIdentity = row.releaseIdentity;
     return t;
   }
-  const def = (ctx.DEFINES.TAGS || {})[row.tag] || {};
+  // An old name (SPEC §246) is not in DEFINES.TAGS on purpose — a bookmark
+  // written without an `activeTags` line would otherwise seat twenty-nine
+  // landless kingdoms on day one — so its definition stands in for the catalog
+  // entry here, and the row's own fields still win over both.
+  const def = (ctx.DEFINES.TAGS || {})[row.tag] || revivalByTag(row.tag) || {};
   const template = g.tags[templateTag] || {};
   const seat = ctx.byId(row.capitalId) || ctx.byId((row.provIds || [])[0]);
   const tech = template.tech || {};
@@ -6526,13 +6794,22 @@ function ensureReleasedCourt(ctx, row, templateTag) {
       : Array.isArray(def.color) ? def.color.slice() : [112, 118, 126],
     religion: row.religion || def.religion || (seat && seat.religion) || template.religion,
     culture: row.culture || def.culture || (seat && seat.culture) || template.culture,
+    // The court's own word for its people and its things (SPEC §246): the map
+    // labels read it, and a restored Phoenicia writing "Free State" armies
+    // would be the giveaway that nothing but the name had changed.
+    adj: row.adj || def.adj || null,
     alive: false,
     ai: true,
     treasury: 0, income: 0, expenses: 0, loans: 0,
     manpower: 0, maxManpower: 0,
     stability: 0, legitimacy: 50, warExhaustion: 0,
     points: { gov: 0, infl: 0, mar: 0 },
-    ideas: { ...(def.ideas || {}) },
+    ideas: { ...(def.ideas || {}), ...(row.ideas || {}) },
+    // …and the same map kept whole, because `ideas` is a DERIVED field:
+    // applyReformsToTag rebuilds it from the catalog on every tech tier, every
+    // reform and every load, and a court that is not in the catalog would lose
+    // what it was founded with the first time an AI took a reform (SPEC §246).
+    baseIdeas: { ...(def.ideas || {}), ...(row.ideas || {}) },
     reforms: { mil: 0, civ: 0, rel: 0 },
     eraIdeas: {}, // a state born new has taken up none of the age's ideas
     programs: {}, // …and owns no works (SPEC §213)
@@ -6548,6 +6825,9 @@ function ensureReleasedCourt(ctx, row, templateTag) {
     atWarWith: [], allies: [], guarantees: [], opinion: {},
     govType: (ctx.bookmark && ctx.bookmark.govTypes && ctx.bookmark.govTypes[row.tag])
       || (ctx.DEFINES.GOV_OF || {})[row.tag]
+      // A league is not a kingdom (SPEC §246): the Decapolis elects archons and
+      // the Emesenes crown a priest, and the constitution rides the row.
+      || row.govType || def.govType
       || (ctx.game.date.y >= 1800 ? 'republic' : 'monarchy'),
     electionIn: 48,
     claims: [], claimFabrications: [], overlord: null,

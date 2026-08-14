@@ -400,19 +400,28 @@ export function initUI(staticCtx) {
           <span class="peace-prov-cost">${info.subjugateCost}</span>
         </label>
         <div class="peace-sec">Force them to release nations</div>
+        ${/* Its own scroll box, like the province lists above it. Since the old
+              names (SPEC §246) a beaten empire can be divided twenty ways, and
+              twenty rows between the war score and the Send button is a card
+              nobody reaches the bottom of. */
+    (info.releasable || []).length ? `<div class="peace-provs peace-releases">` : ''}
         ${(info.releasable || []).length ? info.releasable.map((r) =>
-    `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc(
+    `<label class="peace-prov${r.origin === 'revival' ? ' peace-revival' : ''}" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc(
       (r.kind === 'return'
         ? 'Return the old homeland to the living court of ' + r.name
         : r.kind === 'create'
           ? 'Create ' + r.name + ' as a new cultural state'
-          : 'Restore ' + r.name + ' as a free nation')
+          : r.origin === 'revival'
+            ? 'Raise ' + r.name + ' again over the ground that is still its own'
+            : 'Restore ' + r.name + ' as a free nation')
       + ': ' + (r.provNames || []).join(', ') + ' (' + r.dev + ' development) leave '
       + (info.enemyName || 'the enemy') + '\'s realm.'
       + (r.kind === 'return'
         ? ' The recipient keeps its existing government and treaties.'
         : ' The state rises independent and sheltered by a five-year truce.')
-      + (r.goalAligned ? ' This fulfills the ' + (r.goalReason || 'war goal') + ' and receives favored terms.' : '')
+      // Why this is a country and not a census bucket (SPEC §246).
+      + (r.basis ? '\n\n' + r.basis : '')
+      + (r.goalAligned ? '\n\nThis fulfills the ' + (r.goalReason || 'war goal') + ' and receives favored terms.' : '')
       + '\nCosts ' + r.cost + ' war score. Liberation earns no infamy.')}">
           <input type="checkbox" data-release="${esc(r.tag)}">
           <span class="peace-prov-name">${r.kind === 'return'
@@ -420,12 +429,30 @@ export function initUI(staticCtx) {
     : r.kind === 'create'
       ? 'Create ' + esc(r.name)
       : 'Restore ' + esc(r.name)}
-            <span class="peace-dim">${(r.provIds || []).length} province${(r.provIds || []).length === 1 ? '' : 's'} · ${r.dev} dev</span></span>
+            <span class="peace-dim">${(r.provIds || []).length} province${(r.provIds || []).length === 1 ? '' : 's'} · ${r.dev} dev${
+  r.origin === 'revival' ? ' · an old name' : ''}</span></span>
           <span class="peace-prov-cost">${r.cost}</span>
-        </label>`).join('')
+        </label>`).join('') + '</div>'
     : `<div class="peace-dim peace-none">${info.separate
       ? 'A separate peace cannot redraw another crown\'s map — releases wait for the full congress table.'
-      : 'No viable homeland can be separated from their capital. Historical courts, living claimants, and new cultural states are all considered here.'}</div>`}
+      : 'No viable homeland can be separated from their capital. Historical courts, living claimants, the old names of this ground, and new cultural states are all considered here.'}</div>`}
+        ${/* The old names within reach of this war but not of this table
+              (SPEC §246): shown, priced and explained, so the ladder is a
+              thing to climb rather than a thing to guess at. */
+    (info.releasableLocked || []).length ? `<div class="peace-locked">
+          <div class="peace-dim">Old names this congress cannot quite reach:</div>
+          ${info.releasableLocked.map((r) =>
+    `<label class="peace-prov peace-off" data-tt="${esc(r.name + ' — ' + r.reason
+      + '\n\nIts country is ' + r.cores.join(' and ') + '.'
+      + '\nRaising it asks for ' + r.minWs + '% war score, and would take '
+      + r.dev + ' development out of ' + (info.enemyName || 'their realm') + '.'
+      + (r.basis ? '\n\n' + r.basis : ''))}">
+            <input type="checkbox" disabled>
+            <span class="peace-prov-name">Restore ${esc(r.name)}
+              <span class="peace-dim">${esc(r.reason)}</span></span>
+            <span class="peace-prov-cost">${r.minWs}%</span>
+          </label>`).join('')}
+        </div>` : ''}
         <div class="peace-sec">Take over their client kingdoms</div>
         ${(info.transferableVassals || []).length ? info.transferableVassals.map((r) =>
     `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc(

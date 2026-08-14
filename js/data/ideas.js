@@ -52,8 +52,16 @@ export function ideaCost(tier) { // tier index 0..4
 // levels confer (SPEC §22), every era-idea tier it has taken up (SPEC §179),
 // and every arms program its own shops have delivered (SPEC §213). Pure; call
 // after any change to t.reforms, t.tech, t.eraIdeas or t.programs.
+//
+// A COURT BORN IN PLAY IS NOT IN THE CATALOG (SPEC §246). The old names the
+// peace table raises — Phoenicia, Kurdistan, the Decapolis — are deliberately
+// absent from DEFINES.TAGS, so there is no static entry here to read their
+// founding ideas back out of, and this function runs on every tech tier, every
+// reform and every load: anything it cannot find is anything the court quietly
+// loses. Those courts carry their own `baseIdeas`, and it stands in.
 export function applyReformsToTag(DEFINES, t, tagKey) {
-  const base = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[tagKey] && DEFINES.TAGS[tagKey].ideas) || {};
+  const base = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[tagKey] && DEFINES.TAGS[tagKey].ideas)
+    || (t && t.baseIdeas) || {};
   const merged = { ...base };
   const fold = (eff) => {
     for (const k of Object.keys(eff)) {

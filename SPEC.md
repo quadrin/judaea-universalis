@@ -16976,3 +16976,164 @@ Syria's **Defence Companies** are names, not descriptions.
   still mark a difference; `smoke132.mjs` holds that the military ladder's
   pointer still names the tab in the chapter's own word for it, and that there
   is no longer an override for it to find.
+
+
+## 246. The old names
+
+**What was wrong.** A beaten empire could be forced to let go of two kinds of
+thing, and only two. §69 restores a court that owned the ground when the era
+opened — Nabataea, if Rome has swallowed it — and §76 returns a living
+non-belligerent's old homeland. Everything else fell to the abstraction of last
+resort: culture plus faith, one state per bucket, named by formula. Dismember
+the Seleucid empire in 167 BCE and the congress offered you the **Greek State
+of Straton's Tower**, the **Aramean State of Babylon**, the **Judean State of
+Jerusalem** and the **Galilean State of Sepphoris**.
+
+Those names are honest about what they are. They are also a census being filed
+rather than a map being redrawn — and worse, they are *wrong about the ground*,
+because the ground has better names and everybody at that table knew them. Tyre
+and Sidon in one hand is not a Greek bucket. It is **Phoenicia**.
+
+**What it is now.** A third abstraction sits between the other two: a catalogue
+of countries this map really carried, each written down with the provinces that
+make it that country and not somewhere else. `js/data/revivals.js`, twenty-nine
+of them, from Phoenicia and Philistia through Babylonia, Assyria, Media, Persis
+and pharaonic Egypt to the Decapolis, the Ionian League, Galatia, and — in the
+twentieth-century chapter — Kurdistan, the Alawite State, the Jabal al-Druze
+and the Hejaz. When the enemy holds all of what makes one, the treaty may raise
+the old name over it again. The row reads **Restore Phoenicia**, not Create the
+Greek State of Somewhere, and it carries the case for itself in its tooltip.
+
+**The shape of a requirement.** Four decisions, and each of them is what keeps
+the list from being either empty or a wall of text.
+
+- **Cores are the identity, and they are few** — one to three provinces, every
+  one of them in the enemy's hands *right now*. Phoenicia is Tyre and Sidon.
+  Its `lands` — Byblos, Berytus, Tripolis, Aradus, and in 1948 the Lebanese
+  districts behind them — are swept up where the enemy holds them and silently
+  skipped where it does not, so Phoenicia arrives with as much of the coast as
+  the war actually put on the table and never fails to arrive because Aradus
+  changed hands a generation ago. A country needing sixteen exact provinces
+  would never appear; a country needing one would appear everywhere.
+- **The faith comes from the ground.** A Phoenicia raised out of a Seleucid
+  Tyre is Hellenistic; out of a Byzantine Tyre it is Christian. The catalogue
+  pins a religion only where the state's whole reason for existing is
+  confessional — the Alawite State, the Jabal al-Druze — and those exist for
+  thirty years of one chapter. Culture, by contrast, IS the identity and is
+  pinned: Galatia is Celtic in the middle of Anatolia, which is the entire
+  point of Galatia.
+- **Every name has a century.** `from`/`to`, signed years, against the game's
+  own date. Kurdistan is not a proposal anyone makes in 167 BCE and Moab is not
+  one anybody makes in 1948. Assyria, whose plain has answered to that word for
+  four thousand years, is on offer in both eras this map reaches — and its faith
+  and its capital come from whichever one you are playing.
+- **A war score threshold, and it is about ambition rather than price.** What
+  the land is worth is already priced by development at §69's half-point per
+  dev, like every other release. `minWs` is a separate question: how badly the
+  loser has to be losing before a congress will sit down and resurrect a
+  kingdom at all. A coastal league asks 25, a real country 35, Egypt or Babylon
+  or Assyria 50.
+
+**The precedence, and the one conflict that matters.** Three passes run in
+order over the enemy's non-capital land: the historical court that owned it at
+the era's opening, then the old names, then the culture buckets over whatever
+is left. A court's own homeland outranks a name nobody has worn in four
+centuries, and the culture bucket catches the remainder — which it still does,
+and should: the Syrian tetrapolis around Antioch has no better name than Greek.
+
+Within the middle pass there is exactly one collision worth arbitrating, and
+**a core outranks a land**. Assyria stands two entries above Kurdistan in the
+file and lists Kirkuk and Sulaymaniyah among its lands; those two provinces are
+what makes Kurdistan Kurdistan. Left alone, Assyria sweeps them up and
+Kurdistan can never be raised at all — a country deleted by list order. So
+every era-eligible definition's cores are reserved before any definition takes
+its lands, which works precisely because **no two countries in the catalogue
+share a core**. That is an invariant, not a convention, and smoke166 holds it.
+
+**What the table shows, including what it cannot do.** The old names within
+reach of the war but not of this table are rendered too — dimmed, unclickable,
+capped at four, closest first, each with the reason in the row rather than
+hidden in a hover: *They do not hold Sidon*, *The war has not gone far enough:
+30% of 35% needed to raise a kingdom*, *Their own capital stands at Salamis — a
+crown may be dismembered, not beheaded*. A term you cannot take is only useful
+if you know what it wants. These rows are deliberately kept OUT of
+`info.releasable`, so a hand-edited deal naming one prices and applies nothing.
+
+**Every road out of the pass that is not a row ends in a reason.** Not only the
+four gates: a revival whose core an earlier pass promised to a restored court
+is refused with *Its country is already promised elsewhere at this table*, and
+one whose cores turn out not to touch with *Tyre and Sidon do not touch — there
+is no one country to raise*. A catalogue of twenty-nine names is above all
+exposed to making countries disappear silently, and nothing here is allowed to
+`continue` without saying why. (The dimmed list is still capped at four and
+still requires the enemy to be standing on at least one core, so the reasons
+shown are the ones a player can act on rather than a gazetteer of everything
+that is not currently possible.)
+
+Both halves come out of **one pass**, `releaseTable`, and that is load-bearing
+rather than tidy. The offer's pass begins with an `assigned` set the historical
+courts have already filled, so a revival whose core went to a restored court in
+that first pass is neither offered nor blocked by anything the gate function
+can see. Compute the locked list independently and it calls that country
+*offered*, strikes it from its own list, and the name appears nowhere at all —
+the same silent disappearance the rest of this section is written against. The
+two exported readers are thin wrappers over the single pass, because the halves
+have to agree.
+
+**Two decisions that look like details and are not.**
+
+*The tags are not in `DEFINES.TAGS`.* Every bookmark declares `activeTags`, and
+`initGame` seats a court for every catalogued tag that list admits — so today a
+catalogued PHO would simply never seat. But the day somebody writes a chapter
+without an `activeTags` line, twenty-nine empty kingdoms come alive holding
+nothing. The release row carries the whole identity instead — name, adjective,
+banner, culture, constitution, ideas, the ruler's name pool and title, the
+blurb — and `ensureReleasedCourt` seats a real court from that.
+
+*`baseIdeas` exists because `ideas` is derived.* `applyReformsToTag` rebuilds
+`t.ideas` from `DEFINES.TAGS[tag].ideas` plus reforms, tech, era ideas,
+programs and government — and it runs on every tech tier, every reform, and
+every load. A court that is not in the catalogue had nothing to rebuild from,
+so Phoenicia's merchant fleet would have evaporated the first time its AI took
+a reform, silently, some years after the treaty that made it. The founding
+ideas now ride on the court as `t.baseIdeas` and stand in where the catalogue
+has no entry; `switchTagCore` deletes them across a tag switch, because those
+ideas belong to that name.
+
+**What is raised is a court, not a colour.** Phoenicia stands under its own
+name and adjective (the map labels read `t.adj`, so its overseas region says
+PHOENICIAN and not PHOENICIA'S), its own banner, its own people, the faith of
+its own ground, its own constitution — suffetes, so `republic`, while Emesa
+crowns a priest-king and the Decapolis elects archons — its own founding ideas,
+and a named magistrate drawn deterministically from the era's own name pool
+rather than a Council of the New State. It rises independent, sheltered by the
+five-year truce §69 already grants, loving its liberator and remembering its
+old master bitterly. Liberation still earns no infamy.
+
+**What this deliberately does not touch.** §218's release of one's OWN land as
+a client kingdom still reasons with the two older abstractions only. The
+peace table's third one is new, and granting a crown out of your own realm is a
+different question with its own rules — our own people are a secession and not
+a gift, occupied land is not ours to give — which this section does not answer.
+
+- **Regression contract**: `smoke166.mjs` — every core and land is a real map
+  cell, every culture, faith, constitution, name pool and idea key resolves, no
+  tag collides with the 142 in `DEFINES.TAGS`, and no two countries claim the
+  same core; every chapter has at least five of the old names in its century
+  and none of them asks for a cell that chapter folds away (the failure that
+  cost Assyria seven chapters, when its core was Nineveh — a latent cell
+  outside 1948); the Seleucid empire yields Phoenicia holding Tyre and Sidon,
+  priced by development, in one piece of connected land over the real adjacency
+  graph, seated inside its own territory, with no province promised to two
+  treaties at once and the culture buckets still catching the remainder; all
+  four gates bite — at +10 nothing, at +30 the small ones and not Phoenicia, at
+  +40 Phoenicia, Idumaea in 167 BCE and not in 900 CE, and no row carries
+  Antioch; hand Sidon to a third party and Phoenicia leaves the table with the
+  missing province named; Kurdistan and Assyria are both raisable from Iraq in
+  1948 and Assyria takes neither of Kurdistan's cores; the treaty seats a court
+  with its own name, adjective, people, ground-faith, banner, constitution,
+  ruler, description and ideas — and the ideas survive a reform and a tech tier
+  rebuilding the map; a second table returns land to the living court rather
+  than founding a duplicate; `peaceDealInfo` carries both lists, a deal naming
+  a locked country buys nothing, a separate peace offers neither, and every
+  class the new markup emits has a rule in the stylesheet.
