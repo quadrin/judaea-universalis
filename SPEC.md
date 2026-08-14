@@ -17066,13 +17066,44 @@ and Sidon in one hand is not a Greek bucket. It is **Phoenicia**.
 
 **What it is now.** The bucket is replaced, not supplemented: a catalogue of
 countries this map really carried, each written down with the provinces that
-make it that country and not somewhere else. `js/data/revivals.js`, twenty-nine
+make it that country and not somewhere else. `js/data/revivals.js`, thirty-five
 of them, from Phoenicia and Philistia through Babylonia, Assyria, Media, Persis
 and pharaonic Egypt to the Decapolis, the Ionian League, Galatia, and — in the
 twentieth-century chapter — Kurdistan, the Alawite State, the Jabal al-Druze
-and the Hejaz. When the enemy holds all of what makes one, the treaty may raise
-the old name over it again. The row reads **Restore Phoenicia**, not Create the
-Greek State of Somewhere, and it carries the case for itself in its tooltip.
+and the Hejaz. Near home it carries the ground a Jewish chapter is actually
+played over: **the Galilee** under its own Nasi, **Samaria** under the priests
+of Gerizim, **Idumaea**, **Moab**, **Ammon**, and the small dynasties Rome
+swallowed one by one — **Nabataea**, **Ituraea**, **Osrhoene**, **Commagene**.
+When the enemy holds all of what makes one, the treaty may raise the old name
+over it again. The row reads **Restore Phoenicia**, not Create the Greek State
+of Somewhere, and it carries the case for itself in its tooltip.
+
+**Five of the thirty-five are not new tags**, and that is the interesting half.
+Samaria, Nabataea, Ituraea, Osrhoene and Commagene are courts the chapters
+already seat. Reusing their letters is the point — a restored Nabataea should
+be Nabataea and not a lookalike with the same name — so those entries carry no
+`ideas` (the catalogued court has its own, and `ensureReleasedCourt` merges the
+row's OVER them) and agree with the catalogue on name, adjective, culture and
+banner. They exist for the chapters where the court is *not* seated: Petra is a
+Roman province called Palaestina Tertia by 351 and no fallen court remembers
+it, so without an entry here nothing could put the kingdom back. Where the
+court IS seated, the ordinary historical pass gets there first and the entry
+falls silently away — which is why the locked list is struck against the whole
+table rather than against the revival pass alone. A country listed as *already
+promised elsewhere at this table* directly beneath its own live offer is the
+panel arguing with itself.
+
+**Two guards the Israelite entries needed.** A chapter may fly a name over
+different letters — 351 and 529 seat the Galilee as a renamed JUD (§139) — so a
+revival whose name a living court already bears is refused with *Galilee
+already stands on this map under other letters*, because two courts called
+Galilee is one too many whatever their tags say. And the player's own letters,
+and the enemy's, are skipped entirely rather than listed as out of reach: a
+Samaritan player does not need to be told Samaria cannot be freed from
+Byzantium, and putting it under *cannot quite reach* implies one more campaign
+would fix it. Everything else about the Galilee regulates itself, because the
+row is computed against what the ENEMY holds: a chapter played as the Galilee
+never sees the offer, since it is holding Sepphoris.
 
 **And the formula is gone rather than left underneath.** This is the part worth
 arguing with, so here is the argument. Keeping both would have meant a table

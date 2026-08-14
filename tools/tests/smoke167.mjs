@@ -128,7 +128,7 @@ console.log('== §247 · 1 the list is well formed ==');
   for (const k of Object.keys(DEFINES.TAGS)) {
     for (const i of Object.keys(DEFINES.TAGS[k].ideas || {})) ideaKeys.add(i);
   }
-  ok(REVIVALS.length >= 20, `the catalog carries ${REVIVALS.length} countries`);
+  ok(REVIVALS.length >= 30, `the catalog carries ${REVIVALS.length} countries`);
 
   const badProv = [];
   const badTag = [];
@@ -138,8 +138,25 @@ console.log('== §247 · 1 the list is well formed ==');
   const sharedCore = [];
   for (const r of REVIVALS) {
     for (const n of r.cores.concat(r.lands || [])) if (!cells.has(n)) badProv.push(r.tag + ':' + n);
-    if (tags.has(r.tag) || seen.has(r.tag)) badTag.push(r.tag);
+    if (seen.has(r.tag)) badTag.push(r.tag + ' (twice in the catalog)');
     seen.add(r.tag);
+    // A revival MAY reuse a tag DEFINES.TAGS already carries — Samaria,
+    // Nabataea, Ituraea, Osrhoene and Commagene are courts the chapters seat,
+    // and a restored one should be THAT court rather than a lookalike. What it
+    // may not do is disagree with the catalog about what that court is, or
+    // bring ideas of its own: `ensureReleasedCourt` merges the row's over the
+    // catalog's, so a set here would seat a different Nabataea from the one a
+    // bookmark seats.
+    const cat = DEFINES.TAGS[r.tag];
+    if (cat) {
+      if (cat.name !== r.name) badTag.push(r.tag + ' name ' + r.name + ' vs ' + cat.name);
+      if (cat.adj !== r.adj) badTag.push(r.tag + ' adj ' + r.adj + ' vs ' + cat.adj);
+      if (cat.culture !== r.culture) badTag.push(r.tag + ' culture ' + r.culture + ' vs ' + cat.culture);
+      if (String(cat.color) !== String(r.color)) badTag.push(r.tag + ' colour');
+      if (r.ideas) badTag.push(r.tag + ' brings ideas over a catalogued court');
+    } else if (!r.ideas) {
+      badTag.push(r.tag + ' is in no catalog and brings no ideas');
+    }
     if (!cultures.has(r.culture)) badRef.push(r.tag + ' culture ' + r.culture);
     if (r.religion && !religions.has(r.religion)) badRef.push(r.tag + ' religion ' + r.religion);
     if (!govs.has(r.govType)) badRef.push(r.tag + ' govType ' + r.govType);
@@ -158,8 +175,8 @@ console.log('== §247 · 1 the list is well formed ==');
   ok(!/culturalStateTag|culturalStateIdentity/.test(MIL),
     'and the cultural-state generators are gone from military.js');
   ok(!/' State of '/.test(MIL), 'with no formula name left to build');
-  ok(!badTag.length, 'and no tag collides with the catalog or with another revival'
-    + (badTag.length ? ': ' + badTag.join(', ') : ''));
+  ok(!badTag.length, 'no tag is claimed twice, and one shared with the catalog agrees with it'
+    + (badTag.length ? ': ' + badTag.join('; ') : ''));
   ok(!badRef.length, 'and every culture, faith, constitution, name pool and idea key resolves'
     + (badRef.length ? ': ' + badRef.join('; ') : ''));
   // The invariant the whole conflict resolution rests on. If two countries
@@ -324,6 +341,46 @@ console.log('== §247 · 4 the gates bite ==');
   const rows = mil.releasableNations(ctx, war, 'HAS', 'SEL');
   ok(rows.every((r) => !r.provNames.includes('Antioch')),
     'and no row — revival or otherwise — carries it away');
+}
+
+console.log('== §247 · 4b the Israelite ground, and the two guards it needed ==');
+{
+  // 132 CE: Rome holds the north and the player is Judaea. The Galilee is a
+  // country the treaty can hand back, and Samaria is another.
+  const era132 = ERAS.find((e) => e.bookmark.id === '132ce');
+  const { ctx } = boot(era132.bookmark, 'JUD');
+  const war = warWith(ctx, 'JUD', 'ROM');
+  war.warscore.JUD = 100;
+  const rev = mil.releasableNations(ctx, war, 'JUD', 'ROM').filter((r) => r.origin === 'revival');
+  const gal = rev.find((r) => r.tag === 'GAL');
+  const sam = rev.find((r) => r.tag === 'SAM');
+  ok(!!gal && gal.provNames.includes('Sepphoris'),
+    'a Judaea that lost the north can make Rome give the Galilee back: '
+    + (gal ? gal.provNames.join(', ') : '—'));
+  ok(gal && gal.ruler && gal.ruler.title === 'Nasi', 'under a Nasi, which is what the north had');
+  ok(!!sam && sam.provNames.includes('Sebaste'), 'and Samaria is its own country too');
+  // The catalogued five agree with the catalog rather than shadowing it.
+  ok(sam && sam.culture === DEFINES.TAGS.SAM.culture && sam.name === DEFINES.TAGS.SAM.name,
+    'a revival sharing a catalogued tag IS that court, not a lookalike');
+
+  // Guard one: 529 seats the Galilee as a renamed JUD (§139), and one map
+  // holds one Galilee.
+  const era529 = ERAS.find((e) => e.bookmark.id === '529ce');
+  const b = boot(era529.bookmark, 'SAM');
+  const war2 = warWith(b.ctx, 'SAM', 'BYZ');
+  war2.warscore.SAM = 100;
+  const named = Object.keys(b.game.tags).filter((k) => b.game.tags[k]
+    && b.game.tags[k].alive && b.game.tags[k].name === 'Galilee');
+  ok(named.length === 1 && named[0] !== 'GAL',
+    'the chapter already flies Galilee over other letters (' + named.join(',') + ')');
+  const rows529 = mil.releasableNations(b.ctx, war2, 'SAM', 'BYZ');
+  ok(!rows529.some((r) => r.tag === 'GAL'), 'so no second one is offered');
+  const locked529 = mil.lockedRevivals(b.ctx, war2, 'SAM', 'BYZ');
+  ok(locked529.some((r) => r.tag === 'GAL' && /other letters/.test(r.reason)),
+    'and the refusal says why: ' + ((locked529.find((r) => r.tag === 'GAL') || {}).reason || '—'));
+  // Guard two: our own letters are a category error, not a rung.
+  ok(!locked529.some((r) => r.tag === 'SAM') && !rows529.some((r) => r.tag === 'SAM'),
+    'and a Samaritan player is not told that Samaria is out of reach');
 }
 
 console.log('== §247 · 5 a core outranks a land ==');

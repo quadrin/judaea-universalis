@@ -162,8 +162,8 @@ static site, the zero dependencies, or the missing build step changes.
   to you intact — its land, ruler and army survive while its tribute and war duty change hands.
 - **The old names.** The states you could pull out of an empire used to be a fallen court or
   a formula — the *Greek State of Straton's Tower*, the *Aramean State of Babylon* — which is
-  an honest description of a census category and a poor description of the ground. Between
-  those two answers there is now a third: **twenty-nine countries this map really carried**,
+  an honest description of a census category and a poor description of the ground. The
+  formula is gone and in its place are **thirty-five countries this map really carried**,
   each with the provinces that make it that country. Hold the war score, catch the enemy
   sitting on all of them, and the treaty raises the old name again — **Phoenicia** out of
   Tyre and Sidon, **Philistia**, **Idumaea**, **Moab**, **Ammon**, **Aram**, **Palmyra**,
@@ -171,7 +171,11 @@ static site, the zero dependencies, or the missing build step changes.
   **Cilicia**, **Cappadocia**, **Galatia**, the **Ionian** and **Hellenic** leagues,
   **Bithynia**, **Macedon**, **Cyprus**, **Crete**, **Cyrenaica**, a pharaonic **Egypt** —
   and, in 1948, **Kurdistan**, **Assyria** again, the **Alawite State**, the
-  **Jabal al-Druze** and the **Hejaz**. Each asks for a century that fits (no Kurdistan in
+  **Jabal al-Druze** and the **Hejaz**. Nearer home it carries the ground these chapters are
+  actually played over: **the Galilee** under its own Nasi, **Samaria** under the priests of
+  Gerizim, and the small dynasties Rome swallowed one by one — **Nabataea**, **Ituraea**,
+  **Osrhoene**, **Commagene**. A Judaea that has lost the north can make Rome give it back
+  as a country rather than as provinces. Each asks for a century that fits (no Kurdistan in
   167 BCE, no Moab in 1948), a war score scaled to its ambition (25 for a coastal league,
   50 for Babylon), one connected piece of land, and never the enemy's own capital. What
   rises is a real court — its own banner, adjective, constitution and founding ideas, a

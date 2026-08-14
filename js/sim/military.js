@@ -5500,6 +5500,15 @@ function revivalBlock(ctx, def, war, byTag, enemyTag, idx, myWs) {
   }
   const t = g.tags[def.tag];
   if (t && t.alive && t.overlord) return (t.name || def.name) + ' wears somebody\'s collar already.';
+  // A chapter may already be flying this name over a different tag — 351 and
+  // 529 seat the Galilee as a renamed JUD (SPEC §139) — and two courts called
+  // Galilee on one map is one too many, whatever their letters say.
+  for (const k of Object.keys(g.tags)) {
+    const o = g.tags[k];
+    if (k !== def.tag && o && o.alive && o.name === def.name) {
+      return def.name + ' already stands on this map under other letters.';
+    }
+  }
   const seatOf = def.cores.filter((n) => idx.seat.has(n));
   if (seatOf.length) {
     return 'Their own capital stands at ' + seatOf.join(', ')
@@ -5566,6 +5575,11 @@ function revivalRows(ctx, war, byTag, enemyTag, assigned, capital, myWs) {
     });
   };
   for (const def of era) {
+    // Our own letters and theirs are a category error rather than a rung on a
+    // ladder: a Samaritan player does not need to be told that Samaria cannot
+    // be freed from Byzantium, and listing it under "cannot quite reach" reads
+    // as though one more campaign would fix it.
+    if (def.tag === byTag || def.tag === enemyTag) continue;
     const why = revivalBlock(ctx, def, war, byTag, enemyTag, idx, myWs);
     const held = def.cores.filter((n) => idx.held.has(n)).length;
     if (why) { block(def, held, why); continue; }
@@ -5710,7 +5724,12 @@ function releaseTable(ctx, war, byTag, enemyTag) {
   // is near a great many countries and this is meant to show a ladder rather
   // than a gazetteer; without the dev tiebreak the cap was decided by the
   // alphabet, and the alphabet does not know which refusals matter.
-  const offered = new Set(revived.out.map((r) => r.tag));
+  // Struck against the WHOLE table, not just the revival pass. Nabataea and
+  // Ituraea are in the catalog and are also courts a chapter may seat, so the
+  // historical pass often gets there first — and a country listed as "already
+  // promised elsewhere at this table" directly under its own live offer is the
+  // panel contradicting itself.
+  const offered = new Set(out.map((r) => r.tag));
   locked = revived.locked
     .filter((r) => !offered.has(r.tag))
     .sort((a, b) => (b.coresHeld - b.cores.length) - (a.coresHeld - a.cores.length)

@@ -46,13 +46,23 @@
 //     congress will discuss resurrecting a kingdom at all: a coastal league
 //     at 25, a real country at 35, Egypt or Babylon at 50.
 //
-// The tags below are new courts. They deliberately do NOT live in
+// MOST of the tags below are new courts, and they deliberately do NOT live in
 // DEFINES.TAGS: every bookmark declares `activeTags`, and a tag catalogued
 // there but absent from that list is a court that never seats — but the day
-// somebody writes a bookmark without an `activeTags` line, twenty-nine empty
+// somebody writes a bookmark without an `activeTags` line, thirty empty
 // kingdoms would come alive holding nothing. The release row carries the whole
 // identity instead (name, banner colour, culture, ideas, the ruler's pool and
 // title), and `ensureReleasedCourt` seats it from that.
+//
+// FIVE of them are not new: Samaria, Nabataea, Ituraea, Osrhoene and Commagene
+// are courts the chapters already seat, and reusing their letters is the whole
+// point — a restored Nabataea should be Nabataea and not a lookalike with the
+// same name. Those entries carry no `ideas` (the catalog's court already has
+// its own, and a set here would merge over them) and their name, adjective,
+// culture and banner match the catalog exactly. smoke167 holds them to it.
+// They exist for the chapters where the court is NOT seated: Petra is a Roman
+// province called Palaestina Tertia by 351, no fallen court remembers it, and
+// without an entry here nothing could put the kingdom back.
 
 // `names` keys index military.js's GENERAL_NAMES; `title` is what the court
 // calls the man at the top of it, and both are read only when a revival is
@@ -140,6 +150,89 @@ export const REVIVALS = [
       + 'answering to nobody — as it has managed to be, on and off, for a millennium.',
   },
   {
+    tag: 'GAL', name: 'Galilee', adj: 'Galilean',
+    color: [72, 140, 124], culture: 'galilean', names: 'israelite', title: 'Nasi',
+    govType: 'nasi',
+    from: -100, to: 700, minWs: 25,
+    // Sepphoris alone, and the mechanic does the rest of the work: this row is
+    // computed against what the ENEMY holds, so a chapter whose player IS the
+    // Galilee (351 and 529 seat it as a renamed JUD) never sees it — they are
+    // holding Sepphoris themselves. It appears for an Adiabene watching Rome
+    // govern the north, and for a Judaea that has lost it.
+    cores: ['Sepphoris'],
+    lands: ['Tiberias', 'Jotapata', 'Gischala', 'Tarichaea', 'Gamala', 'Batanea',
+      'Caesarea Philippi', 'Safed', 'Afula'],
+    ideas: { hillDefBonus: 1, moraleMult: 1.08, incomeMult: 1.05, manpowerMult: 0.9 },
+    basis: 'The north has been governed apart from Jerusalem more often than with it — '
+      + 'a tetrarchy under Antipas, a command of its own in every revolt, and after the '
+      + 'Temple fell the seat of the Patriarch and of the schools that outlived the Temple. '
+      + 'It has its own dialect, its own villages and its own opinion of the capital.',
+    description: 'The Galilee under its own Nasi: terraced hills, dense villages, '
+      + 'the academies, and a very old habit of not being told what to do from the south.',
+  },
+  {
+    tag: 'SAM', name: 'Samaria', adj: 'Samaritan',
+    color: [92, 150, 196], culture: 'samaritan', names: 'israelite', title: 'High Priest',
+    govType: 'theocracy',
+    from: -700, to: 900, minWs: 25,
+    cores: ['Sebaste', 'Neapolis'],
+    lands: ['Antipatris', 'Jenin', 'Tulkarm'],
+    // No `ideas` here on purpose: this tag is in DEFINES.TAGS, the court it
+    // names already has national ideas of its own, and a set written here
+    // would merge over them — seating a different Samaria from the one a
+    // bookmark seats. Name, adjective, culture and banner match the catalog
+    // entry for the same reason; smoke167 holds them to it.
+    basis: 'Gerizim is the mountain the Samaritans have been saying is the right one for '
+      + 'six hundred years, through a temple built, a temple burned by Hyrcanus, and a '
+      + 'priesthood that has not missed a Passover since. The hill country between Judaea '
+      + 'and the Galilee has never agreed to be either.',
+    description: 'The hill country under its own high priest, keeping its own Torah, '
+      + 'its own Passover on its own mountain, and its quarrel with both neighbours.',
+  },
+  {
+    tag: 'NAB', name: 'Nabataea', adj: 'Nabataean',
+    color: [196, 124, 40], culture: 'nabataean', names: 'arab', title: 'King',
+    govType: 'monarchy',
+    from: -400, to: 700, minWs: 25,
+    // A live court in five chapters, where the ordinary historical pass gets
+    // there first and this entry falls silently away. It exists for the late
+    // ones, where Petra is a Roman province called Palaestina Tertia and no
+    // fallen court remembers it.
+    cores: ['Petra'],
+    lands: ['Oboda', 'Aila', 'Bostra', 'Hegra', 'Dumatha', 'Auara', 'Wadi Rum',
+      'Sirhan', 'Elusa', 'Medaba'],
+    // No `ideas` here on purpose: this tag is in DEFINES.TAGS, the court it
+    // names already has national ideas of its own, and a set written here
+    // would merge over them — seating a different Nabataea from the one a
+    // bookmark seats. Name, adjective, culture and banner match the catalog
+    // entry for the same reason; smoke167 holds them to it.
+    basis: 'The kings of the rock ran the incense road from the Hejaz to Gaza on water '
+      + 'nobody else could find, and were annexed rather than beaten. The cisterns, the '
+      + 'caravans and the people are all still there under whatever the province is called '
+      + 'this century.',
+    description: 'The caravan kingdom of the rock: hidden water, the incense road, '
+      + 'and a standing preference for paying rather than fighting.',
+  },
+  {
+    tag: 'ITU', name: 'Ituraea', adj: 'Ituraean',
+    color: [112, 132, 68], culture: 'aramean', names: 'syrian', title: 'Tetrarch',
+    govType: 'tribal',
+    from: -150, to: 150, minWs: 25,
+    cores: ['Chalcis'],
+    lands: ['Heliopolis', 'Mount Hermon', 'Caesarea Philippi', 'Quneitra'],
+    // No `ideas` here on purpose: this tag is in DEFINES.TAGS, the court it
+    // names already has national ideas of its own, and a set written here
+    // would merge over them — seating a different Ituraea from the one a
+    // bookmark seats. Name, adjective, culture and banner match the catalog
+    // entry for the same reason; smoke167 holds them to it.
+    basis: 'The Ituraean tetrarchs hold the Beqaa and the Hermon slopes with archers '
+      + 'every army in the east wants to hire, and have never been governed from the plain '
+      + 'for longer than the plain could keep soldiers in the passes.',
+    description: 'The Beqaa and the mountain above it: bowmen, high valleys, and '
+      + 'a temple at Heliopolis richer than the country around it.',
+  },
+
+  {
     tag: 'ARD', name: 'Aram', adj: 'Aramaean',
     color: [96, 128, 148], culture: 'aramean', names: 'syrian', title: 'King',
     govType: 'monarchy',
@@ -198,6 +291,42 @@ export const REVIVALS = [
   },
 
   // ── Mesopotamia and the east ──────────────────────────────────────────────
+  {
+    tag: 'OSR', name: 'Osrhoene', adj: 'Osrhoenian',
+    color: [86, 148, 132], culture: 'aramean', names: 'syrian', title: 'King',
+    govType: 'monarchy',
+    from: -132, to: 260, minWs: 25,
+    cores: ['Edessa'],
+    lands: ['Carrhae'],
+    // No `ideas` here on purpose: this tag is in DEFINES.TAGS, the court it
+    // names already has national ideas of its own, and a set written here
+    // would merge over them — seating a different Osrhoene from the one a
+    // bookmark seats. Name, adjective, culture and banner match the catalog
+    // entry for the same reason; smoke167 holds them to it.
+    basis: 'The Abgarid kings have held Edessa on the crossing between Rome and Parthia '
+      + 'for three centuries by being small, useful and on the winning side slightly before '
+      + 'it won. The city is the hinge of the whole northern road.',
+    description: 'Edessa on the road east: Syriac letters, a shrewd dynasty, and '
+      + 'a talent for surviving between two empires that both want the crossing.',
+  },
+  {
+    tag: 'CMG', name: 'Commagene', adj: 'Commagenian',
+    color: [176, 92, 58], culture: 'aramean', names: 'syrian', title: 'King',
+    govType: 'monarchy',
+    from: -163, to: 120, minWs: 25,
+    cores: ['Samosata'],
+    lands: ['Zeugma', 'Melitene'],
+    // No `ideas` here on purpose: this tag is in DEFINES.TAGS, the court it
+    // names already has national ideas of its own, and a set written here
+    // would merge over them — seating a different Commagene from the one a
+    // bookmark seats. Name, adjective, culture and banner match the catalog
+    // entry for the same reason; smoke167 holds them to it.
+    basis: 'The house of Antiochus rules the upper Euphrates crossing and claims descent '
+      + 'from both Alexander and Darius, which is the sort of thing a kingdom that small '
+      + 'has to claim. Rome annexed it, gave it back, and annexed it again.',
+    description: 'The kingdom of the upper crossing: the tomb on the mountain, the '
+      + 'bridge at Zeugma, and two royal ancestries to bore ambassadors with.',
+  },
   {
     tag: 'ASY', name: 'Assyria', adj: 'Assyrian',
     color: [138, 60, 52], culture: 'aramean', names: 'syrian', title: 'King',
@@ -311,7 +440,10 @@ export const REVIVALS = [
       + 'a court that has survived by never being worth conquering.',
   },
   {
-    tag: 'GAL', name: 'Galatia', adj: 'Galatian',
+    // GLT, not GAL: the Galilee has the better claim on those three letters in
+    // a game played from Israelite sides, and the Celts of Asia are the ones
+    // who can spare them.
+    tag: 'GLT', name: 'Galatia', adj: 'Galatian',
     color: [104, 134, 74], culture: 'celtic', names: 'celtic', title: 'Tetrarch',
     govType: 'tribal',
     from: -270, to: 500, minWs: 35,
