@@ -1,4 +1,4 @@
-// Judaea Universalis — the country, not the court: 534–611 CE (SPEC §247).
+// Judaea Universalis — the country, not the court: 534–611 CE (SPEC §249).
 // Content package. Zero imports; every effect runs through ctx.helpers.
 //
 // The third register, in the chapter where the country is at its richest and

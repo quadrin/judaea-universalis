@@ -1,4 +1,4 @@
-// Judaea Universalis — the country, not the court: 143–377 CE (SPEC §247).
+// Judaea Universalis — the country, not the court: 143–377 CE (SPEC §249).
 // Content package. Zero imports; every effect runs through ctx.helpers.
 //
 // §240 filled the thin decades with the realm's own business — a book, a law,

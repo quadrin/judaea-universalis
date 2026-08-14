@@ -1157,6 +1157,24 @@ static site, the zero dependencies, or the missing build step changes.
   through it. Orders you cannot afford are shown greyed with the arithmetic in
   the tooltip, because deciding what to save for needs the price.
 
+- **The country, not the court.** Two earlier passes filled the empty decades
+  with the state: the realm's own business, then the ring of small courts across
+  the border. What no chapter had was the country underneath both — what the
+  land grows and what happens when it does not, the trades a province lives by,
+  the years the rain fails or the ground moves. Twenty-four cards so far across
+  three chapters: the burnt olive terraces of the Usha years, the glass sand at
+  the mouth of the Belus, the citizenship that arrived by post and turned the
+  courts into courts of consent, the debasement that made a study house rule
+  whether a debt is owed in coin or in wheat, the plague walking north from
+  Alexandria, Diocletian's price stones, the earthquake of 363, the tithing
+  boundary carved into a synagogue floor; the Negev wine towns irrigating a
+  desert off winter run-off, the Madaba map as an argument in stone, the last
+  good harvest before 614; the sabbatical year as a siege engine pointed at
+  ourselves, the balsam gardens worth twice their weight in silver, and the Dead
+  Sea bitumen harvest. Placement is measured where there was a measurable gap —
+  132 CE had fourteen decades carrying only two cards and now has five — and
+  deliberate where there was not, and the section says which is which.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

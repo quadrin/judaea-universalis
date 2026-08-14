@@ -17354,3 +17354,76 @@ rather than finding a dead one.
   called into its lord's war and still fights it; and the player under a collar
   gets all three reasons through `getDiplomacy`, on controls the panel renders
   rather than hides.
+## 249. The country, not the court
+
+§240 filled each chapter's thin decades with the realm's own business — a book,
+a law, a calendar, a school. §241 filled them with the ring of small courts a
+courier can reach in three days. Both are the **state**: one deciding what it
+is, the other discovering what surrounds it. Measured after both, one thing was
+still missing from every chapter and one chapter was still measurably empty.
+
+The third register is the country underneath the state. What the land grows and
+what happens when it does not; the trades a province lives by; the roads and
+who is on them; the years the rain fails, the ground moves, or the sickness
+comes up the coast. These are the decades in which almost nothing happens
+politically and a great deal happens to people — which is exactly why they were
+thin, and exactly what a chapter three centuries long needs to feel like three
+centuries.
+
+**Placement is measured where there was a gap and deliberate where there was
+not.** This is the difference from §240 and §241, which were both gap-driven
+throughout. The audit after those two sections found only one chapter genuinely
+thin — 132 CE, with thirty decades of real room and twenty-five of them
+carrying three dated cards or fewer — and one thin decade elsewhere, in 529.
+Everything else already carried four or more. So 132 gets eleven cards seated
+in the decades the audit named, 529 gets seven, and the remaining chapters get
+this register because a chapter about who rules that never mentions what
+anybody ate is missing something, not because a counter said so. The section
+says which is which rather than claiming a measurement it did not make.
+
+| Chapter | Cards | Span | Why |
+| --- | --- | --- | --- |
+| 132 CE | 11 | 143–378 | measured: 14 decades carried only two cards, now 5 |
+| 529 CE | 7 | 534–611 | measured: the chapter's thinnest decade, 2 → 3 |
+| 167 BCE | 6 | −160 to −84 | texture: a chapter about who rules and never about what was eaten |
+
+**What the register actually contains.** The burnt olive terraces of the Usha
+years and the seven years before a cut tree bears again; the glass sand at the
+mouth of the Belus; two winters without rain and the difference between calling
+a fast and buying Egyptian grain; the citizenship that arrived by post and
+turned our courts into courts of consent; the debasement that made a study
+house decide whether a debt is owed in coin or in wheat; the plague walking
+north from Alexandria and whether to shut the coast road; Scythopolis linen
+against an imperial monopoly; Diocletian's price stones and which of the two
+markets a magistrate enforces; the first pilgrims off the ships at Caesarea;
+the earthquake of 363 and whether to rebuild where the graves are; the tithing
+boundary carved into a synagogue floor at Rehob. In 529: the Negev wine towns
+running an export trade on run-off irrigation, the plague out of Pelusium and a
+tax roll written for a country that no longer exists, the Madaba map as an
+argument in stone, the pilgrim from Piacenza whose account is what Europe will
+believe about this place for four centuries, the communal olive presses, and
+the last good harvest before 614. In 167: the sabbatical year as a siege engine
+pointed at ourselves, the balsam gardens, the Dead Sea bitumen harvest, the
+hill villages refilling, the Arabah copper, and the grain road to Egypt.
+
+**The 529 package names its tags.** That chapter seats two playable crowns, so
+nothing in it reaches for the player's chair — a card that assumed the
+Samaritans would silently apply the Samaritan answer to a Himyarite campaign.
+The suite scans the source to prove it, which is why the file's own comments do
+not spell the helper's name.
+
+**Six chapters are not written yet** — 67 BCE, 40 BCE, 66 CE, 351 CE, 614 CE
+and 1948. The register is defined, the suite is generic over every
+`events_<era>_country.js` that exists, and each package is registered and
+tested as it lands, so those six are additive rather than blocking.
+
+- **Regression contract**: `smoke169.mjs` — written generically over every
+  country package that exists, so a chapter written later is covered the moment
+  it is registered. Each package is registered in its own chapter and appended
+  before the shared pools (§223); every card is dated, inside its chapter's
+  window, uniquely identified across the whole registry, and carries a
+  historical line and an aiOption that indexes an option that exists; no card
+  carries `chance`, `roll` or `once: false`; every option of every card runs
+  clean against a booted campaign, leaves the realm alive, and does not advance
+  the seeded stream; no modifier id in a country package collides with any
+  other package its chapter plays; and the two-chair package names its tags.
