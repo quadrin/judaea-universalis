@@ -13,6 +13,7 @@ import { EVENTS_167_AFTER } from './events_167bce_after.js';
 import { EVENTS_167_EMPIRE } from './events_167bce_empire.js';
 import { EVENTS_167_YEARS } from './events_167bce_years.js';
 import { EVENTS_167_NEIGHBOURS } from './events_167bce_neighbours.js';
+import { EVENTS_167_COUNTRY } from './events_167bce_country.js';
 import { BOOKMARK_67 } from './bookmark_67bce.js';
 import { EVENTS_67 } from './events_67bce.js';
 import { EVENTS_67_WORLD } from './events_67bce_world.js';
@@ -147,7 +148,7 @@ export const ERAS = [
   // continued): Macedonia, Numantia, the Gracchi, the Cimbri, the Social
   // War, Sulla and Spartacus — the century in which Rome became the thing
   // the next chapter opens on.
-  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, EVENTS_167_COUNTRY, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, ANTIQUE) },
