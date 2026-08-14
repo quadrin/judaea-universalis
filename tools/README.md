@@ -1821,3 +1821,25 @@ and signing puts Phoenicia on the board under a suffete. Screenshots land in
 Neither runner's numbers move: revivals are a peace-table term a human takes,
 and the AI does not originate releases, so `node tools/autorun.mjs 8` is
 untouched by the section — the accepted anomaly families above stand unchanged.
+
+**The section then retired the culture buckets it was written beside**, and
+three older suites moved with them rather than being deleted, which is the
+distinction worth keeping. `smoke53` proved §76's "a state can be raised from
+land no fallen court remembers" through a `kind: 'create'` row; the contract is
+unchanged and now runs through the catalog. `smoke145` proved §218 offers the
+Phoenician coast as a state of its own people; it does, and the state is now
+called Phoenicia. `smoke77`'s second block is the one that needed real work: it
+proved §109's "a state grows along its own border" by planting a synthetic
+cultural state on a `releaseIdentity`, which no longer exists. It is rebuilt on
+the path that survives — Nabataea's ten-province homeland is one piece with an
+articulation at Hegra, so removing Hegra leaves a seven-province north and a
+two-province south, and a Nabataea seated beside the smaller pocket is offered
+that pocket rather than the larger one. Same contract, same numbers asserted,
+different vehicle.
+
+One consequence shows up in the suites themselves and is worth knowing before
+you write another: **a release table opened the day war is declared is now
+empty**, because every old name carries a war-score threshold and the culture
+bucket that used to fill the list unconditionally is gone. `smoke77` sets
+`war.warscore` before asking, in all three of its blocks, for that reason and
+no other.
