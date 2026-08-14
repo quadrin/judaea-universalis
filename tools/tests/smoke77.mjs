@@ -74,20 +74,24 @@ console.log('== §109: every release the table offers is one piece of land ==');
   const { game, ctx, geom } = boot(BOOKMARK_167, 'HAS');
   mil.declareWar(ctx, 'HAS', 'SEL', 'the probe');
   const war = game.wars.find((w) => [].concat(w.attackers, w.defenders).includes('SEL'));
+  // §247 gave every old name a war-score threshold, so a table opened the day
+  // war is declared is empty on purpose. This suite is about GEOGRAPHY, and it
+  // needs the rows: a war going well enough to redraw a map.
+  war.warscore.HAS = 100;
   const rows = mil.releasableNations(ctx, war, 'HAS', 'SEL');
   ok(rows.length >= 8, 'the Seleucid empire is divisible into ' + rows.length + ' states');
   const broken = rows.filter((r) => pieces(geom, r.provIds).length > 1);
   ok(!broken.length, 'and not one of them is in two pieces ('
     + (broken.map((r) => r.tag + ':' + pieces(geom, r.provIds).length).join(', ') || 'none') + ')');
   ok(rows.every((r) => r.provIds.length >= 1), 'none is empty');
-  // The specific case that was reported: culture and faith say nothing about
-  // geography, and the Greek provinces of a Seleucid empire are scattered from
-  // Anatolia to Gaza.
-  const greek = rows.find((r) => /Greek/.test(r.name));
-  ok(!!greek, 'a Greek state is on offer');
-  ok(pieces(geom, greek.provIds).length === 1,
+  // The case this suite was written for, in its §247 form: Phoenicia's ground
+  // is a coastal ribbon and the Seleucid empire holds it in one hand, but the
+  // list that names its provinces knows nothing whatever about geography.
+  const pho = rows.find((r) => r.tag === 'PHO');
+  ok(!!pho, 'Phoenicia is on offer');
+  ok(pho && pieces(geom, pho.provIds).length === 1,
     'and it is one country rather than a census category ('
-    + greek.provIds.length + ' provinces)');
+    + (pho ? pho.provIds.length : 0) + ' provinces)');
   // The seat must be inside the land being handed over.
   const seatOutside = rows.filter((r) => r.capitalId && !r.provIds.includes(r.capitalId));
   ok(!seatOutside.length, 'and every state is seated inside its own territory ('
@@ -101,63 +105,72 @@ console.log('== §109: a state grows along its own border ==');
   // it. (Among several touching pieces the most valuable wins, which is why the
   // court used here is landless apart from the seat it is planted in: a real
   // regional power would legitimately border more than one pocket.)
-  const openWar = (o) => {
+  //
+  // The vehicle used to be a synthetic cultural state keyed on
+  // `releaseIdentity`; §247 retired those, so it is now a fallen historical
+  // court — the other consumer of `contiguousRelease`, and the one whose rule
+  // this always was. Nabataea's ten-province homeland is one piece with an
+  // articulation at Hegra: take Hegra away and it is a seven-province north and
+  // a two-province south with no land between them.
+  const setup = (o, aliveAt) => {
+    const g = o.game;
+    const born = [];
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (p && !p.impassable && mil.eraOwnerOf(o.ctx, p) === 'NAB') born.push(i);
+    }
+    const cutId = born.find((i) => (g.provinces[i].canon || g.provinces[i].name) === 'Hegra');
+    for (const i of born) {
+      if (i === cutId) { g.provinces[i].owner = 'PTO'; g.provinces[i].controller = 'PTO'; continue; }
+      g.provinces[i].owner = 'SEL';
+      g.provinces[i].controller = 'SEL';
+    }
+    for (const a of mil.armiesOf(o.ctx, 'NAB')) delete g.armies[a.id];
+    g.tags.NAB.alive = !!aliveAt;
+    g.tags.NAB.overlord = null;
+    if (aliveAt) { g.provinces[aliveAt].owner = 'NAB'; g.provinces[aliveAt].controller = 'NAB'; }
     mil.declareWar(o.ctx, 'HAS', 'SEL', 'the probe');
-    const war = o.game.wars.find((w) => [].concat(w.attackers, w.defenders).includes('SEL'));
-    return mil.releasableNations(o.ctx, war, 'HAS', 'SEL');
+    const war = g.wars.find((w) => [].concat(w.attackers, w.defenders).includes('SEL'));
+    war.warscore.HAS = 100;
+    return { rows: mil.releasableNations(o.ctx, war, 'HAS', 'SEL'), born, cutId };
   };
-  const a = boot(BOOKMARK_167, 'HAS');
-  const baseline = openWar(a).find((r) => /Greek/.test(r.name));
-  ok(!!baseline, 'with no Greek court on the map the table offers a new Greek state');
-  ok(pieces(a.geom, baseline.provIds).length === 1, 'and it is one piece');
-  const chosen = new Set(baseline.provIds);
 
+  const a = boot(BOOKMARK_167, 'HAS');
+  const first = setup(a, 0);
+  const baseline = first.rows.find((r) => r.tag === 'NAB');
+  ok(!!baseline, 'a fallen Nabataea whose homeland the Seleucids hold is on the table');
+  ok(pieces(a.geom, baseline.provIds).length === 1, 'and the offer is one piece');
+  const pockets = pieces(a.geom, first.born.filter((i) => i !== first.cutId));
+  ok(pockets.length === 2, 'though the homeland itself is in two ('
+    + pockets.map((c) => c.length).join(' + ') + ')');
+  ok(baseline.provIds.length === Math.max(...pockets.map((c) => c.length)),
+    'a court risen from nothing takes the larger pocket (' + baseline.provIds.length + ')');
+  const small = pockets.slice().sort((x, y) => x.length - y.length)[0];
+
+  // Now plant the court itself beside the SMALLER pocket, holding nothing else,
+  // so exactly one piece touches it — and watch the offer move.
   const b = boot(BOOKMARK_167, 'HAS');
-  // A Greek pocket the baseline did NOT take, and a province beside it.
-  const greek = [];
-  for (let i = 1; i < b.game.provinces.length; i++) {
-    const p = b.game.provinces[i];
-    if (p && !p.impassable && p.owner === 'SEL'
-      && p.culture === 'greek' && p.religion === 'hellenism') greek.push(i);
-  }
-  const pockets = pieces(b.geom, greek).filter((c) => !c.some((id) => chosen.has(id)));
-  ok(pockets.length > 0, 'the empire has ' + pockets.length
-    + ' further Greek pocket(s) the baseline left behind');
-  const target = pockets[pockets.length - 1];
-  let seatId = null;
-  for (const id of target) {
+  let seatId = 0;
+  for (const id of small) {
     for (const n of (b.geom.neighbors[id] || [])) {
       const q = b.game.provinces[n];
-      if (q && !q.impassable && greek.indexOf(n) < 0) { seatId = n; break; }
+      if (q && !q.impassable && small.indexOf(n) < 0 && first.born.indexOf(n) < 0) { seatId = n; break; }
     }
     if (seatId) break;
   }
-  ok(!!seatId, 'with a province beside it to seat a court in');
-
-  // A court with NO other territory, so exactly one piece can touch it.
-  const HOST = 'ITU';
-  const host = b.game.tags[HOST];
-  host.alive = true;
-  host.releaseIdentity = 'greek|hellenism';
-  for (let i = 1; i < b.game.provinces.length; i++) {
-    const p = b.game.provinces[i];
-    if (p && p.owner === HOST) { p.owner = 'SEL'; p.controller = 'SEL'; }
-  }
-  b.game.provinces[seatId].owner = HOST;
-  b.game.provinces[seatId].controller = HOST;
-
-  const grown = openWar(b).find((r) => r.tag === HOST);
-  ok(!!grown, 'the table offers to enlarge the living court instead of founding a new one');
-  ok(pieces(b.geom, grown.provIds).length === 1, 'still one piece');
-  ok(grown.provIds.some((id) => [...(b.geom.neighbors[id] || [])].includes(seatId)),
+  ok(!!seatId, 'with a province beside the smaller pocket to seat the court in');
+  const second = setup(b, seatId);
+  const grown = second.rows.find((r) => r.tag === 'NAB');
+  ok(!!grown, 'the table offers to enlarge the living court instead of restoring a fallen one');
+  ok(grown && grown.kind === 'return', 'and calls it a return rather than a restoration');
+  ok(grown && pieces(b.geom, grown.provIds).length === 1, 'still one piece');
+  ok(grown && grown.provIds.some((id) => [...(b.geom.neighbors[id] || [])].includes(seatId)),
     'and the piece borders what that court already holds');
-  // It is exactly one of the pockets — a whole one, not a mixture — and it is
-  // not the pocket the table offered when this court did not exist.
-  const isWholePocket = pockets.concat([[...chosen]]).some((pk) =>
-    pk.length === grown.provIds.length && pk.every((id) => grown.provIds.includes(id)));
-  ok(isWholePocket, 'the offer is one whole pocket (' + grown.provIds.length + ' provinces)');
-  ok(!baseline.provIds.every((id) => grown.provIds.includes(id)),
-    'and a different one from the offer made when no such court existed ('
+  ok(grown && grown.provIds.length === small.length
+    && small.every((id) => grown.provIds.includes(id)),
+    'it is one whole pocket (' + (grown ? grown.provIds.length : 0) + ' provinces)');
+  ok(grown && !baseline.provIds.every((id) => grown.provIds.includes(id)),
+    'and a different one from the offer made when the court held nothing ('
     + baseline.provIds.length + ' provinces elsewhere)');
 }
 
@@ -180,6 +193,7 @@ console.log('== §109: the degenerate graph is not mistaken for an archipelago =
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_167, events, provinceMap });
   mil.declareWar(ctx, 'HAS', 'SEL', 'the probe');
   const war = game.wars.find((w) => [].concat(w.attackers, w.defenders).includes('SEL'));
+  war.warscore.HAS = 100; // §247's threshold; this block is about the graph
   const rows = mil.releasableNations(ctx, war, 'HAS', 'SEL');
   ok(rows.some((r) => r.provIds.length > 1),
     'with no adjacency data at all, releases keep their whole homeland');

@@ -4,9 +4,9 @@
 // smoke167 proves the catalogue, the gates and the court that gets seated.
 // This one proves the four things only a browser can:
 //
-//   1. The release section names COUNTRIES. Open the table on a beaten
-//      Seleucid empire and "Restore Phoenicia" is a row you can read, sitting
-//      beside the culture buckets rather than replacing them.
+//   1. The release section names COUNTRIES, and nothing else. Open the table on
+//      a beaten Seleucid empire and every row is a country you can read —
+//      "Restore Phoenicia" — with no Greek State of Straton's Tower left.
 //   2. The case for each is IN THE PANEL — the marker on the row, the historical
 //      basis in its tooltip — so a player learns why Tyre and Sidon are a
 //      country without being told by a wiki.
@@ -104,8 +104,8 @@ await openTable();
   ok(pho && /Restore Phoenicia/.test(pho.text), 'and the row reads in the game\'s own words: ' + (pho && pho.text));
   ok(pho && pho.revival && /an old name/.test(pho.text),
     'marked as an old name rather than a bucket');
-  ok(rows.some((r) => /State of/.test(r.text)),
-    'and the culture states still stand beside it, which is the point of a third answer');
+  ok(rows.every((r) => !/State of/.test(r.text)),
+    'and nothing beside it is named by formula — the culture buckets are gone (§247)');
   ok(pho && /Tyre/.test(pho.tt) && /Sidon/.test(pho.tt), 'the tooltip lists the land that leaves');
   ok(pho && /purple|cities of their own|Phoenician/i.test(pho.tt),
     'and makes the case for the country: ' + (pho ? '…' + pho.tt.slice(-90).replace(/\s+/g, ' ') : ''));

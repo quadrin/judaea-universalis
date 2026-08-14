@@ -3,8 +3,9 @@
 // The peace table could force a beaten empire to let go of two kinds of thing:
 // the court that owned the ground when the era opened, and — for the rest — a
 // bucket of culture-and-faith called the "Greek State of Straton's Tower". This
-// section puts a third between them: the country that IS there. Tyre and Sidon
-// in one hand is Phoenicia, and the treaty may say so.
+// section replaces the second with the country that IS there: Tyre and Sidon in
+// one hand is Phoenicia, the treaty says so, and the formula is gone rather
+// than left underneath generating alternatives nobody would pick.
 //
 // Six contracts:
 //
@@ -150,6 +151,13 @@ console.log('== §247 · 1 the list is well formed ==');
     }
   }
   ok(!badProv.length, 'every core and land is a real map cell' + (badProv.length ? ': ' + badProv.join(', ') : ''));
+  // The formula is retired, not merely outranked (SPEC §247): the two
+  // generators that made the Fxxx tags are gone from the sim entirely, so
+  // nothing can quietly start emitting them again.
+  const MIL = readFileSync(R + '/js/sim/military.js', 'utf8');
+  ok(!/culturalStateTag|culturalStateIdentity/.test(MIL),
+    'and the cultural-state generators are gone from military.js');
+  ok(!/' State of '/.test(MIL), 'with no formula name left to build');
   ok(!badTag.length, 'and no tag collides with the catalog or with another revival'
     + (badTag.length ? ': ' + badTag.join(', ') : ''));
   ok(!badRef.length, 'and every culture, faith, constitution, name pool and idea key resolves'
@@ -221,9 +229,14 @@ const era167 = ERAS.find((e) => e.bookmark.id === '167bce');
     + (broken.map((r) => r.tag).join(', ') || 'none') + ')');
   const seatOutside = rev.filter((r) => r.capitalId && !r.provIds.includes(r.capitalId));
   ok(!seatOutside.length, 'seated inside its own territory');
-  // The rest of the map is still divided by the two older abstractions.
-  ok(rows.some((r) => r.origin === 'cultural'),
-    'and the culture buckets still catch what no country claims');
+  // And nothing else. The culture-and-faith bucket that used to catch the
+  // remainder — the Greek State of Straton's Tower — is gone: a congress that
+  // cannot name a country does not invent one.
+  ok(!rows.some((r) => r.origin === 'cultural'),
+    'and no culture bucket stands beside them');
+  ok(rows.every((r) => !/State of/.test(r.name)),
+    'nothing on the table is named by formula ('
+    + rows.map((r) => r.name).slice(0, 4).join(', ') + ')');
   // Nobody is promised the same province twice.
   const claims = new Map();
   const twice = [];

@@ -3185,7 +3185,13 @@ state or the transfer of an enemy's client kingdom.
      its own name, color, capital, era technology, government, treasury,
      manpower and defensive host; ordinary systems need no static tag entry.
   Historical claims take precedence over cultural creation, so release rows
-  never overlap. The enemy capital remains excluded. War participants cannot
+  never overlap. The enemy capital remains excluded.
+  **Superseded in part by §247**: path 3's culture-and-faith bucket is gone.
+  What replaces it is a catalogue of countries this map really carried, and
+  what does not replace it is anything at all — land whose country has no name
+  is no longer separable from an empire. `releaseIdentity` is still read (a
+  campaign saved before §247 has `Fxxx` courts on the map wearing one) and is
+  no longer written. War participants cannot
   receive land through the release corridor; their fate belongs to the war
   itself.
 - **One dismemberment budget** (`evaluatePeaceDeal`): cessions, returned or
@@ -17058,8 +17064,8 @@ rather than a map being redrawn — and worse, they are *wrong about the ground*
 because the ground has better names and everybody at that table knew them. Tyre
 and Sidon in one hand is not a Greek bucket. It is **Phoenicia**.
 
-**What it is now.** A third abstraction sits between the other two: a catalogue
-of countries this map really carried, each written down with the provinces that
+**What it is now.** The bucket is replaced, not supplemented: a catalogue of
+countries this map really carried, each written down with the provinces that
 make it that country and not somewhere else. `js/data/revivals.js`, twenty-nine
 of them, from Phoenicia and Philistia through Babylonia, Assyria, Media, Persis
 and pharaonic Egypt to the Decapolis, the Ionian League, Galatia, and — in the
@@ -17067,6 +17073,40 @@ twentieth-century chapter — Kurdistan, the Alawite State, the Jabal al-Druze
 and the Hejaz. When the enemy holds all of what makes one, the treaty may raise
 the old name over it again. The row reads **Restore Phoenicia**, not Create the
 Greek State of Somewhere, and it carries the case for itself in its tooltip.
+
+**And the formula is gone rather than left underneath.** This is the part worth
+arguing with, so here is the argument. Keeping both would have meant a table
+where Phoenicia sits above the Phoenician State of Ptolemais — the same ground
+offered twice, once under its name and once under a description of its name —
+and the second row exists only to be not chosen. It also meant the catalogue
+could never be *wrong*, because anything it missed the bucket silently caught,
+which is a very comfortable way to never find out that Assyria has been
+unraisable in seven chapters.
+
+The cost is real and is the point: **land whose country is not in the catalogue
+can no longer be separated from an empire at all.** A congress that cannot
+think of a name for a place does not invent one. It leaves the province where
+it is, and the answer to wanting that province is to demand it — which is what
+the rest of the table has been for all along. In practice the ancient chapters
+still offer nine to nineteen countries against their great empire, and the
+1948 chapter offers Kurdistan and Assyria out of Iraq, the Alawite State and
+the Jabal al-Druze out of Syria, the Hejaz out of the Saudi kingdom and Cyprus
+out of Britain; the one place the table now goes empty is Jordan, whose ground
+this catalogue has no name for.
+
+**§218 takes the same catalogue, with one rule of its own.** Releasing a
+province of your own as a client kingdom used to name the result the same way,
+so that panel is changed with this one: it proclaims Phoenicia, not the
+Phoenician State of Ptolemais. The rule that differs is the core requirement,
+and it is not a relaxation so much as the other half of the same question. At
+the peace table, cores ask *is this country in their hands* — a question about
+somebody else's empire, which either contains Phoenicia or does not. On your
+own ground the question is *are these somebody else's people*, and a Hasmonean
+holding Ptolemais and Dor and neither purple city is sitting on Phoenician
+towns whether or not he ever took Tyre. So §218 asks for any one province of a
+country's ground, seats it on a core where one is held, and keeps every other
+rule it had: not our own people, not occupied, not the capital, never more than
+half the realm.
 
 **The shape of a requirement.** Four decisions, and each of them is what keeps
 the list from being either empty or a wall of text.
@@ -17200,4 +17240,12 @@ a gift, occupied land is not ours to give — which this section does not answer
   rebuilding the map; a second table returns land to the living court rather
   than founding a duplicate; `peaceDealInfo` carries both lists, a deal naming
   a locked country buys nothing, a separate peace offers neither, and every
-  class the new markup emits has a rule in the stylesheet.
+  class the new markup emits has a rule in the stylesheet — plus the retirement
+  itself: neither generator is left in `military.js` and no formula name is
+  left to build. `smoke53.mjs` keeps §76's contract that a state can be raised
+  from land no fallen court remembers, now through the catalogue;
+  `smoke145.mjs` holds that §218's grant offers the coast as Phoenicia; and
+  `smoke77.mjs` re-proves §109 on the two paths that survive — every offer one
+  piece of connected land, and a living court given the pocket that touches
+  what it already holds, which was carried by a synthetic cultural state until
+  this section retired them.

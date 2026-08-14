@@ -410,7 +410,7 @@ export function initUI(staticCtx) {
       (r.kind === 'return'
         ? 'Return the old homeland to the living court of ' + r.name
         : r.kind === 'create'
-          ? 'Create ' + r.name + ' as a new cultural state'
+          ? 'Create ' + r.name + ' as a free nation'
           : r.origin === 'revival'
             ? 'Raise ' + r.name + ' again over the ground that is still its own'
             : 'Restore ' + r.name + ' as a free nation')
@@ -435,7 +435,7 @@ export function initUI(staticCtx) {
         </label>`).join('') + '</div>'
     : `<div class="peace-dim peace-none">${info.separate
       ? 'A separate peace cannot redraw another crown\'s map — releases wait for the full congress table.'
-      : 'No viable homeland can be separated from their capital. Historical courts, living claimants, the old names of this ground, and new cultural states are all considered here.'}</div>`}
+      : 'No country can be separated from them here. Fallen courts whose homeland they are sitting on, living claimants owed their old lands, and the old names of this ground are all considered — and a congress that cannot name a country does not invent one.'}</div>`}
         ${/* The old names within reach of this war but not of this table
               (SPEC §247): shown, priced and explained, so the ladder is a
               thing to climb rather than a thing to guess at. */

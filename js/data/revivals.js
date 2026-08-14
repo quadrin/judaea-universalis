@@ -65,8 +65,13 @@ export const REVIVALS = [
     govType: 'republic',
     from: -1200, to: 700, minWs: 35,
     cores: ['Tyre', 'Sidon'],
-    lands: ['Byblos', 'Berytus', 'Tripolis', 'Aradus', 'Nabatieh', 'Chouf',
-      'Jounieh', 'Batroun', 'Bsharri', 'Akkar'],
+    // Ptolemais and Dora belong on this list and not on the Judaean one: Ake
+    // and Dor were Sidonian harbours before they were anything else, and the
+    // Persian kings assigned them to Sidon by decree. They are also what makes
+    // §218's grant reachable — a realm holding the southern coast and neither
+    // purple city is still sitting on Phoenician towns.
+    lands: ['Byblos', 'Berytus', 'Tripolis', 'Aradus', 'Ptolemais', 'Dora',
+      'Nabatieh', 'Chouf', 'Jounieh', 'Batroun', 'Bsharri', 'Akkar'],
     ideas: { tradeMult: 1.18, navalMult: 1.15, manpowerMult: 0.8 },
     basis: 'Tyre and Sidon have been cities of their own for two thousand years and '
       + 'kings of their own for most of them. Every empire that has taken this coast has '

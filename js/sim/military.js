@@ -5287,28 +5287,12 @@ function stableStateHash(text) {
   return h >>> 0;
 }
 
-function culturalStateIdentity(culture, religion) {
-  return String(culture || 'mixed') + '|' + String(religion || 'local');
-}
-
-// Synthetic cultural states use a deterministic short tag. The identity is
-// also written onto the live court, so a later treaty returns more of the same
-// homeland to the existing state instead of creating a duplicate.
-function culturalStateTag(ctx, identity, reserved) {
-  for (const tag of Object.keys(ctx.game.tags || {})) {
-    const t = ctx.game.tags[tag];
-    if (t && t.releaseIdentity === identity) return tag;
-  }
-  let salt = 0;
-  while (salt < 46656) {
-    const n = (stableStateHash((ctx.game.bookmarkId || '') + '|' + identity) + salt) % 46656;
-    const tag = 'F' + n.toString(36).toUpperCase().padStart(3, '0');
-    const live = ctx.game.tags[tag];
-    if ((!live || live.releaseIdentity === identity) && (!reserved || !reserved.has(tag))) return tag;
-    salt++;
-  }
-  return 'FREE';
-}
+// `t.releaseIdentity` — the culture|faith key the synthetic states were filed
+// under — is no longer WRITTEN by anything (SPEC §247 retired them), and is
+// still READ in two places: `ensureReleasedCourt` preserves whatever a court
+// already carries, and a campaign saved before §247 has F-tagged courts on the
+// map wearing one. A save is not a migration to be run; it is a country that
+// exists, and it goes on existing with its name, its ground and its key.
 
 // A state has to be somewhere (SPEC §109). Both release paths below group the
 // enemy's provinces by an ABSTRACTION — the nation that was born owning them,
@@ -5664,13 +5648,15 @@ export function lockedRevivals(ctx, war, byTag, enemyTag) {
 //   * a dead historical court can be restored;
 //   * a living non-belligerent court can have its old homeland returned;
 //   * a country this map really carried can be raised again where the enemy
-//     holds every province that makes it that country (SPEC §247);
-//   * land with no surviving historical claimant can become a new cultural
-//     state. This last path does NOT require a country to have existed at the
-//     bookmark opening, or to have been conquered during the present game.
-// War participants are skipped as recipients, overlapping homelands are
-// resolved in favor of the historical court, and a crown always keeps its own
-// capital — liberation may dismember an empire, not behead it.
+//     holds every province that makes it that country (SPEC §247) — which does
+//     NOT require it to have existed at the bookmark's opening, or to have been
+//     conquered during the present game.
+// And nothing else. The culture-and-faith bucket that used to catch whatever
+// the first two passes left — the Greek State of Straton's Tower — is gone with
+// §247: a congress that cannot name a country does not invent one. War
+// participants are skipped as recipients, overlapping homelands are resolved in
+// favor of the historical court, and a crown always keeps its own capital —
+// liberation may dismember an empire, not behead it.
 export function releasableNations(ctx, war, byTag, enemyTag) {
   return releaseTable(ctx, war, byTag, enemyTag).rows;
 }
@@ -5731,64 +5717,22 @@ function releaseTable(ctx, war, byTag, enemyTag) {
       || a.minWs - b.minWs || b.dev - a.dev || a.name.localeCompare(b.name))
     .slice(0, 4);
 
-  // The rest of the enemy's non-capital territory is divisible into cultural
-  // states. Culture + faith is the durable identity: it survives owner
-  // changes and does not rely on a "recent conquest" flag or a save migration.
-  const byIdentity = {};
-  for (let i = 1; i < g.provinces.length; i++) {
-    const p = g.provinces[i];
-    if (!p || p.impassable || p.owner !== enemyTag || assigned.has(i)) continue;
-    if (capital && (p.canon || p.name) === capital) continue;
-    if (!p.culture || !p.religion) continue;
-    const identity = culturalStateIdentity(p.culture, p.religion);
-    (byIdentity[identity] = byIdentity[identity] || []).push(i);
-  }
-  const reserved = new Set(Object.keys(g.tags || {}));
-  for (const identity of Object.keys(byIdentity)) {
-    // Same rule, and it matters far more here: culture and faith say nothing
-    // whatever about geography, so this grouping is where the twenty-two
-    // province, five-piece "Greek State" came from (SPEC §109).
-    // If a state of this identity already exists on the map, the treaty
-    // enlarges IT along its own border; otherwise the largest piece is taken
-    // and seated. Looked up by identity rather than by the generated tag,
-    // which can collide and would otherwise steer the choice by an unrelated
-    // court's holdings.
-    let standing = null;
-    for (const k of Object.keys(g.tags)) {
-      if (g.tags[k] && g.tags[k].releaseIdentity === identity) { standing = k; break; }
-    }
-    const ids = contiguousRelease(ctx, standing, byIdentity[identity]);
-    if (!ids.length) continue;
-    let seat = ctx.byId(ids[0]);
-    for (const id of ids) {
-      const p = ctx.byId(id);
-      if (p && (!seat || devTotal(p) > devTotal(seat))) seat = p;
-    }
-    const sample = seat || ctx.byId(ids[0]);
-    const culture = sample && sample.culture;
-    const religion = sample && sample.religion;
-    const tag = culturalStateTag(ctx, identity, reserved);
-    reserved.add(tag);
-    if (participants.indexOf(tag) >= 0 || tag === enemyTag || tag === byTag) continue;
-    const existing = g.tags[tag];
-    const cultureDef = (ctx.DEFINES.CULTURES || {})[culture] || {};
-    const baseColor = Array.isArray(cultureDef.color) ? cultureDef.color : [112, 118, 126];
-    const shade = (stableStateHash(identity) % 31) - 15;
-    const color = baseColor.map((v, idx) => clamp(Math.round(v + shade + (idx === 2 ? 12 : 0)), 24, 224));
-    const name = existing && existing.name
-      ? existing.name
-      : ((cultureDef.name || 'Free') + ' State of ' + ((seat && seat.name) || 'the Provinces'));
-    out.push(releaseRow(ctx, tag, ids, existing && existing.alive ? 'return'
-      : existing ? 'restore' : 'create', {
-      name,
-      origin: 'cultural',
-      culture,
-      religion,
-      releaseIdentity: identity,
-      color,
-      capitalId: seat && seat.id,
-    }));
-  }
+  // AND NOTHING ELSE (SPEC §247). What used to stand here was a third pass over
+  // everything the first two had not claimed, grouping it by culture and faith
+  // and naming the result by formula: the Greek State of Straton's Tower, the
+  // Aramean State of Babylon, the Free State of the Provinces. It was the honest
+  // answer while it was the only one available — some country had to be offered
+  // for land no fallen court remembered — and every single thing wrong with it
+  // was in the name. Nobody at a congress has ever proposed the Judean State of
+  // Jerusalem. They proposed Judaea.
+  //
+  // With the catalog above there is a real name for the ground worth naming, so
+  // the formula goes rather than sitting underneath it generating alternatives
+  // nobody would pick. The cost is deliberate and worth stating: land whose
+  // country is not in the catalog can no longer be separated from an empire at
+  // all. That is the correct failure — a congress that cannot think of a name
+  // for a place does not invent one; it leaves the province where it is, and
+  // the answer to wanting it is to demand it.
   out.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
   return { rows: out, locked };
 }
@@ -6894,7 +6838,11 @@ function refreshReleasedManpower(ctx, tag) {
 // the ancient east used for precisely this office: a nation's own ruler, under
 // somebody else's crown.
 function grantedRuler(ctx, row) {
-  const pool = courtNamePool(ctx, row.tag) || [];
+  // An old name brings its own pool (SPEC §247) — Phoenicia seats a Punic
+  // name, not whatever its culture group happens to resolve to. The TITLE is
+  // Ethnarch either way and deliberately so: this man rules his own nation
+  // under somebody else's crown, which is the whole of what §218 grants.
+  const pool = (row.names && GENERAL_NAMES[row.names]) || courtNamePool(ctx, row.tag) || [];
   const h = stableStateHash(String(row.tag) + '|' + String(row.capitalId || 0));
   return {
     name: (pool.length ? pool[h % pool.length] : null) || 'The Ethnarch',
@@ -6922,7 +6870,17 @@ function releaseGrantRow(ctx, tag, ids, kind, extra) {
     provNames: ids.map((id) => { const q = ctx.byId(id); return q ? q.name : null; }).filter(Boolean),
     dev: Math.round(dev),
     cost: Math.round(num(V.releaseBase, 40) + dev * num(V.releasePerDev, 1)),
-    description: 'A state seated by the crown that let go of its ground, and holding it as a client kingdom.',
+    // An old name brings its own identity here too (SPEC §247) — these tags are
+    // not in DEFINES.TAGS, so the row is the only place `ensureReleasedCourt`
+    // can read them from. The blurb falls back to the one every §218 grant
+    // used to carry.
+    adj: (extra && extra.adj) || def.adj || null,
+    ideas: (extra && extra.ideas) || null,
+    govType: (extra && extra.govType) || null,
+    names: (extra && extra.names) || null,
+    basis: (extra && extra.basis) || null,
+    description: (extra && extra.description)
+      || 'A state seated by the crown that let go of its ground, and holding it as a client kingdom.',
   };
 }
 
@@ -6964,55 +6922,72 @@ export function releasableClients(ctx, tag) {
     out.push(releaseGrantRow(ctx, born, ids, t && t.alive ? 'enlarge' : 'restore'));
   }
 
-  // The rest is divisible by the durable identity — culture and faith — the
-  // same way the peace table divides an enemy's land, with one rule of its own:
-  // our OWN people are not a state waiting to happen.
-  const byIdentity = {};
-  for (const i of held) {
-    if (assigned.has(i)) continue;
-    const p = g.provinces[i];
-    if (!p.culture || !p.religion) continue;
-    if (sameKind(ctx.DEFINES, p.culture, me.culture) && p.religion === me.religion) continue;
-    const identity = culturalStateIdentity(p.culture, p.religion);
-    (byIdentity[identity] = byIdentity[identity] || []).push(i);
-  }
-  const reserved = new Set(Object.keys(g.tags || {}));
-  for (const identity of Object.keys(byIdentity)) {
-    let standing = null;
-    for (const k of Object.keys(g.tags)) {
-      if (g.tags[k] && g.tags[k].releaseIdentity === identity) { standing = k; break; }
-    }
-    const ids = contiguousRelease(ctx, standing, byIdentity[identity]);
-    if (!ids.length) continue;
-    let seat = ctx.byId(ids[0]);
-    for (const id of ids) {
-      const p = ctx.byId(id);
-      if (p && (!seat || devTotal(p) > devTotal(seat))) seat = p;
-    }
-    const sample = seat || ctx.byId(ids[0]);
-    const culture = sample && sample.culture;
-    const religion = sample && sample.religion;
-    const newTag = culturalStateTag(ctx, identity, reserved);
-    reserved.add(newTag);
-    if (newTag === tag) continue;
-    const existing = g.tags[newTag];
+  // The rest is the catalog of old names (SPEC §247), the same list the peace
+  // table reads and for the same reason: what used to stand here grouped the
+  // leftovers by culture and faith and named the result by formula, and a crown
+  // that hands a province its own crown does not proclaim the Phoenician State
+  // of Ptolemais. It proclaims PHOENICIA.
+  //
+  // Four rules of this side of the section are its own, applied here rather
+  // than in the shared pass, because they are about what a crown may do to
+  // ITSELF (§218):
+  //
+  //   * NO CORE REQUIREMENT, which is the one real difference and is not a
+  //     relaxation of the peace table's rule so much as the other half of it.
+  //     There, cores answer "is this country in their hands?" — a question
+  //     about somebody else's empire, which either contains Phoenicia or does
+  //     not. Here the question is "is this ground somebody else's people?",
+  //     and a Hasmonean holding Ptolemais and Dora and neither Tyre nor Sidon
+  //     is sitting on Phoenician towns whether or not he ever took the purple
+  //     cities. Requiring the cores would have made the whole section
+  //     unreachable for exactly the realms it exists for.
+  //   * Our own people are a secession and not a gift (§105), so a country
+  //     seated on our own kind and our own faith is not on the list.
+  //   * The war-score gate is meaningless — there is no war and no congress,
+  //     and the price is influence, which `releaseGrantRow` sets.
+  //   * A name somebody else is already flying, or wearing another crown's
+  //     collar, is not ours to seat.
+  //
+  // Cores still lead the seating order, so a country that CAN sit in its own
+  // capital does: Phoenicia raised out of a realm holding Tyre is seated at
+  // Tyre, and out of one holding only the southern coast, at Ptolemais.
+  for (const def of revivalsAt(g.date && g.date.y)) {
+    if (def.tag === tag) continue;
+    const existing = g.tags[def.tag];
     if (existing && existing.alive && existing.overlord !== tag) continue; // theirs, not ours
-    const cultureDef = (ctx.DEFINES.CULTURES || {})[culture] || {};
-    const baseColor = Array.isArray(cultureDef.color) ? cultureDef.color : [112, 118, 126];
-    const shade = (stableStateHash(identity) % 31) - 15;
-    const color = baseColor.map((v, idx) => clamp(Math.round(v + shade + (idx === 2 ? 12 : 0)), 24, 224));
-    const name = existing && existing.name
-      ? existing.name
-      : ((cultureDef.name || 'Free') + ' State of ' + ((seat && seat.name) || 'the Provinces'));
-    out.push(releaseGrantRow(ctx, newTag, ids,
+    const ids = [];
+    for (const name of def.cores.concat(def.lands || [])) {
+      let found = 0;
+      for (const i of held) {
+        const p = g.provinces[i];
+        if (p && (p.canon || p.name) === name) { found = i; break; }
+      }
+      if (found && !assigned.has(found) && ids.indexOf(found) < 0) ids.push(found);
+    }
+    if (!ids.length) continue;
+    // §105: a state carved out of our own is a secession, and secessions are
+    // suffered rather than granted. Judged on the seat, which is the province
+    // the country is actually raised from.
+    const seatProv = g.provinces[ids[0]];
+    if (seatProv && sameKind(ctx.DEFINES, seatProv.culture, me.culture)
+      && seatProv.religion === me.religion) continue;
+    const piece = contiguousRelease(ctx, def.tag, ids);
+    if (!piece.length || piece.indexOf(ids[0]) < 0) continue;
+    for (const id of piece) assigned.add(id);
+    out.push(releaseGrantRow(ctx, def.tag, piece,
       existing && existing.alive ? 'enlarge' : existing ? 'restore' : 'create', {
-        name,
-        origin: 'cultural',
-        culture,
-        religion,
-        releaseIdentity: identity,
-        color,
-        capitalId: seat && seat.id,
+        name: def.name,
+        origin: 'revival',
+        culture: def.culture,
+        religion: def.religion || (seatProv && seatProv.religion),
+        color: def.color,
+        capitalId: ids[0],
+        adj: def.adj,
+        ideas: def.ideas,
+        govType: def.govType,
+        names: def.names,
+        description: def.description,
+        basis: def.basis,
       }));
   }
   out.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
@@ -7237,8 +7212,8 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     }, 0));
   }
   // Free states (SPEC §69/§76): restore dead courts, return old homelands to
-  // living non-belligerents, or create a new cultural state where no previous
-  // court survives. A revived/new court rises independent and sheltered; a
+  // living non-belligerents, or raise one of the old names this ground carries
+  // (SPEC §247). A revived/new court rises independent and sheltered; a
   // living recipient keeps its existing constitution and diplomatic bonds.
   // Liberation carries no infamy.
   for (const row of ev.releaseRows || []) {

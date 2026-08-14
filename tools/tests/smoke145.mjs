@@ -158,14 +158,19 @@ console.log('== what the realm may let go of, and what it may not ==');
   ok(game.tags.SEL && game.tags.SEL.alive, 'the Seleucids are alive in 167');
   ok(!rowFor(rows, 'SEL'), 'no row hands the Seleucids their own towns back');
   const coast = rowWith(rows, ctx.prov('Ptolemais').id);
-  ok(!!coast && coast.origin === 'cultural' && coast.kind === 'create',
-    'their coast is offered as a new state of its own people instead: ' + (coast && coast.name));
+  // Since §247 the coast is offered under the name it has always had rather
+  // than as the Phoenician State of Ptolemais. Ake and Dor were Sidonian
+  // harbours; a Hasmonean who holds them and neither purple city is still
+  // sitting on Phoenician towns, and the grant says so.
+  ok(!!coast && coast.origin === 'revival' && coast.tag === 'PHO',
+    'their coast is offered under its own name instead: ' + (coast && coast.name));
+  ok(!!coast && !/State of/.test(coast.name), 'and it is a name, not a formula');
 
   // Idumea has its own gods (SPEC §210), and therefore its own state.
   const qos = rowWith(rows, idumea.id);
-  ok(!!qos && qos.religion === 'idumean' && qos.provIds.length === 2,
-    'the south country under Qos is offered as an Idumean state: ' + (qos && qos.name));
-  ok(!!qos && qos.tag !== coast.tag, 'culture and faith divide the grants, not the border');
+  ok(!!qos && qos.tag === 'IDU' && qos.provIds.length === 2,
+    'the south country under Qos is offered as Idumaea: ' + (qos && qos.name));
+  ok(!!qos && qos.tag !== coast.tag, 'the countries divide the grants, not the border');
 
   // Every grant is ours, controlled, capital-free, priced and peopled.
   let sane = true;

@@ -3,8 +3,12 @@
 //
 //  1. A living non-belligerent may receive its old homeland back; the land
 //     need not have been conquered during this war or even be occupied.
-//  2. Enemy territory with no surviving historical claimant can become a
-//     deterministic new cultural state, save-safe and independent.
+//  2. Enemy territory with no surviving historical claimant can still become a
+//     state — one of the old names this ground carries (SPEC §247), raised
+//     deterministically, save-safe and independent. It was a culture-and-faith
+//     bucket when this suite was written; the contract §76 cares about is that
+//     the country need never have existed at the bookmark's opening, and that
+//     survives the change of vehicle intact.
 //  3. A direct enemy client may be transferred intact: land, armies and court
 //     survive while tribute and war duty pass to the victor.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
@@ -74,13 +78,18 @@ console.log('== a living court may receive old land that was never occupied ==')
   'a living recipient keeps its court and existing host — it is not rebooted as a restoration');
 }
 
-console.log('== a genuinely new cultural state can be made from enemy territory ==');
+console.log('== a state can be made from enemy territory no fallen court remembers ==');
 {
   const { game, ctx, war } = boot(77);
   const info = mil.peaceDealInfo(ctx, war, 'JUD');
-  const created = (info.releasable || []).filter((r) => r.kind === 'create');
+  // Not a court the bookmark seated and not one this war killed: a name the
+  // ground carries, raised out of an empire that never lost it (SPEC §247).
+  const created = (info.releasable || []).filter((r) => r.origin === 'revival');
   ok(created.length > 0,
-    'the table finds cultural states even where no bookmark-opening court was conquered');
+    'the table finds countries even where no bookmark-opening court was conquered');
+  ok(created.every((r) => !/State of/.test(r.name)),
+    'and every one of them has a name rather than a formula: '
+    + created.slice(0, 4).map((r) => r.name).join(', '));
   let row = null;
   let ev = null;
   for (const candidate of created.slice().sort((a, b) => a.dev - b.dev)) {
@@ -92,10 +101,10 @@ console.log('== a genuinely new cultural state can be made from enemy territory 
   const releasedIds = row ? row.provIds.slice() : [];
   mil.executePeaceDeal(ctx, war, 'JUD', { release: row ? [row.tag] : [] });
   const state = row && game.tags[row.tag];
-  ok(!!state && state.alive && !state.overlord && !!state.releaseIdentity,
-    'a deterministic live court is created for the new state');
+  ok(!!state && state.alive && !state.overlord && !!state.name && !!state.color,
+    'a deterministic live court is created for the new state: ' + (state && state.name));
   ok(releasedIds.length > 0 && releasedIds.every((id) => game.provinces[id].owner === row.tag),
-    'the cultural homeland belongs to the new state');
+    'its homeland belongs to it');
   ok(state && state.ruler && state.tech && mil.armiesOf(ctx, row.tag).length === 1,
     'the new court has a government, era technology and a defensive host');
   ok(game.tags.JUD.aggression === beforeAggression,

@@ -153,8 +153,9 @@ static site, the zero dependencies, or the missing build step changes.
   discounts demands that fulfill the stated purpose and makes unrelated annexations
   costlier, while historical scripted wars keep their authored score rules.
 - Win hard enough and the treaty can force the enemy to **free states**: restore a fallen
-  court, return an old homeland to a still-living neutral country, or create a new cultural
-  state from enemy territory even when no country there was recently conquered. Every
+  court, return an old homeland to a still-living neutral country, or raise one of the old
+  names this ground carries (below) from enemy territory even when no country there was
+  recently conquered. Every
   package is priced by development against war score and the one-treaty dismemberment cap;
   the old master keeps its capital, remembers the loss, and plots reconquest. Liberation
   earns no infamy. The same congress can transfer one of the enemy's direct client kingdoms
@@ -177,7 +178,13 @@ static site, the zero dependencies, or the missing build step changes.
   named ruler from its own era's name pool, and the faith of its own ground, so a Phoenicia
   raised from a Byzantine Tyre is Christian and one raised from a Seleucid Tyre is not. The
   ones just out of reach are shown too, dimmed, with the reason in the row: *they do not hold
-  Sidon*; *the war has not gone far enough: 30% of 35%*.
+  Sidon*; *the war has not gone far enough: 30% of 35%*. **And nothing else** — the
+  culture-and-faith bucket that used to catch the leftovers, and named the result *Greek
+  State of Straton's Tower* or *Aramean State of Babylon*, is gone. A congress that cannot
+  name a country does not invent one; it leaves the province where it is, and the answer to
+  wanting that province is to demand it. The same catalogue now names what you hand out of
+  your own realm as a client kingdom, so that panel proclaims **Phoenicia** rather than the
+  Phoenician State of Ptolemais.
 - **The chancery has only so many envoys.** A standing bond is an establishment, not a
   purchase: every alliance, guarantee, royal marriage, subsidy and client kingdom takes one
   of your realm's seats (four, plus influence technology, plus a ruler who is good at this).
