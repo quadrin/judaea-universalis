@@ -16976,3 +16976,68 @@ Syria's **Defence Companies** are names, not descriptions.
   still mark a difference; `smoke132.mjs` holds that the military ladder's
   pointer still names the tab in the chapter's own word for it, and that there
   is no longer an override for it to find.
+
+## 246. What wants orders
+
+§244 gave the Defense tab a report and three bulk levers, and a report is not a
+choice. Every line was a count you could read and not act on — *Without a
+general: 2 of 6* named no host and offered no button — and the levers went the
+other way, acting on all of it or none of it. Between "read a number" and
+"spend on everything at once" there was nothing.
+
+The other tabs have had the missing middle all along. Faith seats a High Priest
+from named candidates, each a card with a party and a button. Court hires and
+dismisses named advisors and appeases named estates the same way. The army had
+no such list anywhere in this panel: choosing one host out of six meant leaving
+for the outliner, which is a different screen with a different shape.
+
+So the tab gains **What Wants Orders** — one card per command that wants
+something, in exactly that idiom: a name, what it wants, and the orders that
+answer it.
+
+| The card | Wants | Carries |
+| --- | --- | --- |
+| An army under nobody | no general | Commission — 50 pts · Find |
+| An army on last age's pattern | old pattern | Refit — *n* talents · Find |
+| An army cut off | out of supply · *n*mo | Find, and whatever else it wants |
+| A fleet under nobody | no admiral | Commission — 50 pts · Find |
+| A fleet on an old rig | old rig | Re-rig — *n* talents · Find |
+| A wing under nobody | no commander | Commission — 50 pts · Find |
+
+**It is a to-do list, not a roster.** A host that is fed, led and up to date is
+not a decision and gets no card; a realm with everything in order sees the
+block disappear, which is the rule §244's lines already follow. This is what
+keeps a twenty-army realm from printing twenty cards of nothing, and it means
+the block shrinks as it is worked through — commissioning the Golani Brigade
+removes the Golani Brigade.
+
+**A single order is not armed.** §244's bulk levers are, because they spend on
+everything at once; one general on one named host at a known price is the
+weight of seating a High Priest or hiring an advisor, and those go on one
+click. The two idioms sit side by side in the same tab and must not merge —
+the suite holds both halves.
+
+**An order the purse cannot cover is offered anyway, disabled, with the reason
+and the arithmetic in its tooltip.** Not hidden: a player deciding what to save
+for needs to see the price. Every chapter opens with a martial pool of zero
+(§244 found that the hard way), so the greyed card with *"Not enough martial
+points: 50 needed, we have 0"* is the first version of this block anybody meets.
+
+**And it fixed a button §244 shipped clipped.** The bulk levers went into
+`pp-build-grid` — the province panel's 2x2 *icon* grid, two 1fr columns, with
+`white-space: nowrap` and a span that ellipses the overflow. *Commission
+commanders — 4, 200 pts* rendered as *"Commission comma…"*, losing both numbers
+that are the reason to press it. That is §175's lesson a second time: a text
+button is a different shape from an icon button. They now get one full-width
+column and are allowed to wrap.
+
+- **Regression contract**: `smoke166.mjs` — the block is on the Defense tab, is
+  the player's realm only, and hides when nothing wants anything; a led,
+  current, fed command of each of the three arms gets no card; every want
+  brings its own order and every order names its price; the five sim actions
+  behind the buttons exist; a single order does not arm while §244's bulk
+  levers still do; an unaffordable order is disabled with the shortfall
+  spelled out; all nine chapters open below a commission's price; the cap says
+  what it is not showing; every class the cards emit is in the stylesheet; and
+  the bulk orders are out of the icon grid that clipped them, in a container
+  whose labels may wrap.

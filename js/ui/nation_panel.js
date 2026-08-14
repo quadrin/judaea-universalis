@@ -269,7 +269,24 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build hidden" data-ref="hostBlock" data-tab="war">
         <div class="pp-build-title" data-ref="hostTitle">What We Have Under Arms</div>
         <div class="np-techs" data-ref="hostState"></div>
-        <div class="pp-build-grid" data-ref="hostActs"></div>
+        <!-- Not pp-build-grid: these are text buttons carrying a count and a
+             price, and that icon grid clips them (SPEC §246 fixes what §244
+             shipped). No backticks in here — this whole block is a template
+             literal, and one closes it. -->
+        <div class="np-bulk" data-ref="hostActs"></div>
+      </div>
+      <!-- What wants orders (SPEC §246). §244 gave this tab a report and three
+           bulk levers, and a report is not a choice: every line was a count
+           you could read and not act on, and the levers acted on ALL of it or
+           none. Faith seats a High Priest from named candidates, Court hires
+           and dismisses named advisors and appeases named estates — each a
+           card, a state, and a button. The army had no such list anywhere in
+           this panel; picking one host out of six meant leaving for the
+           outliner. This is that list: one card per command that wants
+           something, with the orders it wants on it. -->
+      <div class="pp-build hidden" data-ref="ordersBlock" data-tab="war">
+        <div class="pp-build-title">What Wants Orders</div>
+        <div class="np-factions" data-ref="orders"></div>
       </div>
       <!-- What the host is made of (SPEC §204): the patterns its three arms
            are raised to, the military rungs that unlock the next ones, and
@@ -343,6 +360,32 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (tb) {
         const id = tb.dataset.tabGo;
         if (id && id !== tab) { tab = id; refreshTabs(); el.scrollTop = 0; }
+        return;
+      }
+      // One command, one order (SPEC §246). Single orders are NOT armed the
+      // way §244's bulk levers are: this is one general or one refit at a
+      // known price on a named host, which is the same weight as seating a
+      // High Priest or hiring an advisor — and those go on one click. The
+      // arming is for the button that spends on everything at once.
+      const ord = e.target.closest('[data-ord-find], [data-ord-general], [data-ord-admiral],'
+        + ' [data-ord-wing], [data-ord-refit], [data-ord-refitfleet]');
+      if (ord) {
+        if (ord.classList.contains('disabled') || !actions) return;
+        const d = ord.dataset;
+        if (d.ordFind != null) {
+          if (onProvinceClick) onProvinceClick(d.ordFind | 0);
+          return;
+        }
+        const run = (fn, id) => {
+          if (typeof actions[fn] !== 'function') return;
+          try { actions[fn](id | 0); } catch (err) { warnOnce('np-ord-' + fn, err); }
+        };
+        if (d.ordGeneral != null) run('hireGeneral', d.ordGeneral);
+        else if (d.ordAdmiral != null) run('hireAdmiral', d.ordAdmiral);
+        else if (d.ordWing != null) run('hireWingLeader', d.ordWing);
+        else if (d.ordRefit != null) run('modernizeArmy', d.ordRefit);
+        else if (d.ordRefitfleet != null) run('modernizeFleet', d.ordRefitfleet);
+        refresh();
         return;
       }
       // Refit the whole host or the whole fleet (SPEC §244): armed on the
@@ -943,6 +986,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshTech(t, self);
     refreshPrograms(self);
     refreshHostState(self);
+    refreshOrders(self);
     refreshLedger(self);
     refreshReforms(t, self);
     refreshEraIdeas(t, self);
@@ -2104,6 +2148,109 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.hostState, rows.join(''));
     setHtml(refs.hostActs, acts.join(''));
     refs.hostBlock.classList.toggle('hidden', !rows.length && !acts.length);
+  }
+
+  // One card per command that wants something (SPEC §246), in the idiom Faith
+  // and Court already use: a name, what it wants, and the orders that answer
+  // it. Only commands with something to answer appear — a host that is fed,
+  // led and up to date is not a decision and does not need a card.
+  const ORDER_CAP = 10;
+  function refreshOrders(self) {
+    if (!refs.orders) return;
+    const g = ctx && ctx.game;
+    const call = (name, ...args) => {
+      if (!actions || typeof actions[name] !== 'function') return null;
+      try { return actions[name](...args); } catch (e) { warnOnce('np-ord-' + name, e); return null; }
+    };
+    if (!self || !g) {
+      refs.ordersBlock.classList.toggle('hidden', true);
+      setHtml(refs.orders, '');
+      return;
+    }
+    const me = g.playerTag;
+    const points = ((g.tags[me] && g.tags[me].points && g.tags[me].points.mar) | 0);
+    const purse = ((g.tags[me] && g.tags[me].treasury) | 0);
+    const cards = [];
+
+    const card = (name, where, wants, tone, buttons, tt) => cards.push(
+      `<div class="np-faction" data-tt="${esc(tt)}">`
+      + `<div class="np-fac-top"><span class="np-fac-name">${esc(name)}</span>`
+      + `<span class="np-fac-state ${tone}">${esc(wants)}</span></div>`
+      + (where ? `<div class="np-fac-effect">${esc(where)}</div>` : '')
+      + `<div class="np-fac-effect np-seat-btns">${buttons.join('')}</div></div>`);
+    const btn = (attr, id, label, tip, off) =>
+      `<button class="pp-build-btn np-seat-btn${off ? ' disabled' : ''}" ${attr}="${id}" `
+      + `data-tt="${esc(tip)}"><span>${esc(label)}</span></button>`;
+    const findBtn = (prov) => (prov
+      ? btn('data-ord-find', prov, 'Find', 'Centre the map on it.', false) : '');
+
+    for (const a of Object.values(g.armies || {}).filter((x) => x && x.tag === me)) {
+      const aa = call('getArmyActions', a.id) || {};
+      const sup = call('getSupplyStatus', a.id);
+      const starving = sup && !sup.ok && !sup.exempt;
+      if (a.general && !aa.canModernize && !starving) continue; // nothing to decide
+      const wants = starving ? `out of supply${sup.months ? ' · ' + sup.months + 'mo' : ''}`
+        : !a.general ? 'no general' : 'old pattern';
+      const p = g.provinces[a.prov];
+      const bs = [];
+      if (!a.general) {
+        bs.push(btn('data-ord-general', a.id, `Commission — ${CMD_COST} pts`,
+          points >= CMD_COST ? `A general adds pips to every phase of a battle. ${CMD_COST} martial points; we have ${points}.`
+            : `Not enough martial points: ${CMD_COST} needed, we have ${points}.`, points < CMD_COST));
+      }
+      if (aa.canModernize) {
+        bs.push(btn('data-ord-refit', a.id, `Refit — ${aa.modernizeCost | 0}t`,
+          purse >= (aa.modernizeCost | 0)
+            ? `Re-equip ${aa.genName || 'the old pattern'} as ${aa.newGenName || 'the new pattern'} for ${aa.modernizeCost | 0} talents.`
+            : `Not enough in the treasury: ${aa.modernizeCost | 0} needed, we have ${purse}.`,
+          purse < (aa.modernizeCost | 0)));
+      }
+      bs.push(findBtn(a.prov));
+      card(a.name || ('Army ' + a.id), p ? p.name : '', wants, starving ? 'neg' : '', bs,
+        starving ? 'An army out of supply bleeds men every month and fights worse for it (SPEC §82).\n'
+          + ((sup && (sup.reasonText || sup.penaltyText)) || 'The supply line is cut.')
+          : !a.general ? 'This host marches under nobody in particular.'
+            : 'Armed to a pattern the ladders have moved past.');
+    }
+    for (const f of ((call('getNavy') || {}).fleets || [])) {
+      if (f.admiral && !f.canModernize) continue;
+      const bs = [];
+      if (!f.admiral) {
+        bs.push(btn('data-ord-admiral', f.id, `Commission — ${CMD_COST} pts`,
+          points >= CMD_COST ? `An admiral works the weather gauge. ${CMD_COST} martial points; we have ${points}.`
+            : `Not enough martial points: ${CMD_COST} needed, we have ${points}.`, points < CMD_COST));
+      }
+      if (f.canModernize) {
+        bs.push(btn('data-ord-refitfleet', f.id, `Re-rig — ${f.modernizeCost | 0}t`,
+          purse >= (f.modernizeCost | 0)
+            ? `Re-rig ${f.genName} as ${f.newGenName} for ${f.modernizeCost | 0} talents.`
+            : `Not enough in the treasury: ${f.modernizeCost | 0} needed, we have ${purse}.`,
+          purse < (f.modernizeCost | 0)));
+      }
+      bs.push(findBtn(f.prov));
+      card(f.name || ('Fleet ' + f.id), f.provName || '', f.admiral ? 'old rig' : 'no admiral', '', bs,
+        f.admiral ? 'Rigged to a pattern the ladders have moved past.' : 'This fleet sails under nobody in particular.');
+    }
+    for (const w of (call('getAirWings') || [])) {
+      if (w.leader) continue;
+      card(w.name || ('Wing ' + w.id), w.provName || '', 'no commander', '', [
+        btn('data-ord-wing', w.id, `Commission — ${CMD_COST} pts`,
+          points >= CMD_COST ? `A wing commander flies better and evades better. ${CMD_COST} martial points; we have ${points}.`
+            : `Not enough martial points: ${CMD_COST} needed, we have ${points}.`, points < CMD_COST),
+        findBtn(w.prov),
+      ], 'This squadron flies under nobody in particular.');
+    }
+
+    // No silent truncation: a realm with thirty hosts is told what it is not
+    // being shown rather than quietly given the first ten.
+    const total = cards.length;
+    const shown = cards.slice(0, ORDER_CAP);
+    if (total > ORDER_CAP) {
+      shown.push(`<div class="np-fac-effect peace-dim">…and ${total - ORDER_CAP} more, `
+        + 'in the outliner or under the bulk orders above.</div>');
+    }
+    setHtml(refs.orders, shown.join(''));
+    refs.ordersBlock.classList.toggle('hidden', !total);
   }
 
   // A locked card is the §179 dark slab, saying what opens it (a rung of the
