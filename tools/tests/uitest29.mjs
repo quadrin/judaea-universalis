@@ -125,11 +125,16 @@ const goBack = async () => {
   if (await b.isEnabled()) { await b.click(); await page.waitForTimeout(60); }
 };
 await goHome();
+// Counted from the data rather than written down, because the last time it was
+// written down a chapter shipped and the number went quietly stale.
+const { ERAS } = await import(new URL('../../js/data/compendium.js', import.meta.url).href);
+const ERAS_EXPECTED = ERAS.length;
 const chapterCount = await page.evaluate(() => {
   const rows = document.querySelectorAll('#wiki-modal [data-go^="era:"]');
   return rows.length;
 });
-ok(chapterCount === 8, 'eight chapter rows on the front page: ' + chapterCount);
+ok(chapterCount === ERAS_EXPECTED,
+  ERAS_EXPECTED + ' chapter rows on the front page: ' + chapterCount);
 let sweepFails = 0;
 for (let i = 0; i < chapterCount; i++) {
   await goHome();
