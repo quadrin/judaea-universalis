@@ -244,8 +244,9 @@ const earlyPeaceText = await page.locator('#peace-modal').textContent();
 ok(/Force them to release nations/.test(earlyPeaceText),
   'the release section is visible before any court has fallen');
 const earlyReleaseRows = await page.locator('#peace-modal [data-release]').count();
-ok(earlyReleaseRows > 0 || /no country can be separated/i.test(earlyPeaceText),
-  'the table either offers a country or explains why none can be freed');
+ok(earlyReleaseRows > 0
+  || /no country can be separated|nothing can be freed on these terms/i.test(earlyPeaceText),
+  'the table either offers a country or explains, in words, why none can be freed yet');
 await page.locator('#peace-modal .peace-cancel').click();
 await page.waitForTimeout(150);
 

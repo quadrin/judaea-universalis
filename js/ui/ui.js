@@ -435,7 +435,12 @@ export function initUI(staticCtx) {
         </label>`).join('') + '</div>'
     : `<div class="peace-dim peace-none">${info.separate
       ? 'A separate peace cannot redraw another crown\'s map — releases wait for the full congress table.'
-      : 'No country can be separated from them here. Fallen courts whose homeland they are sitting on, living claimants owed their old lands, and the old names of this ground are all considered — and a congress that cannot name a country does not invent one.'}</div>`}
+      : (info.releasableLocked || []).length
+        // Something IS on this ground; this table just cannot reach it, and
+        // the block below says which and why. Claiming impossibility above a
+        // list of named countries would be the panel arguing with itself.
+        ? 'Nothing can be freed on these terms yet — but the ground has names on it:'
+        : 'No country can be separated from them here. Fallen courts whose homeland they are sitting on, living claimants owed their old lands, and the old names of this ground are all considered — and a congress that cannot name a country does not invent one.'}</div>`}
         ${/* The old names within reach of this war but not of this table
               (SPEC §247): shown, priced and explained, so the ladder is a
               thing to climb rather than a thing to guess at. */
