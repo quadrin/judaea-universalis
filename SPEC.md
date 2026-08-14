@@ -17280,3 +17280,77 @@ a gift, occupied land is not ours to give — which this section does not answer
   piece of connected land, and a living court given the pocket that touches
   what it already holds, which was carried by a synthetic cultural state until
   this section retired them.
+
+
+## 248. A client kingdom keeps no foreign policy
+
+**What was wrong.** The collar was a tribute-and-war-duty arrangement and
+nothing else. §75 stopped a lord and its client going to war with each other,
+and §92 broke a court's alliances at the moment it accepted the collar — and
+that was the whole of it. Everything after that moment was unrestricted: a
+client signed new alliances with whoever it liked, extended its word to whoever
+asked, and declared its own wars on third parties while its levies answered to
+somebody else.
+
+That is not a client kingdom. It is a sovereign with a standing order to show
+up, and it produced exactly the tangle you would expect — a lord dragged into
+its client's private quarrel by war duty it never agreed to, a lord and its own
+client on opposite sides of one war through separate alliance chains, and a
+guarantee that survived the collar so a court could be collared on Tuesday and
+pull its new lord into somebody else's war on Wednesday on the strength of a
+pledge it was no longer allowed to make.
+
+**What it is now.** The lord speaks abroad. A court with a living overlord
+may not:
+
+- **sign an alliance** — on either side of the table. Ours is not ours to
+  pledge, and theirs is not theirs to sign;
+- **guarantee anyone** — a guarantee is a promise of war, and a client has no
+  war to promise;
+- **declare war on anyone at all.**
+
+`clientForeignPolicyBar(ctx, tag)` is the single question all three ask, and it
+answers with the lord's *name* rather than a boolean, because every refusal in
+this section names who is holding the levies. A collar nobody is holding — an
+overlord that has died and not yet been cleaned up — is no collar (§75).
+
+**The one declaration left is not an exception.** The independence rising reads
+like a hole in the rule and is the proof of it: `declareIndependenceCore`
+strikes the bond *before* sending the herald, so by the time it reaches
+`declareWar` the court asking is nobody's client. The comment in the AI's own
+rising has said "the bond breaks first — free courts declare, clients cannot"
+since it was written; this section makes it literally true at the engine level
+instead of by convention.
+
+**What a client keeps** is worth stating, because the list above reads harsher
+than it plays. Everything about its own survival is untouched: it defends
+itself, it is called to its lord's wars and fights them, it holds its truces,
+it takes gifts, subsidies, marriages and recognitions, it may be guaranteed by
+a third power, and it may always declare independence. What it loses is the
+ability to start something its lord would have to finish.
+
+**Guarantees now lapse with the collar, in one direction.** Alliances already
+lapsed at every door a collar goes on through — §92's offered collar, §76's
+transferred client, §69's subjugation clause. Guarantees lapsed at none of
+them, which is the Wednesday problem above. They now lapse at all three, and
+the courts whose protection ends hear about it (−20 opinion). Only the ones the
+new client GAVE: a guarantee it RECEIVES is somebody else's word and not the
+client's foreign policy, and striking it would quietly cancel a third crown's
+commitment that crown never agreed to give up.
+
+**The player wears this too.** A subjugated player, or one who starts a chapter
+under a collar, gets the same three bars with the same words on the same
+buttons — the diplomacy card already renders `whyNotAlly`, `whyNotGuarantee`
+and `whyNotWar` on the controls, so a client player reads *"We answer to Rome —
+a client kingdom declares no wars but its own independence"* on a live button
+rather than finding a dead one.
+
+- **Regression contract**: `smoke168.mjs` — a free court allies, guarantees and
+  declares; the same court under a collar can do none of the three, and the
+  refusals name the lord; the bar answers the lord's name and answers '' for a
+  collar whose holder is dead; the independence rising still fires from under
+  the collar, because it severs first; alliances *and* guarantees lapse at all
+  three collar doors while received guarantees survive; a client is still
+  called into its lord's war and still fights it; and the player under a collar
+  gets all three reasons through `getDiplomacy`, on controls the panel renders
+  rather than hides.

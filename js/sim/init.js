@@ -12,7 +12,8 @@ import {
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   retireAffinityCore, secedeTagCore, dissolveTagCore,
-  allianceBarred, recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
+  allianceBarred, clientForeignPolicyBar,
+  recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore, annulMarriageCore,
   clientOfferInfo, offerClientshipCore,
@@ -1239,6 +1240,15 @@ export function gameActions(ctx) {
       else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
       else if (ourClient) whyNotAlly = 'They are already our client kingdom.';
       else if (ourOverlord) whyNotAlly = 'They are our overlord.';
+      // A client kingdom keeps no foreign policy (SPEC §248), on either side of
+      // the table: ours is not ours to pledge, and theirs is not theirs to sign.
+      else if (clientForeignPolicyBar(ctx, me)) {
+        whyNotAlly = 'We answer to ' + clientForeignPolicyBar(ctx, me)
+          + ' — a client kingdom signs no alliances of its own.';
+      } else if (clientForeignPolicyBar(ctx, tag)) {
+        whyNotAlly = 'They answer to ' + clientForeignPolicyBar(ctx, tag)
+          + ', and a client kingdom signs no alliances of its own.';
+      }
       // §67 refused an alliance outright while a grudge lived. §86 keeps that
       // refusal — unless the pair are historical friends who have spent the
       // years quietly enough for the wound to close. Then the land is still
@@ -1261,6 +1271,12 @@ export function gameActions(ctx) {
       else if (recognized(ctx, me, tag)) whyNotWar = 'We recognize them — the recognition must be renounced first.';
       else if (ourClient) whyNotWar = 'They are our client kingdom.';
       else if (ourOverlord) whyNotWar = 'They are our overlord.';
+      // SPEC §248: the lord speaks abroad. The one declaration left to a client
+      // is the rising, and that has its own control on the overlord's card.
+      else if (clientForeignPolicyBar(ctx, me)) {
+        whyNotWar = 'We answer to ' + clientForeignPolicyBar(ctx, me)
+          + ' — a client kingdom declares no wars but its own independence.';
+      }
       else if (allied) whyNotWar = 'We are allied — break the alliance first.';
       else if (truceUntil) whyNotWar = 'The ink on the truce is still wet.';
       // Guarantees & subsidies (SPEC §24)
@@ -1272,6 +1288,13 @@ export function gameActions(ctx) {
       if (weGuarantee) whyNotGuarantee = 'Our word already protects them.';
       else if (atWarWithUs) whyNotGuarantee = 'We are at war with them.';
       else if (ourClient || ourOverlord) whyNotGuarantee = 'The bond of fealty already binds us.';
+      // Our word is not ours to give while somebody else holds our levies
+      // (SPEC §248). A guarantee is a promise of war, and a client has no wars
+      // to promise.
+      else if (clientForeignPolicyBar(ctx, me)) {
+        whyNotGuarantee = 'We answer to ' + clientForeignPolicyBar(ctx, me)
+          + ' — a guarantee is a promise of war, and a client has no war to promise.';
+      }
       else if (num(mine.points && mine.points.infl) < 50) whyNotGuarantee = 'Not enough influence (50 required).';
       // Our word is our establishment's to keep (SPEC §202) — theirs is not
       // asked, because a guarantee binds only the guarantor.

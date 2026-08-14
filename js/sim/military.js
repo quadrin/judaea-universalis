@@ -2822,6 +2822,50 @@ export function truceActive(ctx, a, b) {
   if (!t) return false;
   return g.date.y < t.y || (g.date.y === t.y && g.date.m < t.m);
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// A client kingdom keeps no foreign policy of its own (SPEC §248).
+//
+// The collar was a tribute-and-war-duty arrangement and nothing else: a client
+// went on signing alliances with whoever it liked, extending its word to
+// whoever asked, and declaring its own wars on third parties while its levies
+// answered to somebody else. That is not a client kingdom. It is a sovereign
+// with a standing order to show up, and it produced exactly the tangle you
+// would expect — a lord dragged into its client's private quarrel, a client
+// and its lord on opposite sides of the same war through separate alliance
+// chains, and the Herods of the world conducting an independent foreign policy
+// while Rome paid for the garrison.
+//
+// So: the lord speaks abroad. What a client keeps is everything about its own
+// survival — it defends itself, it is called to its lord's wars and fights
+// them, it holds its truces, it takes gifts and marriages, and its ONE
+// remaining declaration is the rising in §226's independence war, which severs
+// the bond before the herald speaks and is therefore not a client's war at all.
+//
+// One helper, three places: `declareWar` below, and the alliance and guarantee
+// gates the diplomacy panel builds (SPEC §24/§202). Returns '' when the court
+// is free.
+export function clientForeignPolicyBar(ctx, tag) {
+  const g = ctx && ctx.game;
+  const t = g && g.tags[tag];
+  if (!t || !t.overlord) return '';
+  const lord = g.tags[t.overlord];
+  if (!lord || !lord.alive) return ''; // a collar with nobody holding it (§75)
+  return lord.name || t.overlord;
+}
+// The word a new client had given is no longer its to keep (SPEC §248). Its
+// alliances already lapse at every one of these four doors; a guarantee is the
+// same promise made one-sidedly, and it lapsed nowhere — so a court could be
+// collared on Tuesday and still drag its lord into somebody else's war on
+// Wednesday on the strength of a pledge it was no longer allowed to make.
+// Guarantees the client RECEIVES are left alone: that is somebody else's word,
+// not the client's foreign policy, and striking it would quietly cancel a
+// third crown's commitment it never agreed to give up.
+function lapseClientGuarantees(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t || !Array.isArray(t.guarantees) || !t.guarantees.length) return;
+  for (const other of t.guarantees.slice()) addOpinion(ctx, other, tag, -20);
+  t.guarantees = [];
+}
 export function vassalsOf(ctx, lord) {
   const g = ctx.game;
   const out = [];
@@ -3333,6 +3377,15 @@ export function declareWar(ctx, atk, def, name, cb) {
   // at war with its own vassal while tribute still flowed between them.
   if (A.overlord === def || D.overlord === atk) {
     warnOnce('dw-bond:' + atk + ':' + def, 'declareWar refused: overlord and client', atk, def);
+    return null;
+  }
+  // And a client declares no wars at all (SPEC §248) — its lord speaks abroad.
+  // The independence rising is not an exception to this so much as the proof of
+  // it: `declareIndependenceCore` strikes the bond BEFORE sending the herald,
+  // so by the time it reaches this line the court asking is nobody's client.
+  const collar = clientForeignPolicyBar(ctx, atk);
+  if (collar) {
+    warnOnce('dw-client:' + atk, 'declareWar refused: a client of ' + collar + ' declares no wars', atk, def);
     return null;
   }
   const existing = warBetween(ctx, atk, def);
@@ -4814,6 +4867,7 @@ export function offerClientshipCore(ctx, me, them) {
   // The bond replaces every other: a client keeps no outside alliances, and
   // the alliance that made this possible becomes the fealty itself.
   for (const al of (theirs.allies || []).slice()) breakAllianceCore(ctx, them, al);
+  lapseClientGuarantees(ctx, them);
   theirs.overlord = me;
   theirs.incorporating = null;
   addOpinion(ctx, them, me, DIPLO.clientOfferAcceptOpinionHit);
@@ -7308,6 +7362,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     t.overlord = byTag;
     t.incorporating = null;
     for (const al of (t.allies || []).slice()) breakAllianceCore(ctx, row.tag, al);
+    lapseClientGuarantees(ctx, row.tag);
     addOpinion(ctx, row.tag, oldLord, -60);
     addOpinion(ctx, row.tag, byTag, -25);
     addOpinion(ctx, oldLord, byTag, -50);
@@ -7374,8 +7429,9 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
   if (ev.subjugate && info.enemyLeader && me) {
     const et = g.tags[info.enemyLeader];
     et.overlord = byTag;
-    // A client keeps no outside alliances of its own.
+    // A client keeps no outside alliances or pledges of its own (SPEC §248).
     for (const al of (et.allies || []).slice()) breakAllianceCore(ctx, info.enemyLeader, al);
+    lapseClientGuarantees(ctx, info.enemyLeader);
     addOpinion(ctx, info.enemyLeader, byTag, -40);
     // Breaking a crown to the yoke is conquest by another name — the world
     // counts it (previously subjugation escaped infamy entirely).

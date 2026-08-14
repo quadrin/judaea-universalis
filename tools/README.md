@@ -1843,3 +1843,22 @@ empty**, because every old name carries a war-score threshold and the culture
 bucket that used to fill the list unconditionally is gone. `smoke77` sets
 `war.warscore` before asking, in all three of its blocks, for that reason and
 no other.
+
+`smoke168.mjs` owns §248's client kingdoms. The suite is mostly about the
+NEGATIVE space, which is the part that is easy to get wrong: it establishes
+that a free Adiabene can ally, guarantee and declare, then puts the collar on
+the same court and shows all three refused — so every bar is demonstrably the
+collar's doing and not some other refusal that was there all along. It holds
+both sides of the alliance table (a free crown cannot ally somebody else's
+client either), the §75 case of a collar whose holder is dead, and the three
+things a client keeps: it is still called into its lord's war, still fights it,
+and can still be declared ON.
+
+Two of its assertions are worth knowing about before touching this code. The
+independence rising fires from under the collar and must go on doing so — it
+works because `declareIndependenceCore` strikes the bond BEFORE calling
+`declareWar`, so a bar keyed on `t.overlord` never sees it, and anything that
+reorders those two lines turns a documented exit into a dead end. And a
+guarantee the client RECEIVES has to survive the collar: only the ones it gave
+lapse, because striking the other direction would cancel a third crown's
+commitment that crown never agreed to give up.

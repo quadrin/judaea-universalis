@@ -220,6 +220,23 @@ static site, the zero dependencies, or the missing build step changes.
   (that is a cession, and it is agreed at a table with them), ground an enemy army is
   standing in, more than half the realm at once — or your own people, because a state carved
   out of your own is a secession and secessions are suffered rather than granted.
+- **A client kingdom keeps no foreign policy.** The collar used to be tribute and war duty
+  and nothing else: a client went on signing alliances with whoever it liked, extending its
+  word to whoever asked, and declaring its own wars on third parties while its levies
+  answered to somebody else. That is a sovereign with a standing order to show up. Now the
+  **lord speaks abroad** — a court with a living overlord signs no alliance (on either side
+  of the table: yours is not yours to pledge, theirs is not theirs to sign), guarantees
+  nobody, and declares no war at all. The rising reads like a hole in that rule and is the
+  proof of it: declaring independence strikes the bond *before* the herald is sent, so the
+  court that declares is nobody's client. Everything about a client's own survival is
+  untouched — it defends itself, it is called to its lord's wars and fights them, it keeps
+  its truces, gifts, marriages and subsidies, it can be guaranteed by a third power, and it
+  can always rise. What it loses is the ability to start something its lord would have to
+  finish. The word it had already given lapses when the collar goes on, the way its
+  alliances always did; the word given *to* it survives, because that is a third crown's
+  pledge and not the client's policy. A player under a collar wears exactly the same three
+  bars, with the reason on the button: *We answer to Rome — a client kingdom declares no
+  wars but its own independence.*
 - **And the collar comes off.** A client kingdom used to have exactly three exits and none of
   them was yours: you died, you ate them, or they rose and won. **Release Them** now sits
   beside Incorporate on the client's own panel and does the opposite thing — nothing moves
