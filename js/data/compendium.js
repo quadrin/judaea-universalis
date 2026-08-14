@@ -46,6 +46,7 @@ import { EVENTS_132_HOUSE } from './events_132ce_house.js';
 import { EVENTS_132_KOSIBA } from './events_132ce_kosiba.js';
 import { EVENTS_132_YEARS } from './events_132ce_years.js';
 import { EVENTS_132_NEIGHBOURS } from './events_132ce_neighbours.js';
+import { EVENTS_132_COUNTRY } from './events_132ce_country.js';
 import { BOOKMARK_351 } from './bookmark_351ce.js';
 import { EVENTS_351 } from './events_351ce.js';
 import { EVENTS_351_WORLD } from './events_351ce_world.js';
@@ -156,7 +157,7 @@ export const ERAS = [
   // so the registry stays the one place the pairing is written down.
   // The west package is the spine's other frontier — Abritus, Adrianople,
   // the frozen Rhine and the sack of 410, arriving on the same clock.
-  { bookmark: withPolitical(BOOKMARK_132), events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, EVENTS_132_WEST, EVENTS_132_GALILEE, EVENTS_132_REDEMPTION, EVENTS_132_ENDURE, EVENTS_132_HOUSE, EVENTS_132_KOSIBA, EVENTS_132_YEARS, EVENTS_132_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_132), events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, EVENTS_132_WEST, EVENTS_132_GALILEE, EVENTS_132_REDEMPTION, EVENTS_132_ENDURE, EVENTS_132_HOUSE, EVENTS_132_KOSIBA, EVENTS_132_YEARS, EVENTS_132_NEIGHBOURS, EVENTS_132_COUNTRY, ANTIQUE) },
   // The rising against Gallus (SPEC §235): the chapter whose antagonist is a
   // century rather than an army. Its own chain runs 351–429 — the arms, the
   // Patriarch, the calendar and Julian's offer — and the world package beside
