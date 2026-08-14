@@ -59,6 +59,7 @@ import { EVENTS_529_WORLD } from './events_529ce_world.js';
 import { EVENTS_529_ROADS } from './events_529ce_roads.js';
 import { EVENTS_529_YEARS } from './events_529ce_years.js';
 import { EVENTS_529_NEIGHBOURS } from './events_529ce_neighbours.js';
+import { EVENTS_529_COUNTRY } from './events_529ce_country.js';
 import { BOOKMARK_614 } from './bookmark_614ce.js';
 import { EVENTS_614 } from './events_614ce.js';
 import { EVENTS_614_PERSIA } from './events_614ce_persia.js';
@@ -185,7 +186,7 @@ export const ERAS = [
   // The world package (SPEC §104's rule) is the age's own calendar — the
   // successions Justinian's court never scripted, from Gelimer's coup to
   // Heraclius' fleet, ending exactly where the roads package picks up.
-  { bookmark: withPolitical(BOOKMARK_529), events: EVENTS_529.concat(EVENTS_529_WORLD, EVENTS_529_ROADS, EVENTS_529_YEARS, EVENTS_529_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_529), events: EVENTS_529.concat(EVENTS_529_WORLD, EVENTS_529_ROADS, EVENTS_529_YEARS, EVENTS_529_NEIGHBOURS, EVENTS_529_COUNTRY, ANTIQUE) },
   // The west package is the same century seen from Toledo, Paris and the
   // Danube — Sisebut's edict to the Seventeenth Council, with Whitby and
   // the Bulgars between.
