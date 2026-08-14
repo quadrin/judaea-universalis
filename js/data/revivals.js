@@ -454,13 +454,17 @@ export const REVIVALS = [
     basis: 'The Hashemites ruled the Hejaz as a kingdom in its own right for nine '
       + 'years, were recognised as such, and were driven out of it by Nejd in 1925. Two '
       + 'of the sons still hold thrones; the family has not conceded the point.',
-    description: 'The kingdom of the two holy cities, restored to the Sharifian house '
-      + 'that held it — pilgrimage, prestige, and a very short army.',
+    description: 'The Sharifian kingdom restored to the house that held it: Medina, '
+      + 'the pilgrim road, an enormous amount of prestige and a very short army.',
   },
 
   // ── the twentieth century ─────────────────────────────────────────────────
   {
     tag: 'KUR', name: 'Kurdistan', adj: 'Kurdish',
+    // `persian` is the closest culture this map has and it is closer than it
+    // looks: Kurdish is an Iranian language, and the alternative was filing a
+    // people under the Arab identity they spent the century insisting they
+    // were not.
     color: [188, 142, 48], culture: 'persian', religion: 'islam',
     names: 'iranian_modern', title: 'President',
     govType: 'republic',
@@ -491,6 +495,10 @@ export const REVIVALS = [
   },
   {
     tag: 'DRZ', name: 'Jabal al-Druze', adj: 'Druze',
+    // The Druze faith is its own thing and this map does not carry it; `islam`
+    // is the nearest key and is what the province already holds, which is the
+    // whole reason a religion is pinned here at all — the state exists because
+    // the mountain is not the plain, and the ground alone would not say so.
     color: [126, 96, 132], culture: 'arab_modern', religion: 'islam',
     names: 'arab_modern', title: 'Emir',
     govType: 'monarchy',
