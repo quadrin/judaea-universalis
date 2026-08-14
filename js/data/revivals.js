@@ -1,4 +1,4 @@
-// js/data/revivals.js — the old names (SPEC §246). DOM-free, dependency-free.
+// js/data/revivals.js — the old names (SPEC §247). DOM-free, dependency-free.
 //
 // What a beaten empire could be made to let go of used to be answered by two
 // abstractions and no third: the court that owned the ground when the era

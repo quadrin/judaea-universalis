@@ -19,7 +19,7 @@ import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
 import { axisOf } from './doctrine.js';
-// The old names (SPEC §246): countries this map really carried, offered at the
+// The old names (SPEC §247): countries this map really carried, offered at the
 // peace table when the enemy holds all the ground that makes one. Pure data.
 import { revivalsAt, revivalByTag } from '../data/revivals.js';
 
@@ -2255,7 +2255,7 @@ export function switchTagCore(ctx, from, to) {
   if (fallen) freeBanner(ctx, to);
   const nt = JSON.parse(JSON.stringify(old));
   nt.tag = to;
-  // The founding ideas of a court born at a peace table (SPEC §246) belong to
+  // The founding ideas of a court born at a peace table (SPEC §247) belong to
   // THAT name. `to` is in the catalog by the test above, so its own entry is
   // what applyReformsToTag will read — and a stale `baseIdeas` riding across
   // the switch would stand in for a catalogued banner that declares none.
@@ -5441,7 +5441,7 @@ function releaseRow(ctx, tag, ids, kind, extra) {
     provNames: ids.map((id) => { const q = ctx.byId(id); return q ? q.name : null; }).filter(Boolean),
     dev,
     cost: Math.max(PEACE.releaseCostMin, Math.round(dev * PEACE.releaseCostPerDev)),
-    // What an old name brings with it (SPEC §246): the court's own adjective,
+    // What an old name brings with it (SPEC §247): the court's own adjective,
     // ideas, ruler and blurb, carried on the row because these tags are not in
     // DEFINES.TAGS and `ensureReleasedCourt` has nowhere else to read them.
     adj: (extra && extra.adj) || def.adj || null,
@@ -5455,7 +5455,7 @@ function releaseRow(ctx, tag, ids, kind, extra) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The old names (SPEC §246).
+// The old names (SPEC §247).
 //
 // Between the historical court that owned the ground when the era opened and
 // the culture-and-faith bucket of last resort sits a third answer, and it is
@@ -5534,7 +5534,7 @@ function revivalBlock(ctx, def, war, byTag, enemyTag, idx, myWs) {
 // already spoken for: a historical court's own homeland outranks a revival of
 // a name nobody has worn in four centuries, so those provinces are taken out
 // of the revival's hands rather than promised to two treaties at once. Cores
-// are unique across the whole list by construction (smoke166 holds it), so two
+// are unique across the whole list by construction (smoke167 holds it), so two
 // revivals can never fight over the province that makes one of them itself.
 function revivalRows(ctx, war, byTag, enemyTag, assigned, capital, myWs) {
   const g = ctx.game;
@@ -5544,7 +5544,7 @@ function revivalRows(ctx, war, byTag, enemyTag, assigned, capital, myWs) {
   // Sulaymaniyah are what makes Kurdistan Kurdistan and are merely more of
   // Assyria's plain; without this, Assyria — two entries above — would sweep
   // them up as `lands` and Kurdistan could never be raised at all. Cores are
-  // unique across the list (smoke166 holds it), so this reservation is total:
+  // unique across the list (smoke167 holds it), so this reservation is total:
   // no province in it is claimed as a core by more than one country.
   const spokenFor = new Map();
   for (const def of era) {
@@ -5660,11 +5660,11 @@ export function lockedRevivals(ctx, war, byTag, enemyTag) {
   return releaseTable(ctx, war, byTag, enemyTag).locked;
 }
 
-// Force them to free nations (EU4-style, widened in SPEC §76 and §246):
+// Force them to free nations (EU4-style, widened in SPEC §76 and §247):
 //   * a dead historical court can be restored;
 //   * a living non-belligerent court can have its old homeland returned;
 //   * a country this map really carried can be raised again where the enemy
-//     holds every province that makes it that country (SPEC §246);
+//     holds every province that makes it that country (SPEC §247);
 //   * land with no surviving historical claimant can become a new cultural
 //     state. This last path does NOT require a country to have existed at the
 //     bookmark opening, or to have been conquered during the present game.
@@ -5676,7 +5676,7 @@ export function releasableNations(ctx, war, byTag, enemyTag) {
 }
 
 // The whole table in one pass: what can be freed, and — for the old names
-// alone (SPEC §246) — what is close enough to be worth showing that it cannot.
+// alone (SPEC §247) — what is close enough to be worth showing that it cannot.
 // `getPeaceInfo` calls this once and takes both halves; the two exported
 // readers above are thin wrappers, because the halves have to agree.
 function releaseTable(ctx, war, byTag, enemyTag) {
@@ -5711,7 +5711,7 @@ function releaseTable(ctx, war, byTag, enemyTag) {
     out.push(releaseRow(ctx, tag, ids, t && t.alive ? 'return' : 'restore'));
   }
 
-  // The old names (SPEC §246), between the two abstractions that were already
+  // The old names (SPEC §247), between the two abstractions that were already
   // here: a country the ground itself remembers, where the enemy holds all of
   // what makes it one and the war has gone far enough to discuss it.
   const myWs = Math.round(num(war.warscore && war.warscore[byTag]));
@@ -6055,7 +6055,7 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     whyNotUnifyCrown = 'They stand under a protection that is not at this table — '
       + ((g.tags[et.overlord] && g.tags[et.overlord].name) || et.overlord) + ' answers for them.';
   } else canUnifyCrown = true;
-  // One pass for both halves of the release section (SPEC §246): what can be
+  // One pass for both halves of the release section (SPEC §247): what can be
   // freed, and the old names close enough to be worth naming that they cannot.
   const releaseHalves = (separate || exit)
     ? { rows: [], locked: [] }
@@ -6133,7 +6133,7 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     // peace cannot redraw another crown's map — releases wait for the full
     // congress, like subjugation — and a withdrawing junior frees no one.
     releasable,
-    // The old names this table cannot quite reach (SPEC §246) — one province
+    // The old names this table cannot quite reach (SPEC §247) — one province
     // short, or one bad month short of the score. Display only: they are kept
     // out of `releasable` so a hand-edited deal naming one buys nothing.
     releasableLocked: releaseHalves.locked,
@@ -6779,7 +6779,7 @@ function ensureReleasedCourt(ctx, row, templateTag) {
     if (row.releaseIdentity && !t.releaseIdentity) t.releaseIdentity = row.releaseIdentity;
     return t;
   }
-  // An old name (SPEC §246) is not in DEFINES.TAGS on purpose — a bookmark
+  // An old name (SPEC §247) is not in DEFINES.TAGS on purpose — a bookmark
   // written without an `activeTags` line would otherwise seat twenty-nine
   // landless kingdoms on day one — so its definition stands in for the catalog
   // entry here, and the row's own fields still win over both.
@@ -6794,7 +6794,7 @@ function ensureReleasedCourt(ctx, row, templateTag) {
       : Array.isArray(def.color) ? def.color.slice() : [112, 118, 126],
     religion: row.religion || def.religion || (seat && seat.religion) || template.religion,
     culture: row.culture || def.culture || (seat && seat.culture) || template.culture,
-    // The court's own word for its people and its things (SPEC §246): the map
+    // The court's own word for its people and its things (SPEC §247): the map
     // labels read it, and a restored Phoenicia writing "Free State" armies
     // would be the giveaway that nothing but the name had changed.
     adj: row.adj || def.adj || null,
@@ -6808,7 +6808,7 @@ function ensureReleasedCourt(ctx, row, templateTag) {
     // …and the same map kept whole, because `ideas` is a DERIVED field:
     // applyReformsToTag rebuilds it from the catalog on every tech tier, every
     // reform and every load, and a court that is not in the catalog would lose
-    // what it was founded with the first time an AI took a reform (SPEC §246).
+    // what it was founded with the first time an AI took a reform (SPEC §247).
     baseIdeas: { ...(def.ideas || {}), ...(row.ideas || {}) },
     reforms: { mil: 0, civ: 0, rel: 0 },
     eraIdeas: {}, // a state born new has taken up none of the age's ideas
@@ -6825,7 +6825,7 @@ function ensureReleasedCourt(ctx, row, templateTag) {
     atWarWith: [], allies: [], guarantees: [], opinion: {},
     govType: (ctx.bookmark && ctx.bookmark.govTypes && ctx.bookmark.govTypes[row.tag])
       || (ctx.DEFINES.GOV_OF || {})[row.tag]
-      // A league is not a kingdom (SPEC §246): the Decapolis elects archons and
+      // A league is not a kingdom (SPEC §247): the Decapolis elects archons and
       // the Emesenes crown a priest, and the constitution rides the row.
       || row.govType || def.govType
       || (ctx.game.date.y >= 1800 ? 'republic' : 'monarchy'),

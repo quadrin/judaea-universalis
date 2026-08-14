@@ -1,7 +1,7 @@
-// UI verification — SPEC §246: the old names, at a real peace table in a real
+// UI verification — SPEC §247: the old names, at a real peace table in a real
 // browser.
 //
-// smoke166 proves the catalogue, the gates and the court that gets seated.
+// smoke167 proves the catalogue, the gates and the court that gets seated.
 // This one proves the four things only a browser can:
 //
 //   1. The release section names COUNTRIES. Open the table on a beaten
@@ -94,7 +94,7 @@ const readReleases = () => page.evaluate(() => {
   return { rows, locked, total: (card.querySelector('[data-ref="total"]') || {}).textContent || '' };
 });
 
-console.log('== §246 · the section names countries ==');
+console.log('== §247 · the section names countries ==');
 await openTable();
 {
   const { rows } = await readReleases();
@@ -111,7 +111,7 @@ await openTable();
     'and makes the case for the country: ' + (pho ? '…' + pho.tt.slice(-90).replace(/\s+/g, ' ') : ''));
 }
 
-console.log('== §246 · the ones out of reach are shown and inert ==');
+console.log('== §247 · the ones out of reach are shown and inert ==');
 {
   // Drop the score below Phoenicia's threshold and re-open: it moves from the
   // table to the block below it, with the reason on the row.
@@ -140,7 +140,7 @@ console.log('== §246 · the ones out of reach are shown and inert ==');
     'nor does it put one on the table');
 }
 
-console.log('== §246 · taking one ==');
+console.log('== §247 · taking one ==');
 {
   await page.evaluate((id) => {
     const w = window._ctx.game.wars.find((x) => x.id === id);

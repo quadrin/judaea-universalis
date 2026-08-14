@@ -401,7 +401,7 @@ export function initUI(staticCtx) {
         </label>
         <div class="peace-sec">Force them to release nations</div>
         ${/* Its own scroll box, like the province lists above it. Since the old
-              names (SPEC §246) a beaten empire can be divided twenty ways, and
+              names (SPEC §247) a beaten empire can be divided twenty ways, and
               twenty rows between the war score and the Send button is a card
               nobody reaches the bottom of. */
     (info.releasable || []).length ? `<div class="peace-provs peace-releases">` : ''}
@@ -419,7 +419,7 @@ export function initUI(staticCtx) {
       + (r.kind === 'return'
         ? ' The recipient keeps its existing government and treaties.'
         : ' The state rises independent and sheltered by a five-year truce.')
-      // Why this is a country and not a census bucket (SPEC §246).
+      // Why this is a country and not a census bucket (SPEC §247).
       + (r.basis ? '\n\n' + r.basis : '')
       + (r.goalAligned ? '\n\nThis fulfills the ' + (r.goalReason || 'war goal') + ' and receives favored terms.' : '')
       + '\nCosts ' + r.cost + ' war score. Liberation earns no infamy.')}">
@@ -437,7 +437,7 @@ export function initUI(staticCtx) {
       ? 'A separate peace cannot redraw another crown\'s map — releases wait for the full congress table.'
       : 'No viable homeland can be separated from their capital. Historical courts, living claimants, the old names of this ground, and new cultural states are all considered here.'}</div>`}
         ${/* The old names within reach of this war but not of this table
-              (SPEC §246): shown, priced and explained, so the ladder is a
+              (SPEC §247): shown, priced and explained, so the ladder is a
               thing to climb rather than a thing to guess at. */
     (info.releasableLocked || []).length ? `<div class="peace-locked">
           <div class="peace-dim">Old names this congress cannot quite reach:</div>

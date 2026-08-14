@@ -1792,7 +1792,7 @@ have — the towns burned, the century converting the province out from under a
 Jewish state — belong to a human's decisions and to `faithDrift`, neither of
 which an eight-year all-AI run exercises.
 
-`smoke166.mjs` and `uitest52.mjs` own §246's old names. The headless suite is
+`smoke167.mjs` and `uitest52.mjs` own §247's old names. The headless suite is
 mostly a *catalog validator*, and deliberately so: `js/data/revivals.js` names
 provinces, cultures, faiths, constitutions, name pools and idea keys in
 strings, and nothing at runtime can tell a typo from a province that simply

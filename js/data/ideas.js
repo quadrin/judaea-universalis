@@ -53,7 +53,7 @@ export function ideaCost(tier) { // tier index 0..4
 // and every arms program its own shops have delivered (SPEC §213). Pure; call
 // after any change to t.reforms, t.tech, t.eraIdeas or t.programs.
 //
-// A COURT BORN IN PLAY IS NOT IN THE CATALOG (SPEC §246). The old names the
+// A COURT BORN IN PLAY IS NOT IN THE CATALOG (SPEC §247). The old names the
 // peace table raises — Phoenicia, Kurdistan, the Decapolis — are deliberately
 // absent from DEFINES.TAGS, so there is no static entry here to read their
 // founding ideas back out of, and this function runs on every tech tier, every

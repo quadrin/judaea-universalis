@@ -1116,6 +1116,19 @@ static site, the zero dependencies, or the missing build step changes.
   with an empty martial pool — and says what it is and what a commission costs
   until the crown can afford one.
 
+- **What wants orders.** The Defense tab could tell you *Without a general: 2 of
+  6* and give you no way to do anything about it — the counts named no host, and
+  the bulk levers spent on everything at once or nothing. Between reading a
+  number and emptying the treasury there was nothing, though every other tab has
+  had the middle all along: Faith seats a High Priest from named candidates,
+  Court hires named advisors, each a card with a button. The army now has the
+  same list. One card per command that wants something — an army under nobody, a
+  fleet on an old rig, a host cut off from supply — carrying the orders that
+  answer it and the price of each. It is a to-do list rather than a roster, so a
+  realm in good order sees nothing at all, and the list shrinks as you work
+  through it. Orders you cannot afford are shown greyed with the arithmetic in
+  the tooltip, because deciding what to save for needs the price.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

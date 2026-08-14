@@ -2675,7 +2675,7 @@ html, body {
   flex: none;
 }
 .peace-off { opacity: 0.45; }
-/* The old names (SPEC §246). A release that raises a country this ground
+/* The old names (SPEC §247). A release that raises a country this ground
    really carried is a different KIND of term from a culture bucket set free,
    and the row says so before the tooltip is opened: a gold edge on the ones
    that are on the table, and a dimmed block below for the ones the war has
@@ -3731,6 +3731,18 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
    `.pp-build-btn span { text-overflow: ellipsis }` (line ~1691) is why the
    label is now wrapped in a span: a name too long for a narrow panel trails
    off rather than being cut mid-letter. */
+/* The Defense tab's bulk orders (SPEC §244, fixed in §246). These are TEXT
+   buttons carrying a count and a price — "Commission commanders — 4, 200 pts"
+   — and they shipped in `.pp-build-grid`, which is the province panel's 2x2
+   icon grid: two 1fr columns, `white-space: nowrap`, and a span that ellipses
+   what will not fit. The button rendered as "Commission comma…", losing both
+   numbers that are the reason to press it. This is §175's lesson again — a
+   text button is a different shape from an icon button — so they get one
+   full-width column and are allowed to wrap. */
+.np-bulk { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.np-bulk .pp-build-btn { justify-content: flex-start; padding: 6px 10px; white-space: normal; }
+.np-bulk .pp-build-btn span { overflow: visible; text-overflow: clip; white-space: normal; }
+
 .np-seat-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .np-seat-btn { flex: 0 1 auto; width: auto; max-width: 100%; padding: 3px 9px; font-size: 11.5px; }
 
