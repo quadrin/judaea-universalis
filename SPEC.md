@@ -17449,3 +17449,160 @@ every settle folds the claimant home whole.
   the four dates and the empire whole afterwards; and all four of the
   chapter's claims run in one campaign on one banner. `smoke160.mjs` carries
   both new arcs in its §239 table.
+
+## 250. The crown is the form of government
+
+Reported: *trim down the amount of formables; "brothers of lot" etc is dumb.
+Instead allow the user to pick* **government** *type forming — Republic of
+Judaea / Israel / Priestly Republic of Judaea. Also add Israelite / Judaean
+Empire for when you attain a huge plot of territory and critical provinces
+annexed.*
+
+Both halves are right, and the second one is the diagnosis of the first.
+
+§227 gave every Jewish constitution a banner of its own: ten crowns, ten
+colours, ten emblems, ten mission trees, one per road of the four
+constitutional forks. The Temple-State, the Commonwealth of the Lot, the
+Jubilee Commonwealth, the Freedom of Zion, the Priest-Kingdom, the Judaean
+Commonwealth, the Crown of Judaea, the House of David, the Two Houses, the
+Patriarchate. Ten banners over one city in one faith, in the same blue-ish
+corner of the palette, and the ten names between them contain the word
+"commonwealth" three times and the actual form of government nowhere.
+
+Those names are the *mechanism of a decision* rather than the thing a chancery
+writes on an envelope. A player who had just decided how their country is
+governed was offered a crown named after the procedure that decided it — as if
+France, having settled its constitution, were obliged to call itself the
+Commonwealth of the Estates-General. And the ten trees behind them were ten
+times the surface for one decision: eighty branch nodes, each written for one
+constitution and read by nobody who answered the fork any other way.
+
+### Five crowns, on two axes
+
+| Crown | Constitutions it is reached by | Out of | Chapters |
+|---|---|---|---|
+| **PRJ** Priestly Republic of Judaea | Temple-State · the Lot | JUD | 66 |
+| | Priesthood and Assembly | HAS | 167 |
+| **RPJ** Republic of Judaea | the Jubilee · No Ruler but God | JUD | 66 |
+| **EPJ** Ethnarchy of Judaea | the Patriarchate · the Two Houses | JUD | 132 |
+| **KGJ** Kingdom of Judaea | the Diadem · the House of David | JUD | 132, 614 |
+| **PKJ** Priestly Kingdom of Judaea | Diadem and Mitre | HAS | 167 |
+
+Two axes and nothing else in the table: **is the head of state crowned, and is
+the head of state the High Priest.** Every one of §214's ten adoptable
+constitutions reaches exactly one of the four quadrants, and the uncrowned
+hereditary prince — Ezekiel's Nasi, and the prince-and-priest of the Bar
+Kokhba coinage — takes the word this country's own history uses for exactly
+that office. Hyrcanus II was an ethnarch and so was Archelaus; the office is
+neither a kingdom nor a commonwealth and there has always been a name for it.
+
+**The plumbing inverts, and that is the section.** §227's ten each declared a
+constitution in `GOV_OF`, so `switchTagCore` applied it and *proclaiming the
+crown adopted the constitution*. The five declare nothing, and `switchTagCore`
+has always left `govType` alone where that table is silent. The crown no longer
+decides what the government is; the government decides what the crown is
+called. A state that fills its high priesthood from the urn and one that has
+handed it back to the four houses fly the same banner and remain two different
+states — which is the right way round, and is why `PRJ`, `RPJ`, `EPJ`, `KGJ`,
+`PKJ`, `JEM` and `IEM` must never be given a line in `GOV_OF`.
+
+The fork itself is untouched for the third time: it still writes the
+constitution at its own call site, still sets its §119 road marker, still fills
+§130's store. What changed is that its first requirement is now a *set* — a
+form of government is a class of constitutions and not one of them — so the
+settlement of 71 now opens `PRJ` down two of its four roads and `RPJ` down the
+other two, and each road still opens exactly one crown and shuts the rest.
+
+Each crown reads eleven nodes: §227's shared spine of five, unchanged, plus a
+branch of six written for the FORM rather than for a constitution. The priestly
+republic keeps an honest register of the priestly houses and survives the death
+of an executive who is also the country's holiest man; the republic comes
+through a sabbatical year solvent, musters off freeholds, and is asked for the
+one thing no other constitution here can be asked for — no ally, no overlord,
+no address, and still standing; the ethnarchy administers Ezekiel 46:18 while
+the founder's own leases are in the room next door; the kingdom is asked for a
+*second* king of the same house, because a crown becomes a dynasty at the
+second coronation and not the first; and the priestly kingdom keeps §227's best
+rung, the Pharisees and the Sadducees held at fifty at once, which the actual
+dynasty never once managed.
+
+### The crown above the crown
+
+The Kingdom of Israel is reached by a dynasty — a son of David, §138 — and
+every one of the five keeps that road open on exactly the terms JUD and HAS
+have. Proclaiming it still *ends* the form of government, and now for a
+sharper reason than before: MLI declares a monarchy in `GOV_OF` and these five
+declare nothing, so the asymmetry is the design rather than a side effect.
+
+The empire is the other direction: reached by the **map**.
+
+| | out of | what it asks |
+|---|---|---|
+| **IEM** Israelite Empire | MLI | the same gate |
+| **JEM** Judaean Empire | JUD · HAS · PRJ · RPJ · EPJ · KGJ · PKJ | the same gate |
+
+The gate is Solomon's border formula plus the seats of the world: the whole
+§138 heartland; the land bridge from the River of Egypt to the desert road —
+Damascus, Tyre, Gaza, Petra and Palmyra; **four** of Antioch, Alexandria,
+Memphis, Babylon, Seleucia-Ctesiphon and Roma, owned *and* controlled, because
+"critical provinces annexed" is the ask and an occupied city is not annexed;
+fifty-five provinces with twenty-four of them keeping the Law; sixty thousand
+men; independence, stability +2, legitimacy 85; and a place among the world's
+first three courts. On a map of 206 habitable cells that is Rome's Near East
+and Egypt in one hand.
+
+Two names for one thing, and the reason is the same reason the ten became
+five. A realm that proclaimed Israel gets the Israelite Empire; every other
+Jewish crown gets the Judaean one; **only Israel's restyles its head of
+state**, to King of Kings of Israel. A priestly republic that conquers the East
+is still a priestly republic, and handing its High Priest an imperial title
+would be the crown overwriting the constitution — the exact thing this section
+stopped doing four paragraphs ago. Both empires read one imperial tree of seven
+rungs under their own two names: pay for the roads, feed the provincial hosts,
+be first in the world's own ordering, bring thirty-five provinces under the
+Law, and then the rung every empire on this map failed at — seventy provinces
+held at stability +3 at war with nobody.
+
+### What the trim actually cost
+
+Ten banners became five and eighty branch nodes became thirty; two banners and
+seven rungs were added above them. `formables.js` is 565 lines shorter. Nothing
+a player can see got smaller: a campaign was only ever offered ONE
+constitutional crown — the one matching the fork it answered — and it is still
+offered one, under a name that says what it is.
+
+- **Regression contract**: `smoke152` — the table (five crowns on two axes,
+  every adoptable constitution reaching exactly one, no constitution reaching
+  two, each crown with a tag def, an emblem, an AI temper, a payoff and a
+  chain, no two sharing three letters, a name, a colour or an emblem, every
+  name matching `(Priestly )?(Republic|Kingdom|Ethnarchy) of Judaea`, and none
+  of §227's ten surviving in `TAGS`, `GOV_OF`, `PERSONALITIES`, `FLAGS` or
+  `FORMABLES`); the inverted plumbing (no crown declares a government; the
+  constitution, the election clock and the heir all survive the proclamation
+  unchanged; and two campaigns under one banner keeping two different
+  constitutions, which is the sentence the inversion exists to make true); the
+  gate (shut on the wrong form, open on either constitution that reaches it,
+  and shutting every rival crown of the same chapter); the four settlements of
+  71 fired through the live cards, two opening the priestly republic and two
+  the republic; five trees plus the empires' one (dressed, seated, reachable,
+  no dangling prerequisite, no branch node shared between two crowns); every
+  reward seating keys the engine actually reads; nothing free on the day of the
+  proclamation; **every node of every crown and both empires paying in a
+  maximal realm** in every chapter it is offered in, which is where dead
+  content hides; the road onward (MLI reachable from all five, and the form of
+  government ending when the kingdom is proclaimed over it); and the empire —
+  called one, flying real art, read as a great power, declaring no government,
+  Israel's reachable only out of Israel, every lesser crown reaching the
+  Judaean one, only Israel's restyling its ruler, and the gate shut on the
+  chapter's opening realm, open on a realm that holds the world, and shut again
+  the moment the seats of the world are lost. `smoke154` (descriptions that do
+  not lie about their own numbers, and no mission modifier that expires),
+  `smoke73` (the crowns not all paying the same), `smoke93`/`smoke120`/
+  `smoke158` (the Kingdom of Israel's own seven chapters), `smoke141` (§214's
+  table and rules), `smoke138` (§211's crown and civil bands), `smoke89`
+  (§130's store), `smoke46`/`smoke71` (emblem art and tag completeness) and
+  `smoke167` (§247's revival catalog, whose idea-key vocabulary is read off
+  `DEFINES.TAGS`) all pass unmoved. The forks, the store, the markers and the
+  four starting constitutions are exactly where they were, and `node
+  tools/autorun.mjs 8` is unchanged on all eight bookmarks: the seven crowns
+  are player-only, no bookmark boots one, and not one all-AI trajectory moves.

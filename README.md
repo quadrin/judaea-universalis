@@ -593,27 +593,41 @@ static site, the zero dependencies, or the missing build step changes.
 - Governments: monarchies crown heirs (and suffer regencies), republics vote
   every four years — Rome is a republic until the emperors, and 1948 Israel
   elects its head of government — theocracies never anoint a child, and tribal
-  confederations field every tent's sons. Forming a nation adopts its
-  constitution.
-- **And a constitution you choose becomes a country of its own.** The forks
-  that ask what kind of state this is — the Hasmonean diadem, the settlement
-  after the Great Revolt, the accession of Beit Kosiba, the line of Jehoiachin
-  — used to leave the same three letters on the map in the same blue whichever
-  answer you gave. Each of the ten answers now has a crown you can proclaim:
-  the Temple-State, the Commonwealth of the Lot, the Jubilee Commonwealth, the
-  Freedom of Zion, the Priest-Kingdom, the Judaean Commonwealth, the Crown of
-  Judaea, the House of David, the Two Houses, the Patriarchate. Each has its
-  own name, colour and emblem, its own founding payoff and national ideas, and
-  its own thirteen-node mission tree — the temple-state restoring the
-  twenty-four courses and collecting the half-shekel from three continents,
-  the Lot keeping an honest register of every priestly house in the country,
-  the Jubilee coming through a sabbatical year at peace and unable to borrow,
-  Freedom of Zion holding a state with no ally and no address, Ezekiel's prince
-  obeying 46:18 while the founder's own leases sit in the room next door.
-  Taking the crown *is* adopting the constitution — the Lot's proclamation
-  abolishes your heir, the Jubilee's starts an election clock — and none of
-  them closes the road to the Kingdom of Israel, which ends the constitution
-  when you proclaim it, because a kingdom is what it is.
+  confederations field every tent's sons.
+- **And how you are governed becomes a country of its own.** The forks that ask
+  what kind of state this is — the Hasmonean diadem, the settlement after the
+  Great Revolt, the accession of Beit Kosiba, the line of Jehoiachin — used to
+  leave the same three letters on the map in the same blue whichever answer you
+  gave. Now the answer names the country, by its **form of government**: the
+  Priestly Republic of Judaea, the Republic of Judaea, the Ethnarchy of Judaea,
+  the Kingdom of Judaea, the Priestly Kingdom of Judaea. Two questions decide
+  which crown is on offer — is your head of state crowned, and is your head of
+  state the High Priest — and every one of the ten constitutions the forks
+  adopt reaches exactly one of them. Each crown has its own colour, emblem,
+  founding payoff and national ideas, and its own eleven-node mission tree: the
+  priestly republic keeping an honest register of every priestly house and
+  surviving the death of an executive who is also the country's holiest man,
+  the republic coming through a sabbatical year solvent and holding a state
+  with no ally and no address, the ethnarchy obeying Ezekiel 46:18 while the
+  founder's own leases sit in the room next door, the kingdom crowning a
+  *second* king of the same house, and the priestly kingdom holding the
+  Pharisees and the Sadducees at fifty at once — which the actual dynasty never
+  managed. Taking the crown does **not** change how you are governed: it is
+  named for the constitution you already chose, so two priestly republics under
+  one banner stay two different states. And none of them closes the road to the
+  Kingdom of Israel, which *does* end the form of government when you proclaim
+  it, because a kingdom is what it is.
+- **Above all of them, the empire.** Hold the whole heartland, the land bridge
+  from the River of Egypt to the desert road — Damascus, Tyre, Gaza, Petra,
+  Palmyra — and annex four of the six seats of the world (Antioch, Alexandria,
+  Memphis, Babylon, Seleucia-Ctesiphon, Roma), with fifty-five provinces, sixty
+  thousand men and a place among the world's first three courts, and you may
+  proclaim the **Judaean Empire** — or, if you took the crown of David first,
+  the **Israelite Empire**, whose ruler is styled King of Kings of Israel. Both
+  read one seven-rung imperial tree: pay for the roads, feed the provincial
+  hosts, be first in the world's own ordering, bring thirty-five provinces
+  under the Law, and then the rung every empire on this map failed at —
+  seventy provinces held at stability +3 at war with nobody.
 - Armies wear their age on the map: antiquity's swallow-tailed standards, the
   lance ages' pennons, and squared modern brigade flags with rifle or tank
   glyphs — and modern armies march half again as fast and break fortress walls
