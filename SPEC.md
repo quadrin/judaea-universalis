@@ -16478,13 +16478,16 @@ the war, exactly as the year after the battle did. Armenia's collar is fastened
 after that war is declared, or the rule that a client joins its overlord's wars
 marches Armenia into a civil war on the far side of Europe.
 
+§249 adds the two this section named and did not fix — the 132 chapter's own
+Avidius Cassius and Pescennius Niger — bringing the table to seven.
+
 - **Regression contract**: `smoke160.mjs` — the banner exists and no roster
   flies it; the primitive folds ground, garrisons and treasury home, ends the
   civil war, inherits every other war, re-points third parties, forwards the
-  letters and moves a human chair rather than deleting it; and all five arcs
-  raise a court that holds ground and fights, then give every province back
-  under one banner with no war left being fought by a country that does not
-  exist.
+  letters and moves a human chair rather than deleting it; and every arc in
+  the table (five here, seven with §249's) raises a court that holds ground
+  and fights, then gives every province back under one banner with no war left
+  being fought by a country that does not exist.
 
 ## 240. The decades the chain skips
 
@@ -17354,3 +17357,95 @@ rather than finding a dead one.
   called into its lord's war and still fights it; and the player under a collar
   gets all three reasons through `getDiplomacy`, on controls the panel renders
   rather than hides.
+
+## 249. The two civil wars nobody fought
+
+Reported: *some of the civil wars aren't actually triggering — like Avidius
+Cassius.*
+
+**The card triggers.** That was checked first and it is not the defect. Run
+the 132 chapter forward from four different chairs — the Nasi's state, Rome,
+the house of the converts, and a Judaea that took the greater crown and
+changed its three letters on the way (§135) — and `ev2_avidius_cassius` fires
+on 175/5 in every one of them, and arrives as a two-road choice rather than a
+notice, exactly as written. So does `ev2_pescennius_niger` on 193/4. Nothing
+is wrong with the scheduler, the era window, the audience or the mask.
+
+**What was wrong** is that the civil war the card announces does not happen.
+§239 opened by saying that every scripted civil war in the game was a ruler
+swap and a modifier, and then fixed five of them. It missed two, and the two
+it missed are the 132 chapter's own — the pair its file header calls "the two
+civil-war cards", the only two in three hundred years where an eastern court
+is asked to pick a side. A player who read the card, weighed three months of
+a usurper's gratitude against a letter with their seal on it, and declared for
+Avidius Cassius, was declaring for:
+
+- a man who was not on the map,
+- against an empire that was never divided — run the chapter forward and `USR`
+  is not raised once before Zenobia in 269,
+- in a war that was never declared.
+
+The reward was talents and a modifier, the penalty was talents and a modifier,
+and the flags both cards set — `backedCassius`, `backedNiger` — are read by
+nothing anywhere in the game. Ninety years later, one file down, Zenobia takes
+sixty provinces off Rome and holds them for four years, and the map says so.
+The complaint is exact: some of the civil wars are not triggering. Two of them.
+
+**What it is now.** Both are §239 pairs — the card that raises the purple and
+the card that puts it out.
+
+| the claim | raised | its roster | settled |
+|---|---|---|---|
+| The Empire of Avidius Cassius | `ev2_avidius_cassius`, 175/5 | up to 64 provinces | `ev2_cassius_killed`, 175/8 |
+| The Empire of Pescennius Niger | `ev2_pescennius_niger`, 193/4 | up to 76 provinces | `ev2_issus`, 194/5 |
+
+"Up to", because only what Rome still holds goes over. Measured against a
+chapter played from 132 with Rome intact, Cassius takes 64 of Rome's 186 and
+Niger 76, and both hand every one of them back.
+
+**The ground is the argument.** `THE_EASTERN_COMMAND` is the commission
+itself — Syria and Commagene, Phoenicia, the Palestinian coast and hills,
+Arabia, Egypt, Cyprus, Cilicia — the provinces a man given the whole East can
+raise by writing to their governors, which is what all three of this chapter's
+eastern usurpations did. Cappadocia is deliberately not in it: Martius Verus
+held it for Marcus, and it is the one province of the commission known to have
+refused. Niger's roster is the same East plus the whole of Asia Minor and the
+city on the crossing, and *minus* Laodicea and Tyre, which read the field
+correctly on the first ballot, were sacked by Niger for it, and were paid back
+afterwards with everything Antioch lost. Only what Rome still holds goes over,
+so a chapter in which the Nasi's state kept the Galilee keeps it.
+
+**The rising is not the player's to decline.** Both roads on both cards raise
+the claimant, the way the Palmyra card already did: the options are what this
+court does about a civil war, not whether there is one. Waiting for the second
+courier is a policy, not a veto.
+
+**Three months and six days** is the point of the first pair and the reason it
+is worth a card rather than a line. The East is a different country for one
+season — long enough for every city between the Nile and the Euphrates to
+commit itself in writing, which is what the card was always about — and then
+Marcus burns the correspondence unread, executes nobody, exiles one prefect,
+and leaves behind the single permanent measure anyone took: no man may govern
+the province he was born in. Issus is the other kind of settlement. Antioch is
+demoted to a village of Laodicea, Neapolis loses its civic rights, Byzantium
+holds out two more years and is levelled to the ground, and the cities that
+guessed right have their guess written into their charters.
+
+**One raise, one settle.** `raiseClaimant` and `settleClaim` are now the two
+doors all three of the chapter's eastern claims go through — Cassius, Niger
+and Zenobia — which is what keeps the banner singular. `USR` is one tag, this
+chapter flies it four times, and `secedeTag` refuses a banner somebody is
+already up: a claim left standing in 175 would quietly cancel Palmyra in 269
+and Carausius in 286. Every raise is guarded on the banner being free and
+every settle folds the claimant home whole.
+
+- **Regression contract**: `smoke169.mjs` — both cards raise a country on
+  either road and Rome is exactly that much smaller; each claimant holds what
+  he actually held and not Cappadocia, Laodicea or Tyre; a Galilee the Nasi
+  owns is not handed to a Roman usurper; each settling card brings back the
+  ground, the garrisons and the treasury, ends the civil war and forwards the
+  letters; the raising cards are choices and the settling cards are Rome's
+  notices; a live campaign from 132 sees the East change hands four times on
+  the four dates and the empire whole afterwards; and all four of the
+  chapter's claims run in one campaign on one banner. `smoke160.mjs` carries
+  both new arcs in its §239 table.

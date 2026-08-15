@@ -17,9 +17,12 @@
 // (SPEC §75, §89).
 //
 // Most of these are `decider`-gated notices (SPEC §70): the player watches
-// them. The exceptions are the two civil-war cards, where an eastern court —
-// Roman province or sovereign Judaea alike — really does have to choose a
-// side, and the two where Judaea is the subject.
+// them. The exceptions are the civil-war cards that RAISE a claim, where an
+// eastern court — Roman province or sovereign Judaea alike — really does have
+// to choose a side, and the two where Judaea is the subject. Every civil war
+// here is a pair (SPEC §239, §249): the card that raises the purple and the
+// card that puts it out, because a claimant left standing is a country on the
+// map with nobody coming for it.
 //
 // Source spine: the Historia Augusta with the usual caution; Cassius Dio
 // LXXII–LXXX; Herodian; Eusebius, HE VI–X and the Life of Constantine;
@@ -106,6 +109,48 @@ function stirCities(ctx, names, id, name, months, effects) {
 // courier is the one departing from history — which is exactly the shape the
 // ledger should show.
 
+// The ground a claimant in the East actually stands on (SPEC §239, §249).
+//
+// `THE_EASTERN_COMMAND` is the commission itself: Syria and Commagene,
+// Phoenicia, the Palestinian coast and hills, Arabia, Egypt, Cyprus and
+// Cilicia — the provinces a man given the whole East can raise by writing to
+// their governors, which is what all three of this chapter's eastern
+// usurpations did. Cappadocia is deliberately not in it: Martius Verus held
+// it for Marcus in 175 and it is the one province of the commission that is
+// known to have refused.
+const THE_EASTERN_COMMAND = [
+  'Antioch', 'Seleucia Pieria', 'Laodicea', 'Apamea', 'Emesa', 'Chalcis',
+  'Damascus', 'Beroea', 'Cyrrhus', 'Palmyra', 'Zeugma', 'Samosata',
+  'Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus',
+  'Caesarea Maritima', 'Dora', 'Ptolemais', 'Scythopolis', 'Pella', 'Gadara',
+  'Antipatris', 'Sebaste', 'Neapolis', 'Jerusalem', 'Joppa', 'Gaza',
+  'Ascalon', 'Azotus', 'Jamnia', 'Caesarea Philippi', 'Batanea',
+  'Sepphoris', 'Tiberias', 'Tarichaea', 'Gischala',
+  'Gerasa', 'Philadelphia', 'Bostra', 'Petra', 'Medaba', 'Oboda', 'Aila',
+  'Hegra', 'Dumatha',
+  'Pelusium', 'Rhinocolura', 'Alexandria', 'Athribis', 'Leontopolis',
+  'Memphis', 'Arsinoe', 'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Syene',
+  'Berenice', 'Salamis', 'Paphos', 'Tarsus', 'Seleucia Trachea',
+];
+
+// Anatolia, which the commission does not carry and a man proclaimed at
+// Antioch with the Danube six weeks away has to be given by its own
+// governors. Niger was; Cassius, with a living emperor at his back, was not.
+const ANATOLIA = [
+  'Caesarea Mazaca', 'Tyana', 'Melitene', 'Iconium', 'Ancyra', 'Pisidia',
+  'Attalia', 'Nicaea', 'Smyrna', 'Halicarnassus', 'Rhodes', 'Sinope',
+  'Trapezus',
+];
+
+// 193: Niger's East, which was the commission plus the whole of Asia Minor and the
+// city on the crossing — and minus the two harbours that read the field
+// correctly on the first ballot. Laodicea and Tyre declared for Severus while
+// Antioch was still cheering, were sacked by Niger for it, and were paid back
+// afterwards with everything Antioch lost.
+const NIGERS_EAST = THE_EASTERN_COMMAND
+  .filter((n) => n !== 'Laodicea' && n !== 'Tyre')
+  .concat(ANATOLIA, ['Byzantion']);
+
 // Zenobia's empire at its height, 270-272 (SPEC §239): Syria, Phoenicia,
 // Palestine, Arabia, Egypt and the road up through Cilicia into Anatolia as
 // far as Ancyra. Only what Rome still holds goes over — a chapter in which
@@ -124,30 +169,93 @@ const PALMYRENE_EMPIRE = [
   'Caesarea Mazaca', 'Tyana', 'Iconium', 'Ancyra',
 ];
 
-// The rising itself happens whichever way the player answers it: the card's
-// two options are what the player's own state does about it, not whether
-// Zenobia takes the East.
-function raisePalmyra(ctx) {
+// One claimant at a time, dressed for the man whose it is (SPEC §239). The
+// banner is singular and `secedeTag` refuses one somebody is already flying,
+// so the raise is guarded and every arc in this chapter is put out by the
+// card that settles it before the next one needs the tag.
+function raiseClaimant(ctx, spec) {
   const h = ctx.helpers;
   if (ctx.game.tags.USR) return null;
-  const zen = h.secedeTag(ctx, 'ROM', 'USR', {
+  const claimant = h.secedeTag(ctx, 'ROM', 'USR', {
+    provinces: spec.provinces,
+    share: spec.share,
+    name: spec.name,
+    color: spec.color,
+    opinion: -160,
+    stability: spec.stability,
+    legitimacy: spec.legitimacy,
+    ruler: spec.ruler,
+  });
+  if (claimant) {
+    h.declareWar(ctx, 'ROM', 'USR', spec.war);
+    if (spec.modifier) h.addTagModifier(ctx, 'USR', spec.modifier);
+  }
+  return claimant;
+}
+
+// The rising itself happens whichever way the player answers it: each card's
+// options are what the player's own state does about a civil war, not whether
+// the civil war happens.
+function raiseCassius(ctx) {
+  return raiseClaimant(ctx, {
+    // The commission and nothing beyond it: three months and six days of it.
+    provinces: THE_EASTERN_COMMAND,
+    share: 0.3,
+    name: 'The Empire of Avidius Cassius',
+    color: [154, 74, 74],
+    stability: 0,
+    legitimacy: 35,
+    war: 'The Acclamation in the East',
+    ruler: { name: 'Avidius Cassius', title: 'Augustus', gov: 2, infl: 2, mar: 5, age: 45 },
+    modifier: {
+      id: 'the_whole_east', name: 'The Eastern Command', months: -1,
+      effects: { moraleMult: 1.1, incomeMult: 0.95 },
+    },
+  });
+}
+
+function raiseNiger(ctx) {
+  return raiseClaimant(ctx, {
+    provinces: NIGERS_EAST,
+    share: 0.4,
+    name: 'The Empire of Pescennius Niger',
+    color: [64, 84, 116],
+    stability: 0,
+    legitimacy: 45,
+    war: 'The War of the Three Emperors',
+    ruler: { name: 'Pescennius Niger', title: 'Augustus', gov: 3, infl: 3, mar: 3, age: 58 },
+    modifier: {
+      id: 'the_eastern_ballot', name: 'The Cities of the East', months: -1,
+      effects: { incomeMult: 1.1, manpowerMult: 1.1 },
+    },
+  });
+}
+
+function raisePalmyra(ctx) {
+  return raiseClaimant(ctx, {
     provinces: PALMYRENE_EMPIRE,
     share: 0.35,
     name: 'The Palmyrene Empire',
     color: [196, 150, 62],
-    opinion: -160,
     stability: 1,
     legitimacy: 55,
+    war: 'The Palmyrene Secession',
     ruler: { name: 'Zenobia', title: 'Augusta', gov: 4, infl: 4, mar: 3, age: 29 },
-  });
-  if (zen) {
-    h.declareWar(ctx, 'ROM', 'USR', 'The Palmyrene Secession');
-    h.addTagModifier(ctx, 'USR', {
+    modifier: {
       id: 'the_caravan_cities', name: 'The Caravan Cities', months: -1,
       effects: { incomeMult: 1.12, moraleMult: 1.05 },
-    });
-  }
-  return zen;
+    },
+  });
+}
+
+// …and the card that puts one out. `dissolveTag` folds the whole of the
+// claimant back into Rome — ground, garrisons, treasury, muster rolls — ends
+// the civil war with the man who was fighting it, and leaves the banner free
+// for the next claim (SPEC §239).
+function settleClaim(ctx, line) {
+  if (!ctx.game.tags.USR) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', 'ROM', { chronicle: line });
+  return true;
 }
 
 export const EVENTS_132_WORLD = [
@@ -179,6 +287,7 @@ export const EVENTS_132_WORLD = [
         effects: guard('ev2_avidius_cassius:0', (ctx) => {
           const h = ctx.helpers;
           const me = ctx.game.playerTag;
+          raiseCassius(ctx);
           h.adjust(ctx, me, { treasury: 120, mar: 15, legitimacy: -10 });
           h.addTagModifier(ctx, me, {
             id: 'letters_were_kept', name: 'The Letters Were Kept', months: 60,
@@ -193,9 +302,59 @@ export const EVENTS_132_WORLD = [
         tooltip: 'The oldest eastern policy there is: +5 legitimacy and no correspondence to explain. Antioch and Alexandria +1 unrest for 12 months while the question is open.',
         effects: guard('ev2_avidius_cassius:1', (ctx) => {
           const h = ctx.helpers;
+          raiseCassius(ctx);
           h.adjust(ctx, ctx.game.playerTag, { legitimacy: 5 });
           stirCities(ctx, ['Antioch', 'Alexandria'], 'the_open_question', 'The Question Is Open', 12, { unrest: 1 });
           h.chronicle(ctx, 'era', 'Avidius Cassius is acclaimed and killed within the season; the prudent waited for the second courier.');
+        }),
+      },
+    ],
+  },
+
+  // ── W1b · 175 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_cassius_killed',
+    title: 'Three Months and Six Days',
+    worldLabel: 'A centurion ends the eastern empire; Marcus burns the letters',
+    desc: 'The second courier says that Marcus Aurelius is alive, on the Danube, and '
+      + 'coming. After that the arithmetic is quick: a decurion and a centurion take '
+      + 'Avidius Cassius on the road, and his head goes west to an emperor who refuses '
+      + 'to look at it and orders it buried. Marcus reaches Syria to find a province '
+      + 'that has spent a season writing to the wrong man, and does the one thing '
+      + 'nobody has planned for — burns the correspondence unread, in public, before '
+      + 'anybody can be denounced with it. Not one senator is executed. The province '
+      + 'is not punished; the Egyptian prefect who declared for Cassius is exiled and '
+      + 'nothing worse. The only permanent measure is administrative and unanswerable: '
+      + 'no man may govern the province he was born in, ever again.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 175, m: 8 },
+    world: true,
+    aiOption: 0,
+    historical: 'Cassius was killed by his own officers after three months and six days; Marcus burned the letters unread, executed no senator, and barred every governor from his native province.',
+    options: [
+      {
+        label: 'Burn them unread',
+        tooltip: 'The East comes back under Rome whole — ground, garrisons and treasury. Rome +12 legitimacy and +1 stability, and "No Man Governs His Own" for 240 months: a governor who is a stranger to his province cannot be its patron (−0.2 unrest everywhere) and costs more to keep there (+3% administration). Antioch and Alexandria +1 unrest for 24 months while everyone works out who is still holding whose letter.',
+        effects: guard('ev2_cassius_killed:0', (ctx) => {
+          const h = ctx.helpers;
+          // Three months and six days (SPEC §249): the East that left in May
+          // is Rome's again in August, and the banner is free for the next
+          // claim on it.
+          settleClaim(ctx, 'A centurion takes Avidius Cassius on the road, and the East that '
+            + 'declared for him in May is Rome\'s again by August; Marcus burns the letters unread.');
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: 12, stability: 1 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'no_man_governs_his_own', name: 'No Man Governs His Own',
+              months: 240, effects: { unrestAll: -0.2, adminMult: 1.03 },
+            });
+          }
+          stirCities(ctx, ['Antioch', 'Alexandria'], 'the_burned_letters',
+            'The Letters Nobody Read', 24, { unrest: 1 });
+          h.chronicle(ctx, 'era', 'Marcus burns the eastern correspondence unread and executes nobody; '
+            + 'the one lasting measure is that no man will govern the province he was born in.');
         }),
       },
     ],
@@ -227,6 +386,7 @@ export const EVENTS_132_WORLD = [
         effects: guard('ev2_pescennius_niger:0', (ctx) => {
           const h = ctx.helpers;
           const me = ctx.game.playerTag;
+          raiseNiger(ctx);
           h.adjust(ctx, me, { treasury: 150, manpower: 2000, legitimacy: -10 });
           h.addTagModifier(ctx, me, {
             id: 'severus_remembers', name: 'Severus Remembers', months: 96,
@@ -243,12 +403,67 @@ export const EVENTS_132_WORLD = [
         effects: guard('ev2_pescennius_niger:1', (ctx) => {
           const h = ctx.helpers;
           const me = ctx.game.playerTag;
+          raiseNiger(ctx);
           h.adjust(ctx, me, { treasury: 80, legitimacy: 8 });
           h.addTagModifier(ctx, me, {
             id: 'right_ballot', name: 'The Right Ballot', months: 96,
             effects: { incomeMult: 1.05 },
           });
           h.chronicle(ctx, 'era', 'Severus takes the purple; the cities that guessed right on the first ballot are made rich.');
+        }),
+      },
+    ],
+  },
+
+  // ── W2b · 194 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_issus',
+    title: 'The Pass at Issus',
+    worldLabel: 'Severus breaks Niger at Issus; the East loses its emperor',
+    desc: 'Cyzicus, then Nicaea, then the Cilician Gates, and finally the pass where '
+      + 'Alexander beat Darius, because the ground has not moved and neither has the '
+      + 'argument for standing on it. Twenty thousand of Niger\'s men are said to fall '
+      + 'at Issus; he runs for Antioch, finds it emptying, runs for the Euphrates and '
+      + 'the Parthians, and is caught and beheaded short of the river. Then comes the '
+      + 'settlement, which is the part the East remembers. Antioch, which acclaimed '
+      + 'him, is stripped of its status and made a village of Laodicea, which did not. '
+      + 'Neapolis loses its civic rights. Byzantium holds out another two years and is '
+      + 'levelled to the ground for it — walls, theatres, baths, the lot — by an '
+      + 'emperor who then complains that he has taken a fortress off the frontier. And '
+      + 'every city that guessed right on the first ballot has its guess written into '
+      + 'its charter.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 194, m: 5 },
+    world: true,
+    aiOption: 0,
+    historical: 'Niger was broken at Issus in 194 and killed fleeing to the Euphrates; Severus demoted Antioch to a village of Laodicea, stripped Neapolis of its rights, and levelled Byzantium in 196.',
+    options: [
+      {
+        label: 'The settlement of the East',
+        tooltip: 'The East is one empire again — every province, garrison and talent back under Rome. Rome +10 legitimacy and +1 stability. Antioch is demoted (−2 development, +2 unrest for 120 months) and Byzantion levelled (−3 development, +2 unrest for 120 months); Neapolis loses its civic rights (+2 unrest for 96 months); and Laodicea and Tyre are paid back for the first ballot (+15% tax for 120 months).',
+        effects: guard('ev2_issus:0', (ctx) => {
+          const h = ctx.helpers;
+          // Issus, and the two years of settlement after it (SPEC §249): the
+          // eastern empire stops existing and everything it held is Rome's.
+          settleClaim(ctx, 'Severus breaks Niger at Issus and takes his head short of the Euphrates; '
+            + 'the East is one empire again, and Antioch is a village of Laodicea.');
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 10, stability: 1 });
+          const demote = (name, tax, prod) => {
+            const p = ctx.prov && ctx.prov(name);
+            if (!p || !p.dev) return;
+            p.dev.tax = Math.max(1, (p.dev.tax || 1) - tax);
+            p.dev.prod = Math.max(1, (p.dev.prod || 1) - prod);
+          };
+          demote('Antioch', 1, 1);
+          demote('Byzantion', 2, 1);
+          stirCities(ctx, ['Antioch'], 'a_village_of_laodicea', 'A Village of Laodicea', 120, { unrest: 2 });
+          stirCities(ctx, ['Byzantion'], 'the_walls_come_down', 'The Walls Come Down', 120, { unrest: 2 });
+          stirCities(ctx, ['Neapolis'], 'the_rights_withdrawn', 'The Rights Withdrawn', 96, { unrest: 2 });
+          stirCities(ctx, ['Laodicea', 'Tyre'], 'the_first_ballot', 'The First Ballot', 120, { taxMult: 1.15 });
+          h.chronicle(ctx, 'era', 'Severus settles the East: Antioch is demoted, Neapolis loses its rights, '
+            + 'Byzantium is levelled, and the cities that guessed right on the first ballot are made rich.');
         }),
       },
     ],
