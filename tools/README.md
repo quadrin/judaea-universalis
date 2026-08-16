@@ -1862,3 +1862,25 @@ reorders those two lines turns a documented exit into a dead end. And a
 guarantee the client RECEIVES has to survive the collar: only the ones it gave
 lapse, because striking the other direction would cancel a third crown's
 commitment that crown never agreed to give up.
+
+Since §251 (the rest of the civil wars) the anomaly set gains exactly one name
+at the default eight years, and it is a chapter's own weather rather than a
+regression. `40bce ATG: BLEEDING` is Antigonus — this file's documented
+"HAS/HER/ATG bleed while their fight-to-the-death scripted wars run" family,
+landing on a run where it had not landed before. Only ONE of that section's ten
+new civil wars falls inside an eight-year window at all: Labienus takes thirteen
+Anatolian provinces off Rome in September 40 and gives them back in June 39, so
+the 40 BCE chapter draws a different stream from its second month onwards. The
+trajectory is the family's, not a spiral — twenty-one provinces held start to
+finish, treasury at zero rather than the parent commit's −51, eleven thousand
+men in the field rather than eight. Every other anomaly on every other chapter
+is byte-identical to the parent commit, 66 CE included, where the empire of the
+Gauls is raised and dissolved inside the window without moving a single line.
+
+`smoke171.mjs` owns §251's ten arcs, and the thing to know before adding an
+eleventh is that `USR` is ONE tag. The suite runs four chapters twice each on
+that banner precisely because a claim left standing silently cancels the next
+one: `secedeTag` refuses a banner somebody is already flying, and the failure
+mode is not an exception but a later civil war that quietly never happens. If
+you add an arc, add its settling card in the same commit, and check that no
+other arc in that chapter overlaps its years.

@@ -88,6 +88,131 @@ function transfer(ctx, names, to, from) {
   return n;
 }
 
+// ── the Republic's civil wars, on the map (SPEC §251) ───────────────────────
+//
+// This package's own header says what it is for: the century in which Rome
+// became the thing the next chapter opens on, and the dispatches the high
+// priests actually read. Two of those dispatches are wars fought inside Italy
+// — the allies' war of 91 and Sulla's of 83 — and both were rendered as
+// unrest in three cities and a modifier on one undivided Rome.
+//
+// `USR`, the rival purple (§239): one generic banner, raised by the card that
+// raises the claim and dissolved by the card that settles it, dressed each
+// time for whoever is flying it. The two arcs here are three years apart and
+// this chapter flies the banner nowhere else before -91, so the singular rule
+// holds by the calendar rather than by luck.
+//
+// Neither claim is a "usurpation" in the later imperial sense, and the tag
+// does not care: Italia is a confederacy with its own senate, its own coinage
+// and a capital it renamed Italica, and Sulla is a proconsul with an army and
+// no legal standing whatever. What they have in common is the only thing the
+// map needs — provinces that have stopped obeying the government at Rome.
+
+// The confederacy of 91: Picenum, Campania south of the Volturnus, Samnium,
+// Lucania and Bruttium, at the resolution this map has for Italy. Roma is not
+// in it, and neither is anything north of the Apennines: the Po valley did not
+// rise, and the whole political point of the war is that it did not have to.
+const ITALIA = ['Ancona', 'Capua', 'Tarentum', 'Rhegium'];
+// Sulla's landing and his march: five legions at Brundisium in the spring of
+// 83, Campania by the autumn, and the Colline Gate a year later. What he holds
+// on the way is what he has taken from the government he is marching on.
+const SULLAS_ITALY = ['Brundisium', 'Tarentum', 'Capua'];
+
+// One claimant at a time; only what Rome still holds; a claim with no ground
+// is a proclamation, and this map does not model proclamations.
+function raiseAgainstRome(ctx, spec) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USR) return null;
+  const rome = who(ctx, 'ROM');
+  const ground = spec.provinces.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === rome;
+  });
+  if (!ground.length) return null;
+  const claimant = h.secedeTag(ctx, rome, 'USR', {
+    provinces: ground,
+    share: spec.share,
+    name: spec.name,
+    color: spec.color,
+    opinion: -200,
+    stability: spec.stability,
+    legitimacy: spec.legitimacy,
+    ruler: spec.ruler,
+  });
+  if (!claimant) return null;
+  h.declareWar(ctx, rome, 'USR', spec.war);
+  for (const w of g.wars || []) {
+    const all = (w.attackers || []).concat(w.defenders || []);
+    if (all.indexOf('USR') >= 0 && all.indexOf(rome) >= 0) w.noNegotiation = true;
+  }
+  setOpinion(ctx, rome, 'USR', -200);
+  setOpinion(ctx, 'USR', rome, -200);
+  if (spec.modifier) h.addTagModifier(ctx, 'USR', spec.modifier);
+  if (spec.army) {
+    const at = ground.indexOf(spec.army.at) >= 0 ? spec.army.at : ground[0];
+    h.spawnArmy(ctx, 'USR', at, spec.army.opts);
+  }
+  return claimant;
+}
+// …and the settlement. `winner: true` says the court being dissolved is the
+// one that WON, which is Sulla exactly: the army that marched on Rome did not
+// lose, it became the government and then wrote down what it had done.
+function settleAgainstRome(ctx, line, winner) {
+  if (!ctx.game.tags.USR) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), { chronicle: line, winner: !!winner });
+  return true;
+}
+
+function raiseItalia(ctx) {
+  return raiseAgainstRome(ctx, {
+    provinces: ITALIA,
+    share: 0.25,
+    name: 'Italia',
+    // The bull on the confederacy's own coinage, goring the wolf.
+    color: [138, 116, 72],
+    stability: 0,
+    legitimacy: 45,
+    war: 'The War of the Allies',
+    ruler: { name: 'Quintus Poppaedius Silo', title: 'Consul of Italia', gov: 3, infl: 3, mar: 4, age: 45 },
+    modifier: {
+      id: 'trained_in_roman_camps', name: 'Trained in Roman Camps', months: -1,
+      effects: { disciplineMult: 1.08, moraleMult: 1.05, incomeMult: 0.85 },
+    },
+    army: {
+      at: 'Ancona',
+      opts: {
+        inf: 12, cav: 2, name: 'The Army of Italica',
+        general: { name: 'Poppaedius Silo', fire: 3, shock: 3, maneuver: 3 },
+      },
+    },
+  });
+}
+
+function raiseSulla(ctx) {
+  return raiseAgainstRome(ctx, {
+    provinces: SULLAS_ITALY,
+    share: 0.2,
+    name: 'The Proconsul\'s Army',
+    color: [156, 118, 92],
+    stability: 0,
+    legitimacy: 20,
+    war: 'The War of Sulla and the Consuls',
+    ruler: { name: 'Lucius Cornelius Sulla', title: 'Proconsul', gov: 4, infl: 3, mar: 5, age: 55 },
+    modifier: {
+      id: 'the_army_from_the_east', name: 'The Army Back From the East', months: -1,
+      effects: { moraleMult: 1.15, disciplineMult: 1.1, manpowerMult: 0.6 },
+    },
+    army: {
+      at: 'Brundisium',
+      opts: {
+        inf: 10, cav: 3, name: 'The Legions of the Mithridatic War',
+        general: { name: 'Cornelius Sulla', fire: 3, shock: 4, maneuver: 3 },
+      },
+    },
+  });
+}
+
 export const EVENTS_167_REPUBLIC = [
 
   // ── R1 · -148 ─────────────────────────────────────────────────────────────
@@ -521,7 +646,7 @@ export const EVENTS_167_REPUBLIC = [
     options: [
       {
         label: 'Win the war by conceding the demand',
-        tooltip: 'Rome −1 stability, −6,000 manpower, and "The War of the Allies" (−15% income and manpower for 48 months) while the peninsula burns; Roma, Capua and Brundisium +2 unrest for 36 months. Then the settlement pays forever: "The Enfranchised Peninsula" (+5% income, +8% manpower permanently).',
+        tooltip: 'Italy goes onto the map as a confederacy with its own senate, its own coinage and its own capital, at war with Rome until the enrollment of 88. Rome −1 stability, −6,000 manpower, and "The War of the Allies" (−15% income and manpower for 48 months); Roma, Capua and Brundisium +2 unrest for 36 months. The settlement — and what it pays forever — comes when the war ends.',
         effects: guard('ev_rw_social_war:0', (ctx) => {
           const h = ctx.helpers;
           if (alive(ctx, 'ROM')) {
@@ -530,17 +655,90 @@ export const EVENTS_167_REPUBLIC = [
               id: 'war_of_the_allies', name: 'The War of the Allies', months: 48,
               effects: { incomeMult: 0.85, manpowerMult: 0.85 },
             });
-            h.addTagModifier(ctx, 'ROM', {
-              id: 'enfranchised_peninsula', name: 'The Enfranchised Peninsula', months: -1,
-              effects: { incomeMult: 1.05, manpowerMult: 1.08 },
-            });
           }
           stir(ctx, ['Roma', 'Capua', 'Brundisium'], {
             id: 'italia_rises', name: 'The Bull and the Wolf', months: 36,
             effects: { unrest: 2 },
           });
           h.setFlag(ctx, 'socialWar', true);
-          h.chronicle(ctx, 'era', 'Italy rises under its own senate and its own coin; Rome wins by conceding the demand, and the census rolls treble.');
+          // Eight peoples, one senate, one coinage and a capital renamed
+          // Italica (SPEC §251). "The most dangerous war Rome has fought
+          // since Hannibal" is a country on the map for three years, not a
+          // modifier on the country it is fighting.
+          const italia = raiseItalia(ctx);
+          h.chronicle(ctx, 'era', 'Italy rises under its own senate and its own coin'
+            + (italia ? ': the bull gores the wolf from Picenum to Bruttium, and Rome must beat armies it trained itself.' : '; Rome wins by conceding the demand, and the census rolls treble.'));
+        }),
+      },
+    ],
+  },
+
+  // ── R9b · -88 ─────────────────────────────────────────────────────────────
+  // The other half of the pair (§251): a card that raises a country has to
+  // have a card that puts it out. Rome wins this war the only way it can be
+  // won, which is by conceding what it is about — and the concession is what
+  // pays, for ever, which is why the permanent modifier lives here and not on
+  // the rising.
+  {
+    id: 'ev_rw_italia_enrolled',
+    title: 'The Enrollment',
+    worldLabel: 'Italy is enfranchised; the confederacy dissolves into the census',
+    desc: 'Rome fights the second year of the war with a law in one hand: citizenship '
+      + 'for every ally that has not revolted, then for every ally that lays down its '
+      + 'arms, then — by a tribune\'s bill nobody troubles to oppose — for the '
+      + 'peninsula. The confederacy at Italica has nothing left to secede for, and its '
+      + 'armies, which are Roman armies in everything but the oath, go home to be '
+      + 'enrolled in tribes deliberately too few to matter. The holdouts in Samnium '
+      + 'fight on for their own reasons and are destroyed for them. Within a decade '
+      + 'everyone from the Po to the strait is Roman, the word means something it has '
+      + 'never meant before, and the census rolls have roughly trebled: a thing every '
+      + 'foreign court should sit with for a moment, because Rome has just converted a '
+      + 'mutiny into manpower.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: -88, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'socialWar'),
+    historical: 'The lex Julia of 90 and the lex Plautia Papiria of 89 enfranchised the allies by stages; the last Samnite holdouts were reduced by 88.',
+    options: [
+      {
+        label: 'Enroll them in tribes too few to matter',
+        tooltip: 'The confederacy folds back into Rome — ground, armies and treasury — and the war ends. Rome takes "The Enfranchised Peninsula" (+5% income, +8% manpower, permanently) and +5 legitimacy.',
+        effects: guard('ev_rw_italia_enrolled:0', (ctx) => {
+          const h = ctx.helpers;
+          settleAgainstRome(ctx, 'Italy is enrolled: the confederacy at Italica dissolves into the '
+            + 'census that beat it, and the word Roman means something it never meant before.', false);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: 5 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'enfranchised_peninsula', name: 'The Enfranchised Peninsula', months: -1,
+              effects: { incomeMult: 1.05, manpowerMult: 1.08 },
+            });
+          }
+          h.setFlag(ctx, 'socialWar', false);
+        }),
+      },
+      {
+        label: 'Enroll them, and make the Samnites an example',
+        tooltip: 'The same reunion and the same permanent settlement, taken by storm rather than by law: Rome −4,000 manpower and +1 stability, and Capua and Tarentum carry "The Samnite Reckoning" (+3 unrest for 36 months).',
+        effects: guard('ev_rw_italia_enrolled:1', (ctx) => {
+          const h = ctx.helpers;
+          settleAgainstRome(ctx, 'The enrollment is voted and Samnium is reduced anyway; the '
+            + 'confederacy ends in a census and a punitive march.', false);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { manpower: -4000, stability: 1 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'enfranchised_peninsula', name: 'The Enfranchised Peninsula', months: -1,
+              effects: { incomeMult: 1.05, manpowerMult: 1.08 },
+            });
+          }
+          stir(ctx, ['Capua', 'Tarentum'], {
+            id: 'samnite_reckoning', name: 'The Samnite Reckoning', months: 36,
+            effects: { unrest: 3 },
+          });
+          h.setFlag(ctx, 'socialWar', false);
         }),
       },
     ],
@@ -588,6 +786,50 @@ export const EVENTS_167_REPUBLIC = [
     ],
   },
 
+  // ── R10b · -83 ────────────────────────────────────────────────────────────
+  // The road demonstrated in 88 is used in 83, and this time nobody leaves for
+  // the East afterwards. §251: the card that raises the claim, so that the
+  // proscriptions have a war to be the end of.
+  {
+    id: 'ev_rw_sulla_returns',
+    title: 'Five Legions at Brundisium',
+    worldLabel: 'Sulla lands in Italy; the civil war for Rome begins',
+    desc: 'Sulla finishes with Mithridates on terms the Senate never authorized, sells '
+      + 'Asia a fine it will take a generation to pay, and lands at Brundisium with '
+      + 'five legions, two thousand talents and no legal standing of any kind. The '
+      + 'government at Rome — Marian, consular, and perfectly lawful — raises armies '
+      + 'that outnumber him two to one and watches them change sides on the march, '
+      + 'because his are the men who have been paid and theirs are the men who have '
+      + 'been promised. Young Pompey brings three legions of his own raising, which is '
+      + 'not a thing a private citizen is allowed to have, and is thanked for it. For '
+      + 'eighteen months Italy has two governments, and the one with no office wins.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: -83, m: 5 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    historical: 'Sulla landed at Brundisium in the spring of 83 with five legions; the war ran through Italy for eighteen months and ended at the Colline Gate in November 82.',
+    options: [
+      {
+        label: 'The men who have been paid against the men who have been promised',
+        tooltip: 'Southern Italy goes over to the proconsul: a second Roman government on the map, at war with Rome until the Colline Gate. Rome −1 stability and −20 legitimacy; Roma +2 unrest for 24 months.',
+        effects: guard('ev_rw_sulla_returns:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { stability: -1, legitimacy: -20 });
+          stir(ctx, ['Roma'], {
+            id: 'two_governments', name: 'Two Governments in Italy', months: 24,
+            effects: { unrest: 2 },
+          });
+          const sulla = raiseSulla(ctx);
+          h.setFlag(ctx, 'sullaLanded', !!sulla);
+          h.chronicle(ctx, 'era', 'Sulla lands at Brundisium with five legions and no office'
+            + (sulla ? '; for eighteen months Italy has two governments.' : ', and the consuls raise armies that keep changing sides.'));
+        }),
+      },
+    ],
+  },
+
   // ── R11 · -82 ─────────────────────────────────────────────────────────────
   {
     id: 'ev_rw_proscriptions',
@@ -616,9 +858,13 @@ export const EVENTS_167_REPUBLIC = [
     options: [
       {
         label: 'White boards, names, and a bounty',
-        tooltip: 'Rome +300 talents of confiscations, +1 stability and −12 legitimacy; Roma +2 unrest for 60 months ("Checking the Lists"). Order of a kind is restored — the kind you check every morning.',
+        tooltip: 'The Colline Gate ends the war and the proconsul\'s Italy comes back under one banner — as the winner, with the dictatorship written afterwards. Rome +300 talents of confiscations, +1 stability and −12 legitimacy; Roma +2 unrest for 60 months ("Checking the Lists"). Order of a kind is restored — the kind you check every morning.',
         effects: guard('ev_rw_proscriptions:0', (ctx) => {
           const h = ctx.helpers;
+          // The army that marched on Rome did not lose; it became the
+          // government and then legislated about what it had done (§251).
+          settleAgainstRome(ctx, 'The Colline Gate is fought under the walls and the proconsul\'s '
+            + 'party is the government: Italy is one country again, with lists in the Forum.', true);
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 300, stability: 1, legitimacy: -12 });
           stir(ctx, ['Roma'], {
             id: 'checking_the_lists', name: 'Checking the Lists', months: 60,

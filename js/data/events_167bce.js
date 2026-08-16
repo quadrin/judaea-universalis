@@ -288,6 +288,81 @@ function suppressBreakaway(ctx, names, id, label, costs) {
   } catch (e) { warnOnce('suppressBreakaway:' + id, e); }
 }
 
+// ── the king's own civil war (SPEC §251) ────────────────────────────────────
+//
+// Six years, fifty thousand dead by Josephus' count, a Seleucid king invited
+// onto Judaean ground by Judaeans, and eight hundred crosses at the end of it.
+// The chapter has all four cards — the citrons, the invitation, the feast at
+// the crosses, the deathbed advice — and the war between them consisted of a
+// flag called `etrogimSpilled` and +2 unrest. The player could answer "let the
+// mercenaries clear the court", read the words "the civil-war chain begins",
+// and then govern an entirely peaceful kingdom for six years until the card
+// about the invitation arrived.
+//
+// This is the sectarian war of the whole Hasmonean century and it belongs on
+// the map: not a rival court — the rebels never founded a state, they sent for
+// somebody else's king — but the countryside in arms under the ordinary rebel
+// banner, which is exactly what the sources describe and exactly what the
+// engine already models.
+//
+// The hill country the schools held, in the order the war took it. Shechem is
+// first because Shechem is where Demetrius camped.
+const THE_COUNTRY_IN_ARMS = [
+  'Neapolis', 'Sebaste', 'Hebron', 'Adora', 'Emmaus', 'Lydda', 'Jericho', 'Modi\'in',
+];
+const REBEL_HOST = 'The Country in Arms';
+// The rising: up to three provinces of the king's own, never his seat, each
+// under the rebel banner with a host standing on it. Returns how many rose.
+function theCountryRises(ctx) {
+  const h = ctx.helpers;
+  const has = who(ctx, 'HAS');
+  const seat = h.controls(ctx, has, 'Jerusalem') ? 'Jerusalem' : null;
+  // Never more than half the kingdom, and never more than three districts:
+  // this is a civil war inside a state, not the end of one, and the chapter
+  // opens on a Judaea of three provinces that a rising of three would erase.
+  const held = (ctx.game.provinces || []).filter((p) => p && !p.impassable && p.controller === has).length;
+  const cap = Math.min(3, Math.floor(held / 2));
+  if (cap < 1) return 0;
+  const pool = THE_COUNTRY_IN_ARMS.filter((n) => n !== seat && h.controls(ctx, has, n));
+  // A kingdom whose hill country is elsewhere still has a countryside: fall
+  // back to anything the crown holds that is not the capital.
+  if (pool.length < cap) {
+    for (const p of ctx.game.provinces || []) {
+      if (!p || p.impassable || p.controller !== has || p.name === seat) continue;
+      if (pool.indexOf(p.name) < 0) pool.push(p.name);
+      if (pool.length >= cap) break;
+    }
+  }
+  let risen = 0;
+  for (const name of pool.slice(0, cap)) {
+    h.changeController(ctx, name, 'REB');
+    const id = h.spawnArmy(ctx, 'REB', name, {
+      inf: risen === 0 ? 6 : 4, name: REBEL_HOST,
+      general: risen === 0 ? { name: 'The Elders of the Schools', fire: 1, shock: 2, maneuver: 3 } : null,
+    });
+    if (id) risen++;
+  }
+  return risen;
+}
+// …and the end of it, whichever card gets there first: the hosts disperse and
+// the ground answers the crown again. Only the bands this rising raised are
+// touched — a rebellion somewhere else in the world is somebody else's war.
+function theCountrySubmits(ctx) {
+  const h = ctx.helpers;
+  const has = who(ctx, 'HAS');
+  let put = 0;
+  for (const a of h.armiesOf(ctx, 'REB') || []) {
+    if (!a || a.name !== REBEL_HOST) continue;
+    h.removeArmy(ctx, a.id);
+    put++;
+  }
+  for (const p of ctx.game.provinces || []) {
+    if (!p || p.impassable || p.owner !== has || p.controller !== 'REB') continue;
+    h.changeController(ctx, p.canon || p.name, has);
+  }
+  return put;
+}
+
 const JUDEAN_HILLS = ['Jerusalem', 'Emmaus', 'Hebron', 'Adora', 'Sebaste', 'Neapolis'];
 const SOUTHERN_APPROACH = ['Hebron', 'Adora', 'Engaddi', 'Jerusalem', 'Emmaus'];
 const EASTERN_PROVINCES = ['Ecbatana', 'Susa', 'Seleucia-Ctesiphon', 'Babylon', 'Nehardea',
@@ -3763,7 +3838,7 @@ export const EVENTS_167 = [
     options: [
       {
         label: 'Let the mercenaries clear the court',
-        tooltip: '−20 legitimacy; "Slaughter at the Feast" (+2 unrest everywhere, 36 months); Hasideans −30 approval, captains +15; the civil-war chain begins.',
+        tooltip: '−20 legitimacy; "Slaughter at the Feast" (+2 unrest everywhere, 36 months); Hasideans −30 approval, captains +15. The civil war begins in earnest: up to three provinces of the kingdom raise the rebel banner with hosts standing on them, and they must be beaten or bought back.',
         effects: guard('ev_etrogim:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { legitimacy: -20 });
@@ -3775,6 +3850,18 @@ export const EVENTS_167 = [
           h.factionShift(ctx, 'HAS', 'warparty', 15);
           h.doctrine(ctx, 'authority', 2);
           h.setFlag(ctx, 'etrogimSpilled', true);
+          // Six years and fifty thousand dead is a war, not a modifier
+          // (SPEC §251). The hill country goes over.
+          const risen = theCountryRises(ctx);
+          if (risen) {
+            h.addTagModifier(ctx, 'HAS', {
+              id: 'the_king_and_the_nation', name: 'The War of the King and the Nation', months: 72,
+              effects: { moraleMult: 0.92, incomeMult: 0.85, manpowerMult: 0.9 },
+            });
+            h.chronicle(ctx, 'war', 'The citrons are answered with the guards, and the country '
+              + 'takes arms against its own king: ' + risen + (risen === 1 ? ' district' : ' districts')
+              + ' raise the banner of the schools.');
+          }
         }),
       },
       {
@@ -3818,11 +3905,24 @@ export const EVENTS_167 = [
     options: [
       {
         label: 'They will remember whose ground this is',
-        tooltip: 'The Six Thousand muster for Jannaeus (6 infantry); +15 legitimacy; Hasideans −10 approval. Demetrius withdraws and the executions follow.',
+        tooltip: 'The Six Thousand muster for Jannaeus (6 infantry) and one rebel host goes home with them; +15 legitimacy; Hasideans −10 approval. Demetrius withdraws and the executions follow.',
         effects: guard('ev_demetrius_invited:0', (ctx) => {
           const h = ctx.helpers;
           const at = firstControlled(ctx, 'HAS', ['Neapolis', 'Sebaste', 'Jerusalem', 'Emmaus']);
           if (at) h.spawnArmy(ctx, 'HAS', at, { inf: 6, name: 'The Six Thousand' });
+          // The men who walk back across the lines walk out of somebody's
+          // army (SPEC §251): the largest band in the field dissolves, and the
+          // district it was standing on answers the crown again.
+          const bands = (h.armiesOf(ctx, 'REB') || []).filter((a) => a && a.name === REBEL_HOST);
+          if (bands.length) {
+            bands.sort((a, b) => (b.men || 0) - (a.men || 0));
+            const gone = bands[0];
+            const stood = ctx.game.provinces[gone.prov];
+            h.removeArmy(ctx, gone.id);
+            if (stood && stood.controller === 'REB' && stood.owner === who(ctx, 'HAS')) {
+              h.changeController(ctx, stood.canon || stood.name, who(ctx, 'HAS'));
+            }
+          }
           h.adjust(ctx, 'HAS', { legitimacy: 15 });
           h.factionShift(ctx, 'HAS', 'hasideans', -10);
           h.setFlag(ctx, 'defectorsReturned', true);
@@ -3869,9 +3969,13 @@ export const EVENTS_167 = [
     options: [
       {
         label: 'Let the city watch',
-        tooltip: '−25 legitimacy, −8,000 manpower; "The Lion of Wrath" (+1 unrest everywhere, +10% discipline, permanent); Hasideans −40 approval, captains +20; crowned authority +3.',
+        tooltip: 'The rising is over: the rebel hosts disperse and their districts answer the crown again. −25 legitimacy, −8,000 manpower; "The Lion of Wrath" (+1 unrest everywhere, +10% discipline, permanent); Hasideans −40 approval, captains +20; crowned authority +3.',
         effects: guard('ev_eight_hundred:0', (ctx) => {
           const h = ctx.helpers;
+          // Bethome ends the war (SPEC §251): what the crosses are FOR is that
+          // nobody keeps the field afterwards.
+          theCountrySubmits(ctx);
+          h.removeModifier(ctx, 'HAS', 'the_king_and_the_nation');
           h.adjust(ctx, 'HAS', { legitimacy: -25, manpower: -8000 });
           h.addTagModifier(ctx, 'HAS', {
             id: 'the_lion_of_wrath', name: 'The Lion of Wrath', months: -1,
@@ -3885,9 +3989,11 @@ export const EVENTS_167 = [
       },
       {
         label: 'Enough',
-        tooltip: '−10 legitimacy, +1 stability, −4,000 manpower; Hasideans +10 approval, captains −5; conciliar authority +1.',
+        tooltip: 'The rising is over on softer terms: the hosts disperse, their districts answer the crown again, and the country is not taught what a cross is. −10 legitimacy, +1 stability, −4,000 manpower; Hasideans +10 approval, captains −5; conciliar authority +1.',
         effects: guard('ev_eight_hundred:1', (ctx) => {
           const h = ctx.helpers;
+          theCountrySubmits(ctx);
+          h.removeModifier(ctx, 'HAS', 'the_king_and_the_nation');
           h.adjust(ctx, 'HAS', { legitimacy: -10, stability: 1, manpower: -4000 });
           h.factionShift(ctx, 'HAS', 'hasideans', 10);
           h.factionShift(ctx, 'HAS', 'warparty', -5);

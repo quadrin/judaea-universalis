@@ -278,6 +278,76 @@ function romeJoins(ctx) {
   }
 }
 
+// ── the Roman who conquered Rome for Parthia (SPEC §251) ────────────────────
+//
+// Quintus Labienus overran the Roman East in 40 with Pacorus' horsemen and
+// minted coins reading PARTHICUS IMPERATOR — a Roman general titling himself
+// conqueror of Parthia by Parthia's leave. He held Cilicia, Caria, Lydia,
+// Phrygia, Pisidia and Pamphylia for the better part of a year, garrisoned
+// them with Roman deserters, and the province he did not hold was the one
+// Ventidius landed in. This chapter's card said all of that and then adjusted
+// two numbers on Parthia's ledger: Rome kept every province, and the "tide
+// that flooded Asia" was a tooltip.
+//
+// It is a civil war and not an invasion, which is why it flies `USR` (§239)
+// and not Parthia's banner: the men in those garrisons were Roman soldiers of
+// the Liberators' army, and what the cities of Asia paid was Roman taxes to a
+// Roman commander with the wrong patron.
+const LABIENUS_ASIA = [
+  'Tarsus', 'Seleucia Trachea', 'Attalia', 'Pisidia', 'Iconium', 'Tyana', 'Mazaca',
+  'Melitene', 'Smyrna', 'Halicarnassus', 'Rhodes', 'Nicaea', 'Ancyra',
+];
+
+// The claim, on whatever of it Rome still holds. Guarded on the banner being
+// free and on there being ground to raise it over.
+function raiseLabienus(ctx) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USR) return null;
+  const rome = who(ctx, 'ROM');
+  const ground = LABIENUS_ASIA.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === rome;
+  });
+  if (!ground.length) return null;
+  const claimant = h.secedeTag(ctx, rome, 'USR', {
+    provinces: ground,
+    share: 0.3,
+    name: 'Labienus Parthicus',
+    color: [150, 120, 84],
+    opinion: -200,
+    stability: -1,
+    legitimacy: 25,
+    ruler: {
+      name: 'Quintus Labienus', title: 'Parthicus Imperator', gov: 2, infl: 2, mar: 4, age: 36,
+    },
+  });
+  if (!claimant) return null;
+  h.declareWar(ctx, rome, 'USR', 'The War of the Parthian Roman');
+  const w = warBetween(g, rome, 'USR');
+  if (w) w.noNegotiation = true; // a proconsul does not negotiate with a renegade
+  nudgeOpinion(ctx, rome, 'USR', -200);
+  nudgeOpinion(ctx, 'USR', rome, -200);
+  h.addTagModifier(ctx, 'USR', {
+    id: 'the_parthian_horse', name: 'Parthian Horse and Roman Deserters', months: -1,
+    effects: { moraleMult: 1.1, incomeMult: 0.85, manpowerMult: 0.75 },
+  });
+  const at = ground.indexOf('Tarsus') >= 0 ? 'Tarsus' : ground[0];
+  h.spawnArmy(ctx, 'USR', at, {
+    inf: 6, cav: 4, name: 'The Army of Labienus',
+    general: { name: 'Quintus Labienus', fire: 2, shock: 3, maneuver: 4 },
+  });
+  return claimant;
+}
+// …and the pass that ends him. Ventidius breaks Labienus at the Cilician
+// Gates in 39; the renegade dies in flight and the province he taxed goes
+// back to the government that owned it.
+function settleLabienus(ctx, line) {
+  if (!ctx.game.tags.USR) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), { chronicle: line });
+  return true;
+}
+
 export const EVENTS_40 = [
   // ── 1: scene-setter ───────────────────────────────────────────────────────
   {
@@ -330,16 +400,21 @@ export const EVENTS_40 = [
     options: [
       {
         label: 'The East belongs to the horsemen',
-        tooltip: 'Parthia: +25 martial points, +1 stability. Antigonus: +5 legitimacy — his patron bestrides the world.',
+        tooltip: 'Roman Asia Minor goes over to Labienus — a Roman court in Parthian service, on the map and at war with Rome until Ventidius reaches the Cilician Gates. Parthia: +25 martial points, +1 stability. Antigonus: +5 legitimacy — his patron bestrides the world.',
         effects: guard('ev5_labienus:0', (ctx) => {
+          raiseLabienus(ctx);
           ctx.helpers.adjust(ctx, 'PAR', { mar: 25, stability: 1 });
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
         }),
       },
       {
         label: 'Asia pays for its conquerors',
-        tooltip: 'Parthia: +40 talents from the plundered cities, +10 martial points — the lancers are paid, not inspired. Antigonus: +5 legitimacy.',
+        tooltip: 'The same conquest, farmed rather than governed: Parthia +40 talents from the plundered cities and +10 martial points — the lancers are paid, not inspired. Antigonus: +5 legitimacy. Labienus holds Asia either way.',
         effects: guard('ev5_labienus:1', (ctx) => {
+          const renegade = raiseLabienus(ctx);
+          // Plundered rather than administered: the cities pay Parthia now and
+          // the court that taxes them is the poorer for it.
+          if (renegade) ctx.helpers.adjust(ctx, 'USR', { treasury: -40 });
           ctx.helpers.adjust(ctx, 'PAR', { treasury: 40, mar: 10 });
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
         }),
@@ -547,8 +622,10 @@ export const EVENTS_40 = [
     options: [
       {
         label: 'The mule-seller\'s first lesson',
-        tooltip: 'Parthia: −1 stability. Rome: +10 legitimacy. Antigonus\' Parthian Party −10 approval — the patron looks mortal.',
+        tooltip: 'Labienus dies in flight and Roman Asia Minor comes back under one banner. Parthia: −1 stability. Rome: +10 legitimacy. Antigonus\' Parthian Party −10 approval — the patron looks mortal.',
         effects: guard('ev5_gates:0', (ctx) => {
+          settleLabienus(ctx, 'Ventidius breaks Labienus at the Cilician Gates; the renegade dies in '
+            + 'flight, and the cities that paid him pay Rome again.');
           ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
           ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 10 });
           ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -10);
@@ -556,8 +633,10 @@ export const EVENTS_40 = [
       },
       {
         label: 'Hound them to the Euphrates',
-        tooltip: 'Rome: +15 martial points, +1 war exhaustion — the pursuit is paid for in marching flesh. Parthia: −1 stability. Antigonus\' Parthian Party −5 approval.',
+        tooltip: 'The same reconquest, pressed further: Rome +15 martial points and +1 war exhaustion — the pursuit is paid for in marching flesh. Parthia: −1 stability. Antigonus\' Parthian Party −5 approval.',
         effects: guard('ev5_cilician_gates:1', (ctx) => {
+          settleLabienus(ctx, 'Labienus is broken at the passes and hunted to the Euphrates; the '
+            + 'Roman East is Rome\'s again, and the horse-archers have learned what slingers do.');
           ctx.helpers.adjust(ctx, 'ROM', { mar: 15, warExhaustion: 1 });
           ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
           ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -5);

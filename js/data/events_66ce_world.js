@@ -78,6 +78,71 @@ function transfer(ctx, names, to, from) {
   return n;
 }
 
+// ── the imperium Galliarum, on the map (SPEC §251) ──────────────────────────
+//
+// The Batavian rising is the one card in this package that describes a country
+// coming into existence — "the Gallic units have sworn an empire of the Gauls"
+// — and it used to spend three province modifiers and an opinion shift saying
+// so. It is a civil war, not a barbarian invasion: Civilis had twenty-five
+// years in Roman service, the units that swore the Gallic empire were Roman
+// auxiliary and legionary units, and the two legions at Vetera surrendered to
+// men wearing the same equipment.
+//
+// It therefore flies the same `USR` banner as every other claimant (§239),
+// which this chapter has already used once and given back: Vitellius takes it
+// in January 69 and Vespasian's card folds it up in July. The Rhine is
+// September. One tag, twice in one year, never both at once — and `secedeTag`
+// refuses a banner somebody is already flying, so the guard is real rather
+// than a comment.
+const GALLIC_EMPIRE = [
+  'Batavia', 'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
+  'Augusta Treverorum', 'Durocortorum', 'Vesontio',
+  'Gesoriacum', 'Samarobriva', 'Rotomagus', 'Lutetia',
+];
+
+function raiseTheGauls(ctx) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USR) return null;
+  const rome = who(ctx, 'ROM');
+  const ground = GALLIC_EMPIRE.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === rome;
+  });
+  if (!ground.length) return null;
+  const gauls = h.secedeTag(ctx, rome, 'USR', {
+    provinces: ground,
+    share: 0.15,
+    name: 'The Empire of the Gauls',
+    color: [104, 132, 96],
+    opinion: -180,
+    stability: -1,
+    legitimacy: 30,
+    ruler: {
+      name: 'Julius Civilis', title: 'Prince of the Batavi', gov: 2, infl: 3, mar: 4, age: 45,
+    },
+  });
+  if (!gauls) return null;
+  h.declareWar(ctx, rome, 'USR', 'The Rising on the Rhine');
+  setOpinion(ctx, rome, 'USR', -180);
+  setOpinion(ctx, 'USR', rome, -180);
+  h.addTagModifier(ctx, 'USR', {
+    id: 'the_oath_of_the_gauls', name: 'The Oath of the Gauls', months: -1,
+    effects: { moraleMult: 1.1, incomeMult: 0.8, manpowerMult: 0.8 },
+  });
+  const at = ground.indexOf('Batavia') >= 0 ? 'Batavia' : ground[0];
+  h.spawnArmy(ctx, 'USR', at, {
+    inf: 8, cav: 2, name: 'The Batavian Cohorts',
+    general: { name: 'Julius Civilis', fire: 2, shock: 3, maneuver: 4 },
+  });
+  return gauls;
+}
+function settleTheGauls(ctx, line) {
+  if (!ctx.game.tags.USR) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), { chronicle: line });
+  return true;
+}
+
 export const EVENTS_66_WORLD = [
 
   // ── W1 · 69 ───────────────────────────────────────────────────────────────
@@ -113,7 +178,7 @@ export const EVENTS_66_WORLD = [
     options: [
       {
         label: 'Eight legions for one small nation',
-        tooltip: 'Rome −5,000 manpower and −100 talents; Batavia, Colonia Agrippina and Mogontiacum carry "The Rhine in Arms" (+3 unrest for 18 months). The Frisii cool toward Rome (−40 opinion). In Jerusalem, the news is read aloud on the walls.',
+        tooltip: 'The Rhine and the Gallic north go over to an empire of the Gauls — a court on the map, at war with Rome, until Cerialis reaches the Moselle next summer. Rome −5,000 manpower and −100 talents; Batavia, Colonia Agrippina and Mogontiacum carry "The Rhine in Arms" (+3 unrest for 18 months). The Frisii cool toward Rome (−40 opinion). In Jerusalem, the news is read aloud on the walls.',
         effects: guard('ev_fw_civilis:0', (ctx) => {
           const h = ctx.helpers;
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { manpower: -5000, treasury: -100 });
@@ -123,7 +188,64 @@ export const EVENTS_66_WORLD = [
           });
           if (alive(ctx, 'FRS')) setOpinion(ctx, 'FRS', 'ROM', -40);
           h.setFlag(ctx, 'civilisRising', true);
-          h.chronicle(ctx, 'era', 'The Batavians rise under Civilis and two legions surrender at Vetera; in the year of four emperors, one small nation nearly closes the Rhine.');
+          const gauls = raiseTheGauls(ctx);
+          h.chronicle(ctx, 'era', 'The Batavians rise under Civilis and two legions surrender at Vetera; in the year of four emperors, one small nation nearly closes the Rhine'
+            + (gauls ? ' — and the Gallic units swear an empire of the Gauls on the far side of it.' : '.'));
+        }),
+      },
+    ],
+  },
+
+  // ── W1b · 70 ──────────────────────────────────────────────────────────────
+  // The other half of the pair (SPEC §251). A card that raises a country has
+  // to have a card that puts it out, or the map keeps a Gallic empire for the
+  // next three hundred years of a chapter that runs to 425.
+  {
+    id: 'ev_fw_civilis_ends',
+    title: 'The Bridge in the Middle of the Sentence',
+    worldLabel: 'Cerialis breaks the empire of the Gauls; Civilis parleys and vanishes',
+    desc: 'Eight legions come up the Moselle under Petillius Cerialis, and the empire '
+      + 'of the Gauls discovers what every provincial rising discovers: that the '
+      + 'legions who swore to it were legions, and want their pay in an empire that '
+      + 'still exists. Trier is retaken, the Treveri and the Lingones make terms, and '
+      + 'Cerialis addresses the Gauls in the only speech of the war anyone bothered to '
+      + 'copy — Roman rule is expensive, he tells them, and the alternative is Germans. '
+      + 'Civilis pulls back to the island, burns his own farms so the legions cannot '
+      + 'have them, and meets Cerialis on a broken bridge over the Nabalia to explain '
+      + 'himself. The manuscript of Tacitus stops mid-sentence. What he said, what was '
+      + 'agreed, and what became of the one-eyed man are all missing, and the Rhine '
+      + 'frontier goes on as though nothing had been proposed there at all.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 70, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    // No rising, no bridge to settle it on.
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'civilisRising'),
+    historical: 'Cerialis retook Trier in 70 and reduced the rising by autumn; the Historiae break off in the middle of Civilis\' parley on the Nabalia.',
+    options: [
+      {
+        label: 'Roman rule is expensive; the alternative is Germans',
+        tooltip: 'The empire of the Gauls folds back into Rome — ground, garrisons and treasury — and the war ends with it. Rome +5 legitimacy and −80 talents for the reconstruction; the Rhine keeps its unrest until the modifier runs out.',
+        effects: guard('ev_fw_civilis_ends:0', (ctx) => {
+          const h = ctx.helpers;
+          settleTheGauls(ctx, 'Cerialis retakes Trier and the empire of the Gauls comes apart; Civilis '
+            + 'parleys on a broken bridge, and the sentence describing it was never finished.');
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 5, treasury: -80 });
+          h.setFlag(ctx, 'civilisRising', false);
+        }),
+      },
+      {
+        label: 'Burn the island farms and take the terms',
+        tooltip: 'The same reunion, bought rather than stormed: Rome −160 talents in terms and back pay, +10 legitimacy, and Batavia is spared the sack (its unrest modifier lifts at once).',
+        effects: guard('ev_fw_civilis_ends:1', (ctx) => {
+          const h = ctx.helpers;
+          settleTheGauls(ctx, 'The Batavian terms are signed on the Nabalia and the Gallic empire is '
+            + 'dissolved by agreement; Rome pays for the quiet and does not ask what was promised.');
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 10, treasury: -160 });
+          h.removeModifier(ctx, 'Batavia', 'rhine_in_arms');
+          h.setFlag(ctx, 'civilisRising', false);
         }),
       },
     ],

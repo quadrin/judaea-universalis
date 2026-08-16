@@ -533,6 +533,30 @@ export function disembarkCore(ctx, fleet) {
 // (SPEC §82: an invasion built at three yards must sail as a single armada).
 // Cargo and the better admiral follow the hulls; the older pattern names the
 // merged fleet's broadside (a mixed line fights at its weakest rig).
+//
+// The hulls a given fleet may take under its command right now: our own, at
+// this anchor, riding at it rather than under sail. `completeShip` only adds a
+// launch to an idle fleet OF THE SAME PATTERN, so a yard that has been
+// re-rigged between two orders leaves two squadrons at one port with no way to
+// make them one — which is the whole reason this is a player-facing action and
+// not only the invasion planner's private arithmetic.
+export function mergeableFleetsAt(ctx, fleet) {
+  if (!fleet || fleet.ships <= 0) return [];
+  if (fleet.path && fleet.path.length) return [];
+  return fleetsAt(ctx, fleet.prov).filter((f) => f && f.id !== fleet.id
+    && f.tag === fleet.tag && !(f.path && f.path.length));
+}
+// …and why not, in the words the outliner prints on a dead button.
+export function mergeFleetsInfo(ctx, fleet) {
+  if (!fleet || fleet.ships <= 0) return { can: false, count: 0, ships: 0, why: 'No such fleet.' };
+  if (fleet.path && fleet.path.length) {
+    return { can: false, count: 0, ships: 0, why: 'A fleet under sail takes nothing under its command.' };
+  }
+  const here = mergeableFleetsAt(ctx, fleet);
+  const ships = here.reduce((n, f) => n + num(f.ships), 0);
+  if (!here.length) return { can: false, count: 0, ships: 0, why: 'No other squadron of ours rides at this anchor.' };
+  return { can: true, count: here.length, ships, why: '' };
+}
 export function mergeFleetsCore(ctx, fromFleet, intoFleet) {
   const g = ctx.game;
   if (!fromFleet || !intoFleet || fromFleet.id === intoFleet.id) return false;

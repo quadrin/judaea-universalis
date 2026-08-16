@@ -254,6 +254,19 @@ export const BOOKMARK_614 = {
 
   // The era's lens on the western tags (SPEC §139, §173).
   tagTweaks: {
+    // The rival purple, in a century whose civil wars are fought over a
+    // different word (SPEC §251). `USR` is one generic banner dressed by each
+    // card for the man whose it is; what the LENS has to fix is the things a
+    // card cannot pass — the faith and the people of the court that secedes,
+    // which `secedeTagCore` reads off the tag definition. A caliphate that
+    // split in two produced two Muslim Arab courts, not a Greek-speaking
+    // Hellenistic one, and communal unrest, conversion and the religion
+    // mapmode all read the difference.
+    USR: {
+      name: 'The Rival Caliphate', adj: 'Rival', religion: 'islam', culture: 'arab',
+      description: 'Two Commanders of the Faithful, one community, and an army between them: '
+        + 'the provinces that have decided the oath belongs to somebody else.',
+    },
     CAL: { name: 'The Picts', adj: 'Pictish', description: 'The kingdom beyond the old wall, a generation after Columba came to Iona.' },
     CIM: { name: 'The Danes', adj: 'Danish', description: 'The sea-kings of the Cimbric shore, whom Frankish annals already know by name.' },
     MAU: { name: 'The Moorish Kingdoms', adj: 'Moorish', description: 'Altava\'s world: the kings the exarchate pays, fights, and cannot replace.' },

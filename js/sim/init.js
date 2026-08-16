@@ -40,6 +40,7 @@ import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS,
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
+  mergeFleetsInfo, mergeableFleetsAt, mergeFleetsCore,
   merchantShipInfo, commissionMerchantShipCore, merchantShipsOf,
   merchantDestinations, sendMerchantCore, merchantVoyagesOf,
   tradeRunDestinations, sendTradeRunCore,
@@ -2545,6 +2546,10 @@ export function gameActions(ctx) {
             const here = Object.values(g.armies).filter((a) => a && !a.aboard && a.prov === f.prov && a.tag === me && !a.inBattle);
             const p = ctx.byId(f.prov);
             const mi = modernizeFleetInfo(ctx, f);
+            // Every squadron of ours riding this anchor may come under one
+            // command (SPEC §251) — the same courtesy an army has had since
+            // the outliner shipped.
+            const gi = mergeFleetsInfo(ctx, f);
             return {
               id: f.id, name: f.name, ships: f.ships, prov: f.prov,
               provName: (p && p.name) || ('#' + f.prov),
@@ -2561,6 +2566,7 @@ export function gameActions(ctx) {
               canModernize: mi.can, modernizeCost: mi.cost, whyModernize: mi.why || '',
               admiral: f.admiral ? { name: f.admiral.name, maneuver: num(f.admiral.maneuver) } : null,
               canHireAdmiral: !f.admiral && num(g.tags[me].points && g.tags[me].points.mar) >= 50,
+              canMerge: gi.can, mergeCount: gi.count, mergeShips: gi.ships, whyMerge: gi.why || '',
             };
           });
         const merchant = merchantShipsOf(ctx, me);
@@ -3059,6 +3065,40 @@ export function gameActions(ctx) {
         }
         if (!merged) say('Nothing to merge', 'No other army of ours stands in this province (or they are locked in battle).', 'info');
       } catch (e) { warnOnce('mergeAll', 'mergeAllInto failed', e); }
+    },
+    // …and the same for the hulls (SPEC §251). Ships built at one yard join
+    // the idle fleet of their own pattern and nothing else does: a squadron
+    // sailed in from another port, a re-rigged yard's next launch, a fleet
+    // whose admiral was hired yesterday — each rides its own anchor with its
+    // own name, and an armada assembled from three ports was three fleets to
+    // move, three fleets to embark and three fleets to fight with. Cargo and
+    // the better admiral follow the hulls; the older pattern names the merged
+    // broadside, because a mixed line fights at its weakest rig.
+    mergeAllFleets(fleetId) {
+      try {
+        const into = (g.fleets || {})[fleetId];
+        if (!into || into.tag !== g.playerTag) return;
+        const info = mergeFleetsInfo(ctx, into);
+        if (!info.can) { say('Nothing to merge', info.why, 'info'); return; }
+        const wasGen = num(into.gen, 0);
+        const hadAdmiral = !!into.admiral;
+        let merged = 0;
+        let ships = 0;
+        for (const other of mergeableFleetsAt(ctx, into)) {
+          const n = num(other.ships);
+          if (mergeFleetsCore(ctx, other, into)) { merged++; ships += n; }
+        }
+        if (!merged) { say('Nothing to merge', info.why || 'The squadrons could not be brought under one command.', 'info'); return; }
+        const p = ctx.byId(into.prov);
+        const rigged = num(into.gen, 0) < wasGen;
+        say('One command at ' + ((p && p.name) || 'the anchorage'),
+          merged + (merged === 1 ? ' squadron' : ' squadrons') + ' — ' + ships
+          + (ships === 1 ? ' hull' : ' hulls') + ' — come under ' + (into.name || 'the fleet')
+          + ', which now counts ' + into.ships + '.'
+          + (rigged ? ' The line fights at its oldest pattern: ' + navalGenName(num(into.gen, 0)) + '.' : '')
+          + (!hadAdmiral && into.admiral ? ' ' + into.admiral.name + ' takes the deck.' : ''),
+          'good');
+      } catch (e) { warnOnce('mergeAllFleets', 'mergeAllFleets failed', e); }
     },
 
     // ---- declaring war (a casus belli softens the cost) ---------------------

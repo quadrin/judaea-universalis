@@ -17606,3 +17606,140 @@ offered one, under a name that says what it is.
   four starting constitutions are exactly where they were, and `node
   tools/autorun.mjs 8` is unchanged on all eight bookmarks: the seven crowns
   are player-only, no bookmark boots one, and not one all-AI trajectory moves.
+
+## 251. The rest of the civil wars, and the ships that could not be one fleet
+
+Two reports, and they are the same report twice: *make ships in the same
+province mergeable into one unit*, and *for all of the sectarian/civil war
+cards, actually trigger civil wars and new courts on the map across bookmarks —
+there are a lot of these that don't have anything actually happen.*
+
+### The hulls
+
+A yard's launches join the idle fleet **of their own pattern** and nothing else
+does — `completeShip` says so, and it is the right rule for a yard. It is not a
+rule about anchorages. Re-rig a yard between two orders and the port holds two
+squadrons; sail one in from another port and it holds three; hire an admiral
+for one of them and the three stay three for ever. Armies have had a merge
+button on the outliner row since the outliner shipped. The fleets had
+`mergeFleetsCore` — written for §82's invasion planner, called by the AI, and
+reachable by the player through nothing at all.
+
+`mergeAllFleets(fleetId)` is the fleets' half of `mergeAllInto`, on the same
+kind of button in the same row. Every other squadron of ours riding that anchor
+comes under the one command; the cargo is re-pointed at the fleet that now
+carries it; the better admiral takes the deck; and the merged line fights at
+its **oldest** pattern, because a mixed line fights at its weakest rig. A fleet
+under sail takes nothing under its command and is not itself offered, a foreign
+squadron at the same anchor is never touched, and the dead button carries the
+reason.
+
+### The civil wars
+
+§239 built the instrument — `USR`, one generic rival banner, raised by the card
+that raises the claim and dissolved by the card that settles it — and used it
+five times. §249 found two more in the 132 chapter and made the table seven.
+This section is the sweep across every remaining chapter, because the same
+complaint was true of nine more:
+
+| chapter | the claim | raised | settled |
+|---|---|---|---|
+| 167 BCE | Italia, the confederacy of the allies | `ev_rw_social_war`, -91/11 | `ev_rw_italia_enrolled`, -88/9 |
+| 167 BCE | The Proconsul's Army (Sulla) | `ev_rw_sulla_returns`, -83/5 | `ev_rw_proscriptions`, -82/11 |
+| 167 BCE | the country in arms against Jannaeus | `ev_etrogim`, -94/7 | `ev_eight_hundred`, -88 |
+| 67 BCE | The Republic in the East (Pompey) | `ev4_caesar_civil_war`, -49/1 | `ev4_pharsalus`, -48/8 |
+| 67 BCE | The Liberators | `ev4_cassius_talents`, -43/5 | `ev4_w_philippi`, -42/10 |
+| 40 BCE | Labienus Parthicus | `ev5_labienus`, -40/9 | `ev5_cilician_gates`, -39/6 |
+| 66 CE | The Empire of the Gauls | `ev_fw_civilis`, 69/9 | `ev_fw_civilis_ends`, 70/9 |
+| 614 CE | The Caliphate at Damascus | `ev_p_uthman_slain`, 656/6 | `ev_p_ali_falls`, 661/1 |
+| 614 CE | The Caliphate of Ibn al-Zubayr | `ev_p_second_fitna`, 683/7 | `ev_p_zubayr_falls`, 692/11 |
+| 1948 | The Mutawakkilite Imamate | `ev_s48_sanaa_officers`, 1962/9 | `ev_s48_yemen_compromise`, 1970/3 |
+
+**What was wrong** is what §249 found in the 132 chapter, in nine more places.
+The First Fitna — five years, two Commanders of the Faithful, Siffin and the
+arbitration — was `−10% morale, −10% income` on one undivided green country.
+The Second Fitna was the same modifier for a war in which the man most of the
+Muslim world prayed for by name held Mecca, Iraq and Egypt while the dynasty
+held Syria. Caesar crossed the Rubicon and the map showed one Rome; five years
+later the Liberators assessed Judaea for seven hundred talents out of provinces
+they visibly did not hold, which is the card the player answers. Labienus
+"overran Asia Minor" and Rome lost no province. Italy raised a senate, a
+coinage and a capital it renamed Italica, and the map showed Roman Italy. Sulla
+landed at Brundisium with five legions and no legal standing and the war was
+three unrest points in the Forum. The Gallic units swore an empire of the Gauls
+in a chapter that runs to 425 and it existed in a tooltip. And the Judaean
+civil war of the nineties — six years, fifty thousand dead by Josephus' count,
+a Seleucid king invited onto Judaean ground by Judaeans, eight hundred crosses
+and a banquet in sight of them — consisted of a flag called `etrogimSpilled`
+and `+2 unrest`. A player could answer *let the mercenaries clear the court*,
+read the words *the civil-war chain begins*, and then govern an entirely
+peaceful kingdom for six years until the card about the invitation arrived.
+
+**The ground is the argument, and it is never the player's.** Every raise
+filters its authored roster down to what the parent *still holds*, so a Return
+that holds Palestine keeps it out of a rival caliphate, a Judaea that has taken
+the Phoenician coast keeps it out of Pompey's Republic, and a claim with no
+ground behind it is not made — the card falls back to the ledger it always was,
+exactly as the Vitellius card already did. The rosters are the historical ones:
+Mu'awiya's jund and not Medina; Ibn al-Zubayr's Hijaz, Iraq and Egypt and not
+Syria; the East and Greece for both Roman claims and not Italy, Gaul, Spain or
+Africa; Labienus' Cilicia, Caria, Lydia, Phrygia, Pisidia and Pamphylia;
+Civilis' Rhine and the Gallic north and not Lugdunensis; Picenum, Campania,
+Apulia and Bruttium for Italia and nothing north of the Apennines, because the
+Po did not rise and the whole political point of that war is that it did not
+have to; Sulla's landing and his march; Marib and not Sana'a or Hodeida,
+because the republic held the capital and the port for all eight years.
+
+**The rising is not the player's to decline**, on every card that has two
+roads. Buying the garrisons quiet, treating with Mecca for a season, farming
+Asia rather than governing it, refusing Cassius' assessment: each is a policy
+about a civil war, not a veto on one.
+
+**One banner, and it is given back.** `USR` is singular and `secedeTag` refuses
+one somebody is already flying, so a claim left standing would silently cancel
+every later claim in the chapter. 66 CE now flies it twice in nine months —
+Vitellius in January, the Gauls in September — 167 BCE twice, 67 BCE twice, 614
+CE twice. A card that CLOSES a civil war may not retire on the gate its own
+strand uses: `fitnaToClose` lets the two settling cards of the 614 chapter fire
+for a caliphate that has meanwhile been collared, because otherwise a diverged
+world keeps a rival caliphate for ever.
+
+**Two courts had to be dressed.** `secedeTagCore` reads the seceding court's
+faith and people off the tag definition, and `USR` is defined as a Hellenistic
+Latin thing because it was built for Roman usurpers. A caliphate that split in
+two produced two Muslim Arab courts and a Yemeni civil war produced two modern
+Arab ones; communal unrest, conversion and the religion mapmode all read the
+difference. The 614 and 1948 bookmarks therefore dress `USR` through the §139
+lens — a lens, never a write.
+
+**The Judaean rising is the sectarian half and is deliberately not a court.**
+The rebels of the nineties never founded a state; they sent for somebody
+else's king. So `ev_etrogim` puts the hill country under the ordinary rebel
+banner with hosts standing on it — up to three districts, never the king's own
+seat, and never more than half the kingdom, because the chapter opens on a
+Judaea of three provinces that a rising of three would erase. The invitation
+card's returning six thousand walk out of the largest band; Bethome disperses
+what is left and the districts answer the crown again. Refusing the assessment
+at the feast — withdrawing from the altar — raises nobody, which is what that
+road has always been for.
+
+**What this deliberately does not do**: raise the Gallic Empire of Postumus in
+the 132 chapter (260–274 overlaps Palmyra's 269–273, and the banner is
+singular by design), or make a court out of the Nika riots (five days, and the
+senator was executed apologizing).
+
+- **Regression contract**: `smoke170.mjs` — the anchorage is read and a fleet
+  under sail offers nothing; the merge folds every squadron into the one that
+  was clicked with no hull conjured or drowned; the cargo, the better admiral
+  and the oldest pattern follow; a foreign squadron is never taken and the
+  action refuses a fleet that is not the player's; and the button exists,
+  greys out, and carries its reason. `smoke171.mjs` — every one of the ten arcs
+  raises a country and leaves the parent exactly that much smaller with a war
+  on; each holds what it actually held and not what it did not; both roads
+  raise it; the settlement brings back ground, garrisons and treasury, ends the
+  civil war and forwards the letters; a claim with no ground raises nobody and
+  throws nothing; a player's own provinces are never handed to somebody else's
+  claimant; four chapters run two arcs each on the one banner; and the Judaean
+  rising raises rebel-held districts with hosts on them and is put down by the
+  card that ends the war. `smoke70` (the Jannaeus spine) and `smoke160`/
+  `smoke169` (§239's and §249's tables) pass unmoved.

@@ -396,9 +396,19 @@ export const EVENTS_67_WORLD = [
     options: [
       {
         label: 'The estate is divided between two heirs',
-        tooltip: 'Rome +5 legitimacy and −150 talents — the legions\' pay for two battles comes due at once. Thessalonica and Dyrrhachium carry "The Armies Ate the Coast" (+2 unrest, −20% tax for 24 months): twenty legions wintered on the Via Egnatia, and the towns fed them.',
+        tooltip: 'The Liberators are off the map and the East is Rome\'s again. Rome +5 legitimacy and −150 talents — the legions\' pay for two battles comes due at once. Thessalonica and Dyrrhachium carry "The Armies Ate the Coast" (+2 unrest, −20% tax for 24 months): twenty legions wintered on the Via Egnatia, and the towns fed them.',
         effects: guard('ev4_w_philippi:0', (ctx) => {
           const h = ctx.helpers;
+          // The second of this chapter's civil wars ends where the first one
+          // did — on a field, with the claimant's ground folding home
+          // (SPEC §251). The court is raised by `ev4_cassius_talents`, one
+          // file over, on the same banner Pompey flew and gave up in 48.
+          if (ctx.game.tags.USR) {
+            h.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), {
+              chronicle: 'Cassius dies on his birthday and Brutus three weeks later; the East '
+                + 'that paid for their war answers Rome again, and the world is divided like an estate.',
+            });
+          }
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 5, treasury: -150 });
           stir(ctx, ['Thessalonica', 'Dyrrhachium'], {
             id: 'armies_ate_the_coast', name: 'The Armies Ate the Coast', months: 24,

@@ -175,6 +175,147 @@ function judaeanCrown(ctx) {
   return who(ctx, 'ARI');
 }
 
+// ── the Republic's own civil wars, on the map (SPEC §251) ───────────────────
+//
+// This chapter is played in the shadow of three of them — Caesar against
+// Pompey, the triumvirs against the Liberators, Octavian against Antony — and
+// every Judaean card in it turns on which Roman is the lawful one. Cassius
+// levies seven hundred talents on the country at sword-point; Antipater's
+// house backs the winner three times running and survives because of it; the
+// alternate strand asks the player to WAGER on Pharsalus. And the map showed
+// one Rome throughout, with a reinforcement penalty on it.
+//
+// `USR` is the same rival purple every chapter's claimant flies (§239): one
+// generic banner, raised by the card that raises the claim and dissolved by
+// the card that settles it, dressed each time for the man whose it is. The two
+// arcs here are strictly sequential — Pharsalus frees the banner in 48 and the
+// Liberators do not take it up until 43 — so the singular rule holds.
+//
+// The GROUND is the East and Greece, and only what Rome still holds. Both
+// wars were fought there and paid for there: Pompey mustered nine legions at
+// Beroea out of the eastern provinces and the client kings; Brutus and Cassius
+// spent two years assessing Asia and Syria for the war chest they lost at
+// Philippi. Italy, Gaul, Spain and Africa stay with the government at Rome,
+// which is where Caesar and then the triumvirs actually were.
+const THE_EAST_AND_GREECE = [
+  'Corinth', 'Athens', 'Sparta', 'Dyrrhachium', 'Thessalonica', 'Hadrianopolis',
+  'Byzantion', 'Tomis', 'Nicaea', 'Smyrna', 'Halicarnassus', 'Rhodes', 'Ancyra',
+  'Iconium', 'Tyana', 'Mazaca', 'Pisidia', 'Attalia', 'Tarsus', 'Seleucia Trachea',
+  'Melitene', 'Antioch', 'Seleucia Pieria', 'Laodicea', 'Apamea', 'Emesa',
+  'Beroea', 'Cyrrhus', 'Zeugma', 'Damascus', 'Palmyra', 'Dura-Europos', 'Singara',
+  'Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus', 'Ptolemais', 'Panion',
+  'Cyrene',
+];
+
+// One claimant at a time; only what Rome still holds goes over; and a claim
+// with no ground behind it is a proclamation, which this map does not model.
+// Returns the new court or null, and the card that called it says the rest.
+function raiseRomanClaim(ctx, spec) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USR) return null;
+  const rome = who(ctx, 'ROM');
+  const ground = (spec.provinces || THE_EAST_AND_GREECE).filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === rome;
+  });
+  if (!ground.length) return null;
+  const claimant = h.secedeTag(ctx, rome, 'USR', {
+    provinces: ground,
+    share: spec.share,
+    name: spec.name,
+    color: spec.color,
+    opinion: -200,
+    stability: spec.stability,
+    legitimacy: spec.legitimacy,
+    ruler: spec.ruler,
+  });
+  if (!claimant) return null;
+  h.declareWar(ctx, rome, 'USR', spec.war);
+  const w = (g.wars || []).find((x) => x
+    && (x.attackers || []).concat(x.defenders || []).indexOf('USR') >= 0
+    && (x.attackers || []).concat(x.defenders || []).indexOf(rome) >= 0);
+  // Two Roman governments cannot recognise each other and remain Roman: this
+  // ends on a field or it does not end.
+  if (w) w.noNegotiation = true;
+  bumpOpinion(g, rome, 'USR', -200);
+  bumpOpinion(g, 'USR', rome, -200);
+  if (spec.modifier) h.addTagModifier(ctx, 'USR', spec.modifier);
+  if (spec.army) {
+    const at = ground.indexOf(spec.army.at) >= 0 ? spec.army.at : ground[0];
+    h.spawnArmy(ctx, 'USR', at, spec.army.opts);
+  }
+  return claimant;
+}
+// -49 · the consuls, two hundred senators and the eastern provinces leave
+// Italy. Pompey's is not a usurpation and does not pretend to be: it is the
+// lawful government of the Republic, standing on the ground it organized, and
+// the man at Rome is the one with no legal office at all. The banner does not
+// care which of them is which.
+function raiseCaesarsWar(ctx) {
+  return raiseRomanClaim(ctx, {
+    share: 0.45,
+    name: 'The Republic in the East',
+    color: [122, 108, 156],
+    stability: 0,
+    legitimacy: 55,
+    war: 'The Great Roman Civil War',
+    ruler: {
+      name: 'Pompeius Magnus', title: 'Proconsul', gov: 3, infl: 4, mar: 4, age: 57,
+    },
+    modifier: {
+      id: 'the_senate_over_the_sea', name: 'The Senate Over the Sea', months: -1,
+      effects: { manpowerMult: 1.15, incomeMult: 1.05, reinforceMult: 0.9 },
+    },
+    army: {
+      at: 'Thessalonica',
+      opts: {
+        inf: 12, cav: 4, name: 'The Army of the Republic',
+        general: { name: 'Pompeius Magnus', fire: 3, shock: 3, maneuver: 3 },
+      },
+    },
+  });
+}
+
+// -43 · the assassins go east. Brutus takes Macedonia and Greece, Cassius
+// takes Syria out of Dolabella's hands, and between them they spend two years
+// assessing the eastern provinces for the war chest — which is the card the
+// player already answers when Cassius' officers arrive at Jerusalem with a
+// figure written down.
+function raiseTheLiberators(ctx) {
+  return raiseRomanClaim(ctx, {
+    share: 0.4,
+    name: 'The Liberators',
+    color: [96, 124, 132],
+    stability: 0,
+    legitimacy: 40,
+    war: 'The War of the Liberators',
+    ruler: {
+      name: 'Gaius Cassius Longinus', title: 'Imperator', gov: 3, infl: 3, mar: 4, age: 42,
+    },
+    modifier: {
+      id: 'the_assessment_of_asia', name: 'The Assessment of Asia', months: -1,
+      effects: { incomeMult: 1.2, unrestAll: 1, moraleMult: 1.05 },
+    },
+    army: {
+      at: 'Antioch',
+      opts: {
+        inf: 10, cav: 3, name: 'The Army of the Liberators',
+        general: { name: 'Cassius Longinus', fire: 3, shock: 2, maneuver: 4 },
+      },
+    },
+  });
+}
+
+// …and the field that settles it. Everything the claimant held goes back
+// under one banner, the civil war ends with the man who was fighting it, and
+// the letters forward home (SPEC §239).
+function settleRomanClaim(ctx, line) {
+  if (!ctx.game.tags.USR) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), { chronicle: line });
+  return true;
+}
+
 export const EVENTS_67 = [
   // ── 1 ─────────────────────────────────────────────────────────────────────
   {
@@ -970,7 +1111,7 @@ export const EVENTS_67 = [
     aiOption: 0,
     options: [{
       label: 'Rome has two centers and no peace',
-      tooltip: 'Rome loses stability and reinforcement capacity for three years. Its eastern neighbors gain a strategic opening.',
+      tooltip: 'Rome loses stability and reinforcement capacity for three years — and the East and Greece go over to Pompey and the Senate, a second Roman government on the map until Pharsalus. Its eastern neighbors gain a strategic opening.',
       effects: guard('ev4_caesar_civil_war:0', (ctx) => {
         if (!alive(ctx, 'ROM')) return;
         ctx.helpers.adjust(ctx, 'ROM', { stability: -2, legitimacy: -20, manpower: -8000 });
@@ -978,7 +1119,14 @@ export const EVENTS_67 = [
           id: 'caesar_pompey_war', name: 'The Great Roman Civil War', months: 36,
           effects: { reinforceMult: 0.65, aiPassive: true },
         });
-        ctx.helpers.chronicle(ctx, 'war', 'Caesar crosses the Rubicon; the Roman Republic divides against itself.');
+        // Two centres is what the card SAYS; this is the map saying it
+        // (SPEC §251). The consuls, two hundred senators and the eastern
+        // provinces left Italy with Pompey; the government at Rome is
+        // Caesar's, and the war between them is fought where this chapter is
+        // played.
+        const senate = raiseCaesarsWar(ctx);
+        ctx.helpers.chronicle(ctx, 'war', 'Caesar crosses the Rubicon; the Roman Republic divides against itself'
+          + (senate ? ' — the consuls, the Senate and the East go over the sea with Pompey.' : '.'));
       }),
     }],
   },
@@ -1101,10 +1249,12 @@ export const EVENTS_67 = [
     options: [
       {
         label: 'The Lord repays; the sand receives',
-        tooltip: 'Rome consolidates under one master (+10 legitimacy). The Profaned Veil is lifted from every province of the faith; each surviving Judaean court +5 legitimacy.',
+        tooltip: 'Rome consolidates under one master (+10 legitimacy) and the East comes back under one banner — the Republic in the East is off the map. The Profaned Veil is lifted from every province of the faith; each surviving Judaean court +5 legitimacy.',
         effects: guard('ev4_pharsalus:0', (ctx) => {
           const h = ctx.helpers;
           const g = ctx.game;
+          settleRomanClaim(ctx, 'Pharsalus: the largest army the Republic ever raised against itself '
+            + 'breaks, and the East comes back under the government at Rome.');
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 10 });
           if (h.getFlag(ctx, 'veilProfaned')) {
             for (let i = 1; i < g.provinces.length; i++) {
@@ -1122,9 +1272,11 @@ export const EVENTS_67 = [
       },
       {
         label: 'Light no lamps; count the consequences',
-        tooltip: 'Rome consolidates (+10 legitimacy). The courts study the new order instead of the old grudge: each surviving Judaean court +15 governance points.',
+        tooltip: 'Rome consolidates (+10 legitimacy) and the East comes back under one banner. The courts study the new order instead of the old grudge: each surviving Judaean court +15 governance points.',
         effects: guard('ev4_pharsalus:1', (ctx) => {
           const h = ctx.helpers;
+          settleRomanClaim(ctx, 'Pharsalus: Pompey\'s army breaks and his cause with it, and the '
+            + 'eastern provinces answer Rome again.');
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 10 });
           for (const t of ['HYR', 'ARI']) {
             if (alive(ctx, t)) h.adjust(ctx, t, { gov: 15 });
@@ -1420,10 +1572,14 @@ export const EVENTS_67 = [
     options: [
       {
         label: 'Pay, by any means, in full',
-        tooltip: 'Each surviving Judaean court −120 talents; Rome\'s opinion of each +20. Hyrcanus\' court: +10 martial points (Herod, stratégos of Coele-Syria, delivers first).',
+        tooltip: 'Each surviving Judaean court −120 talents; Rome\'s opinion of each +20. Hyrcanus\' court: +10 martial points (Herod, stratégos of Coele-Syria, delivers first). The Liberators go onto the map: the East is a second Roman government again until Philippi.',
         effects: guard('ev4_cassius_talents:0', (ctx) => {
           const h = ctx.helpers;
           const g = ctx.game;
+          // The men doing the assessing hold the country they are assessing
+          // (SPEC §251): Brutus has Macedonia and Greece, Cassius has taken
+          // Syria out of Dolabella's hands, and neither answers Rome.
+          raiseTheLiberators(ctx);
           for (const t of ['HYR', 'ARI']) {
             if (!alive(ctx, t)) continue;
             h.adjust(ctx, t, { treasury: -120 });
@@ -1437,10 +1593,11 @@ export const EVENTS_67 = [
       },
       {
         label: 'The quota fails; the dealers come',
-        tooltip: 'Each surviving court −40 talents only — but Emmaus and Lydda are sold into slavery (+3 unrest, 24 months) and Rome\'s opinion of each −30.',
+        tooltip: 'Each surviving court −40 talents only — but Emmaus and Lydda are sold into slavery (+3 unrest, 24 months) and Rome\'s opinion of each −30. The Liberators hold the East either way: refusing the assessment is a policy, not a veto.',
         effects: guard('ev4_cassius_talents:1', (ctx) => {
           const h = ctx.helpers;
           const g = ctx.game;
+          raiseTheLiberators(ctx);
           for (const t of ['HYR', 'ARI']) {
             if (!alive(ctx, t)) continue;
             h.adjust(ctx, t, { treasury: -40 });

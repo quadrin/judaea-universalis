@@ -215,6 +215,71 @@ function seatTheParty(ctx) {
   return 'HEZ';
 }
 
+// ── the war in the mountains, on the map (SPEC §251) ────────────────────────
+//
+// The North Yemen civil war ran from 1962 to 1970 with seventy thousand
+// Egyptian troops on one side and Saudi silver on the other, and it is the
+// reason the Egyptian army was where it was in June 1967 — which is why this
+// chapter has a card about it at all. The card described a republic in the
+// lowlands and an Imamate in the mountains and then put three unrest points on
+// Yemen: one country, one colour, one government.
+//
+// `USR` is the rival banner every chapter's claimant flies (§239), dressed for
+// this one by the 1948 bookmark's lens. Nothing else in this chapter flies it.
+// The mountains behind the capital. Sana'a and Hodeida are deliberately not in
+// it: the republic held the capital and the port for the whole eight years,
+// and a royalist court sitting in Sana'a would be a different war.
+const IMAMATE_GROUND = ['Marib'];
+function raiseTheImamate(ctx) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USR || typeof h.secedeTag !== 'function') return null;
+  const yem = alive(ctx, 'YEM') ? 'YEM' : null;
+  if (!yem) return null;
+  const ground = IMAMATE_GROUND.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === yem;
+  });
+  if (!ground.length) return null;
+  const royalists = h.secedeTag(ctx, yem, 'USR', {
+    provinces: ground,
+    share: 0.35,
+    name: 'The Mutawakkilite Imamate',
+    color: [176, 148, 72],
+    opinion: -200,
+    stability: 0,
+    legitimacy: 45,
+    ruler: {
+      name: 'Muhammad al-Badr', title: 'Imam', gov: 2, infl: 3, mar: 2, age: 36,
+    },
+  });
+  if (!royalists) return null;
+  h.declareWar(ctx, yem, 'USR', 'The War in the Mountains');
+  const w = findWar(g, yem, 'USR');
+  if (w) w.noNegotiation = true; // eight years, and no signature until 1970
+  setOpinion(ctx, yem, 'USR', -200);
+  setOpinion(ctx, 'USR', yem, -200);
+  h.addTagModifier(ctx, 'USR', {
+    id: 'the_tribes_and_the_silver', name: 'The Tribes and the Silver', months: -1,
+    effects: { moraleMult: 1.15, incomeMult: 1.1, manpowerMult: 0.8 },
+  });
+  h.spawnArmy(ctx, 'USR', ground[0], {
+    inf: 4, name: 'The Royalist Tribes',
+    general: { name: 'Prince Hassan bin Yahya', fire: 1, shock: 2, maneuver: 4 },
+  });
+  // Riyadh pays for the counter-revolution and Cairo is the reason it needs
+  // paying for.
+  if (alive(ctx, 'SAU')) { setOpinion(ctx, 'SAU', 'USR', 90); setOpinion(ctx, 'USR', 'SAU', 90); }
+  if (alive(ctx, 'EGY')) { setOpinion(ctx, 'USR', 'EGY', -140); setOpinion(ctx, 'EGY', 'USR', -140); }
+  return royalists;
+}
+function settleTheImamate(ctx, line) {
+  const g = ctx.game;
+  if (!g.tags.USR || !alive(ctx, 'YEM')) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', 'YEM', { chronicle: line });
+  return true;
+}
+
 // Damascus as a polity in its own right — the union does not count, because
 // the whole question these cards ask is whether there is a Syria to ask.
 function syrOwn(ctx) {
@@ -1665,9 +1730,12 @@ export const EVENTS_1948_REGION = [
     options: [
       {
         label: 'Republic on the radio, Imamate in the hills',
-        tooltip: 'Yemen −2 stability and "The War in the Mountains" (+3 unrest across its provinces for 5 years). If Egypt stands, it is drawn in: −150 talents, and "Our Vietnam" (−8% income and −7% manpower for 5 years).',
+        tooltip: 'The Imamate goes onto the map in the mountains behind the capital — a court of its own, Saudi-paid, at war with the republic until 1970. Yemen −2 stability and "The War in the Mountains" (+3 unrest across its provinces for 5 years). If Egypt stands, it is drawn in: −150 talents, and "Our Vietnam" (−8% income and −7% manpower for 5 years).',
         effects: guard('ev_s48_sanaa_officers:0', (ctx) => {
           const h = ctx.helpers;
+          // The Imam climbing out of the back window ends up somewhere, and
+          // for eight years it is a government (SPEC §251).
+          raiseTheImamate(ctx);
           h.adjust(ctx, 'YEM', { stability: -2 });
           unrestAcross(ctx, 'YEM', ['Zafar', 'Muza', 'Marib'], {
             id: 'war_in_mountains', name: 'The War in the Mountains', months: 60,
@@ -1683,6 +1751,66 @@ export const EVENTS_1948_REGION = [
           }
           h.setFlag(ctx, 'yemenRevolution', true);
           h.chronicle(ctx, 'era', 'The Imam is dead a week when the tanks shell the palace: republic in the lowlands, Imamate in the mountains, and Egypt marching seventy thousand men into the war its officers will call our Vietnam.');
+        }),
+      },
+    ],
+  },
+
+  // ── Y4b · 1970 · March ────────────────────────────────────────────────────
+  // The other half of the pair (§251): the war ends the way that war ended —
+  // not with a victory but with a compromise nobody calls one, after the
+  // Egyptian army has gone home to a defeat somewhere else entirely.
+  {
+    id: 'ev_s48_yemen_compromise',
+    title: 'The Republic Nobody Won',
+    worldLabel: 'Yemen\'s eight-year war ends in a compromise: republic kept, royalists seated',
+    desc: 'Egypt withdraws the last of its divisions after June 1967 — the war it '
+      + 'needed at a manageable distance is now a war it cannot afford at any — and '
+      + 'the royalists, left with Saudi money and no Egyptian enemy, besiege Sana\'a '
+      + 'for seventy days and fail to take it. What follows is the settlement neither '
+      + 'side asked for: Riyadh recognizes the republic, the republic seats royalists '
+      + 'in its cabinet and its assembly, the Imam is pensioned into an English exile '
+      + 'nobody mentions afterwards, and the state that emerges is neither the '
+      + 'revolution of 1962 nor the Imamate of 1962. About two hundred thousand people '
+      + 'are dead, the mountains are full of rifles that never go back to any '
+      + 'armoury, and the arrangement holds — which is more than can be said for most '
+      + 'of the settlements in this chapter.',
+    forTag: 'both',
+    decider: 'YEM',
+    date: { y: 1970, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_yemen_compromise:when', (ctx) =>
+      alive(ctx, 'YEM') && !!ctx.helpers.getFlag(ctx, 'yemenRevolution')),
+    historical: 'Egypt withdrew after 1967, the royalists failed to take Sana\'a in the seventy-day siege of 1967–68, and the 1970 settlement recognized the republic while seating royalists in government.',
+    options: [
+      {
+        label: 'Seat them in the cabinet and call it a republic',
+        tooltip: 'The Imamate folds back into Yemen and the war ends: the mountains, their men and their treasury come under one banner. Yemen +1 stability and +10 legitimacy; Saudi opinion of Yemen +60 — Riyadh is recognizing what it spent eight years shooting at.',
+        effects: guard('ev_s48_yemen_compromise:0', (ctx) => {
+          const h = ctx.helpers;
+          settleTheImamate(ctx, 'The seventy-day siege of Sana\'a fails, Riyadh recognizes the '
+            + 'republic, and the royalists take seats in the government they were fighting: the '
+            + 'war in the mountains ends without a victory.');
+          h.adjust(ctx, 'YEM', { stability: 1, legitimacy: 10 });
+          if (alive(ctx, 'SAU')) setOpinion(ctx, 'SAU', 'YEM', 60);
+          h.setFlag(ctx, 'yemenRevolution', false);
+          h.setFlag(ctx, 'yemenCompromise', true);
+        }),
+      },
+      {
+        label: 'Buy the tribes out one wadi at a time',
+        tooltip: 'The same reunion, paid for: Yemen −120 talents and +2 stability, and its provinces lose "The War in the Mountains" at once. The rifles stay in the mountains either way.',
+        effects: guard('ev_s48_yemen_compromise:1', (ctx) => {
+          const h = ctx.helpers;
+          settleTheImamate(ctx, 'The tribes are bought out wadi by wadi and the Imamate simply '
+            + 'stops being a government; the republic pays for a quiet it could not win.');
+          h.adjust(ctx, 'YEM', { treasury: -120, stability: 2 });
+          for (const n of ['Sanaa', 'Hodeida', 'Marib']) h.removeModifier(ctx, n, 'war_in_mountains');
+          if (alive(ctx, 'SAU')) setOpinion(ctx, 'SAU', 'YEM', 40);
+          h.setFlag(ctx, 'yemenRevolution', false);
+          h.setFlag(ctx, 'yemenCompromise', true);
         }),
       },
     ],

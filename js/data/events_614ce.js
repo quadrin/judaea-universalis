@@ -306,6 +306,180 @@ function addWarscore(ctx, war, tag, amount) {
   } catch (e) { warnOnce('addWarscore', e); }
 }
 
+// ── the fitnas on the map (SPEC §251) ───────────────────────────────────────
+//
+// Two civil wars, thirty years apart, that this chapter used to fight entirely
+// inside a modifier. The First Fitna is Ali in Kufa against Mu'awiya in
+// Damascus for five years; the Second is nine years in which the man most of
+// the Muslim world prayed for by name was in MECCA and the Umayyads held Syria
+// and little else. Both were rendered as −10% income on one green country that
+// never once divided, which is the thing §239 was written about.
+//
+// The banner is the same `USR` every other chapter's claimant flies, dressed
+// by the 614 bookmark's lens (§139) as an Arab Muslim court rather than a
+// Latin one, and dressed again by each card for the man whose it is. The two
+// arcs never overlap: Mu'awiya's court is folded up at Ali's death in 661 and
+// Ibn al-Zubayr's is not raised until 683.
+//
+// The GROUND is whatever the Caliphate actually holds. A campaign in which the
+// conquests went differently — the Return holding Palestine, Persia holding
+// Iraq, a Caliphate still inside the peninsula — divides what there is to
+// divide, and where a claim has no ground at all the card falls back to the
+// modifier it always was, exactly as the Vitellius card does.
+
+// Mu'awiya's twenty years of Syria: the jund he governed, and the ground the
+// Sufyanid claim actually stood on.
+const SUFYANID_SYRIA = [
+  'Damascus', 'Emesa', 'Chalcis', 'Beroea', 'Apamea', 'Antioch', 'Seleucia Pieria',
+  'Laodicea', 'Cyrrhus', 'Zeugma', 'Samosata', 'Palmyra',
+  'Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus',
+  'Bostra', 'Caesarea Philippi', 'Batanea', 'Gerasa', 'Philadelphia', 'Medaba',
+  'Scythopolis', 'Pella', 'Gadara', 'Sebaste', 'Neapolis', 'Caesarea Maritima',
+  'Ptolemais', 'Dora', 'Joppa', 'Ascalon', 'Gaza', 'Azotus', 'Jamnia',
+];
+// …and the desert road he would have had to stand on instead, in a world where
+// the caliphate never took Syria at all. The northern half of the peninsula is
+// the Syrian party's ground when there is no Syria: the oases the Ridda won
+// and the road the Syrian armies were raised along.
+const SUFYANID_FALLBACK = ['Bostra', 'Dumatha', 'Sirhan', 'Azraq', 'Tayma', 'Hegra', 'Dedan'];
+
+// Ibn al-Zubayr's caliphate: the sanctuary he was acclaimed in, the Hijaz
+// around it, the Iraq that swore to him, and Egypt while it lasted. Medina
+// and the northern oases are deliberately NOT in it — the Umayyad court has
+// to keep a seat to be a court, and this list is already most of the peninsula.
+const ZUBAYRID_CLAIM = [
+  'Macoraba', 'Yamama', 'Najran', 'Asir', 'Marib', 'Zafar', 'Muza',
+  'Eudaemon Arabia', 'Shabwa', 'Moscha', 'Dioscurida', 'Omana', 'Mazun', 'Gerrha',
+  'Uruk', 'Babylon', 'Najaf', 'Kut', 'Samawa', 'Amara', 'Charax', 'Nukhayb',
+  'Seleucia-Ctesiphon', 'Susa',
+  'Alexandria', 'Memphis', 'Pelusium', 'Athribis', 'Leontopolis', 'Arsinoe',
+  'Oxyrhynchus', 'Thebes', 'Syene',
+];
+
+// One claimant at a time, and never onto ground the caliphate no longer holds.
+// Returns the new court, or null when there is nothing to raise it on.
+function raiseFitna(ctx, spec) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  if (g.tags.USR) return null;
+  const home = who(ctx, 'RSH');
+  const ground = spec.provinces.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === home;
+  });
+  if (!ground.length) return null;
+  const claimant = h.secedeTag(ctx, home, 'USR', {
+    provinces: ground,
+    share: spec.share,
+    name: spec.name,
+    color: spec.color,
+    opinion: -200,
+    stability: spec.stability,
+    legitimacy: spec.legitimacy,
+    ruler: spec.ruler,
+  });
+  if (!claimant) return null;
+  h.declareWar(ctx, home, 'USR', spec.war);
+  const w = findWar(g, home, 'USR');
+  // Neither man can recognise the other and remain the Commander of the
+  // Faithful; this ends at a battle or it does not end.
+  if (w) w.noNegotiation = true;
+  setOpinion(ctx, home, 'USR', -200);
+  setOpinion(ctx, 'USR', home, -200);
+  if (spec.modifier) h.addTagModifier(ctx, 'USR', spec.modifier);
+  if (spec.army) {
+    const at = ground.indexOf(spec.army.at) >= 0 ? spec.army.at : ground[0];
+    h.spawnArmy(ctx, 'USR', at, spec.army.opts);
+  }
+  return claimant;
+}
+// 656 · the governor who would not swear. Twenty years of Syria, the treasury
+// that paid for it, and the shirt of a murdered kinsman on the pulpit at
+// Damascus. The Sufyanid claim takes the jund Mu'awiya governed; where the
+// conquests never reached Syria it takes the desert road instead, because a
+// Syrian party with no Syria still has the northern half of the peninsula.
+function raiseSufyanids(ctx) {
+  // How much of the jund the caliphate actually took. Under three cities of
+  // it there is no Syria to secede, and the Syrian party's ground is the
+  // desert road its armies were raised along instead — which is the shape a
+  // campaign that fought the conquests differently leaves behind.
+  const home = who(ctx, 'RSH');
+  const heldSyria = SUFYANID_SYRIA.filter((n) => {
+    const p = ctx.prov(n);
+    return p && p.owner === home;
+  }).length;
+  const ground = heldSyria >= 3 ? SUFYANID_SYRIA : SUFYANID_SYRIA.concat(SUFYANID_FALLBACK);
+  return raiseFitna(ctx, {
+    provinces: ground,
+    share: 0.45,
+    name: 'The Caliphate at Damascus',
+    color: [96, 140, 118],
+    stability: 1,
+    legitimacy: 40,
+    war: 'The First Fitna',
+    ruler: {
+      name: 'Mu\'awiya ibn Abi Sufyan', title: 'Commander of the Faithful',
+      gov: 5, infl: 5, mar: 3, age: 54,
+    },
+    modifier: {
+      id: 'the_syrian_army', name: 'The Army of Syria', months: -1,
+      effects: { moraleMult: 1.08, disciplineMult: 1.05, incomeMult: 1.05 },
+    },
+    army: {
+      at: 'Damascus',
+      opts: {
+        inf: 8, cav: 4, name: 'The Army of Syria',
+        general: { name: 'Amr ibn al-As', fire: 3, shock: 3, maneuver: 4 },
+      },
+    },
+  });
+}
+
+// 683 · the sanctuary that was besieged twice. Yazid dies, his son follows him
+// in weeks, and the man Iraq, Egypt and the Hijaz pray for by name is in
+// Mecca. This is the claim that held MOST of the empire for nine years while
+// the dynasty held Syria and its nerve.
+function raiseZubayrids(ctx) {
+  return raiseFitna(ctx, {
+    provinces: ZUBAYRID_CLAIM,
+    share: 0.5,
+    name: 'The Caliphate of Ibn al-Zubayr',
+    color: [186, 158, 92],
+    stability: 0,
+    legitimacy: 55,
+    war: 'The Second Fitna',
+    ruler: {
+      name: 'Abd Allah ibn al-Zubayr', title: 'Commander of the Faithful',
+      gov: 4, infl: 4, mar: 3, age: 59,
+    },
+    modifier: {
+      id: 'the_oath_at_the_kaaba', name: 'The Oath at the Kaaba', months: -1,
+      effects: { moraleMult: 1.05, manpowerMult: 1.1, incomeMult: 0.95 },
+    },
+    army: {
+      at: 'Macoraba',
+      opts: { inf: 6, cav: 2, name: 'The Host of the Sanctuary' },
+    },
+  });
+}
+
+// …and the card that puts one out. The whole of the claimant folds back into
+// the Caliphate — ground, garrisons, treasury, muster rolls — and the civil
+// war ends with the man who was fighting it. `winner: true` says the court
+// being dissolved is the one that WON, which is the First Fitna exactly: the
+// Sufyanid claim did not lose, it became the government.
+// The gate a SETTLING card is allowed to retire on: the ordinary strand test,
+// or a claimant this chapter raised and has not yet put out.
+function fitnaToClose(ctx) {
+  return freeCaliphate(ctx) || !!(ctx.game.tags && ctx.game.tags.USR);
+}
+function settleFitna(ctx, line, winner) {
+  const g = ctx.game;
+  if (!g.tags.USR) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'RSH'), { chronicle: line, winner: !!winner });
+  return true;
+}
+
 export const EVENTS_614 = [
   // ── 1 ─────────────────────────────────────────────────────────────────────
   {
@@ -1702,7 +1876,7 @@ export const EVENTS_614 = [
     options: [
       {
         label: 'The empire turns inward',
-        tooltip: 'The Caliphate: Ali enthroned; −2 stability, −15 legitimacy, and "The First Fitna" (−10% morale, −10% income) for 60 months.',
+        tooltip: 'The Caliphate: Ali enthroned; −2 stability, −15 legitimacy, and "The First Fitna" (−10% morale, −10% income) for 60 months. Mu\'awiya\'s Syria goes onto the map as a court of its own, at war with Kufa until 661.',
         effects: guard('ev_p_uthman_slain:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
@@ -1713,12 +1887,14 @@ export const EVENTS_614 = [
             effects: { moraleMult: 0.9, incomeMult: 0.9 },
           });
           h.setFlag(ctx, 'firstFitna', true);
-          h.chronicle(ctx, 'era', 'Uthman is killed at his own doorway in Medina; Ali takes the oath, Damascus withholds it, and the First Fitna opens.');
+          const syria = raiseSufyanids(ctx);
+          h.chronicle(ctx, 'era', 'Uthman is killed at his own doorway in Medina; Ali takes the oath, Damascus withholds it, and the First Fitna opens'
+            + (syria ? ' — with two Commanders of the Faithful on the map and one army between them.' : '.'));
         }),
       },
       {
         label: 'Buy the garrisons quiet',
-        tooltip: 'The Caliphate: Ali enthroned; −120 talents in stipend arrears paid at once — −1 stability, −15 legitimacy, and the same "First Fitna" modifier. Silver slows a civil war; it has never yet stopped one.',
+        tooltip: 'The Caliphate: Ali enthroned; −120 talents in stipend arrears paid at once — −1 stability, −15 legitimacy, and the same "First Fitna" modifier. Damascus withholds the oath either way: silver slows a civil war; it has never yet stopped one.',
         effects: guard('ev_p_uthman_slain:1', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
@@ -1729,7 +1905,9 @@ export const EVENTS_614 = [
             effects: { moraleMult: 0.9, incomeMult: 0.9 },
           });
           h.setFlag(ctx, 'firstFitna', true);
-          h.chronicle(ctx, 'era', 'Uthman is killed at his doorway; Ali pays the garrisons their arrears and takes an oath that Damascus still refuses.');
+          const syria = raiseSufyanids(ctx);
+          h.chronicle(ctx, 'era', 'Uthman is killed at his doorway; Ali pays the garrisons their arrears and takes an oath that Damascus still refuses'
+            + (syria ? ', with an army behind the refusal.' : '.'));
         }),
       },
     ],
@@ -1758,11 +1936,14 @@ export const EVENTS_614 = [
     options: [
       {
         label: 'Raise the leaves on the lances',
-        tooltip: 'The Caliphate: −6,000 manpower, −5 legitimacy; the Kharijites walk out — "Judgment Belongs to God Alone" (+1 unrest everywhere) for 48 months.',
+        tooltip: 'The Caliphate: −6,000 manpower, −5 legitimacy; the Kharijites walk out — "Judgment Belongs to God Alone" (+1 unrest everywhere) for 48 months. The arbitration is Damascus\' victory: the Syrian court gains in the civil war.',
         effects: guard('ev_p_camel_siffin:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
           h.adjust(ctx, 'RSH', { manpower: -6000, legitimacy: -5 });
+          // The arbitration was the Syrian court's whole objective: it made the
+          // claim a party to a negotiation rather than a rebellion.
+          if (ctx.game.tags.USR) addWarscore(ctx, findWar(ctx.game, who(ctx, 'RSH'), 'USR'), 'USR', 12);
           h.addTagModifier(ctx, 'RSH', {
             id: 'kharijite_secession', name: '"Judgment Belongs to God Alone"', months: 48,
             effects: { unrestAll: 1 },
@@ -1773,11 +1954,14 @@ export const EVENTS_614 = [
       },
       {
         label: 'Fight Siffin to the finish',
-        tooltip: 'The Caliphate: −10,000 manpower, −10 legitimacy — no arbitration, no walkout, and a generation of Syrian and Iraqi widows on the same pension rolls.',
+        tooltip: 'The Caliphate: −10,000 manpower, −10 legitimacy — no arbitration, no walkout, and a generation of Syrian and Iraqi widows on the same pension rolls. The Syrian court bleeds with it: −6,000 of its own.',
         effects: guard('ev_p_camel_siffin:1', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
           h.adjust(ctx, 'RSH', { manpower: -10000, legitimacy: -10 });
+          // No Book on the lance-points and no walkout: the river is paid for
+          // by both banks of it.
+          if (ctx.game.tags.USR) h.adjust(ctx, 'USR', { manpower: -6000, legitimacy: -5 });
           h.chronicle(ctx, 'war', 'The Camel, then Siffin fought to the end: the Book stays in its satchels and the river carries the cost downstream.');
         }),
       },
@@ -1843,17 +2027,29 @@ export const EVENTS_614 = [
     roll: true,
     date: { y: 661, m: 1 },
     world: true,
-    when: freeCaliphate,
+    // A card that CLOSES a civil war may not retire while the civil war is on
+    // the map (SPEC §251). `freeCaliphate` is the strand's ordinary gate — a
+    // caliphate broken to somebody's collar stops having an imperial
+    // chronicle — but the Sufyanid court exists because this chapter put it
+    // there, and a settling card that retires leaves a claimant standing for
+    // ever on a banner the next arc needs.
+    when: fitnaToClose,
     major: true,
     aiOption: 0,
     options: [
       {
         label: 'An empire ruled from Damascus',
-        tooltip: 'The Caliphate becomes the Umayyad Caliphate: Mu\'awiya enthroned, +2 stability, +10 legitimacy, the Fitna modifier ends. If it holds Jerusalem: +15 influence points and the city −1 unrest for 24 months.',
+        tooltip: 'The Caliphate becomes the Umayyad Caliphate: Mu\'awiya enthroned, +2 stability, +10 legitimacy, the Fitna modifier ends, and the Syrian court folds back in — as the winner. If it holds Jerusalem: +15 influence points and the city −1 unrest for 24 months.',
         effects: guard('ev_p_ali_falls:0', (ctx) => {
           const h = ctx.helpers;
           const r = ctx.game.tags.RSH;
           if (!r || r.alive === false) return;
+          // The claim did not lose; it became the government (SPEC §251). The
+          // ground, the garrisons and the treasury of Damascus come back under
+          // one banner, the civil war ends with the man who was fighting it,
+          // and the state that survives is the one this card renames.
+          settleFitna(ctx, 'Ali is struck down at prayer in Kufa and the Syrian court is the government: '
+            + 'the empire is one again, and it is ruled from Damascus.', true);
           h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya ibn Abi Sufyan', title: 'Commander of the Faithful', gov: 5, infl: 5, mar: 3, age: 59 });
           r.name = 'Umayyad Caliphate';
           h.removeModifier(ctx, 'RSH', 'first_fitna');
@@ -1872,11 +2068,13 @@ export const EVENTS_614 = [
       },
       {
         label: 'Keep Medina\'s stipends flowing',
-        tooltip: 'The same succession, softened south: −120 talents to the old families of Medina; +1 stability, +15 legitimacy. The pious are not reconciled, merely paid.',
+        tooltip: 'The same succession and the same reunion, softened south: −120 talents to the old families of Medina; +1 stability, +15 legitimacy. The pious are not reconciled, merely paid.',
         effects: guard('ev_p_ali_falls:1', (ctx) => {
           const h = ctx.helpers;
           const r = ctx.game.tags.RSH;
           if (!r || r.alive === false) return;
+          settleFitna(ctx, 'Ali is struck down at prayer in Kufa; the Syrian court becomes the government, '
+            + 'and Medina is pensioned into a dignified quiet.', true);
           h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya ibn Abi Sufyan', title: 'Commander of the Faithful', gov: 5, infl: 5, mar: 3, age: 59 });
           r.name = 'Umayyad Caliphate';
           h.removeModifier(ctx, 'RSH', 'first_fitna');
@@ -2510,7 +2708,7 @@ export const EVENTS_614 = [
     options: [
       {
         label: 'Hold Syria, lose the rest',
-        tooltip: 'The Caliphate: a caretaker in Damascus; −2 stability, −10 legitimacy, "The Second Fitna" (−8% morale, −10% income) for 96 months; its Syrian cities take "Plague and Famine" (+2 unrest, −15% tax) for 36 months.',
+        tooltip: 'The Caliphate: a caretaker in Damascus; −2 stability, −10 legitimacy, "The Second Fitna" (−8% morale, −10% income) for 96 months; its Syrian cities take "Plague and Famine" (+2 unrest, −15% tax) for 36 months. The Hijaz, Iraq and Egypt go over to Mecca — a second caliphate on the map for nine years.',
         effects: guard('ev_p_second_fitna:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
@@ -2529,12 +2727,14 @@ export const EVENTS_614 = [
             }
           }
           h.setFlag(ctx, 'secondFitna', true);
-          h.chronicle(ctx, 'era', 'The Second Fitna: Ibn al-Zubayr is caliph in Mecca, the Kaaba bears siege-scorch, and plague works through Syria like a second army.');
+          const mecca = raiseZubayrids(ctx);
+          h.chronicle(ctx, 'era', 'The Second Fitna: Ibn al-Zubayr is caliph in Mecca, the Kaaba bears siege-scorch, and plague works through Syria like a second army'
+            + (mecca ? ' — the sanctuary\'s caliphate holds the Hijaz, Iraq and Egypt, and Damascus holds Syria.' : '.'));
         }),
       },
       {
         label: 'Treat with Mecca for a season',
-        tooltip: 'The Caliphate: −20 legitimacy, −1 stability — half the empire prays for Ibn al-Zubayr by name while Damascus pretends not to hear. Syria takes the same plague; the Fitna modifier still lands.',
+        tooltip: 'The Caliphate: −20 legitimacy, −1 stability — half the empire prays for Ibn al-Zubayr by name while Damascus pretends not to hear. Syria takes the same plague; the Fitna modifier still lands; and the second caliphate is on the map either way. Treating with a rival caliph is a policy, not a veto.',
         effects: guard('ev_p_second_fitna:1', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
@@ -2553,7 +2753,9 @@ export const EVENTS_614 = [
             }
           }
           h.setFlag(ctx, 'secondFitna', true);
-          h.chronicle(ctx, 'era', 'The Second Fitna: Damascus buys a truce with Mecca it does not intend to keep, while half the empire prays for Ibn al-Zubayr by name.');
+          const mecca = raiseZubayrids(ctx);
+          h.chronicle(ctx, 'era', 'The Second Fitna: Damascus buys a truce with Mecca it does not intend to keep, while half the empire prays for Ibn al-Zubayr by name'
+            + (mecca ? ' — and pays taxes to him.' : '.'));
         }),
       },
     ],
@@ -2576,10 +2778,17 @@ export const EVENTS_614 = [
     options: [
       {
         label: 'The sword-edge holds',
-        tooltip: 'The Caliphate: Marwan enthroned, Abd al-Malik heir; +10 martial points, +5 legitimacy, −2,000 manpower; Damascus +1 unrest for 24 months (the feud begins).',
+        tooltip: 'The Caliphate: Marwan enthroned, Abd al-Malik heir; +10 martial points, +5 legitimacy, −2,000 manpower; Damascus +1 unrest for 24 months (the feud begins). The meadow is the dynasty\'s: the Zubayrid caliphate loses ground in the civil war.',
         effects: guard('ev_p_marj_rahit:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
+          // The meadow is what keeps Syria Umayyad: the Qaysi tribes who
+          // declared for Mecca are broken on it, and the claim never comes
+          // north again.
+          if (ctx.game.tags.USR) {
+            addWarscore(ctx, findWar(ctx.game, who(ctx, 'RSH'), 'USR'), who(ctx, 'RSH'), 15);
+            h.adjust(ctx, 'USR', { manpower: -4000, legitimacy: -5 });
+          }
           h.setRuler(ctx, 'RSH', { name: 'Marwan ibn al-Hakam', title: 'Commander of the Faithful', gov: 3, infl: 4, mar: 2, age: 61 });
           h.setHeir(ctx, 'RSH', { name: 'Abd al-Malik', gov: 5, infl: 4, mar: 3, age: 38 });
           h.adjust(ctx, 'RSH', { mar: 10, legitimacy: 5, manpower: -2000 });
@@ -2754,17 +2963,20 @@ export const EVENTS_614 = [
     roll: true,
     date: { y: 692, m: 11 },
     world: true,
-    // No Second Fitna, no siege of Mecca to end it.
-    when: (ctx) => freeCaliphate(ctx) && !!ctx.helpers.getFlag(ctx, 'secondFitna'),
+    // No Second Fitna, no siege of Mecca to end it — and the card that ends
+    // one may not retire while the rival caliphate is still on the map.
+    when: (ctx) => fitnaToClose(ctx) && !!ctx.helpers.getFlag(ctx, 'secondFitna'),
     major: true,
     aiOption: 0,
     options: [
       {
         label: 'The catapults do not pause for the sanctuary',
-        tooltip: 'The Caliphate: +2 stability, +10 legitimacy, +10 martial points; "The Second Fitna" modifier ends. The imperial caliphate begins.',
+        tooltip: 'The Caliphate: +2 stability, +10 legitimacy, +10 martial points; "The Second Fitna" modifier ends and the rival caliphate — the Hijaz, Iraq and Egypt — comes back under one banner. The imperial caliphate begins.',
         effects: guard('ev_p_zubayr_falls:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
+          settleFitna(ctx, 'Ibn al-Zubayr dies at the sanctuary door under al-Hajjaj\'s stones; '
+            + 'the Hijaz, Iraq and Egypt come back to Damascus and the Second Fitna is over.', false);
           h.removeModifier(ctx, 'RSH', 'second_fitna');
           h.setFlag(ctx, 'secondFitna', false);
           h.adjust(ctx, 'RSH', { stability: 2, legitimacy: 10, mar: 10 });
@@ -2773,10 +2985,12 @@ export const EVENTS_614 = [
       },
       {
         label: 'Starve the city instead',
-        tooltip: 'The Caliphate: −100 talents for the longer siege; +1 stability, +15 legitimacy — the sanctuary is taken unbombarded, and the chroniclers note it.',
+        tooltip: 'The Caliphate: −100 talents for the longer siege; +1 stability, +15 legitimacy — the sanctuary is taken unbombarded, and the chroniclers note it. The rival caliphate folds back all the same.',
         effects: guard('ev_p_zubayr_falls:1', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'RSH')) return;
+          settleFitna(ctx, 'Mecca is starved rather than stoned; Ibn al-Zubayr falls at the sanctuary '
+            + 'door all the same, and his caliphate comes back under Damascus.', false);
           h.removeModifier(ctx, 'RSH', 'second_fitna');
           h.setFlag(ctx, 'secondFitna', false);
           h.adjust(ctx, 'RSH', { treasury: -100, stability: 1, legitimacy: 15 });

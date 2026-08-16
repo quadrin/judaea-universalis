@@ -926,6 +926,30 @@ static site, the zero dependencies, or the missing build step changes.
   play with are thumb-sized; long values stack instead of running through their
   labels; the title screen's era card fits the screen; and in landscape the
   panels become a full-height side panel so the map keeps half the screen.
+- **Every civil war is a country now.** A civil war used to be a ruler swap and
+  a modifier: Caesar crossed the Rubicon and the map showed one Rome, the First
+  and Second Fitnas were −10% income on one undivided caliphate, Italy raised
+  its own senate and its own coinage and the map showed Roman Italy, and the
+  Judaean civil war of the nineties — six years, a Seleucid king invited in by
+  Judaeans, eight hundred crosses — was a hidden flag. Ten more of them are on
+  the map: Pompey's Republic in the East and the Liberators after him, Labienus
+  ruling Roman Asia for Parthia, the confederacy at Italica and Sulla's landing
+  at Brundisium, the empire of the Gauls on the Rhine, Mu'awiya's Damascus and
+  Ibn al-Zubayr's Mecca, the Imamate in the Yemeni mountains — each a real
+  court with its own colour, treasury, armies and war, raised by the card that
+  raises the claim and folded back by the card that settles it. Only what the
+  parent still holds ever goes over, so a Judaea that has taken the coast keeps
+  it, and both roads on a card raise the claimant: what you choose is what your
+  court does about a civil war, not whether there is one. Jannaeus' war is the
+  sectarian one and is not a court at all — the hill country simply rises,
+  under hosts you have to beat or outlive.
+- **Ships in one harbour can be one fleet.** New hulls join the idle squadron of
+  their own pattern, so a re-rigged yard, a squadron sailed in from another
+  port and a fleet with an admiral used to sit at one anchor as three commands
+  you had to move three times. The fleet row now carries the armies' merge
+  button: every other squadron of ours at that anchor comes under one command,
+  the cargo and the better admiral come with it, and the merged line fights at
+  its oldest pattern.
 - **Nobody else had a court.** Every foreign power was a treasury, an army and an
   opinion score, and the only bad thing that ever happened to one was you. Now
   every court on the map convenes: two or three parties by constitution (a

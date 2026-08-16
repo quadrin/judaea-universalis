@@ -81,6 +81,11 @@ export function createOutliner(el, {
       if (!fa.classList.contains('disabled')) runArmyAction('hireAdmiral', Number(fa.dataset.fleetAdmiral));
       return;
     }
+    const fg = e.target.closest('[data-fleet-merge]');
+    if (fg) {
+      if (!fg.classList.contains('disabled')) runArmyAction('mergeAllFleets', Number(fg.dataset.fleetMerge));
+      return;
+    }
     const fm = e.target.closest('[data-fleet-modernize]');
     if (fm) {
       if (!fm.classList.contains('disabled')) runArmyAction('modernizeFleet', Number(fm.dataset.fleetModernize));
@@ -258,6 +263,13 @@ export function createOutliner(el, {
         const modTT = f.canModernize
           ? `Re-rig ${f.genName} as ${f.newGenName} (${f.modernizeCost} talents)`
           : (f.whyModernize || 'Nothing newer to re-rig to');
+        // Merge every other squadron of ours at this anchor into this one
+        // (SPEC §251) — the fleets' half of the army row's merge button.
+        const mergeTT = f.canMerge
+          ? `Bring every other squadron of ours at ${f.provName} under this command `
+            + `(${f.mergeCount} fleet${f.mergeCount === 1 ? '' : 's'}, ${f.mergeShips} `
+            + `hull${f.mergeShips === 1 ? '' : 's'}) — a mixed line fights at its oldest pattern`
+          : (f.whyMerge || 'No other squadron of ours rides at this anchor');
         html += `
           <div class="ol-row ol-fleet${sel ? ' sel' : ''}" data-fleet="${f.id}" data-tt="${esc(tt)}">
             <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.provName)}</span>
@@ -265,6 +277,7 @@ export function createOutliner(el, {
             ${sel ? `<span class="ol-acts">`
     + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('shield')}</button>` : '')
     + (f.canDisembark ? `<button class="ol-act" data-fleet-disembark="${f.id}" data-tt="Put the carried armies ashore here">${icon('retreat')}</button>` : '')
+    + `<button class="ol-act${f.canMerge ? '' : ' disabled'}" data-fleet-merge="${f.id}" data-tt="${esc(mergeTT)}">${icon('ship')}</button>`
     + `<button class="ol-act${f.canHireAdmiral ? '' : ' disabled'}" data-fleet-admiral="${f.id}" data-tt="${esc(admTT)}">${icon('helmet')}</button>`
     + `<button class="ol-act${f.canModernize ? '' : ' disabled'}" data-fleet-modernize="${f.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>`
     + `</span>` : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}

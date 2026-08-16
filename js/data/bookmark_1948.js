@@ -1008,6 +1008,15 @@ export const BOOKMARK_1948 = {
     // its own century's court (the static 'arab' pool is the Periplus-era
     // one, correct everywhere else OMA is seated).
     OMA: { names: 'omani_modern' },
+    // The rival banner (SPEC §251), dressed for a century whose civil wars are
+    // fought between officers and imams rather than between purples. `USR` is
+    // one generic tag that each card names for itself; what the LENS has to
+    // fix is what a card cannot pass — the faith and the people of the court
+    // that secedes, which `secedeTagCore` reads off the definition.
+    USR: {
+      name: 'The Rival Court', adj: 'Royalist', religion: 'islam', culture: 'arab_modern',
+      description: 'The provinces that have stopped answering the capital, and the government they answer instead.',
+    },
   },
 
   // The victors' pens wait on both the schoolhouse and the settlers (SPEC
