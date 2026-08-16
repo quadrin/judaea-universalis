@@ -107,6 +107,19 @@ function worthRecording(ev) {
   return !!ev && (ev.major === true || typeof ev.historical === 'string');
 }
 
+// …and the pages that are not the record's to keep (SPEC §252). A card
+// carrying `verdict` is ONE ROAD of a drawn outcome — who won the civil war,
+// which claimant the army acclaimed — and its siblings are the other roads.
+// Exactly one of them fires and the rest retire in the same month, so listing
+// the retirements under "Chapters that never came" would do two wrong things
+// at once: it would report a page as missing that was never owed to this
+// world, and it would tell the reader that the page which DID come was drawn
+// rather than fated. A campaign should feel like a century, not like a table
+// of odds it can audit afterwards.
+function isVerdictRoad(ev) {
+  return !!ev && typeof ev.verdict === 'string' && !!ev.verdict;
+}
+
 // Called from resolveEventOption once the option's effects have run.
 export function noteEventChoice(ctx, ev, idx) {
   try {
@@ -144,7 +157,7 @@ export function noteEventChoice(ctx, ev, idx) {
 // written at all.
 export function noteRetired(ctx, ev, why) {
   try {
-    if (!worthRecording(ev)) return;
+    if (!worthRecording(ev) || isVerdictRoad(ev)) return;
     const g = ctx.game;
     if (!Array.isArray(g.retiredChapters)) g.retiredChapters = [];
     if (g.retiredChapters.some((r) => r && r.id === ev.id)) return;

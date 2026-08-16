@@ -473,6 +473,28 @@ function raiseZubayrids(ctx) {
 function fitnaToClose(ctx) {
   return freeCaliphate(ctx) || !!(ctx.game.tags && ctx.game.tags.USR);
 }
+
+// Who won (SPEC §252). Both fitnas ended on a blade and a siege, and neither
+// was decided when it opened. The Kharijites of Ramadan 40 sent three killers
+// out on one night — for Ali, for Mu'awiya and for Amr — and only the first
+// finished his work; the second wounded his man and the third killed a
+// substitute. Damascus won the First Fitna partly because Kufa's caliph was
+// the one who died. Mecca held out nine years against the empire's whole
+// professional army and fell in the end to a siege engine and a defection.
+//
+// So the record is the likelier road and not the only one, and the war the
+// campaign actually fought bends the odds: a claimant who has beaten the
+// caliphate in the field is likelier to keep what he took.
+function sufyanidsWin(ctx) {
+  return ctx.helpers.verdict(ctx, 'firstFitna', 0.78, {
+    recorded: 'USR', war: ['RSH', 'USR'], sway: 0.3,
+  });
+}
+function marwanidsWin(ctx) {
+  return ctx.helpers.verdict(ctx, 'secondFitna', 0.75, {
+    recorded: 'RSH', war: ['RSH', 'USR'], sway: 0.35,
+  });
+}
 function settleFitna(ctx, line, winner) {
   const g = ctx.game;
   if (!g.tags.USR) return false;
@@ -2033,7 +2055,13 @@ export const EVENTS_614 = [
     // chronicle — but the Sufyanid court exists because this chapter put it
     // there, and a settling card that retires leaves a claimant standing for
     // ever on a banner the next arc needs.
-    when: fitnaToClose,
+    //
+    // …and it is one of TWO roads out of the First Fitna (SPEC §252): the
+    // night the Kharijites went out, this is the one where all three blades
+    // do what they were sent to do or fail to, and the oath is acclaimed
+    // rather than bargained for. `ev_p_ali_survives` is the other.
+    verdict: 'firstFitna',
+    when: (ctx) => fitnaToClose(ctx) && sufyanidsWin(ctx),
     major: true,
     aiOption: 0,
     options: [
@@ -2081,6 +2109,91 @@ export const EVENTS_614 = [
           h.adjust(ctx, 'RSH', { treasury: -120, stability: 1, legitimacy: 15 });
           h.setFlag(ctx, 'muawiyaCaliph', true);
           h.chronicle(ctx, 'era', 'Ali dies at prayer in Kufa; Mu\'awiya rules from Damascus and pensions Medina into a dignified quiet.');
+        }),
+      },
+    ],
+  },
+
+  // ── 17b ───────────────────────────────────────────────────────────────────
+  // The other road out of the First Fitna (SPEC §252). The night the
+  // Kharijites went out they sent three killers, not one — for Kufa, for
+  // Damascus, for Egypt — and only the first finished his work. This is the
+  // world where the second one nearly does: Mu'awiya still takes the oath,
+  // because the empire has nobody else and the Syrians have an army, but he
+  // takes it from a sickbed and pays for it, and the caliphate that comes out
+  // of the settlement is a weaker thing than the one the chronicles describe.
+  //
+  // The century that follows is the same century — the Sufyanid order, Yazid,
+  // Karbala, Marwan, Abd al-Malik and the octagon on the Mount are all still
+  // ahead — because a chapter whose next forty cards are written for one
+  // house's victory cannot draw for a different house without lying to the
+  // reader afterwards. What is drawn here is the PRICE.
+  {
+    id: 'ev_p_ali_survives',
+    verdict: 'firstFitna',
+    title: 'Three Blades, One Night',
+    worldLabel: 'The Kharijites take Ali and nearly take Damascus; the oath is bought',
+    desc: 'The men who walked out at Siffin send three killers out on one night of '
+      + 'Ramadan — for the caliph at Kufa, for the governor at Damascus, for the old '
+      + 'fox in Egypt — on the reasoning that the community will be whole again once '
+      + 'all three are gone. The reasoning is bad and one of the aims is very nearly '
+      + 'good: the blade meant for Mu\'awiya opens him from the hip and he is carried '
+      + 'off the prayer-mat alive, which the Syrians take for a judgment and the '
+      + 'Iraqis take for a warning. Kufa still buries its caliph. But the oath is not '
+      + 'acclaimed this time so much as negotiated — envoys, a written settlement, a '
+      + 'pension for the Prophet\'s grandsons, an amnesty nobody trusts — and the '
+      + 'empire that comes out of it is governed from Damascus by a man who has just '
+      + 'learned that he can be reached at prayer.',
+    forTag: 'both',
+    decider: 'RSH',
+    date: { y: 661, m: 1 },
+    world: true,
+    when: (ctx) => fitnaToClose(ctx) && !sufyanidsWin(ctx),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A settlement, a pension, and an amnesty nobody trusts',
+        tooltip: 'The Caliphate becomes the Umayyad Caliphate with Mu\'awiya on a sickbed: the Syrian court folds back in, the Fitna modifier ends, +1 stability and +5 legitimacy only — and "The Settlement, Not the Victory" (−6% income, −0.05 legitimacy a month, +1 unrest everywhere) for twenty years. A caliphate that was bargained for is argued with for a generation.',
+        effects: guard('ev_p_ali_survives:0', (ctx) => {
+          const h = ctx.helpers;
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          settleFitna(ctx, 'Ali is buried at Kufa and Mu\'awiya is carried off his own prayer-mat '
+            + 'alive; the oath is negotiated rather than acclaimed, and the empire is one again on paper '
+            + 'before it is one anywhere else.', true);
+          h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya ibn Abi Sufyan', title: 'Commander of the Faithful', gov: 5, infl: 5, mar: 2, age: 59 });
+          r.name = 'Umayyad Caliphate';
+          h.removeModifier(ctx, 'RSH', 'first_fitna');
+          h.adjust(ctx, 'RSH', { stability: 1, legitimacy: 5 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'settlement_not_victory', name: 'The Settlement, Not the Victory', months: 240,
+            effects: { incomeMult: 0.94, legitimacyAdd: -0.05, unrestAll: 1 },
+          });
+          h.setFlag(ctx, 'muawiyaCaliph', true);
+          h.setFlag(ctx, 'boughtOath', true);
+        }),
+      },
+      {
+        label: 'Pay Kufa what the settlement promised, to the coin',
+        tooltip: 'The same succession, honoured rather than signed and shelved: −180 talents into the Iraqi pension rolls; +2 stability, +12 legitimacy, and the settlement modifier runs half as long. Silver spent on the losing side is the cheapest thing in this century and the last thing anyone tries.',
+        effects: guard('ev_p_ali_survives:1', (ctx) => {
+          const h = ctx.helpers;
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          settleFitna(ctx, 'The settlement after Kufa is paid to the coin: the Iraqi pensions are '
+            + 'honoured, the amnesty holds, and Damascus rules an empire that has been bought rather '
+            + 'than beaten.', true);
+          h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya ibn Abi Sufyan', title: 'Commander of the Faithful', gov: 5, infl: 5, mar: 2, age: 59 });
+          r.name = 'Umayyad Caliphate';
+          h.removeModifier(ctx, 'RSH', 'first_fitna');
+          h.adjust(ctx, 'RSH', { treasury: -180, stability: 2, legitimacy: 12 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'settlement_not_victory', name: 'The Settlement, Not the Victory', months: 120,
+            effects: { incomeMult: 0.94, legitimacyAdd: -0.05, unrestAll: 1 },
+          });
+          h.setFlag(ctx, 'muawiyaCaliph', true);
+          h.setFlag(ctx, 'boughtOath', true);
         }),
       },
     ],
@@ -2965,7 +3078,11 @@ export const EVENTS_614 = [
     world: true,
     // No Second Fitna, no siege of Mecca to end it — and the card that ends
     // one may not retire while the rival caliphate is still on the map.
-    when: (ctx) => fitnaToClose(ctx) && !!ctx.helpers.getFlag(ctx, 'secondFitna'),
+    // One of two roads (SPEC §252): this is the siege that works. Nothing
+    // after 692 in this chapter is written for either winner, which is why
+    // this arc is allowed to draw for the winner rather than for the terms.
+    verdict: 'secondFitna',
+    when: (ctx) => fitnaToClose(ctx) && !!ctx.helpers.getFlag(ctx, 'secondFitna') && marwanidsWin(ctx),
     major: true,
     aiOption: 0,
     options: [
@@ -2995,6 +3112,85 @@ export const EVENTS_614 = [
           h.setFlag(ctx, 'secondFitna', false);
           h.adjust(ctx, 'RSH', { treasury: -100, stability: 1, legitimacy: 15 });
           h.chronicle(ctx, 'era', 'Mecca is starved rather than stoned; Ibn al-Zubayr falls at the sanctuary door all the same, and the civil war closes its books.');
+        }),
+      },
+    ],
+  },
+
+  // ── 33b ───────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_mecca_holds',
+    verdict: 'secondFitna',
+    title: 'The Siege That Failed at the Sanctuary',
+    worldLabel: 'Mecca holds; the caliphate passes to the house of Zubayr',
+    desc: 'Al-Hajjaj has the engines, the professionals and the patience, and Mecca '
+      + 'has a wall of pilgrims, a well and nine years of practice at being besieged. '
+      + 'What it also has, this season, is the news from Iraq: the garrison towns '
+      + 'that had been changing sides every spring change them once more and do not '
+      + 'change back, the Syrian pay chest arrives light, and the army outside the '
+      + 'sanctuary discovers it is the one being starved. Ibn al-Zubayr — past '
+      + 'seventy, out of everything except manner — comes out through the Gate of the '
+      + 'Beni Shayba to accept the surrender in person, wearing perfume, because he '
+      + 'has been dressed for his own death for nine years and sees no reason to '
+      + 'change. The oath is collected in the sanctuary the Umayyads bombarded, and '
+      + 'the empire is governed from a city with no army in it, which every chancery '
+      + 'in the world notes down as a thing that cannot last and nobody is willing to '
+      + 'test.',
+    forTag: 'both',
+    decider: 'RSH',
+    date: { y: 692, m: 11 },
+    world: true,
+    when: (ctx) => fitnaToClose(ctx) && !!ctx.helpers.getFlag(ctx, 'secondFitna') && !marwanidsWin(ctx),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The oath is collected in the sanctuary',
+        tooltip: 'The rival caliphate is the caliphate: the whole realm comes under one banner as the Zubayrid Caliphate, with Ibn al-Zubayr on the throne. The Fitna modifier ends; +1 stability, +15 legitimacy, and "The Caliphate of the Sanctuary" (+6% income, −5% morale, +0.05 legitimacy a month) for twenty years — a state ruled from the Hijaz by a man who owes the garrison towns everything.',
+        effects: guard('ev_p_mecca_holds:0', (ctx) => {
+          const h = ctx.helpers;
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          // The claim did not lose; it became the government (SPEC §251).
+          settleFitna(ctx, 'The siege of Mecca fails and the army outside it goes home unpaid; '
+            + 'the oath is collected in the sanctuary, and the caliphate passes to the house of Zubayr.', true);
+          r.name = 'Zubayrid Caliphate';
+          h.setRuler(ctx, 'RSH', {
+            name: 'Abd Allah ibn al-Zubayr', title: 'Commander of the Faithful',
+            gov: 4, infl: 4, mar: 3, age: 68,
+          });
+          h.removeModifier(ctx, 'RSH', 'second_fitna');
+          h.setFlag(ctx, 'secondFitna', false);
+          h.setFlag(ctx, 'zubayridCaliphate', true);
+          h.adjust(ctx, 'RSH', { stability: 1, legitimacy: 15 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'caliphate_of_the_sanctuary', name: 'The Caliphate of the Sanctuary', months: 240,
+            effects: { incomeMult: 1.06, moraleMult: 0.95, legitimacyAdd: 0.05 },
+          });
+        }),
+      },
+      {
+        label: 'Keep Damascus in the settlement, and its army in its pay',
+        tooltip: 'The same verdict, with the losing capital bought instead of broken: −150 talents into the Syrian pay chest; +2 stability, +8 legitimacy, and the jund keeps its stipends. The army that besieged the sanctuary is now the army that garrisons it.',
+        effects: guard('ev_p_mecca_holds:1', (ctx) => {
+          const h = ctx.helpers;
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          settleFitna(ctx, 'Mecca holds, and the Syrian army is paid rather than disbanded: the '
+            + 'caliphate passes to the house of Zubayr without the jund going home to think about it.', true);
+          r.name = 'Zubayrid Caliphate';
+          h.setRuler(ctx, 'RSH', {
+            name: 'Abd Allah ibn al-Zubayr', title: 'Commander of the Faithful',
+            gov: 4, infl: 4, mar: 3, age: 68,
+          });
+          h.removeModifier(ctx, 'RSH', 'second_fitna');
+          h.setFlag(ctx, 'secondFitna', false);
+          h.setFlag(ctx, 'zubayridCaliphate', true);
+          h.adjust(ctx, 'RSH', { treasury: -150, stability: 2, legitimacy: 8 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'caliphate_of_the_sanctuary', name: 'The Caliphate of the Sanctuary', months: 240,
+            effects: { incomeMult: 1.06, moraleMult: 0.95, legitimacyAdd: 0.05 },
+          });
         }),
       },
     ],

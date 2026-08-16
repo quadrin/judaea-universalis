@@ -1123,7 +1123,7 @@ export const EVENTS_66 = [
     options: [
       {
         label: 'The King of Kings weighs the omens',
-        tooltip: 'Either Parthia declares war on Rome (35% chance), or Rome must garrison the east: "Eastern Anxiety" (armies passive, 6 months).',
+        tooltip: 'The King of Kings may cross the Euphrates, or may do what he has done for a decade and merely stand where Rome can see him — in which case Rome garrisons the east: "Eastern Anxiety" (armies passive, 6 months).',
         effects: guard('ev_parthian_posture:0', (ctx) => {
           const h = ctx.helpers;
           const par = ctx.game.tags.PAR;
@@ -1145,7 +1145,7 @@ export const EVENTS_66 = [
       },
       {
         label: 'Send gold over the river to tip the scales',
-        tooltip: 'Judaea: −40 treasury to Nehardea\'s elders and the court at Ctesiphon. Either Parthia declares war on Rome (50% chance), or Rome must garrison the east: "Eastern Anxiety" (armies passive, 6 months).',
+        tooltip: 'Judaea: −40 treasury to Nehardea\'s elders and the court at Ctesiphon — silver argues in Ctesiphon better than an embassy does. Parthia may cross the Euphrates; failing that Rome garrisons the east: "Eastern Anxiety" (armies passive, 6 months).',
         effects: guard('ev_parthian_posture:1', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { treasury: -40 });

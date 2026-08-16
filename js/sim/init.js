@@ -823,6 +823,58 @@ export const simHelpers = {
   climate(ctx, kind) {
     try { return harvestOdds(ctx, kind === 'bad' ? 'bad' : 'good'); } catch (e) { return 1; }
   },
+  // The world's own verdict (SPEC §252). A pivot the chapters used to PIN —
+  // who won the civil war, whether the relief column arrived, which claimant
+  // the army acclaimed — asked once and remembered for ever.
+  //
+  //   base    the historical likelihood, 0..1: how often the record holds.
+  //           0.5 is an honest tossup and belongs on the pivots the sources
+  //           themselves argue about.
+  //   opts.war    [a, b] — the war whose score bends the odds. This is the
+  //           whole difference between a dice game and a campaign: a claimant
+  //           who has actually beaten the government in the field is likelier
+  //           to keep what he took, and one who has been driven back to his
+  //           first province is not. Zero at the outbreak, so an arc nobody
+  //           has fought yet draws its authored odds and nothing else.
+  //   opts.recorded  whose side the record says won, for reading that score.
+  //   opts.sway   how far the campaign may bend the record (default 0.3).
+  //
+  // Nothing is ever certain and nothing is ever impossible: the drawn weight
+  // is clamped away from both ends, so the likeliest verdict can still fail
+  // and the unlikeliest can still land. The answer is memoized on the flags,
+  // which means it saves, relays and replays like any other world fact — and
+  // means a card may ask for it in a `when` gate without drawing twice.
+  verdict(ctx, key, base, opts = {}) {
+    const g = ctx.game;
+    const k = String(key || '');
+    if (!g.flags._verdicts || typeof g.flags._verdicts !== 'object') g.flags._verdicts = {};
+    const book = g.flags._verdicts;
+    if (typeof book[k] === 'boolean') return book[k];
+    let w = clamp(num(base, 0.667), 0, 1);
+    const pair = Array.isArray(opts.war) ? opts.war.map((t) => L(ctx, t)) : null;
+    const recorded = opts.recorded ? L(ctx, opts.recorded) : null;
+    const sway = clamp(num(opts.sway, 0.3), 0, 1);
+    if (pair && pair.length === 2 && recorded && sway > 0) {
+      let war = null;
+      for (const x of g.wars || []) {
+        if (!x) continue;
+        const all = (x.attackers || []).concat(x.defenders || []);
+        if (all.indexOf(pair[0]) >= 0 && all.indexOf(pair[1]) >= 0) { war = x; break; }
+      }
+      if (war) {
+        const ws = war.warscore || {};
+        let score = 0;
+        if (Number.isFinite(ws[recorded])) score = num(ws[recorded]);
+        else if (Number.isFinite(ws.attackers)) {
+          score = (war.attackers || []).indexOf(recorded) >= 0 ? num(ws.attackers) : -num(ws.attackers);
+        }
+        w += sway * clamp(score / 100, -1, 1);
+      }
+    }
+    w = clamp(w, 0.05, 0.95);
+    book[k] = ctx.rng ? ctx.rng.chance(w) : true;
+    return book[k];
+  },
   getFlag(ctx, key) {
     return ctx.game.flags[key];
   },

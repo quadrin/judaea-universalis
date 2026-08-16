@@ -17743,3 +17743,135 @@ senator was executed apologizing).
   rising raises rebel-held districts with hosts on them and is put down by the
   card that ends the war. `smoke70` (the Jannaeus spine) and `smoke160`/
   `smoke169` (§239's and §249's tables) pass unmoved.
+
+## 252. The world's own verdict — historical likelihood, not historical certainty
+
+Reported, in one breath: *add weighted RNG to who wins these wars — it
+shouldn't be 100% historical, but historical* **likelihood**. *Same goes for
+other cards: historical pivot points should be weighted RNG, some fully
+tossup. And don't make the player aware a card is RNG — it should feel
+serendipitous. Some cards telegraph that they're RNG-driven, and that should
+be fixed.*
+
+Three requests, and the third is the one that decides how the first two are
+built.
+
+### The verdict
+
+§251 put ten civil wars on the map and then decided every one of them the same
+way, in every campaign that ever ran: the record won, on the month the record
+won, for ever. Pompey lost at Pharsalus in every world; al-Hajjaj took Mecca in
+every world; the Colline Gate went to Sulla in every world. A century whose
+every pivot is pinned is a diorama — and the pinning was invisible, so the
+player could not even enjoy it as fate.
+
+`helpers.verdict(ctx, key, base, opts)` is the answer, and it is four lines of
+arithmetic with one idea in it:
+
+- **`base` is the historical likelihood.** 0.8 is "this is how it went and it
+  nearly didn't"; 0.5 is an honest tossup and belongs on the pivots the
+  sources themselves argue about.
+- **The campaign bends it.** `opts.war` names the war whose score sways the
+  draw. This is the whole difference between a dice game and a campaign: a
+  claimant who has actually beaten the government in the field is likelier to
+  keep what he took, and one driven back to his first province is not. The
+  score is zero at the outbreak, so an arc nobody has fought yet draws its
+  authored odds and nothing else.
+- **Nothing is certain and nothing is impossible.** The swayed weight is
+  clamped to [0.05, 0.95]: the likeliest verdict can still fail, and the
+  unlikeliest can still land.
+- **It is asked once and remembered.** The answer rides `flags._verdicts`, so
+  it saves, relays and replays like any other world fact — and a `when` gate
+  may ask it on every tick of every month without drawing twice.
+
+### Which arcs draw for the winner, and which draw for the terms
+
+A chapter cannot draw for an outcome it will contradict twenty cards later.
+The 614 chapter's next forty cards are written for the house of Mu'awiya —
+the Sufyanid order, Karbala, Marj Rahit, Abd al-Malik, the octagon on the
+Mount that the Return's own poets answer — so the First Fitna draws for the
+PRICE of Damascus' victory and not for the victor: the Kharijite blade that
+historically only wounded Mu'awiya nearly finishes him, the oath is negotiated
+instead of acclaimed, and the caliphate starts twenty years down. The Social
+War is the same case for the same reason: both roads end with one Italy and
+the same franchise, because that is what the war was about and both sides got
+it; what is drawn is who wrote the terms, and a peninsula enrolled in all
+thirty-five tribes is worth twice the manpower to whoever has to raise armies
+out of it.
+
+Where nothing downstream is written for either winner, the winner is what is
+drawn:
+
+| arc | base | the other road |
+|---|---|---|
+| The Second Fitna, 692 | 0.75 | the siege of Mecca fails; the caliphate passes to the house of Zubayr |
+| Sulla at the Colline Gate, -82 | 0.78 | the gate holds, the proconsul dies in the dark, and there are no lists |
+| The Batavian rising, 70 | 0.80 | the Gallic councils at Reims vote the other way and the Rhine is a border |
+| The war in the Yemen, 1970 | 0.72 | the seventy-day siege takes Sana'a and the Imamate is restored |
+| Labienus, -39 | 0.80 | the quarrel in his camp does not happen; Gindarus collects the debt a year late |
+
+Two of those settle by `dissolveTag(..., winner: true)` — §239's own clause,
+where the ground still ends under one banner and what changes is whose face is
+on the coin. One of them, deliberately, does not settle at all: the empire of
+the Gauls is the arc where a civil war ends in a country instead of a
+reconquest, and the war ends because both sides have just signed a frontier.
+
+### The other cards
+
+§212 gave the engine `roll: true` — a foreign court's question the table
+cannot answer, drawn against `EVENT_ROLL_RECORDED` — and swept five chapters
+with it. `roll` now also takes a **number**: `roll: 0.85` is a near-certainty
+that is still not a promise and `roll: 0.5` is an honest tossup, so a chapter
+can price its own pivots instead of taking one global weight. Twenty-one more
+foreign-decided pivots are rolled at their own weights: the Seleucid
+succession the Maccabean revolt is fought against (the anabasis, the king's
+death in Persis, the king from Rome, the boy king's expedition), the Roman
+East's own quarrel in the crown chapter, and the region's courts in 1948,
+which §212 swept only for Black September — Baghdad's three coups, the Cairo
+agreement, Ajloun, the disengagement, the longest war, Marjeh Square, the
+artillery school, the hostages, Port Said, the bus at Ain al-Rummaneh and the
+Gulf's three reckonings.
+
+**A chair somebody may sit in is never rolled.** The test §212 set stands:
+what differs between the two roads has to be somebody else's act. Every
+remaining unrolled card with a `decider` in this game is addressed to a throne
+one of its own chapters lets a player take, and those stay choices.
+
+### And none of it is announced
+
+The point of the whole section: *it should just feel serendipitous.* So the
+chrome that named the dice is gone.
+
+- The Compendium's **"the world rolls" badge** is deleted, with its style.
+- Its audience line no longer says a card is drawn when it fires.
+- A rolled card's historical option is labelled **"the historical course"**
+  like every other card's, not "the recorded course".
+- The Compendium no longer prints **`35%/month once true`** under a triggered
+  card. It says the card comes when its conditions are met, in a season of its
+  own, which is what a chronicle would say.
+- Three cards quoted their own probability at the player in a tooltip — the
+  Parthian posture twice, the Antonine reckoning, and the militia the occupier
+  arms in Lebanon. All four numbers are gone; the tooltips now describe what
+  may happen without pricing it.
+- **The road not taken never reaches the ledger.** A card carrying `verdict`
+  is one road of a drawn outcome; its siblings retire in the same month, and
+  listing those retirements under "Chapters that never came" would report a
+  page as missing that was never owed to this world — and tell the reader that
+  the page which *did* come was drawn rather than fated. `noteRetired` skips
+  them.
+
+What the player sees is one card, written for the world that happened, with a
+`historical` line only where the divergence is theirs. There is no seam.
+
+- **Regression contract**: `smoke172.mjs` — the draw is weighted (0/1 absolute,
+  0.5 a coin over four hundred seeds, 0.8 a lean and neither a promise),
+  seeded, and remembered across a hundred asks; the war score bends it in both
+  directions without reaching either end; every arc's two roads are
+  complementary and exactly one is open, on either verdict; either road leaves
+  one banner, no orphan provinces and no civil war still running (except the
+  Gallic road, which is the arc where a country stands and whose war still
+  ends); the verdict roads never reach the divergence ledger while an ordinary
+  retirement still does; the Compendium names no dice and no odds and no card
+  quotes a percentage; and `roll` reads a number, the default, or nothing.
+  `smoke139` (§212's own suite) passes unmoved — `roll: true` still means what
+  it meant.

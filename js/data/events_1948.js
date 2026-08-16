@@ -2986,6 +2986,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_ramadan_revolution:when', (ctx) => alive(ctx, 'IRQ')),
     decider: 'IRQ',
+    roll: 0.7,
     aiOption: 0,
     options: [
       {
@@ -3096,6 +3097,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_baath_baghdad:when', (ctx) => alive(ctx, 'IRQ')),
     decider: 'IRQ',
+    roll: 0.8,
     aiOption: 0,
     options: [
       {
@@ -3210,6 +3212,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_saddam_ascends:when', (ctx) => alive(ctx, 'IRQ')),
     decider: 'IRQ',
+    roll: 0.8,
     aiOption: 0,
     options: [
       {
@@ -4069,6 +4072,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_cairo_agreement:when', (ctx) => alive(ctx, 'LEB')),
     decider: 'LEB',
+    roll: 0.65,
     aiOption: 0,
     options: [
       {
@@ -4205,6 +4209,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_ajloun:when', (ctx) => alive(ctx, 'JOR') && !!ctx.game.flags.jordanCivilWar),
     decider: 'JOR',
+    roll: 0.85,
     aiOption: 0,
     options: [
       {
@@ -5068,6 +5073,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_lebanon_civil_war:when', (ctx) => alive(ctx, 'LEB')),
     decider: 'LEB',
+    roll: 0.8,
     aiOption: 0,
     options: [
       {
@@ -5523,6 +5529,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_jordan_disengages:when', (ctx) => alive(ctx, 'JOR') && !!ctx.game.flags.firstIntifada),
     decider: 'JOR',
+    roll: 0.7,
     aiOption: 0,
     options: [
       {
@@ -5578,6 +5585,7 @@ export const EVENTS_1948 = [
     when: safeTrigger('ev_i_iran_iraq_war:when', (ctx) =>
       alive(ctx, 'IRQ') && alive(ctx, 'IRN') && !!ctx.game.flags.saddamIraq),
     decider: 'IRQ',
+    roll: 0.8,
     aiOption: 0,
     options: [
       {

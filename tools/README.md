@@ -1884,3 +1884,21 @@ one: `secedeTag` refuses a banner somebody is already flying, and the failure
 mode is not an exception but a later civil war that quietly never happens. If
 you add an arc, add its settling card in the same commit, and check that no
 other arc in that chapter overlaps its years.
+
+§252 (the world's own verdict) puts a draw under six of §251's ten arcs, which
+means **the anomaly set is now a distribution rather than a number**. Run the
+harness twice with different seeds and the 40 BCE chapter may settle Labienus
+in 39 or in 38, 66 CE may end with the Rhine Roman or with a frontier on it,
+and the Yemen may finish 1970 as a republic or as an Imamate. None of those
+moves a Judaean trajectory — every one of them is a foreign court's own
+century — but a diff against a parent commit is only meaningful at the SAME
+seed, which is what `rngSeed: 1234567` in `runBookmark` is for. Do not "fix" a
+flag that appears at one seed and not another until you have run both.
+
+`smoke172.mjs` owns the draw. Two things in it are load-bearing and easy to
+break. The distribution assertions boot a fresh game per seed, because a
+verdict is answered ONCE and remembered — asking the same game four hundred
+times measures nothing. And the "nothing telegraphs" block greps the shipped
+card text for percentages: if you write a tooltip that prices its own odds,
+that suite is what tells you, and the fix is to describe what may happen
+rather than how often.

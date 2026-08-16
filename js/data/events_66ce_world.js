@@ -137,6 +137,17 @@ function raiseTheGauls(ctx) {
   });
   return gauls;
 }
+// Who won (SPEC §252). Cerialis put the rising down inside a year with eight
+// legions, and every account of how he did it turns on the Gallic councils at
+// Reims voting NOT to join — a vote that could have gone the other way and
+// that Tacitus reports as a near thing. The record is the likelier road; the
+// war the campaign actually fought bends the odds.
+function romeRetakesTheRhine(ctx) {
+  return ctx.helpers.verdict(ctx, 'batavianRising', 0.8, {
+    recorded: 'ROM', war: ['ROM', 'USR'], sway: 0.3,
+  });
+}
+
 function settleTheGauls(ctx, line) {
   if (!ctx.game.tags.USR) return false;
   ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), { chronicle: line });
@@ -221,8 +232,11 @@ export const EVENTS_66_WORLD = [
     world: true,
     major: true,
     aiOption: 0,
-    // No rising, no bridge to settle it on.
-    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'civilisRising'),
+    // No rising, no bridge to settle it on — and one of two roads out of it
+    // (SPEC §252). Nothing later in this chapter is written for either
+    // outcome, so the Rhine is allowed to draw for the winner.
+    verdict: 'batavianRising',
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'civilisRising') && romeRetakesTheRhine(ctx),
     historical: 'Cerialis retook Trier in 70 and reduced the rising by autumn; the Historiae break off in the middle of Civilis\' parley on the Nabalia.',
     options: [
       {
@@ -246,6 +260,80 @@ export const EVENTS_66_WORLD = [
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 10, treasury: -160 });
           h.removeModifier(ctx, 'Batavia', 'rhine_in_arms');
           h.setFlag(ctx, 'civilisRising', false);
+        }),
+      },
+    ],
+  },
+
+  // ── W1c · 70 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fw_gauls_stand',
+    verdict: 'batavianRising',
+    title: 'The Councils at Reims Vote the Other Way',
+    worldLabel: 'The Gallic councils join the rising; the empire of the Gauls stands',
+    desc: 'Everything about the Batavian rising turns on a meeting of Gallic notables '
+      + 'at Reims in the spring, where the question is whether the Gauls have an '
+      + 'empire or a governor — and the vote, which the histories record as close and '
+      + 'reluctant and which went for Rome, goes the other way. The Treveri and the '
+      + 'Lingones are not isolated after that; they are the near edge of a country. '
+      + 'Cerialis wins his battles and cannot hold what he wins, because eight '
+      + 'legions can beat any army in Gaul and cannot garrison a province that has '
+      + 'stopped paying, and the Rhine armies he is fighting were built by Rome to '
+      + 'the same drill and out of the same men. What is signed in the autumn is not '
+      + 'a surrender: it is a frontier. The empire keeps the Alps, the Gauls keep the '
+      + 'Rhine, and every court from Antioch to Ctesiphon reads the same dispatch, '
+      + 'which says that the thing that happened to the Rhine can happen anywhere the '
+      + 'auxiliaries are recruited where they serve.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 70, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'civilisRising') && !romeRetakesTheRhine(ctx),
+    options: [
+      {
+        label: 'A frontier, and the word empire used by both parties',
+        tooltip: 'The empire of the Gauls stays on the map as a court of its own, and the war between them ends. Rome −15 legitimacy, −6,000 manpower and "The Rhine Is a Border" (−8% income, −5% manpower) for twenty years; the new state keeps its army. In Jerusalem the dispatch is read on the walls twice.',
+        effects: guard('ev_fw_gauls_stand:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          // The claimant is not dissolved: this is the arc where a civil war
+          // ends in a country rather than in a reconquest (SPEC §252). The
+          // war does end — a frontier is what both sides just signed.
+          const kept = [];
+          for (const w of g.wars || []) {
+            if (!w) { continue; }
+            const all = (w.attackers || []).concat(w.defenders || []);
+            if (all.indexOf('USR') >= 0 && all.indexOf(who(ctx, 'ROM')) >= 0) continue;
+            kept.push(w);
+          }
+          g.wars = kept;
+          for (const t of [g.tags[who(ctx, 'ROM')], g.tags.USR]) {
+            if (t && Array.isArray(t.atWarWith)) {
+              t.atWarWith = t.atWarWith.filter((x) => x !== 'USR' && x !== who(ctx, 'ROM'));
+            }
+          }
+          if (g.tags.USR) {
+            g.tags.USR.name = 'The Empire of the Gauls';
+            h.addTagModifier(ctx, 'USR', {
+              id: 'the_frontier_signed', name: 'The Frontier Signed', months: -1,
+              effects: { moraleMult: 1.05, incomeMult: 0.95 },
+            });
+          }
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: -15, manpower: -6000 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'rhine_is_a_border', name: 'The Rhine Is a Border', months: 240,
+              effects: { incomeMult: 0.92, manpowerMult: 0.95 },
+            });
+          }
+          setOpinion(ctx, who(ctx, 'ROM'), 'USR', -120);
+          setOpinion(ctx, 'USR', who(ctx, 'ROM'), -120);
+          h.setFlag(ctx, 'civilisRising', false);
+          h.setFlag(ctx, 'gallicEmpire', true);
+          h.chronicle(ctx, 'era', 'The councils at Reims vote the other way and Cerialis cannot garrison what he beats: '
+            + 'the autumn signature is a frontier, and the empire of the Gauls keeps the Rhine.');
         }),
       },
     ],

@@ -2285,7 +2285,7 @@ export const EVENTS_132 = [
     options: [
       {
         label: 'Let the accountants argue',
-        tooltip: 'If Rome is strong, the expedition may march (35% if Rome fields the manpower): war returns. If not — the de-facto recognition: Judaea +10 legitimacy, Rome −5 legitimacy, and the tax rolls stop.',
+        tooltip: 'A Rome with the manpower to spare may put the expedition on the road, and war returns. A Rome without it files the study: the de-facto recognition — Judaea +10 legitimacy, Rome −5 legitimacy, and the tax rolls stop.',
         effects: guard('ev2_antonine_reckoning:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'JUD') || !alive(ctx, 'ROM')) return;

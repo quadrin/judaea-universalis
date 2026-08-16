@@ -213,7 +213,47 @@ console.log('== the shipped rolls are foreign, world-history, and answerable =='
     bad('and keeps no §89 record, because a roll is nobody\'s departure from one',
       (e) => typeof e.historical === 'string' && e.historical.length > 0);
   }
-  ok(total === 25, 'the chains ship 25 rolled cards (' + total + ')');
+  ok(total === 25, 'the chains ship 25 rolled cards at the chapter weight (' + total + ')');
+}
+
+// SPEC §252: a card may also price its OWN pivot — `roll: 0.5` is an honest
+// tossup and `roll: 0.85` a near-certainty that is still not a promise. Those
+// keep every invariant above except world-history, because a foreign court's
+// decision inside the chapter's own theatre (the Cilician Gates, the king who
+// dies in Persis) is the chapter's news rather than the world's.
+console.log('== …and the ones that price their own weight keep the same rules ==');
+{
+  const seen = new Set();
+  let total = 0;
+  for (const era of ERAS) {
+    const id = era.bookmark.id;
+    const playable = (era.bookmark.playableTags || []).map((p) => (typeof p === 'string' ? p : p && p.tag));
+    const rolled = era.events.filter((e) => e && Number.isFinite(e.roll) && !seen.has(id + ':' + e.id));
+    for (const e of rolled) seen.add(id + ':' + e.id);
+    if (!rolled.length) continue;
+    total += rolled.length;
+    const bad = (why, f) => {
+      const list = rolled.filter(f);
+      ok(list.length === 0, id + ': ' + why + (list.length ? ' — ' + list.map((e) => e.id).join(', ') : ''));
+    };
+    bad('a weight is a weight, between nothing and certainty',
+      (e) => !(e.roll > 0 && e.roll < 1));
+    bad('every weighted card names the court whose question it is',
+      (e) => !e.decider || typeof e.decider === 'function');
+    bad('and that court is a real one this chapter can seat',
+      (e) => !DEFINES.TAGS[e.decider]);
+    bad('and is a court no standard of this chapter sits in',
+      (e) => playable.indexOf(e.decider) >= 0);
+    bad('every weighted card still records its historical course',
+      (e) => !Number.isFinite(e.aiOption) && typeof e.aiOption !== 'function');
+    bad('every weighted card has a road to roll between',
+      (e) => !Array.isArray(e.options) || e.options.length < 2);
+    bad('and is addressed to whoever is playing',
+      (e) => e.forTag !== 'both' && e.forTag !== 'player');
+    bad('and keeps no §89 record, because a roll is nobody\'s departure from one',
+      (e) => typeof e.historical === 'string' && e.historical.length > 0);
+  }
+  ok(total === 21, 'the chains ship 21 cards that price their own pivot (' + total + ')');
 }
 
 if (failures) { console.error(failures + ' FAILURES'); process.exit(1); }

@@ -67,6 +67,12 @@ export function nextWorldEvent(ctx) {
   let best = null;
   for (const ev of eventList(ctx)) {
     if (!ev || ev.world !== true || !ev.date || (g.firedEvents && g.firedEvents[ev.id])) continue;
+    // A road of a drawn verdict (SPEC §252) never appears on the world clock.
+    // Two of them share one month by construction, so the forecast would
+    // either name a card that is not going to fire or — worse — announce the
+    // outcome of a war before it is decided. The month arrives unheralded,
+    // which is how a century arrives.
+    if (typeof ev.verdict === 'string' && ev.verdict) continue;
     if (!requiredWarActive(ctx, ev) && requiredWarSettled(ctx, ev)) continue;
     const at = monthIndex(ev.date.y, ev.date.m);
     if (at < now || (best && best.at <= at)) continue;
@@ -159,22 +165,37 @@ function recordedCourse(ctx, ev, allowed) {
   return maskIdx(allowed, idx, ev.options.length);
 }
 
+// How heavily a card's own record weighs against the roads it did not take
+// (SPEC §212, §252). `roll: true` takes the chapter default; `roll: 0.85` is a
+// near-certainty that is still not a promise, and `roll: 0.5` is an honest
+// tossup — a pivot the sources themselves could have gone either way on.
+// Returns null for a card that asks for no roll, which is most of them.
+export function rollWeight(ctx, ev) {
+  if (!ev) return null;
+  if (Number.isFinite(ev.roll)) return Math.max(0, Math.min(1, ev.roll));
+  if (ev.roll !== true) return null;
+  const w = Number(ctx && ctx.DEFINES && ctx.DEFINES.EVENT_ROLL_RECORDED);
+  return Number.isFinite(w) ? Math.max(0, Math.min(1, w)) : 0.667;
+}
+export function isRolled(ctx, ev) {
+  return rollWeight(ctx, ev) !== null;
+}
+
 // The course a card takes when nobody at this table decides it (SPEC §212).
-// A `roll: true` card is a foreign court's own question whose answers differ
-// in cost and flavour rather than in what happens, so the campaign's own
-// seeded stream answers it: the recorded course carries `EVENT_ROLL_RECORDED`
-// of the weight and the roads the chronicles did not take split the rest. The
-// stream is only touched for a card that asks for it, so every existing save,
-// replay and multiplayer relay draws exactly the numbers it drew before.
+// A rolled card is a foreign court's own question whose answers differ in cost
+// and flavour rather than in what happens, so the campaign's own seeded stream
+// answers it: the recorded course carries the card's weight and the roads the
+// chronicles did not take split the rest. The stream is only touched for a
+// card that asks for it, so every existing save, replay and multiplayer relay
+// draws exactly the numbers it drew before.
 function courseFor(ctx, ev, allowed) {
   const rec = recordedCourse(ctx, ev, allowed);
-  if (ev.roll !== true || !ctx.rng) return rec;
+  const weight = rollWeight(ctx, ev);
+  if (weight === null || !ctx.rng) return rec;
   const pool = (allowed && allowed.length ? allowed.slice() : ev.options.map((_, i) => i))
     .filter((i) => ev.options[i]);
   const others = pool.filter((i) => i !== rec);
   if (!others.length) return rec;
-  const w = Number(ctx.DEFINES && ctx.DEFINES.EVENT_ROLL_RECORDED);
-  const weight = Number.isFinite(w) ? Math.max(0, Math.min(1, w)) : 0.667;
   if (ctx.rng.chance(weight)) return rec;
   return others[ctx.rng.int(others.length)];
 }
@@ -262,7 +283,7 @@ export function fireEvent(ctx, ev) {
     // and one whose decider is a foreign court is a notice to them exactly as
     // it would be to the protagonist. In a solo campaign the two are the same
     // tag, so this reads identically to the line it replaced.
-    if (decider && decider !== audience && (g.tags[decider] || ev.roll === true)) {
+    if (decider && decider !== audience && (g.tags[decider] || isRolled(ctx, ev))) {
       pe.notice = true;
       pe.optIdx = courseFor(ctx, ev, allowed);
       // A court the world no longer knows names nobody; the modal says "another

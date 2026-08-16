@@ -164,6 +164,24 @@ function settleAgainstRome(ctx, line, winner) {
   return true;
 }
 
+// Who won (SPEC §252). Neither of this package's two wars was decided when it
+// opened, and the sources say so. Rome fought the allies to a standstill for a
+// year and won by conceding what the war was about; Sulla landed with five
+// legions against a government that could field three times as many and won
+// because their armies kept changing sides, which is not a thing anybody can
+// count on twice. The record is the likelier road, and the war the campaign
+// actually fought bends the odds either way.
+function romeConcedes(ctx) {
+  return ctx.helpers.verdict(ctx, 'socialWar', 0.8, {
+    recorded: 'ROM', war: ['ROM', 'USR'], sway: 0.3,
+  });
+}
+function sullaTakesTheCity(ctx) {
+  return ctx.helpers.verdict(ctx, 'sullasWar', 0.78, {
+    recorded: 'USR', war: ['ROM', 'USR'], sway: 0.35,
+  });
+}
+
 function raiseItalia(ctx) {
   return raiseAgainstRome(ctx, {
     provinces: ITALIA,
@@ -700,7 +718,14 @@ export const EVENTS_167_REPUBLIC = [
     world: true,
     major: true,
     aiOption: 0,
-    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'socialWar'),
+    // One of two roads (SPEC §252). Both end with one Italy and the same
+    // franchise, because that is what the war was about and both sides got
+    // it; what is drawn is who wrote the terms. A surviving confederacy is
+    // deliberately not on the table — this chapter's next sixty years are
+    // written for a Rome that governs the peninsula, and a chapter cannot
+    // draw for an outcome it will contradict in twenty cards' time.
+    verdict: 'socialWar',
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'socialWar') && romeConcedes(ctx),
     historical: 'The lex Julia of 90 and the lex Plautia Papiria of 89 enfranchised the allies by stages; the last Samnite holdouts were reduced by 88.',
     options: [
       {
@@ -739,6 +764,71 @@ export const EVENTS_167_REPUBLIC = [
             effects: { unrest: 3 },
           });
           h.setFlag(ctx, 'socialWar', false);
+        }),
+      },
+    ],
+  },
+
+  // ── R9c · -88 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_rw_italia_dictates',
+    verdict: 'socialWar',
+    title: 'The Terms Are Written at Corfinium',
+    worldLabel: 'Italy wins its war; the franchise is granted on the allies\' terms',
+    desc: 'The second year goes the other way. The consuls are beaten in the field '
+      + 'twice more, an army of the confederacy is on the Via Appia within four days\' '
+      + 'march of the city, and the law enfranchising the allies is voted not as a '
+      + 'move in a war Rome is winning but as the price of one it has lost. The '
+      + 'difference is written into the text and read aloud by everyone: the new '
+      + 'citizens are distributed through all thirty-five tribes instead of the eight '
+      + 'the Senate had in mind, the confederacy dissolves itself rather than being '
+      + 'dissolved, and its generals are enrolled with their commands intact. Italy '
+      + 'is one country and the census rolls treble either way. What changes is who '
+      + 'the Republic belongs to afterwards, and the men who find out first are the '
+      + 'ones who spend the next decade discovering that the votes no longer arrive '
+      + 'where they used to.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: -88, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'socialWar') && !romeConcedes(ctx),
+    options: [
+      {
+        label: 'Vote it as the price, and enroll them in all thirty-five tribes',
+        tooltip: 'The confederacy folds back into Rome on its own terms: Rome −2 stability and −12 legitimacy for the terms it had to take, and "The Enfranchised Peninsula" (+5% income, +8% manpower, permanently) doubled in manpower — +5% income and +16% manpower — because the men who wrote the law meant to be counted.',
+        effects: guard('ev_rw_italia_dictates:0', (ctx) => {
+          const h = ctx.helpers;
+          settleAgainstRome(ctx, 'Italy wins its war and dissolves itself: the franchise is voted as '
+            + 'a price rather than a policy, and the new citizens are enrolled in every tribe there is.', true);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { stability: -2, legitimacy: -12 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'enfranchised_peninsula', name: 'The Enfranchised Peninsula', months: -1,
+              effects: { incomeMult: 1.05, manpowerMult: 1.16 },
+            });
+          }
+          h.setFlag(ctx, 'socialWar', false);
+          h.setFlag(ctx, 'italiaDictated', true);
+        }),
+      },
+      {
+        label: 'Take the terms, and buy the Samnite commands out separately',
+        tooltip: 'The same settlement, with the hardest holdouts paid rather than enrolled: −180 talents, −1 stability, −8 legitimacy, the same permanent franchise, and no unrest left in the south. Cheaper than the alternative and remembered longer.',
+        effects: guard('ev_rw_italia_dictates:1', (ctx) => {
+          const h = ctx.helpers;
+          settleAgainstRome(ctx, 'Italy wins its war, and the Samnite commands are bought out of it '
+            + 'one at a time; the peninsula is enrolled and nobody is made an example of.', true);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { treasury: -180, stability: -1, legitimacy: -8 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'enfranchised_peninsula', name: 'The Enfranchised Peninsula', months: -1,
+              effects: { incomeMult: 1.05, manpowerMult: 1.16 },
+            });
+          }
+          h.setFlag(ctx, 'socialWar', false);
+          h.setFlag(ctx, 'italiaDictated', true);
         }),
       },
     ],
@@ -854,6 +944,12 @@ export const EVENTS_167_REPUBLIC = [
     date: { y: -82, m: 11 },
     world: true,
     aiOption: 0,
+    // One of two roads out of the Colline Gate (SPEC §252). Nothing later in
+    // this package is written for either winner — Bithynia's will and the
+    // school at Capua are somebody else's decade — so this arc draws for the
+    // winner rather than for the terms.
+    verdict: 'sullasWar',
+    when: (ctx) => sullaTakesTheCity(ctx),
     historical: 'Sulla won at the Colline Gate in November 82, took the revived dictatorship, and proscribed perhaps two thousand men including a quarter of the Senate; he resigned in 79 and died in his bed.',
     options: [
       {
@@ -872,6 +968,70 @@ export const EVENTS_167_REPUBLIC = [
           });
           h.setFlag(ctx, 'proscriptions', true);
           h.chronicle(ctx, 'era', 'Sulla\'s proscription lists go up in the Forum, revised daily; the Republic\'s furniture is put back by a man who has priced what it costs to move.');
+        }),
+      },
+    ],
+  },
+
+  // ── R11b · -82 ────────────────────────────────────────────────────────────
+  {
+    id: 'ev_rw_colline_gate_holds',
+    verdict: 'sullasWar',
+    title: 'The Gate Holds',
+    worldLabel: 'The consuls break Sulla under the walls; the Republic keeps its constitution',
+    desc: 'The last army the Marian government can put in the field meets the '
+      + 'proconsul under the walls of Rome at the Colline Gate, at dusk, with the '
+      + 'Samnites on its left wing announcing that they have come to pull down the '
+      + 'city that has been pulling down Samnium for two hundred years — and this '
+      + 'time the line does not break. Sulla is killed on his own right wing in the '
+      + 'dark, or captured and dead within the week; the accounts disagree and both '
+      + 'are written by men who wanted him deader than the facts allowed. His '
+      + 'veterans are settled on land the Senate would rather not have given and '
+      + 'never proscribed, because the men who won have no lists to post: they are '
+      + 'the government. The furniture of the Republic is not put back, because it '
+      + 'was never taken out — and every army on every frontier files the other '
+      + 'lesson, which is that the road to the city can be walked and can also be '
+      + 'blocked.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: -82, m: 11 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !sullaTakesTheCity(ctx),
+    historical: 'Sulla won at the Colline Gate in November 82 and took the revived dictatorship; the battle was fought at dusk and his own left wing broke before the night decided it.',
+    options: [
+      {
+        label: 'No lists, and no dictator',
+        tooltip: 'The proconsul\'s Italy folds back into a Republic that keeps its constitution: −1 stability and −60 talents for the settlement of two armies, +10 legitimacy, and "The Constitution Held" (+4% income, +0.03 legitimacy a month) for twenty-five years. Rome is poorer, slower and still a republic that means it.',
+        effects: guard('ev_rw_colline_gate_holds:0', (ctx) => {
+          const h = ctx.helpers;
+          settleAgainstRome(ctx, 'The Colline Gate holds: the proconsul is killed in the dark, his '
+            + 'veterans are settled rather than proscribed, and the Republic keeps the constitution it '
+            + 'was about to lose.', false);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { stability: -1, treasury: -60, legitimacy: 10 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'the_constitution_held', name: 'The Constitution Held', months: 300,
+              effects: { incomeMult: 1.04, legitimacyAdd: 0.03 },
+            });
+          }
+          h.setFlag(ctx, 'collineHeld', true);
+        }),
+      },
+      {
+        label: 'Hunt the proconsul\'s party through Italy',
+        tooltip: 'The same verdict, taken to the same lengths the other man would have: +200 talents of confiscations and +1 stability, −8 legitimacy, and Roma and Capua carry "The Winners\' Lists" (+2 unrest for 48 months). A republic that proscribes to save itself has learned the wrong half of the lesson.',
+        effects: guard('ev_rw_colline_gate_holds:1', (ctx) => {
+          const h = ctx.helpers;
+          settleAgainstRome(ctx, 'The Colline Gate holds, and the winners post lists of their own: '
+            + 'the Republic is saved by the instrument it was being saved from.', false);
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 200, stability: 1, legitimacy: -8 });
+          stir(ctx, ['Roma', 'Capua'], {
+            id: 'the_winners_lists', name: 'The Winners\' Lists', months: 48,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'collineHeld', true);
         }),
       },
     ],

@@ -297,7 +297,7 @@ export const EVENTS_1948_LEVANT = [
     options: [
       {
         label: 'Rule through the militias that already exist',
-        tooltip: 'The Christian north is administered by its own armed men, who are cheap, loyal and unaccountable. +200 treasury saved, Mount Lebanon −1 unrest for 240 months, no garrison bill in the north — but the south takes +1.5 unrest permanently, the occupier −1 stability, and "The Men We Armed" (+15% chance the last act goes badly): a militia is a debt that comes due in somebody else\'s massacre.',
+        tooltip: 'The Christian north is administered by its own armed men, who are cheap, loyal and unaccountable. +200 treasury saved, Mount Lebanon −1 unrest for 240 months, no garrison bill in the north — but the south takes +1.5 unrest permanently, the occupier −1 stability, and "The Men We Armed": a militia is a debt that comes due in somebody else\'s massacre, and the bill is written in the camps.',
         effects: guard('ev_l_confessional_arithmetic:0', (ctx) => {
           const h = ctx.helpers;
           const me = occupier(ctx);

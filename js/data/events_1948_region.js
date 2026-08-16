@@ -273,6 +273,17 @@ function raiseTheImamate(ctx) {
   if (alive(ctx, 'EGY')) { setOpinion(ctx, 'USR', 'EGY', -140); setOpinion(ctx, 'EGY', 'USR', -140); }
   return royalists;
 }
+// Who won (SPEC §252). The royalists besieged Sana'a for seventy days after
+// Egypt went home and did not take it, which every account agrees was closer
+// than the settlement afterwards made it look — the republic held because an
+// airlift arrived and because the tribes outside were being paid by a Riyadh
+// that had already decided to recognize it. The record is the likelier road.
+function theRepublicHolds(ctx) {
+  return ctx.helpers.verdict(ctx, 'yemenWar', 0.72, {
+    recorded: 'YEM', war: ['YEM', 'USR'], sway: 0.35,
+  });
+}
+
 function settleTheImamate(ctx, line) {
   const g = ctx.game;
   if (!g.tags.USR || !alive(ctx, 'YEM')) return false;
@@ -442,6 +453,7 @@ export const EVENTS_1948_REGION = [
     after: 'ev_i_kadesh',
     when: safeTrigger('ev_i_port_said:when', (ctx) => !!ctx.game.flags.sinaiCampaign),
     decider: 'UK',
+    roll: 0.7,
     aiOption: 0,
     options: [
       {
@@ -746,6 +758,7 @@ export const EVENTS_1948_REGION = [
     when: safeTrigger('ev_i_marjeh_square:when', (ctx) =>
       !!ctx.game.flags.eliCohen && !ctx.game.flags.eliCohenExtracted && !!syrOwn(ctx)),
     decider: 'SAR',
+    roll: 0.7,
     aiOption: 0,
     options: [
       {
@@ -812,6 +825,7 @@ export const EVENTS_1948_REGION = [
     maxYear: 1984,
     when: safeTrigger('ev_i_brotherhood_uprising:when', (ctx) => !!syrOwn(ctx)),
     decider: 'SAR',
+    roll: 0.75,
     aiOption: 0,
     options: [
       {
@@ -1043,6 +1057,7 @@ export const EVENTS_1948_REGION = [
     maxYear: 1982,
     when: safeTrigger('ev_i_hostage_crisis:when', (ctx) => !!ctx.game.flags.iranianRevolution),
     decider: 'IRN',
+    roll: 0.7,
     aiOption: 0,
     options: [
       {
@@ -1781,8 +1796,13 @@ export const EVENTS_1948_REGION = [
     world: true,
     major: true,
     aiOption: 0,
+    // One of two roads out of the seventy-day siege (SPEC §252): this is the
+    // one where the airlift lands. Nothing later in this chapter is written
+    // for either Yemen, so the arc draws for the winner.
+    verdict: 'yemenWar',
     when: safeTrigger('ev_s48_yemen_compromise:when', (ctx) =>
-      alive(ctx, 'YEM') && !!ctx.helpers.getFlag(ctx, 'yemenRevolution')),
+      alive(ctx, 'YEM') && !!ctx.helpers.getFlag(ctx, 'yemenRevolution')
+      && theRepublicHolds(ctx)),
     historical: 'Egypt withdrew after 1967, the royalists failed to take Sana\'a in the seventy-day siege of 1967–68, and the 1970 settlement recognized the republic while seating royalists in government.',
     options: [
       {
@@ -1811,6 +1831,85 @@ export const EVENTS_1948_REGION = [
           if (alive(ctx, 'SAU')) setOpinion(ctx, 'SAU', 'YEM', 40);
           h.setFlag(ctx, 'yemenRevolution', false);
           h.setFlag(ctx, 'yemenCompromise', true);
+        }),
+      },
+    ],
+  },
+
+  // ── Y4c · 1970 · March ────────────────────────────────────────────────────
+  {
+    id: 'ev_s48_yemen_imamate',
+    verdict: 'yemenWar',
+    title: 'The Seventy Days',
+    worldLabel: 'Sana\'a falls to the royalists; the Imamate is restored in the north',
+    desc: 'With the Egyptians gone the arithmetic in the mountains is simple and the '
+      + 'republic is on the wrong side of it. The royalist tribes close the roads, '
+      + 'the airlift that was supposed to keep the capital fed comes in short and '
+      + 'then stops, and after seventy days of siege the garrison negotiates rather '
+      + 'than starves — which in this country is not a defeat so much as a change of '
+      + 'the arrangement everyone was already living under. The Imam comes down out '
+      + 'of the wadis to a city that has spent eight years being told he was finished. '
+      + 'Riyadh, which paid for this and would have paid for the other one, sends '
+      + 'congratulations and a subsidy the same week. What is restored is not the '
+      + 'Imamate of 1962: it keeps the republic\'s ministries because somebody has to '
+      + 'run the ports, and it will spend the next decade discovering that a state '
+      + 'with an administration is a different animal from a state with a following.',
+    forTag: 'both',
+    decider: 'YEM',
+    date: { y: 1970, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_yemen_imamate:when', (ctx) =>
+      alive(ctx, 'YEM') && !!ctx.helpers.getFlag(ctx, 'yemenRevolution')
+      && !theRepublicHolds(ctx)),
+    options: [
+      {
+        label: 'The Imam comes down out of the wadis',
+        tooltip: 'The mountains win: the country comes back under one banner as the Mutawakkilite Kingdom, with al-Badr on the throne and the republic\'s ministries kept on. +1 stability, +10 legitimacy, and "The Restored Imamate" (+5% manpower, −5% income, +1 unrest everywhere) for fifteen years. Saudi opinion +80; Egyptian opinion −60.',
+        effects: guard('ev_s48_yemen_imamate:0', (ctx) => {
+          const h = ctx.helpers;
+          const y = alive(ctx, 'YEM') ? ctx.game.tags.YEM : null;
+          if (!y) return;
+          // The claim did not lose; it became the government (SPEC §251).
+          settleTheImamate(ctx, 'Seventy days of siege end in a negotiation rather than a storm: '
+            + 'the Imam comes down out of the wadis, and the north is a kingdom again.');
+          y.name = 'Mutawakkilite Kingdom of Yemen';
+          h.setRuler(ctx, 'YEM', {
+            name: 'Muhammad al-Badr', title: 'Imam', gov: 2, infl: 3, mar: 2, age: 44,
+          });
+          h.adjust(ctx, 'YEM', { stability: 1, legitimacy: 10 });
+          h.addTagModifier(ctx, 'YEM', {
+            id: 'restored_imamate', name: 'The Restored Imamate', months: 180,
+            effects: { manpowerMult: 1.05, incomeMult: 0.95, unrestAll: 1 },
+          });
+          if (alive(ctx, 'SAU')) setOpinion(ctx, 'SAU', 'YEM', 80);
+          if (alive(ctx, 'EGY')) setOpinion(ctx, 'EGY', 'YEM', -60);
+          h.setFlag(ctx, 'yemenRevolution', false);
+          h.setFlag(ctx, 'yemenImamate', true);
+        }),
+      },
+      {
+        label: 'Keep the ministries and the officers who ran them',
+        tooltip: 'The same restoration, with the republic\'s administration bought rather than purged: −80 talents, +2 stability, +5 legitimacy, and no unrest left behind. A kingdom that keeps the other side\'s clerks lasts longer than one that keeps its own promises.',
+        effects: guard('ev_s48_yemen_imamate:1', (ctx) => {
+          const h = ctx.helpers;
+          const y = ctx.game.tags.YEM;
+          if (!y) return;
+          settleTheImamate(ctx, 'The Imam is restored and keeps the republic\'s clerks: the ports '
+            + 'go on being run by the men who ran them, under a flag they spent eight years shooting at.');
+          y.name = 'Mutawakkilite Kingdom of Yemen';
+          h.setRuler(ctx, 'YEM', {
+            name: 'Muhammad al-Badr', title: 'Imam', gov: 2, infl: 3, mar: 2, age: 44,
+          });
+          h.adjust(ctx, 'YEM', { treasury: -80, stability: 2, legitimacy: 5 });
+          h.addTagModifier(ctx, 'YEM', {
+            id: 'restored_imamate', name: 'The Restored Imamate', months: 180,
+            effects: { manpowerMult: 1.05, incomeMult: 0.95 },
+          });
+          if (alive(ctx, 'SAU')) setOpinion(ctx, 'SAU', 'YEM', 80);
+          h.setFlag(ctx, 'yemenRevolution', false);
+          h.setFlag(ctx, 'yemenImamate', true);
         }),
       },
     ],

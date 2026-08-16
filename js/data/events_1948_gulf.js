@@ -204,6 +204,7 @@ export const EVENTS_1948_GULF = [
       && !capitalTaken(ctx, 'IRQ', 'Seleucia-Ctesiphon', 'IRN')
       && !capitalTaken(ctx, 'IRN', 'Ecbatana', 'IRQ')),
     decider: 'IRQ',
+    roll: 0.6,
     aiOption: 0,
     options: [
       {
@@ -315,6 +316,7 @@ export const EVENTS_1948_GULF = [
       && holdsCount(ctx, 'IRQ', IRAN_CORE) >= 2),
     minYear: 1980, maxYear: 1990,
     decider: 'IRQ',
+    roll: 0.6,
     aiOption: 0,
     options: [
       {
@@ -453,6 +455,7 @@ export const EVENTS_1948_GULF = [
       flag(ctx, 'iraqDemandedForgiveness') && !flag(ctx, 'kuwaitTaken')
       && !flag(ctx, 'iraqDisarmed') && alive(ctx, 'IRQ') && alive(ctx, 'SAU')),
     decider: 'IRQ',
+    roll: 0.6,
     aiOption: 1,
     options: [
       {

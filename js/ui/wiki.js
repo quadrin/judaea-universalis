@@ -40,11 +40,16 @@ export function createWiki({ DEFINES, getCtx }) {
   const fmtMonth = (d) => (MONTHS[(d.m | 0) - 1] || 'M' + d.m) + ' ' + fmtYear(d.y);
 
   // ---------------------------------------------------------------- helpers --
+  // What the Compendium says about WHEN a card comes (SPEC §252). A dated card
+  // says its month. An undated one says the world has to be right for it —
+  // and never says how often the world then obliges, because a card that
+  // prints its own monthly odds is a card the player reads as a dice roll
+  // instead of as a thing that happened to their country.
   function fireLabel(ev) {
     if (ev.date) return fmtMonth(ev.date);
-    const bits = ['When its conditions are met'];
-    if (Number.isFinite(ev.chance)) bits.push(Math.round(ev.chance * 100) + '%/month once true');
-    return bits.join(' · ');
+    return Number.isFinite(ev.chance)
+      ? 'When its conditions are met, in a season of their own'
+      : 'When its conditions are met';
   }
   function fireDetail(ev) {
     const rows = [];
@@ -77,19 +82,20 @@ export function createWiki({ DEFINES, getCtx }) {
     // the card is written for and leaves the runtime to pick the successor.
     // A rolled card (SPEC §212) names the same court and a different answer:
     // nobody at the table gets the question, and the course is drawn.
+    // A rolled card (SPEC §212) names the same court and the same line: what
+    // it does NOT say is that the course is drawn (SPEC §252). Whether a
+    // foreign court's answer was pinned by the chronicles or drawn against
+    // them is the world's business, and a reader told which cards are dice is
+    // a reader playing the dice instead of the century.
     if (ev.decider && typeof ev.decider !== 'function') {
       rows.push(['The choice belongs to', tagName(ev.decider)
-        + (ev.roll === true
-          ? ' — and the world rolls it when the card fires, weighted toward the record'
-          : ' — any other player is only notified of their course')]);
+        + ' — any other player is only notified of their course']);
     }
     return rows;
   }
   function optionListHtml(ev) {
     const aiIdx = typeof ev.aiOption === 'function' ? -1 : (ev.aiOption | 0);
-    const histLabel = ev.roll === true
-      ? '<span class="wiki-hist" data-tt="What the chronicles record — and the likelier half of the roll.">the recorded course</span>'
-      : '<span class="wiki-hist" data-tt="What an AI court (and history) does.">the historical course</span>';
+    const histLabel = '<span class="wiki-hist" data-tt="What an AI court (and history) does.">the historical course</span>';
     return (ev.options || []).map((o, i) => `
       <div class="wiki-opt">
         <div class="wiki-opt-label">${icon('star4', 'icon-xs')} ${esc(o.label || 'Continue')}
@@ -108,9 +114,7 @@ export function createWiki({ DEFINES, getCtx }) {
       + (ev.major ? '<span class="wiki-badge">major</span>' : '')
       + (ev.once === false ? '<span class="wiki-badge">recurring</span>' : '')
       + (ev.decider && typeof ev.decider !== 'function'
-        ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '')
-      + (ev.roll === true
-        ? '<span class="wiki-badge wiki-badge-roll" data-tt="No answer this table can give — the world draws one.">the world rolls</span>' : '');
+        ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '');
   }
   function kv(rows) {
     return rows.map(([k, v]) => `<div class="wiki-kv"><span class="wiki-k">${esc(k)}</span><span class="wiki-v">${esc(v)}</span></div>`).join('');

@@ -926,6 +926,22 @@ static site, the zero dependencies, or the missing build step changes.
   play with are thumb-sized; long values stack instead of running through their
   labels; the title screen's era card fits the screen; and in landscape the
   panels become a full-height side panel so the map keeps half the screen.
+- **The record is likely, not certain.** A civil war used to end the way the
+  chronicles ended it, on the month they ended it, in every campaign ever
+  played. Now the pivots are drawn: the record is the likelier road, the war
+  you actually watched being fought bends the odds, and nothing is ever a
+  promise in either direction. Sometimes the siege of Mecca fails and the
+  caliphate passes to the house of Zubayr; sometimes the Colline Gate holds
+  and there are no proscription lists; sometimes the Gallic councils vote the
+  other way and the Rhine becomes a border. Where a chapter's next forty cards
+  are written for one man's victory, what is drawn is the price of it instead
+  — the oath after the First Fitna is bargained for rather than acclaimed, and
+  the peninsula is enrolled on Italy's terms rather than Rome's. Twenty-one
+  more foreign courts' pivots draw at their own weights, from the Seleucid
+  succession to Baghdad's coups. **And none of it is announced.** No badge, no
+  odds in the Compendium, no percentages in a tooltip, and no entry in the
+  chronicle for the road the world did not take: one card arrives, written for
+  the world that happened.
 - **Every civil war is a country now.** A civil war used to be a ruler swap and
   a modifier: Caesar crossed the Rubicon and the map showed one Rome, the First
   and Second Fitnas were −10% income on one undivided caliphate, Italy raised

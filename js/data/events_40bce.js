@@ -339,6 +339,18 @@ function raiseLabienus(ctx) {
   });
   return claimant;
 }
+// When he ends (SPEC §252). Ventidius broke Labienus at the Cilician Gates in
+// 39 because the renegade's Parthian horse would not wait for his Roman
+// infantry — a quarrel between allies, in a camp, on a hill, which is the sort
+// of thing that goes the other way about one year in five. The record is the
+// likelier road; where it does not hold, the renegade keeps Asia through the
+// winter and the reckoning waits for Gindarus.
+function ventidiusCatchesHim(ctx) {
+  return ctx.helpers.verdict(ctx, 'labienusWar', 0.8, {
+    recorded: 'ROM', war: ['ROM', 'USR'], sway: 0.25,
+  });
+}
+
 // …and the pass that ends him. Ventidius breaks Labienus at the Cilician
 // Gates in 39; the renegade dies in flight and the province he taxed goes
 // back to the government that owned it.
@@ -395,6 +407,7 @@ export const EVENTS_40 = [
       + 'a rumor this year, and every throne in Syria knows it.',
     forTag: 'both',
     decider: 'PAR',
+    roll: 0.6,
     date: { y: -40, m: 9 },
     aiOption: 0,
     options: [
@@ -617,15 +630,25 @@ export const EVENTS_40 = [
       + 'its first wall.',
     forTag: 'both',
     decider: 'ROM',
+    roll: 0.7,
     date: { y: -39, m: 6 },
     aiOption: 0,
     options: [
       {
         label: 'The mule-seller\'s first lesson',
-        tooltip: 'Labienus dies in flight and Roman Asia Minor comes back under one banner. Parthia: −1 stability. Rome: +10 legitimacy. Antigonus\' Parthian Party −10 approval — the patron looks mortal.',
+        tooltip: 'Ventidius forces the passes and takes back whatever the renegade is caught holding. Parthia: −1 stability. Rome: +10 legitimacy. Antigonus\' Parthian Party −10 approval — the patron looks mortal.',
         effects: guard('ev5_gates:0', (ctx) => {
-          settleLabienus(ctx, 'Ventidius breaks Labienus at the Cilician Gates; the renegade dies in '
-            + 'flight, and the cities that paid him pay Rome again.');
+          // One of two roads (SPEC §252): the passes finish him, or the
+          // quarrel in his camp does not happen and Asia stays his through
+          // the winter — in which case Gindarus collects the debt instead.
+          if (ventidiusCatchesHim(ctx)) {
+            settleLabienus(ctx, 'Ventidius breaks Labienus at the Cilician Gates; the renegade dies in '
+              + 'flight, and the cities that paid him pay Rome again.');
+          } else {
+            ctx.helpers.chronicle(ctx, 'war', 'Ventidius forces the Cilician Gates and the renegade is '
+              + 'not in them: Labienus keeps his Roman infantry together, winters in Caria, and the '
+              + 'reckoning is put off a year.');
+          }
           ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
           ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 10 });
           ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -10);
@@ -633,10 +656,15 @@ export const EVENTS_40 = [
       },
       {
         label: 'Hound them to the Euphrates',
-        tooltip: 'The same reconquest, pressed further: Rome +15 martial points and +1 war exhaustion — the pursuit is paid for in marching flesh. Parthia: −1 stability. Antigonus\' Parthian Party −5 approval.',
+        tooltip: 'The same advance, pressed to the river: Rome +15 martial points and +1 war exhaustion — the pursuit is paid for in marching flesh. Parthia: −1 stability. Antigonus\' Parthian Party −5 approval.',
         effects: guard('ev5_cilician_gates:1', (ctx) => {
-          settleLabienus(ctx, 'Labienus is broken at the passes and hunted to the Euphrates; the '
-            + 'Roman East is Rome\'s again, and the horse-archers have learned what slingers do.');
+          if (ventidiusCatchesHim(ctx)) {
+            settleLabienus(ctx, 'Labienus is broken at the passes and hunted to the Euphrates; the '
+              + 'Roman East is Rome\'s again, and the horse-archers have learned what slingers do.');
+          } else {
+            ctx.helpers.chronicle(ctx, 'war', 'The pursuit reaches the Euphrates and finds the fords '
+              + 'held: the renegade is over them with his pay chest, and Asia is still writing to him.');
+          }
           ctx.helpers.adjust(ctx, 'ROM', { mar: 15, warExhaustion: 1 });
           ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
           ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -5);
@@ -741,10 +769,16 @@ export const EVENTS_40 = [
     options: [
       {
         label: 'Carrhae is repaid',
-        tooltip: 'Parthian Syria falls to Rome; Parthia quits the War for the Crown; Antigonus loses his shield (−10 legitimacy, morale modifier expires).',
+        tooltip: 'Parthian Syria falls to Rome and whatever the renegade still held comes back with it; Parthia quits the War for the Crown; Antigonus loses his shield (−10 legitimacy, morale modifier expires).',
         effects: guard('ev5_gindarus:0', (ctx) => {
           const g = ctx.game;
           const h = ctx.helpers;
+          // Whatever the renegade still holds comes home with Pacorus' body
+          // (SPEC §252). In the world where the Cilician Gates finished him
+          // this line does nothing at all; in the other one it is the end of
+          // the Roman East's second government.
+          settleLabienus(ctx, 'Gindarus finishes what the passes did not: the last of the renegade\'s '
+            + 'garrisons come over, and Rome\'s East answers Rome again.');
           for (const name of ['Zeugma', 'Samosata', 'Cyrrhus', 'Beroea', 'Chalcis', 'Emesa',
             'Apamea', 'Palmyra', 'Damascus', 'Batanea', 'Caesarea Philippi']) {
             const p = ctx.prov(name);
