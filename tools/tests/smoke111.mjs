@@ -39,13 +39,12 @@ function boot(playerTag, seed) {
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_66, events });
   return { game, ctx, actions: gameActions(ctx) };
 }
-// The §207 drumbeat: one completion a pass, then the chain rests. Where this
-// suite means "let the months go by until the pass has paid", it pumps —
-// each call is one synthetic month.
 // §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
-// what is ready. Where this suite means "let the months go by until everything
-// satisfiable has paid", the hand on the panel is the suite's own: one claim a
-// month, which is exactly the drum's own pace.
+// what is ready. Where this suite means "let a month go by and take what it
+// offers", the hand on the panel is the suite's own: one claim a month, so a
+// count of months is a count of claims. (§254 retired the rest timer that
+// used to enforce that spacing on its own, so the count here is now the
+// suite's deliberate restraint rather than the engine's.)
 const pump = (ctx, n) => {
   for (let i = 0; i < n; i++) {
     realm.checkMissions(ctx);
@@ -55,7 +54,6 @@ const pump = (ctx, n) => {
     }
   }
 };
-const PACE = DEFINES.MISSION_PACE_MONTHS | 0;
 
 console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
@@ -87,8 +85,13 @@ const { game, ctx, actions } = boot('JUD', 42);
     'requires resolved to ids');
   ok(v[1].requiresNames.join(',') === 'Arm the Nation', 'and to names for the tooltip');
   ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,0,2,1,0,2,1,2,0,0,0,1,1,2,2,4,4,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
-  ok(v.map((m) => m.row).join(',') === '0,1,1,1,2,2,2,2,3,3,4,4,4,5,5,5,6,7,6,7,6,7,0,1,2,3,4',
-    'rows derived one below the deepest parent (declared rows stick): ' + v.map((m) => m.row).join(','));
+  // §254: a row is the band the difficulty ladder measured for the mission's
+  // own check, relaxed down so no child draws above a prerequisite and packed
+  // so no two share a cell. What the ladder cannot price — a flag, a date, a
+  // court's own politics, which is what the §183 hypotheticals in column four
+  // are — keeps the row its author wrote.
+  ok(v.map((m) => m.row).join(',') === '1,2,2,4,3,4,3,6,5,3,4,6,5,5,7,7,1,3,6,7,8,9,0,1,2,3,4',
+    'rows are the ladder\'s, not the author\'s: ' + v.map((m) => m.row).join(','));
   ok(v.every((m) => m.icon), 'every node wears an icon');
 }
 
@@ -109,11 +112,12 @@ console.log('== branches advance independently; the prefix does not lie ==');
     + 'hy_house_stands,hy_royal_robes,hy_granaries',
     'three war branches open at once, plus the three §211 strand roots and the '
     + 'standing hypotheticals: ' + open.join(','));
-  // Complete a LATER branch first: the Parthian mission, by opinion. The
-  // root's completion above left the chain resting (§207), so wait it out.
+  // Complete a LATER branch first: the Parthian mission, by opinion. One
+  // month, one claim — the point of the block is that a branch deep in the
+  // table can be banked while its neighbours wait, not how fast either goes.
   game.tags.PAR.opinion = game.tags.PAR.opinion || {};
   game.tags.PAR.opinion.JUD = 90;
-  pump(ctx, PACE + 1);
+  pump(ctx, 1);
   const st = Object.fromEntries(actions.getMissions().map((m) => [m.id, m.status]));
   ok(st.jm_diaspora === 'done', 'a later branch completed early');
   ok(st.jm_samaria === 'locked', 'while its neighbour still waits on the coast');
