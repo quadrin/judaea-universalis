@@ -200,5 +200,100 @@ console.log('== §248 · 6 the player wears it too ==');
   'and puts the reason on the control rather than hiding it');
 }
 
+// ---------------------------------------------------------------------------
+// SPEC §255: the other half of §248. §248 says a client declares no war and is
+// called to its lord's; what nothing covered was the war it was ALREADY
+// fighting under somebody else's banner when the collar changed hands.
+// Reported from the 66 chapter: a Judaea that beat Rome and took Agrippa's
+// kingdom as a client at the table found Rome still at war with it, because
+// the collar was a field on a tag and nothing went back to look at the wars
+// the tag was in.
+//
+// The test is the OLD lord and not merely the absence of the new one, because
+// a crown war's pen belongs to its claimant (§226): Herod opens the 40 chapter
+// as Rome's client fighting his own war for the crown while Rome stays out of
+// it, and a rule that ended every war a client's lord was not in would end
+// that one. Four contracts, and the fourth is the one that costs.
+console.log('== §255 · a client carries no war for a lord it no longer has ==');
+{
+  const { game, ctx } = boot('JUD');
+  // The chapter's own shape: Agrippa fights beside Rome, as Rome's client.
+  const revolt = game.wars.find((w) => w && (w.attackers || []).concat(w.defenders || []).indexOf('AGR') >= 0);
+  ok(!!revolt, 'the Great Revolt opens with Agrippa in it');
+  ok(game.tags.AGR.overlord === 'ROM', 'and Agrippa opens as Rome\'s client');
+  mil.enforceVassalPeace(ctx);   // the sweeps of every month before the peace
+  // The player wins him at the table while Rome fights on.
+  game.tags.AGR.overlord = 'JUD';
+  mil.enforceVassalPeace(ctx);
+  const stillIn = game.wars.some((w) => w
+    && (w.attackers || []).concat(w.defenders || []).indexOf('AGR') >= 0);
+  ok(!stillIn, 'the moment the collar changes hands, Agrippa is out of the war');
+  ok((game.tags.AGR.atWarWith || []).length === 0, 'and is at war with nobody');
+  ok(game.wars.some((w) => w && (w.attackers || []).concat(w.defenders || []).indexOf('ROM') >= 0),
+    'while Rome\'s own war with the player goes on');
+  // The lord is never dragged in: that would be §248 pointed backwards.
+  ok((game.tags.JUD.atWarWith || []).indexOf('ROM') >= 0,
+    'the lord keeps the war it was already fighting');
+  ok((game.tags.JUD.atWarWith || []).indexOf('AGR') < 0,
+    'and is at war with the client it just took, in no sense at all');
+
+  // The same rule where the war is one the client was carrying for Rome
+  // against a THIRD court — the case the first half of the guard (a client may
+  // not take the field against its lord) does not reach.
+  const b2 = boot('JUD');
+  b2.game.wars.length = 0;
+  b2.game.wars.push({
+    id: 'w_test', name: 'Rome\'s Own War',
+    attackers: ['ROM', 'AGR'], defenders: ['PAR'], warscore: { ROM: 0, AGR: 0 },
+  });
+  b2.game.tags.ROM.atWarWith = ['PAR'];
+  b2.game.tags.AGR.atWarWith = ['PAR'];
+  b2.game.tags.PAR.atWarWith = ['ROM', 'AGR'];
+  b2.game.tags.JUD.atWarWith = [];
+  mil.enforceVassalPeace(b2.ctx);         // sweeps while the collar is Rome's
+  ok(b2.game.wars.some((w) => w && (w.attackers || []).indexOf('AGR') >= 0),
+    'a client carrying its lord\'s war against a third court keeps carrying it');
+  b2.game.tags.AGR.overlord = 'JUD';
+  mil.enforceVassalPeace(b2.ctx);
+  const w2 = b2.game.wars.find((w) => w && w.id === 'w_test');
+  ok(!!w2 && (w2.attackers || []).indexOf('AGR') < 0,
+    'and drops it the month the collar goes to somebody else');
+  ok(!!w2 && (w2.attackers || []).indexOf('ROM') >= 0,
+    'while the lord that started it fights on alone');
+  ok((b2.game.tags.AGR.atWarWith || []).length === 0
+    && (b2.game.tags.PAR.atWarWith || []).indexOf('AGR') < 0,
+  'and neither court is listed at war with the other afterwards');
+
+  // A war the LORD is in stays exactly as it is — that is the war a client is
+  // supposed to be fighting.
+  const c2 = boot('JUD');
+  c2.game.tags.AGR.overlord = 'ROM';
+  const before = c2.game.wars.length;
+  mil.enforceVassalPeace(c2.ctx);
+  ok(c2.game.wars.length === before
+    && c2.game.wars.some((w) => w && (w.defenders || []).indexOf('AGR') >= 0),
+  'a client fighting its lord\'s war is left alone');
+
+  // …and the war that costs: a collar that never changed hands is no signal at
+  // all, so Herod's own war for the crown survives a guard that only knows how
+  // to end what a client carried for a court that let it go (SPEC §226).
+  const e40 = ERAS.find((e) => e.bookmark.id === '40bce');
+  const bus = { emit() {}, on() { return () => {}; } };
+  const g40 = initGame({
+    DEFINES, MAP_DATA, bookmark: e40.bookmark, events: e40.events, playerTag: 'HER', rngSeed: seed++,
+  });
+  const x40 = makeCtx({ game: g40, DEFINES, MAP_DATA, bus, bookmark: e40.bookmark, events: e40.events });
+  ok(g40.tags.HER.overlord === 'ROM', 'Herod opens the 40 chapter as Rome\'s client');
+  const crown = g40.wars.find((w) => w
+    && (w.attackers || []).concat(w.defenders || []).indexOf('HER') >= 0);
+  ok(!!crown && (w => (w.attackers || []).concat(w.defenders || []).indexOf('ROM') < 0)(crown),
+    'fighting a war for the crown that Rome is not in');
+  mil.enforceVassalPeace(x40);
+  mil.enforceVassalPeace(x40);
+  ok(g40.wars.some((w) => w && w.id === crown.id
+    && (w.attackers || []).concat(w.defenders || []).indexOf('HER') >= 0),
+  'and the guard leaves it alone: a crown war\'s pen belongs to the claimant');
+}
+
 console.log(failures ? failures + ' FAILURES' : 'smoke168: ALL PASS');
 process.exit(failures ? 1 : 0);

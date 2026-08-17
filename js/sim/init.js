@@ -49,6 +49,7 @@ import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked, missionPaceMonths, missionClosedSet, missionForkState, missionForkLedger, claimMission } from './realm.js';
+import { missionCosts, costBand, BANDS } from './mission_cost.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFactionsInfo } from './factions.js';
@@ -3658,25 +3659,79 @@ export function gameActions(ctx) {
         const ids = list.map((m, i) => missionId(m, i));
         const nameOf = {};
         list.forEach((m, i) => { nameOf[ids[i]] = m.name || ids[i]; });
-        // Grid seats: a declared col sticks (clamped to five, EU4's width); a
-        // declared row sticks; an undeclared row lands one below the deepest
-        // parent. A ladder is column zero, one row per mission.
+        // Grid seats (SPEC §254). A declared col sticks (clamped to five,
+        // EU4's width). The ROW is no longer an author's guess: it is how far
+        // down the difficulty ladder the mission's own `check` actually sits —
+        // measured against a realm grown a twelfth at a time — relaxed down
+        // wherever a prerequisite sits deeper, so a child never draws above
+        // its parent however cheap it is. A mission the ladder cannot move (a
+        // flag an event sets, a date, a court's own politics) keeps the seat
+        // its author gave it, because the engine orders what it can measure
+        // and does not invent the rest. A ladder chain is still column zero,
+        // one row per mission.
+        const costs = tree ? missionCosts(ctx, g.playerTag, list) : new Map();
         const col = [];
         const row = [];
+        const cost = [];
         list.forEach((m, i) => {
           col[i] = tree ? Math.max(0, Math.min(4, num(m.col, 0) | 0)) : 0;
-          let r = Number.isFinite(m.row) ? Math.max(0, m.row | 0) : null;
-          if (r === null) {
-            if (tree && Array.isArray(m.requires) && m.requires.length) {
-              r = 0;
-              for (const rid of m.requires) {
-                const pi = ids.indexOf(String(rid));
-                if (pi >= 0 && pi < i && Number.isFinite(row[pi])) r = Math.max(r, row[pi] + 1);
-              }
-            } else r = tree ? 0 : i;
-          }
-          row[i] = r;
+          const c = costs.has(String(ids[i])) ? costs.get(String(ids[i])) : null;
+          cost[i] = Number.isFinite(c) ? c : null;
         });
+        if (!tree) {
+          list.forEach((m, i) => { row[i] = i; });
+        } else {
+          const parents = list.map((m) => (Array.isArray(m.requires) ? m.requires : [])
+            .map((rid) => ids.indexOf(String(rid))).filter((pi) => pi >= 0));
+          // Where difficulty alone would seat it: the band the ladder measured,
+          // or — for the unmeasurable — the row its author wrote.
+          const want = list.map((m, i) => {
+            const band = costBand(cost[i]);
+            return Number.isFinite(band) ? band : Math.max(0, num(m.row, 0) | 0);
+          });
+          // Relax to a fixpoint: every mission at least as deep as it costs,
+          // and at least one below each of its prerequisites. The table is
+          // small and acyclic, so a settle loop is the whole algorithm.
+          for (let i = 0; i < list.length; i++) row[i] = want[i];
+          for (let pass = 0; pass < list.length + 2; pass++) {
+            let moved = false;
+            for (let i = 0; i < list.length; i++) {
+              for (const pi of parents[i]) {
+                if (row[pi] + 1 > row[i]) { row[i] = row[pi] + 1; moved = true; }
+              }
+            }
+            if (!moved) break;
+          }
+          // Then pack each column so no two medallions share a cell, taking
+          // them in the order the relaxation put them and breaking ties on
+          // what they cost: of two things that could sit in one row, the
+          // cheaper is the one that sits higher.
+          for (let pass = 0; pass < 4; pass++) {
+            const byCol = new Map();
+            list.forEach((m, i) => {
+              if (!byCol.has(col[i])) byCol.set(col[i], []);
+              byCol.get(col[i]).push(i);
+            });
+            for (const idxs of byCol.values()) {
+              idxs.sort((a, b) => (row[a] - row[b])
+                || ((cost[a] === null ? 1.1 : cost[a]) - (cost[b] === null ? 1.1 : cost[b]))
+                || (a - b));
+              let prev = -1;
+              for (const i of idxs) {
+                if (row[i] <= prev) row[i] = prev + 1;
+                prev = row[i];
+              }
+            }
+            // Packing one column can push a parent past a child in another.
+            let moved = false;
+            for (let i = 0; i < list.length; i++) {
+              for (const pi of parents[i]) {
+                if (row[pi] + 1 > row[i]) { row[i] = row[pi] + 1; moved = true; }
+              }
+            }
+            if (!moved) break;
+          }
+        }
         return list.map((m, i) => {
           const id = ids[i];
           const requires = tree
@@ -3731,17 +3786,14 @@ export function gameActions(ctx) {
       try { return missionForkLedger(ctx, g.playerTag); } catch (e) { warnOnce('getForks', 'getForks failed', e); return []; }
     },
 
-    // The drumbeat (SPEC §207): how long the player's chain still rests after
-    // its last accomplishment, so the panel can say why a satisfied mission
-    // has not landed yet. Null when the player has no chain at all.
+    // §207's drumbeat, retired (SPEC §254). The reader stays and answers
+    // zero: a save carrying `missionRest` loads into a world that no longer
+    // rests, and an old panel asking after the pace is told there is none.
     getMissionPace() {
       try {
         const t = g.tags[g.playerTag];
         if (!t || !missionsFor(ctx, g.playerTag)) return null;
-        return {
-          rest: Math.max(0, num(t.missionRest, 0) | 0),
-          pace: missionPaceMonths(ctx),
-        };
+        return { rest: 0, pace: missionPaceMonths(ctx) };
       } catch (e) { warnOnce('getMissionPace', 'getMissionPace failed', e); return null; }
     },
 

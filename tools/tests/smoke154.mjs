@@ -8,7 +8,7 @@
 //   until claimMission is called. The ready list is rebuilt from live checks
 //   every pass, so a realm that qualified in March and lost the province in
 //   April is owed nothing — claim it while it holds. The AI keeps §102's
-//   symmetry and goes on banking to §207's drum (smoke134 counts that half).
+//   symmetry and goes on banking on the calendar (smoke134 counts that half).
 //
 //   THE SHUT ROAD. A §183 hypothetical stands for one ROAD of one §119 fork,
 //   and the roads of a fork are one question asked once. When a sibling road
@@ -51,7 +51,6 @@ function boot(seed, bookmark) {
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: bm, events: EVENTS_66 });
   return { game, ctx, actions: gameActions(ctx) };
 }
-const PACE = DEFINES.MISSION_PACE_MONTHS | 0;
 const done = (t) => (t.missionsDone || []).slice();
 // Over §227's harder muster: the root asks 28,000 and the chapter deals 26,000.
 const arm = (w) => { for (const a of Object.values(w.game.armies)) if (a && a.tag === 'JUD') a.men += 4000; };
@@ -79,30 +78,30 @@ const w = boot(42);
     'six more months change nothing — a reward not claimed is a reward not paid');
 }
 
-console.log('== the click banks it, pays it, and starts the drum ==');
+console.log('== the click banks it and pays it ==');
 {
   const res = realm.claimMission(w.ctx, 'jm_arm_the_nation');
   ok(res && res.ok, 'the claim is honoured: ' + JSON.stringify(res));
   ok(done(w.game.tags.JUD).join(',') === 'jm_arm_the_nation', 'and banked: ' + done(w.game.tags.JUD));
   ok((w.game.tags.JUD.modifiers || []).some((m) => m.id === 'levies_of_zion'), 'the reward is paid at the click');
-  ok((w.game.tags.JUD.missionRest | 0) === PACE, 'the chain rests the pace from the CLAIM: ' + w.game.tags.JUD.missionRest);
+  // §254 retired the drum this section used to count: a claim charges no rest,
+  // because what spaces accomplishments out is the ladder in the tree.
+  ok((w.game.tags.JUD.missionRest | 0) === 0, 'and the claim charges no rest: ' + w.game.tags.JUD.missionRest);
   ok(ready(w.game.tags.JUD).indexOf('jm_arm_the_nation') < 0, 'and it leaves the ready list');
   const again = realm.claimMission(w.ctx, 'jm_arm_the_nation');
   ok(again && !again.ok, 'claiming it twice is refused: ' + (again && again.why));
 }
 
-console.log('== the drum gates the next claim ==');
+console.log('== nothing gates the next claim but the terms (SPEC §254) ==');
 {
   w.ctx.helpers.changeOwner(w.ctx, 'Caesarea Maritima', 'JUD');
   realm.checkMissions(w.ctx);
   ok(ready(w.game.tags.JUD).indexOf('jm_coastal_road') >= 0,
-    'the coast is ready while the realm consolidates: ' + ready(w.game.tags.JUD));
-  const held = realm.claimMission(w.ctx, 'jm_coastal_road');
-  ok(held && !held.ok && held.why === 'resting', 'but the claim is refused mid-rest: ' + (held && held.why));
-  for (let i = 0; i < PACE; i++) realm.checkMissions(w.ctx);
-  ok((w.game.tags.JUD.missionRest | 0) === 0, 'the rest runs out on schedule');
+    'the coast is ready the month it is taken: ' + ready(w.game.tags.JUD));
   const now = realm.claimMission(w.ctx, 'jm_coastal_road');
-  ok(now && now.ok && done(w.game.tags.JUD).length === 2, 'and then it lands: ' + done(w.game.tags.JUD));
+  ok(now && now.ok && done(w.game.tags.JUD).length === 2,
+    'and lands in that same month, beside the one already claimed: ' + done(w.game.tags.JUD));
+  ok((w.game.tags.JUD.missionRest | 0) === 0, 'with the chain still owing nothing');
 }
 
 console.log('== readiness is live: lose the terms, lose the claim ==');

@@ -934,13 +934,20 @@ function writeMissionState(t, list, done) {
   t.missionIdx = prefix;
 }
 
-// The pace of the drumbeat (SPEC §207): how many months a chain rests after
-// a completion before the next may land. The era's own arc may retune it —
-// a bookmark's `missionPaceMonths` answers before the DEFINES default.
-export function missionPaceMonths(ctx) {
-  const b = ctx.bookmark;
-  if (b && Number.isFinite(b.missionPaceMonths)) return Math.max(0, b.missionPaceMonths | 0);
-  return Math.max(0, num(ctx.DEFINES && ctx.DEFINES.MISSION_PACE_MONTHS, 0) | 0);
+// The pace of the drumbeat, retired (SPEC §254). §207 spaced accomplishments
+// with a clock: one a month, then the chain rested two more before the next
+// could land, so a realm that had genuinely earned three medallions was told
+// to wait for two of them. That is a metronome standing in where a difficulty
+// curve belongs, and the tree has one now — the ladder in `mission_cost.js`
+// measures what each objective actually asks of a realm and seats it that deep.
+// A chapter's objectives still arrive across its years, because the things
+// further down the tree are harder, which is the honest reason for a gap.
+//
+// The reader stays, answering zero, because a bookmark may still declare
+// `missionPaceMonths` and a save may still carry `missionRest`: both are read
+// here and nowhere else, and both now mean nothing.
+export function missionPaceMonths() {
+  return 0;
 }
 
 export function checkMissions(ctx) {
@@ -953,7 +960,6 @@ export function checkMissions(ctx) {
     if (g.tags[k] && g.tags[k].alive && missionsFor(ctx, k)) tags.add(k);
   }
   if (!tags.size) return;
-  const pace = missionPaceMonths(ctx);
   for (const tag of tags) {
     const t = g.tags[tag];
     const list = missionsFor(ctx, tag);
@@ -981,8 +987,7 @@ export function checkMissions(ctx) {
       // all-AI autorun seats nobody at all, so the harness banks every chain
       // on the calendar, which is the only thing a run with no hands can mean.
       if (isHumanChair(g, tag)) {
-        const rest = Math.max(0, num(t.missionRest, 0) | 0);
-        if (rest > 0) t.missionRest = rest - 1;
+        t.missionRest = 0; // §254: nothing rests; the tree paces itself
         const was = new Set(Array.isArray(t.missionReady) ? t.missionReady.map(String) : []);
         const ready = [];
         const fresh = [];
@@ -1022,36 +1027,36 @@ export function checkMissions(ctx) {
         continue;
       }
 
-      // ONE completion a month, then the chain rests (SPEC §207). The old
-      // guard ran up to three WAVES a pass, so a prepared realm banked a
-      // whole branch — parents, children, parallel roots — in a single
-      // morning, and every chapter opened with a volley of medallions. Now
-      // the first satisfied mission in table order completes, the rest of
-      // the chain waits its turn, and after each accomplishment the chain
-      // rests `missionPaceMonths` before the next may land. A month whose
-      // checks all fail charges no rest — waiting on the world is not
-      // resting from it. This is the AI's half of §102's symmetry: a court
-      // with no panel to click cannot be asked to claim, so its chains keep
-      // marching to the drum, and it earns exactly what the player earns.
-      const rest = Math.max(0, num(t.missionRest, 0) | 0);
-      if (rest > 0) {
-        t.missionRest = rest - 1;
-        writeMissionState(t, list, done);
-        continue;
-      }
-      for (let i = 0; i < list.length; i++) {
-        const m = list[i];
-        if (!m || typeof m.check !== 'function') continue;
-        const id = missionId(m, i);
-        if (done.has(id) || closed.has(id)) continue;
-        if (!missionUnlocked(list, i, done, tree)) continue;
-        let ok = false;
-        try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
-        if (!ok) continue;
-        try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + id, 'mission reward threw', id, e); }
-        done.add(id);
-        if (pace > 0) t.missionRest = pace;
-        break;
+      // Everything the chain has actually earned, in table order (SPEC §254).
+      // §207 let an AI court bank ONE mission a month and then rest two, so a
+      // realm that had met four objectives took most of a year to be paid for
+      // them — the same metronome the player's panel wore, for the same
+      // reason, and the same answer: what spaces accomplishments out is that
+      // the next one is harder, not that the calendar says wait. This is the
+      // AI's half of §102's symmetry — a court with no panel to click cannot
+      // be asked to claim, so it banks exactly what a player could claim in
+      // the same month, and no more.
+      //
+      // The pass repeats while anything lands, because a completed parent can
+      // unlock a child whose terms are ALREADY met, and making that child wait
+      // a month would be the metronome again in a smaller coat.
+      t.missionRest = 0;
+      for (let pass = 0; pass < list.length; pass++) {
+        let landed = false;
+        for (let i = 0; i < list.length; i++) {
+          const m = list[i];
+          if (!m || typeof m.check !== 'function') continue;
+          const id = missionId(m, i);
+          if (done.has(id) || closed.has(id)) continue;
+          if (!missionUnlocked(list, i, done, tree)) continue;
+          let ok = false;
+          try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
+          if (!ok) continue;
+          try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + id, 'mission reward threw', id, e); }
+          done.add(id);
+          landed = true;
+        }
+        if (!landed) break;
       }
       writeMissionState(t, list, done);
     } catch (e) { warnOnce('missions:' + tag, 'missions failed for', tag, e); }
@@ -1061,16 +1066,16 @@ export function checkMissions(ctx) {
 // Bank an accomplishment the player has clicked (SPEC §229). Every judgment
 // the monthly pass used to make on its own is made again HERE, at the moment
 // of the click: readiness is a view, and a view can be a month stale — the
-// province can have fallen, a sibling road can have shut this one, the chain
-// can still be resting from the last claim. Returns what happened, so the
-// panel can say why nothing did.
+// province can have fallen, a sibling road can have shut this one, a
+// prerequisite can be unaccomplished still. Returns what happened, so the
+// panel can say why nothing did. (§254 struck the fourth of those: no claim
+// is ever refused for resting, because nothing rests any more.)
 export function claimMission(ctx, id) {
   const g = ctx.game;
   const tag = g.playerTag;
   const t = g.tags && g.tags[tag];
   const list = missionsFor(ctx, tag);
   if (!t || t.alive === false || !Array.isArray(list)) return { ok: false, why: 'none' };
-  if (Math.max(0, num(t.missionRest, 0) | 0) > 0) return { ok: false, why: 'resting' };
   const want = String(id);
   const tree = isMissionTree(list);
   const done = missionDoneSet(t, list);
@@ -1090,8 +1095,6 @@ export function claimMission(ctx, id) {
     done.add(mid);
     writeMissionState(t, list, done);
     if (Array.isArray(t.missionReady)) t.missionReady = t.missionReady.filter((x) => String(x) !== mid);
-    const pace = missionPaceMonths(ctx);
-    if (pace > 0) t.missionRest = pace;
     ctx.bus.emit('notify', {
       title: 'Mission complete — ' + (m.name || mid),
       text: m.rewardText || 'The realm advances.',

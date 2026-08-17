@@ -1912,3 +1912,35 @@ chapter has to be tested with `ev351w_magnentius_falls` played first — otherwi
 is false, and BOTH roads of the verdict close. The symptom is a suite reporting
 "exactly one road is open (none)", which reads like a gate bug and is a
 sequencing one.
+
+§254 replaces §207's mission metronome with a measured difficulty ladder, and
+that moves the balance harness for a reason worth stating plainly: an AI court
+now banks every mission it has earned in the month it earns it, where before it
+banked one and rested two. Chains that used to take a decade to pay out can pay
+out in a season, so the seeded trajectories step — compare against the parent
+commit at the SAME seed and expect the mission-fed numbers (points, treasury,
+manpower) to arrive earlier rather than differently.
+
+Measured at the default eight years, that moved two names and moved one off:
+`40bce ATG` stops bleeding, `167bce PAR` starts again, and `132ce JUD` adds
+BLEEDING to the SNOWBALL this file already documents for it — the Return
+holding its provinces to the end and paying for the host that holds them, now
+paid for a season or two earlier because its own chain banks on time. Every one
+of the three is in a family documented above; nothing new appeared.
+
+`smoke173.mjs` owns the ladder. The one thing to know before touching
+`mission_cost.js` is that the probe must stay a QUESTION: it builds a throwaway
+ctx over shallow copies and a dead rng, and the suite asserts that measuring a
+tree moves no province, no tag, no army, no flag and no seeded state. If you
+give the probe the live game by accident, every panel repaint becomes a turn.
+
+§255's guard has one trap in it, and `smoke7` is where you find out. The rule
+reads naturally as "a client leaves any war its lord is not in" — and that
+sentence ends Herod's war for the crown in the first month of the 40 chapter,
+because Rome collars him from setup and then stays out of the fighting (§226).
+The implemented rule fires on the collar CHANGING, tracked by `t.lordSeen`, so
+a bookmark that opens with both the collar and the war in place is untouched.
+If you widen it, the symptom is not a §248 suite failure — it is `smoke7`
+reporting that Rome never enters the war, the alliance is never sealed, and
+Parthian Syria never falls, three chapters' worth of consequences downstream of
+a war that was quietly cancelled before it started.

@@ -471,10 +471,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         let res = null;
         try { res = actions.claimMission(claim.dataset.claim); } catch (err) { warnOnce('np-claimMission', err); }
         if (res && !res.ok && ctx && ctx.bus) {
-          const why = res.why === 'resting' ? 'The realm is still consolidating — wait out the pace.'
-            : res.why === 'unmet' ? 'The terms no longer hold.'
-              : res.why === 'shut' ? 'That road is shut: the campaign took the other one.'
-                : res.why === 'locked' ? 'What it waits on is not accomplished yet.' : '';
+          // §254 retired 'resting': nothing a realm has earned is held back by
+          // a clock, so every refusal left names something about the world.
+          const why = res.why === 'unmet' ? 'The terms no longer hold.'
+            : res.why === 'shut' ? 'That road is shut: the campaign took the other one.'
+              : res.why === 'locked' ? 'What it waits on is not accomplished yet.' : '';
           if (why) ctx.bus.emit('notify', { title: 'Not claimed', text: why, type: 'bad' });
         }
         refresh();
@@ -1139,19 +1140,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const doneN = base.filter((m) => m.status === 'done').length;
     const hypoDone = hypo.filter((m) => m.status === 'done').length;
     const readyN = list.filter((m) => m.status === 'ready').length;
-    // The drumbeat (SPEC §207): while the chain rests from its last
-    // accomplishment, say so — a satisfied medallion that has not landed
-    // is the pace at work, not a broken check. Under §229 what it delays is
-    // the CLAIM, so the line says claim.
-    let paceNote = '';
-    if (actions && typeof actions.getMissionPace === 'function') {
-      try {
-        const p = actions.getMissionPace();
-        if (p && p.rest > 0) {
-          paceNote = ` · <span class="np-mt-pace">the realm consolidates — the next may be claimed in ${p.rest} month${p.rest === 1 ? '' : 's'}</span>`;
-        }
-      } catch (e) { warnOnce('np-getMissionPace', e); }
-    }
+    // §207's drumbeat line is retired with the drumbeat (SPEC §254): a
+    // satisfied medallion is claimable the moment it is satisfied, and what
+    // spaces the tree out is that the next thing down it is harder. There is
+    // no longer a sentence to write about waiting.
+    const paceNote = '';
     const cells = list.map((m) => {
       // What the medallion is, in the one line under the rule (SPEC §229).
       // READY is the state the whole section now turns on: the terms are met

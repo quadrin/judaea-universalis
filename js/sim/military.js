@@ -2047,7 +2047,68 @@ export function enforceVassalPeace(ctx) {
     // A side emptied by the bond has no war left to fight.
     if (!war.attackers.length || !war.defenders.length) dissolveWar(ctx, war);
   }
+  // …and the other half of the same rule (SPEC §255). Above: a client may not
+  // take the field AGAINST its lord. Here: when a collar CHANGES HANDS, the
+  // client stops fighting the wars it was in as the old lord's client.
+  //
+  // §248 says a client kingdom keeps no foreign policy — it declares no war
+  // and is called to its lord's. What nothing covered was the war it was
+  // already fighting under somebody ELSE's banner when the collar changed.
+  // Agrippa's kingdom opens the 66 chapter in the Great Revolt as Rome's
+  // client; a Judaea that wins takes him at the table; and the war he was in
+  // went on existing, with Rome on one side of it and the player's own client
+  // on the other, because the collar was a field on a tag and nothing went
+  // back to look at the wars.
+  //
+  // The test is the OLD lord and not merely the new one, because a crown war
+  // is the claimant's own (SPEC §226): Herod is Rome's client from the first
+  // month of the 40 chapter and fights his war for the crown while Rome stays
+  // out of it, and a rule that ended every war a client's lord was not in
+  // would end that one. What ends here is only what the client was carrying
+  // FOR the court that no longer holds its collar.
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || t.alive === false) continue;
+    const lord = t.overlord || null;
+    const was = t.lordSeen === undefined ? lord : (t.lordSeen || null);
+    t.lordSeen = lord;
+    if (!lord || !was || was === lord) continue;      // no collar, or no change
+    if (!g.tags[was]) continue;
+    for (const war of g.wars.slice()) {
+      if (!war) continue;
+      const side = war.attackers.indexOf(k) >= 0 ? war.attackers
+        : war.defenders.indexOf(k) >= 0 ? war.defenders : null;
+      if (!side) continue;
+      const foes = side === war.attackers ? war.defenders : war.attackers;
+      const all = war.attackers.concat(war.defenders);
+      // The new lord's own war is the war a client is supposed to be in.
+      if (all.indexOf(lord) >= 0) continue;
+      // Only what it was carrying for the court that let it go.
+      if (all.indexOf(was) < 0) continue;
+      const at = side.indexOf(k);
+      if (at >= 0) side.splice(at, 1);
+      if (war.warscore) delete war.warscore[k];
+      for (let i = 1; i < g.provinces.length; i++) {
+        const p = g.provinces[i];
+        if (!p || p.impassable || p.controller === p.owner) continue;
+        const held = (p.owner === k && foes.indexOf(p.controller) >= 0)
+          || (p.controller === k && foes.indexOf(p.owner) >= 0);
+        if (held && g.tags[p.owner] && g.tags[p.owner].alive) changeControllerCore(ctx, p, p.owner);
+      }
+      liftSiegesBetween(ctx, [k], foes);
+      for (const f of foes) if (g.tags[f]) setTruce(ctx, k, f, war.name);
+      rebuildAtWarWith(ctx);
+      marchStrandedHome(ctx, [k].concat(foes));
+      chronicle(ctx, 'peace', (t.name || k) + ' carried that war for '
+        + ((g.tags[was] && g.tags[was].name) || was) + ' and carries it no longer: the collar of '
+        + ((g.tags[lord] && g.tags[lord].name) || lord) + ' settles it, and it leaves '
+        + (war.name || 'the war') + '.');
+      ctx.bus.emit('war', { id: war.id, name: war.name, left: k });
+      if (!war.attackers.length || !war.defenders.length) dissolveWar(ctx, war);
+    }
+  }
 }
+
 
 // The only true game-over: the player's nation has ceased to exist — no
 // provinces under its banner and no army in the field. Runs monthly, fires

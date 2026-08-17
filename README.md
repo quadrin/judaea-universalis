@@ -500,8 +500,8 @@ static site, the zero dependencies, or the missing build step changes.
   **Claim** under its name, and waits: nothing is banked and nothing is paid
   until you click it, the Missions tab wears a badge for what it owes you, and
   the terms have to still hold at the moment you click. Lose the province in
-  April and March's accomplishment goes with it. The chapter's own drumbeat
-  still spaces the claims out, so which branch you bank first is a decision.
+  April and March's accomplishment goes with it. Nothing holds a claim back
+  but the terms themselves — bank two in one month if you have earned two.
   (The AI has no panel to click, so its chains go on banking on the calendar —
   the symmetry is the point: it earns exactly what you earn.)
 - **Harder asks, and rewards you keep.** Every muster, purse, development and
@@ -926,6 +926,24 @@ static site, the zero dependencies, or the missing build step changes.
   play with are thumb-sized; long values stack instead of running through their
   labels; the title screen's era card fits the screen; and in landscape the
   panels become a full-height side panel so the map keeps half the screen.
+- **A client keeps no war of its own.** Take a court as a client and the wars
+  it was fighting for its old master end with the collar: status quo on its
+  fronts and a truce, the way the collar already settled a quarrel with the
+  lord itself. Agrippa's kingdom, won at the table in the middle of the Great
+  Revolt, no longer stands in the field against an empire you have just signed
+  peace with — and your own realm inherits none of its quarrels, because a
+  client that cannot start a war cannot hand you one either. A crown a king is
+  already fighting for is still his own to win: what ends is what he was
+  carrying for somebody else.
+- **The mission tree is a ladder of difficulty.** It used to be a hand-drawn
+  grid paced by a stopwatch: one accomplishment a month, then two months of
+  rest, with a line in the panel explaining that your realm was consolidating.
+  Now every objective is priced by asking its own victory condition against a
+  realm grown a twelfth at a time — eleven thousand men, a war score of forty,
+  the Queen's nine years of peace — and it sits as far down the tree as the
+  answer says, one below anything it depends on. Nothing rests any more: what
+  spaces your accomplishments out is that the next thing down the tree is
+  harder, which is the only honest reason for a gap.
 - **Three Roman governments, when there were three.** The rival banner used to
   be singular, so the third century could show Palmyra or the Gallic empire but
   never both — and the Gallic empire, fourteen years of consuls and coinage

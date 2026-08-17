@@ -12480,6 +12480,13 @@ lives, and each documented one was re-run:
 
 ## 207. The drumbeat of accomplishment
 
+> **Superseded by §254.** The drum below was a metronome standing in for a
+> difficulty curve, and §254 gave the tree the curve instead: `missionRest` is
+> never set and never served, `missionPaceMonths` answers zero, and what
+> spaces a chapter's accomplishments out is that the things further down the
+> tree are harder. What §207 was really protecting — no volley of the unearned
+> — is still contract, restated positively and still counted by `smoke134`.
+
 A mission completed the instant its condition did, and the monthly pass ran
 up to three waves deep (§177), so a realm that qualified for several at once
 banked them all in one morning. Every chapter therefore opened with a
@@ -17928,3 +17935,133 @@ later.
   Rome, each settled by its own card and the empire whole afterwards.
   `smoke160`/`smoke169` (§239's and §249's tables) and `smoke139` (§212's
   rolls) pass unmoved.
+
+## 254. The tree is a ladder of difficulty, and the clock stops pacing it
+
+Reported: *instead of spacing out each mission artificially in each mission
+tree, have the mission trees actually be progress-based — given how hard it is
+to conquer XYZ land or achieve ABC thing, have it further down the tree.*
+
+Both halves of that are exactly right, and the second is the diagnosis of the
+first.
+
+**What was artificial.** §207 spaced accomplishments with a metronome: one
+completion a month, and then the chain rested two more months before the next
+could land. A realm that had genuinely earned three medallions in one campaign
+season was told to wait for two of them, and the panel wrote a line explaining
+that the realm was consolidating. That is a clock standing in for a difficulty
+curve — and it had to stand in, because the trees had none. A row was whatever
+an author wrote, or one below the deepest parent; a column was a hand-drawn
+branch. So "hold six provinces of the faith" could sit above "take Jerusalem",
+and the only thing that made a chapter's objectives arrive across its years
+rather than in its first season was the rest timer.
+
+**The ladder.** Every mission carries `check(ctx)`, and a check is a predicate
+over one realm's state — so the honest way to ask how hard a mission is, is to
+ask IT. `js/sim/mission_cost.js` builds a throwaway ctx whose game is this same
+board with one realm grown to a power level p: it controls the p-share of the
+map nearest its seat, fields p× the era's military weight, banks p× a chapter's
+treasury, sits at p× full tech, and is regarded by every court at p×+100.
+Twelve rungs, and a mission's cost is the lowest rung at which its own check
+turns true.
+
+Ground goes as the SQUARE of the level and armies and money as the power of one
+and a half, because a realm does not acquire the map at a constant rate: a
+linear ladder handed a twelfth of four hundred provinces — the whole Levant —
+on the first rung, and rated "take Jerusalem" and "hold the coast from Gaza to
+Tyre" the same.
+
+**What it refuses to guess.** A check already true of a realm with nothing, and
+one still false of a realm with everything, are both unmeasurable: a flag an
+event sets, a date, a court's own politics. Those keep the seat their author
+gave them. The engine orders what it can measure and does not pretend about the
+rest — in the nine chapters' own chains that is between a third and two-thirds
+of each tree.
+
+**The layout.** A mission's row is now the band its cost falls in, relaxed
+downward to a fixpoint so that every mission sits at least one below each of
+its prerequisites, then packed per column so no two medallions share a cell —
+and where two could sit in one row, the cheaper is the one that sits higher. A
+cheap mission hanging off a deep parent still draws deep, which is the tree
+being right rather than the ladder being ignored.
+
+**And the clock stops.** `missionRest` is never set and never served; a claim
+is never refused for resting; the panel's "the realm consolidates" line is
+gone; and the AI banks everything its chain has earned in the month it earns
+it, re-running the pass while anything lands so a completed parent's already-met
+child does not wait a month either. That is §102's symmetry restored on both
+sides: a court with no panel to click banks exactly what a player could claim.
+`missionPaceMonths` stays as a reader that answers zero, because a bookmark may
+still declare one and a save may still carry a rest.
+
+- **Regression contract**: `smoke173.mjs` — the ladder prices the chapters' own
+  tables in the right order (+40 war score above +20, the Queen's Peace above
+  taking Jerusalem) and prices at least a third of every chapter's chain; the
+  probe is a question and not a turn (not a province, not a tag, not an army,
+  not a flag, not the seeded stream); it is deterministic across campaigns and
+  memoized within one; the layout seats every priced mission at least as deep
+  as it costs, never a child above its parent, never two in a cell, and — where
+  two share a floor — the cheaper higher; two medallions earned in one month
+  claim in one month and an old save's rest is cleared rather than served; and
+  one monthly pass banks everything an AI chain has earned. `smoke134` (§207's
+  own suite) is rewritten to count the rule that replaced the drum: everything
+  earned the month it is earned, and still never a medallion the realm has not
+  earned — a parent may unlock a child in the same pass, but only a child whose
+  own check is already true. `smoke154` drops the two claims the drum gated.
+  `smoke138` (§211's civil band seats) and `smoke152` (§250's crowns) pass
+  unmoved.
+
+## 255. A client keeps no war of its own
+
+Reported, from the 66 chapter: *in the Year of the Four Emperors, I had already
+taken Agrippa's kingdom as a client after peacing out of the revolt — how come
+Rome was still at war with it?*
+
+Because the collar was a field on a tag, and nothing went back to look at the
+wars the tag was already in.
+
+§248 gave a client kingdom no foreign policy: it signs no alliance, guarantees
+nobody, and declares no war at all. §149 stopped a client and its lord from
+being on opposite sides of one — the yoke IS the settlement of that quarrel, so
+the client leaves the war and everyone else fights on. Between those two rules
+there was a hole exactly the shape of Agrippa II: **the war a court was already
+fighting when the collar went on, against somebody its new lord is not fighting
+at all.**
+
+The 66 chapter opens with Agrippa's kingdom in the Great Revolt on Rome's side,
+as Rome's client. A Judaea that wins and takes him at the table gets the
+collar, §149 pulls him out of the war against his new lord — and any OTHER war
+he was holding for Rome stays exactly where it was, the player's own client
+still in the field for the empire they just signed with.
+
+**The rule is §149's, pointed the other way.** `enforceVassalPeace` now makes a
+second pass: when a collar CHANGES HANDS, the client stops fighting the wars it
+was in as the OLD lord's client — status quo on its own fronts, a truce with
+everyone it was facing, its sieges lifted and its stranded armies marched home.
+If it was the last court on its side, the war dissolves for want of an enemy.
+The chronicle says why: *carried that war for Rome and carries it no longer.*
+
+**Why the old lord and not merely the new one.** The obvious rule — a client
+leaves any war its lord is not in — is wrong, and the 40 chapter says so in its
+first month. A crown war's pen belongs to its claimant (§226): Herod opens that
+chapter as Rome's client and fights Antigonus for the crown with Rome staying
+carefully out of it, and the obvious rule ends that war before the chapter
+starts. The signal is not *my lord is absent* — it is *my collar just moved*,
+which is why the sweep carries `lordSeen`, a shadow of the collar as of the
+previous pass. A collar that never changed hands is no signal at all, so a
+crown war survives and Agrippa's inherited one does not.
+
+**The lord is never dragged in.** Inheriting the client's old war would be §248
+read backwards: the whole point of that section is that a client cannot start
+something its lord would have to finish. A war the new lord IS in, on either
+side, is the war a client is supposed to be fighting and is left untouched.
+
+- **Regression contract**: `smoke168.mjs` (§248's own suite) — the chapter's
+  opening shape, Agrippa in the revolt as Rome's client; the collar changing
+  hands taking him out of it in the same pass while Rome's war with the player
+  goes on, and the new lord at war with its new client in no sense at all; the
+  case §149 cannot reach — a war carried for Rome against a THIRD court, kept
+  while the collar is Rome's and dropped the month it is not, with Rome fighting
+  on alone; a client fighting its LORD's war left exactly alone; and the one
+  that costs — Herod's war for the crown, Rome not in it, surviving two sweeps
+  because his collar never moved.
