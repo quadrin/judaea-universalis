@@ -1921,12 +1921,35 @@ out in a season, so the seeded trajectories step — compare against the parent
 commit at the SAME seed and expect the mission-fed numbers (points, treasury,
 manpower) to arrive earlier rather than differently.
 
-Measured at the default eight years, that moved two names and moved one off:
-`40bce ATG` stops bleeding, `167bce PAR` starts again, and `132ce JUD` adds
-BLEEDING to the SNOWBALL this file already documents for it — the Return
-holding its provinces to the end and paying for the host that holds them, now
-paid for a season or two earlier because its own chain banks on time. Every one
-of the three is in a family documented above; nothing new appeared.
+Measured at the default eight years against `00a0b52`, the anomaly set gains
+four names and loses none:
+
+    167bce  none                        →  PAR: BLEEDING
+    40bce   ATG: BLEEDING               →  HER: DEBT-SPIRAL | ATG: BLEEDING | KSH: EXHAUSTED
+    66ce    none                        →  ADI: BLEEDING
+    132ce   JUD: SNOWBALL               →  JUD: SNOWBALL,BLEEDING
+    67bce / 351ce / 529ce / 614ce / 1948ce   unmoved
+
+All four are courts spending earlier rather than differently, which is the
+mechanism working: `167bce PAR`, `40bce HER` and `66ce ADI` are come-and-go
+members of families this file documents by name above, and `132ce JUD` is the
+Return holding its provinces to the end and paying for the host that holds
+them — now paying a season or two sooner because its chain banks on time
+instead of a medallion a quarter.
+
+`40bce KSH: EXHAUSTED` is the one genuinely new name in that chapter. It is the
+same court and the same state the 67 chapter has carried for many sections
+(`67bce KSH: EXHAUSTED`, unmoved on this run) — Kush at the bottom of the map,
+manpower spent with almost no army, far from anything §254 or §255 touches and
+reachable from either side of a nudge. Watch it; do not treat it as a
+regression unless it starts costing the chapter something.
+
+A caution for whoever measures next: an earlier draft of this note claimed
+`40bce ATG` STOPS bleeding. It does not, and never did — the claim came from
+reading a stale harness dump rather than a fresh baseline. Run `00a0b52`
+(or whatever the parent actually is) in a `git worktree` and diff the two
+`=== anomalies ===` blocks; do not compare against a file in a scratch
+directory whose provenance you cannot name.
 
 `smoke173.mjs` owns the ladder. The one thing to know before touching
 `mission_cost.js` is that the probe must stay a QUESTION: it builds a throwaway
