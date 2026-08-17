@@ -73,6 +73,83 @@ function transfer(ctx, names, to, from) {
   return n;
 }
 
+// ── the Gallic empire, on the second banner (SPEC §253) ─────────────────────
+//
+// The one thing everybody knows about the third century is that the Roman
+// world came apart into three, and this chapter could only ever show two of
+// them: §239's rival purple is a single banner, and Zenobia is flying it from
+// 269 to 273 — exactly the years Tetricus is flying nothing at all over a
+// country that ran from the Antonine Wall to the Pyrenees for fourteen years,
+// with its own consuls, its own senate and its own coinage. `USV`, the second
+// purple, is that hole filled: one more generic banner, dressed by the card
+// that raises it, for the one century that needs two.
+//
+// The Gallic empire also outlives every other claim in this chapter, which is
+// why it is the one arc where the settlement is a battle and not a card two
+// months later: Postumus in 260, Aurelian at Châlons in 274.
+const GALLIC_PROVINCES = [
+  'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Argentorate', 'Batavia',
+  'Durocortorum', 'Samarobriva', 'Gesoriacum', 'Rotomagus', 'Lutetia', 'Condate',
+  'Darioritum', 'Limonum', 'Avaricum', 'Augustodunum', 'Lugdunum', 'Vesontio',
+  'Burdigala', 'Tolosa', 'Narbo', 'Nemausus', 'Genava', 'Atuatuca', 'Britannia',
+];
+// Spain came in with Postumus and went home to Rome in 269, which is a card
+// this chapter does not have room for; it is simply not in the roster.
+function raiseTheGallicEmpire(ctx) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USV) return null;
+  const rome = who(ctx, 'ROM');
+  const ground = GALLIC_PROVINCES.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === rome;
+  });
+  if (!ground.length) return null;
+  const gaul = h.secedeTag(ctx, rome, 'USV', {
+    provinces: ground,
+    share: 0.3,
+    name: 'The Gallic Empire',
+    color: [96, 116, 148],
+    opinion: -150,
+    stability: 1,
+    legitimacy: 45,
+    ruler: { name: 'Postumus', title: 'Augustus in Gaul', gov: 3, infl: 3, mar: 4, age: 45 },
+  });
+  if (!gaul) return null;
+  h.declareWar(ctx, rome, 'USV', 'The Secession of the Gauls');
+  const w = (g.wars || []).find((x) => x
+    && (x.attackers || []).concat(x.defenders || []).indexOf('USV') >= 0
+    && (x.attackers || []).concat(x.defenders || []).indexOf(rome) >= 0);
+  // Postumus never marched on Italy and Gallienus never reached the Rhine:
+  // this one is a standoff by design, and it ends when Aurelian has the time.
+  if (w) w.noNegotiation = true;
+  h.addTagModifier(ctx, 'USV', {
+    id: 'the_gallic_consuls', name: 'Its Own Consuls and Its Own Coin', months: -1,
+    effects: { incomeMult: 1.08, moraleMult: 1.05, legitimacyAdd: 0.05 },
+  });
+  const at = ground.indexOf('Augusta Treverorum') >= 0 ? 'Augusta Treverorum' : ground[0];
+  h.spawnArmy(ctx, 'USV', at, {
+    inf: 10, cav: 4, name: 'The Army of the Rhine',
+    general: { name: 'Postumus', fire: 3, shock: 3, maneuver: 3 },
+  });
+  return gaul;
+}
+function settleTheGallicEmpire(ctx, line) {
+  if (!ctx.game.tags.USV) return false;
+  ctx.helpers.dissolveTag(ctx, 'USV', who(ctx, 'ROM'), { chronicle: line });
+  return true;
+}
+// Who won at Châlons (SPEC §252). Tetricus is supposed to have written to
+// Aurelian asking to be rescued from his own army and then changed sides in
+// the middle of the battle — a story his enemies told and his coins do not
+// confirm, and an army that is not betrayed at Châlons is the best army in the
+// west fighting on its own ground.
+function aurelianTakesGaul(ctx) {
+  return ctx.helpers.verdict(ctx, 'gallicEmpire', 0.75, {
+    recorded: 'ROM', war: ['ROM', 'USV'], sway: 0.3,
+  });
+}
+
 export const EVENTS_132_WEST = [
 
   // ── X1 · 170 ──────────────────────────────────────────────────────────────
@@ -303,6 +380,159 @@ export const EVENTS_132_WEST = [
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 5 });
           h.setFlag(ctx, 'daciaAbandoned', true);
           h.chronicle(ctx, 'era', 'Aurelian walls Rome in brick and gives up Dacia entire; the empire has drawn its second border by subtraction, and the edges take note.');
+        }),
+      },
+    ],
+  },
+
+  // ── X5b · 260 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_eu_postumus',
+    title: 'The Empire That Kept the Rhine',
+    worldLabel: 'Postumus is acclaimed in Gaul; the west secedes for fourteen years',
+    desc: 'The emperor is a prisoner in Persia, his son is dead at Cologne in a '
+      + 'quarrel over plunder, and the Rhine army — which has spent the decade '
+      + 'holding a frontier the central government cannot reinforce — acclaims the '
+      + 'man who has actually been holding it. What Postumus then does is the '
+      + 'interesting part, and it is why this is not a usurpation in the ordinary '
+      + 'sense: he does not march on Italy. He takes Gaul, Britain and Spain, seats '
+      + 'consuls, opens a senate, mints coin better than the legitimate empire\'s, '
+      + 'stamps it RESTITVTOR GALLIARVM, and gets on with the job the central '
+      + 'government had stopped doing. For fourteen years the Roman world has two '
+      + 'governments in the west and, from 269, a third in the east, and every one '
+      + 'of them describes itself as the Roman empire. The cities behind the Rhine '
+      + 'are not liberated and do not want to be: they are defended, which is the '
+      + 'only political programme the century has left.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 260, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    historical: 'Postumus was acclaimed on the Rhine in 260 after Valerian\'s capture and ruled Gaul, Britain and Spain for nine years; the Gallic empire outlived him and ended in 274.',
+    options: [
+      {
+        label: 'A Roman empire that defends the Rhine',
+        tooltip: 'Gaul, the Rhine and Britain go over: a second Roman government on the map, at war with the first, with its own consuls and better coin (+8% income, +5% morale). Rome −10 legitimacy and "The West Is Gone" (−12% income, −10% manpower) for as long as it lasts.',
+        effects: guard('ev2_eu_postumus:0', (ctx) => {
+          const h = ctx.helpers;
+          const gaul = raiseTheGallicEmpire(ctx);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: -10 });
+            if (gaul) {
+              h.addTagModifier(ctx, 'ROM', {
+                id: 'the_west_is_gone', name: 'The West Is Gone', months: -1,
+                effects: { incomeMult: 0.88, manpowerMult: 0.9 },
+              });
+            }
+          }
+          h.setFlag(ctx, 'gallicEmpire', !!gaul);
+          h.chronicle(ctx, 'era', 'The Rhine army acclaims Postumus and he does not march on Italy: '
+            + 'Gaul, Britain and Spain get consuls, a senate and better silver, and the Roman world has two governments in the west.');
+        }),
+      },
+    ],
+  },
+
+  // ── X5c · 274 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_eu_chalons',
+    verdict: 'gallicEmpire',
+    title: 'The Field at Châlons',
+    worldLabel: 'Aurelian ends the Gallic empire; the west comes home',
+    desc: 'Aurelian has spent four years doing nothing but this: the Danube first, '
+      + 'then Palmyra, then Egypt, and now the last of the three empires, on a plain '
+      + 'in Champagne. The Gallic army is the best in the west and its emperor does '
+      + 'not want to be its emperor — Tetricus, a civil governor pushed into purple '
+      + 'by soldiers, is supposed to have written to Aurelian asking to be rescued '
+      + 'from his own troops, and in the middle of the battle he changes sides. His '
+      + 'army fights on without him and is destroyed where it stands, which is the '
+      + 'detail that tells you the letter, if there was one, was his and not theirs. '
+      + 'Aurelian walks both his defeated emperors through Rome in the same triumph '
+      + 'and then makes Tetricus a governor in Italy, because a man who hands over a '
+      + 'country is worth more employed than executed. Fourteen years of the Gallic '
+      + 'empire end in an afternoon and a job offer.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 274, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'gallicEmpire') && aurelianTakesGaul(ctx),
+    options: [
+      {
+        label: 'Both emperors in the same triumph',
+        tooltip: 'The Gallic empire folds back into Rome — ground, garrisons and treasury — and the war ends with it. Rome +15 legitimacy, +1 stability, and "The West Is Gone" lifts. The world has one Roman government again for the first time in fourteen years.',
+        effects: guard('ev2_eu_chalons:0', (ctx) => {
+          const h = ctx.helpers;
+          settleTheGallicEmpire(ctx, 'Châlons: the Gallic emperor changes sides in the middle of his '
+            + 'own battle and his army is destroyed where it stands; the west comes home, and Aurelian '
+            + 'walks two emperors through Rome in one triumph.');
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: 15, stability: 1 });
+            h.removeModifier(ctx, 'ROM', 'the_west_is_gone');
+          }
+          h.setFlag(ctx, 'gallicEmpire', false);
+        }),
+      },
+    ],
+  },
+
+  // ── X5d · 274 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_eu_gaul_holds',
+    verdict: 'gallicEmpire',
+    title: 'Nobody Changes Sides at Châlons',
+    worldLabel: 'The Gallic army holds the field; the west stays a country',
+    desc: 'The letter is never written, or is written and never arrives, or arrives '
+      + 'and is ignored — the accounts of this battle were composed by people who '
+      + 'needed it to have been a betrayal, and in this world it is simply a battle. '
+      + 'The Gallic army is the best in the west, it is standing on its own ground, '
+      + 'and it has spent fourteen years being the only government that answered the '
+      + 'Rhine. Aurelian, who has beaten the Goths, Zenobia and the Egyptians in four '
+      + 'years, discovers on a plain in Champagne that the third empire is the one '
+      + 'that was actually defended, and takes the peace he can get. Two Roman '
+      + 'governments sign a frontier neither of them calls a frontier, both keep the '
+      + 'name, and the cities behind the Rhine go on being defended by the men who '
+      + 'have been defending them.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 274, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'gallicEmpire') && !aurelianTakesGaul(ctx),
+    options: [
+      {
+        label: 'Take the peace, and do not call it a frontier',
+        tooltip: 'The Gallic empire stays on the map as a court of its own and the war between them ends. Rome −10 legitimacy and −8,000 manpower, and "The West Is Gone" becomes permanent; the Gallic court takes "The Rhine Answers Trier" (+6% morale, +5% manpower). The Roman world stays two governments.',
+        effects: guard('ev2_eu_gaul_holds:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const rome = who(ctx, 'ROM');
+          // A civil war that ends in a country rather than a reconquest: the
+          // claim is not dissolved, and the war ends because both sides have
+          // just stopped fighting it (SPEC §252).
+          g.wars = (g.wars || []).filter((w) => {
+            if (!w) return false;
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return !(all.indexOf('USV') >= 0 && all.indexOf(rome) >= 0);
+          });
+          for (const t of [g.tags[rome], g.tags.USV]) {
+            if (t && Array.isArray(t.atWarWith)) {
+              t.atWarWith = t.atWarWith.filter((x) => x !== 'USV' && x !== rome);
+            }
+          }
+          if (g.tags.USV) {
+            h.addTagModifier(ctx, 'USV', {
+              id: 'the_rhine_answers_trier', name: 'The Rhine Answers Trier', months: -1,
+              effects: { moraleMult: 1.06, manpowerMult: 1.05 },
+            });
+          }
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: -10, manpower: -8000 });
+          h.setFlag(ctx, 'gallicEmpireStands', true);
+          h.chronicle(ctx, 'era', 'Nobody changes sides at Châlons: the Gallic army holds its field, '
+            + 'Aurelian takes the peace he can get, and the Roman world keeps two governments in the west.');
         }),
       },
     ],

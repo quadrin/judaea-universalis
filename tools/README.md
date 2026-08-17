@@ -1902,3 +1902,13 @@ times measures nothing. And the "nothing telegraphs" block greps the shipped
 card text for percentages: if you write a tooltip that prices its own odds,
 that suite is what tells you, and the fix is to describe what may happen
 rather than how often.
+
+§253 adds a second rival banner (`USV`) and four more civil wars, and the one
+thing to know before adding a fifth is what `smoke172` had to learn the hard
+way: **the 351 chapter boots with a claimant already on the banner.** Magnentius
+is raised by the bookmark's own first tick, so any arc that raises `USR` in that
+chapter has to be tested with `ev351w_magnentius_falls` played first — otherwise
+`secedeTag` refuses the banner, the raise returns null, the flag its card sets
+is false, and BOTH roads of the verdict close. The symptom is a suite reporting
+"exactly one road is open (none)", which reads like a gate bug and is a
+sequencing one.

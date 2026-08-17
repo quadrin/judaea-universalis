@@ -367,6 +367,16 @@ export const FLAGS = {
     `<path d="M6.4 7.9h11.2v7.9l-1.9-1.4-1.9 1.4-1.8-1.4-1.9 1.4-1.9-1.4L6.4 15.8Z" ${SIL}/>` +
     `<circle cx="12" cy="11.4" r="2.5" fill="none" stroke="${FG}" stroke-width="1.1"/>` +
     `<circle cx="12" cy="4.4" r="1.5" ${ACC}/>`,
+  // The second purple (SPEC §253): the same vexillum, hung the other way — a
+  // draco standard beside it rather than a wreath over it. The claimants who
+  // needed a second banner were the ones whose armies were frontier armies,
+  // and the windsock dragon is what those armies actually carried.
+  USV:
+    `<rect x="11.2" y="2.6" width="1.6" height="18.6" rx="0.8" ${ACC}/>` +
+    `<rect x="5.4" y="6.2" width="13.2" height="1.7" rx="0.85" ${ACC}/>` +
+    `<path d="M6.4 7.9h11.2v7.9l-1.9-1.4-1.9 1.4-1.8-1.4-1.9 1.4-1.9-1.4L6.4 15.8Z" ${SIL}/>` +
+    `<path d="M8.6 11.4h6.8M8.6 13.6h4.6" fill="none" stroke="${FG}" stroke-width="1.1" stroke-linecap="round"/>` +
+    `<path d="M12 2.4c1.6 0 2.6 1 2.6 2.2 0 1-.8 1.6-1.6 1.6" fill="none" stroke="${FG}" stroke-width="1.1" stroke-linecap="round"/>`,
   // Galilee (SPEC §236): the zodiac roundel of the synagogue floors. Hammat
   // Tiberias, Beth Alpha and Sepphoris all laid one — twelve signs around a
   // wheel, in the century this chapter opens in, by a community with an

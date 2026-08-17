@@ -45,6 +45,88 @@ function mod(ctx, tag, id, name, effects, months) {
   });
 }
 
+// ── the west's next two purples (SPEC §253) ─────────────────────────────────
+//
+// This chapter opens on a civil war and then narrates seventy more years in
+// which the Roman world has, by the sources' own count, four more of them —
+// and it showed exactly one. Magnus Maximus held Britain, Gaul and Spain for
+// five years and was recognized as an Augustus by the government he had
+// rebelled against; Eugenius held Italy for two and was beaten by a wind.
+// Both are §239 pairs on the banner Magnentius gives back in 353.
+const MAXIMUS_WEST = [
+  'Britannia',
+  'Lutetia', 'Rotomagus', 'Samarobriva', 'Gesoriacum', 'Durocortorum',
+  'Augusta Treverorum', 'Colonia Agrippina', 'Mogontiacum', 'Argentorate',
+  'Batavia', 'Atuatuca', 'Vesontio', 'Genava',
+  'Lugdunum', 'Augustodunum', 'Avaricum', 'Limonum', 'Condate', 'Darioritum',
+  'Burdigala', 'Tolosa', 'Narbo', 'Nemausus', 'Massilia',
+  'Tarraco', 'Caesaraugusta', 'Barcino', 'Emporiae', 'Valentia', 'Numantia',
+  'Salmantica', 'Toletum', 'Carthago Nova', 'Corduba', 'Hispalis', 'Malaca',
+  'Gades', 'Emerita', 'Olisipo', 'Bracara', 'Asturica',
+];
+// Eugenius' court is Italy and the Alpine passes: he was made by a Frankish
+// general who did not want the purple himself, and he never held anything the
+// army of Italy did not hold for him.
+const EUGENIUS_ITALY = [
+  'Mediolanum', 'Genua', 'Bononia', 'Ravenna', 'Pisae', 'Ancona', 'Aquileia',
+  'Roma', 'Capua', 'Genava', 'Augusta Vindelicorum', 'Virunum',
+];
+
+function raiseWesternClaim(ctx, spec) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USR) return null;
+  const rome = who(ctx, 'ROM');
+  const ground = spec.provinces.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === rome;
+  });
+  if (!ground.length) return null;
+  const claim = h.secedeTag(ctx, rome, 'USR', {
+    provinces: ground,
+    share: spec.share,
+    name: spec.name,
+    color: spec.color,
+    opinion: -180,
+    stability: spec.stability,
+    legitimacy: spec.legitimacy,
+    ruler: spec.ruler,
+  });
+  if (!claim) return null;
+  h.declareWar(ctx, rome, 'USR', spec.war);
+  for (const w of g.wars || []) {
+    const all = (w && (w.attackers || []).concat(w.defenders || [])) || [];
+    if (all.indexOf('USR') >= 0 && all.indexOf(rome) >= 0) w.noNegotiation = true;
+  }
+  if (spec.modifier) h.addTagModifier(ctx, 'USR', spec.modifier);
+  if (spec.army) {
+    const at = ground.indexOf(spec.army.at) >= 0 ? spec.army.at : ground[0];
+    h.spawnArmy(ctx, 'USR', at, spec.army.opts);
+  }
+  return claim;
+}
+function settleWesternClaim(ctx, line, winner) {
+  if (!ctx.game.tags.USR) return false;
+  ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), { chronicle: line, winner: !!winner });
+  return true;
+}
+// Who won (SPEC §252). Maximus lost because Theodosius marched faster than
+// anyone expected and his own Alpine garrisons changed sides; the Frigidus was
+// decided on the second day by a wind out of the mountains that blew the
+// western army's own arrows back into its faces, which every source on both
+// sides agrees about and none of them can explain away. Neither is a
+// certainty, and the second is barely a lean.
+function theodosiusTakesTheWest(ctx) {
+  return ctx.helpers.verdict(ctx, 'maximusWar', 0.75, {
+    recorded: 'ROM', war: ['ROM', 'USR'], sway: 0.3,
+  });
+}
+function theWindRises(ctx) {
+  return ctx.helpers.verdict(ctx, 'frigidus', 0.6, {
+    recorded: 'ROM', war: ['ROM', 'USR'], sway: 0.35,
+  });
+}
+
 export const EVENTS_351_WORLD = [
 
   // ── 353 ────────────────────────────────────────────────────────────────────
@@ -501,6 +583,163 @@ export const EVENTS_351_WORLD = [
     ],
   },
 
+  // ── 383 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev351w_magnus_maximus',
+    title: 'The Army in Britain Names Its Own',
+    worldLabel: 'Magnus Maximus is acclaimed in Britain; the west has its own Augustus',
+    desc: 'The army of Britain proclaims its commander, and this time the acclamation '
+      + 'does not stay on the island: Maximus crosses to Gaul with the British '
+      + 'garrison, the Gallic army comes over to him without a battle, and the '
+      + 'reigning emperor of the west is run down and killed at Lyon by his own '
+      + 'cavalry commander. What follows is the part the century finds interesting. '
+      + 'Maximus does not march on Italy. He settles at Trier, governs Britain, Gaul '
+      + 'and Spain competently for five years, executes a Spanish bishop for heresy — '
+      + 'the first execution of a Christian by a Christian government for belief, '
+      + 'which the bishops of Gaul protest and the precedent survives anyway — and '
+      + 'writes to Constantinople asking to be recognized. And he is: for five years '
+      + 'there are three Augusti, one of whom got the title by killing the last man '
+      + 'who held it, and everyone signs everyone else\'s laws.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 383, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    historical: 'Maximus was acclaimed in Britain in 383, killed Gratian at Lyon, ruled the west from Trier for five years and was recognized as Augustus; Theodosius destroyed him at Aquileia in 388.',
+    options: [
+      {
+        label: 'Recognize him, and sign each other\'s laws',
+        tooltip: 'Britain, Gaul and Spain go over to a court of their own — recognized, competent and at war with the government it left. Rome −10 legitimacy and "The Third Augustus" (−15% income, −10% manpower) while it lasts.',
+        effects: guard('ev351w_magnus_maximus:0', (ctx) => {
+          const h = ctx.helpers;
+          const claim = raiseWesternClaim(ctx, {
+            provinces: MAXIMUS_WEST,
+            share: 0.35,
+            name: 'The West of Magnus Maximus',
+            color: [110, 126, 156],
+            stability: 1,
+            legitimacy: 45,
+            war: 'The War of the Third Augustus',
+            ruler: { name: 'Magnus Maximus', title: 'Augustus', gov: 3, infl: 3, mar: 4, age: 48 },
+            modifier: {
+              id: 'the_army_of_britain', name: 'The Army of Britain', months: -1,
+              effects: { moraleMult: 1.06, incomeMult: 1.05, manpowerMult: 0.9 },
+            },
+            army: {
+              at: 'Augusta Treverorum',
+              opts: {
+                inf: 12, cav: 4, name: 'The Army of the West',
+                general: { name: 'Magnus Maximus', fire: 3, shock: 3, maneuver: 3 },
+              },
+            },
+          });
+          if (alive(ctx, 'ROM') && claim) {
+            h.adjust(ctx, 'ROM', { legitimacy: -10 });
+            mod(ctx, 'ROM', 'the_third_augustus', 'The Third Augustus',
+              { incomeMult: 0.85, manpowerMult: 0.9 }, -1);
+          }
+          h.setFlag(ctx, 'magnusMaximus', !!claim);
+          h.chronicle(ctx, 'era', 'The army of Britain names its own and the west follows him without a battle: '
+            + 'for five years the Roman world has three Augusti, and they sign each other\'s laws.');
+        }),
+      },
+    ],
+  },
+
+  // ── 388 · the two roads out of Aquileia ────────────────────────────────────
+  {
+    id: 'ev351w_aquileia',
+    verdict: 'maximusWar',
+    title: 'Faster Than Anyone Expected',
+    worldLabel: 'Theodosius destroys Maximus at Aquileia; the west comes home',
+    desc: 'Theodosius comes west by forced march with a field army full of Goths, and '
+      + 'the five-year settlement comes apart in about six weeks. The Alpine '
+      + 'garrisons change sides, the fleet does not fight, and Maximus is taken at '
+      + 'Aquileia, stripped of the purple and beheaded in front of an army that had '
+      + 'acclaimed him. The son he had made a colleague is hunted down in Gaul '
+      + 'afterwards. What the west remembers is not the execution but the arithmetic '
+      + 'behind it: the man who won marched an eastern army into the western '
+      + 'provinces to settle who governed them, and did it twice in six years.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 388, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'magnusMaximus') && theodosiusTakesTheWest(ctx),
+    options: [
+      {
+        label: 'Stripped of the purple in front of his own army',
+        tooltip: 'The western court folds back into the empire — ground, garrisons and treasury — and the war ends with it. Rome +12 legitimacy, +1 stability, and "The Third Augustus" lifts.',
+        effects: guard('ev351w_aquileia:0', (ctx) => {
+          const h = ctx.helpers;
+          settleWesternClaim(ctx, 'Maximus is taken at Aquileia and beheaded in front of the army '
+            + 'that acclaimed him; Britain, Gaul and Spain answer the east again.', false);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: 12, stability: 1 });
+            h.removeModifier(ctx, 'ROM', 'the_third_augustus');
+          }
+          h.setFlag(ctx, 'magnusMaximus', false);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev351w_maximus_holds',
+    verdict: 'maximusWar',
+    title: 'The Passes Are Held',
+    worldLabel: 'Maximus holds the Alps; the west keeps its own Augustus',
+    desc: 'The forced march is the whole plan, and this time the passes are held by '
+      + 'men who have not been paid to lose them. Theodosius fights his way as far as '
+      + 'the Julian Alps, loses a season and a good part of a field army he cannot '
+      + 'replace with anything but more Goths, and signs what the chanceries call a '
+      + 'concord: three Augusti, three courts, one law, and a border on the Alps that '
+      + 'nobody describes as a border. Maximus goes back to Trier and governs Britain, '
+      + 'Gaul and Spain for as long as his health lasts. Every western general for the '
+      + 'next thirty years takes the lesson, which is not that the west can win, but '
+      + 'that the east can be made to stop.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 388, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'magnusMaximus') && !theodosiusTakesTheWest(ctx),
+    options: [
+      {
+        label: 'Three Augusti, one law, and a line on the Alps',
+        tooltip: 'The western court stays on the map and the war between them ends. Rome −8 legitimacy and −10,000 manpower, and "The Third Augustus" becomes permanent; the west takes "The Concord of the Alps" (+5% income, +5% morale).',
+        effects: guard('ev351w_maximus_holds:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const rome = who(ctx, 'ROM');
+          g.wars = (g.wars || []).filter((w) => {
+            if (!w) return false;
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return !(all.indexOf('USR') >= 0 && all.indexOf(rome) >= 0);
+          });
+          for (const t of [g.tags[rome], g.tags.USR]) {
+            if (t && Array.isArray(t.atWarWith)) {
+              t.atWarWith = t.atWarWith.filter((x) => x !== 'USR' && x !== rome);
+            }
+          }
+          if (g.tags.USR) {
+            h.addTagModifier(ctx, 'USR', {
+              id: 'the_concord_of_the_alps', name: 'The Concord of the Alps', months: -1,
+              effects: { incomeMult: 1.05, moraleMult: 1.05 },
+            });
+          }
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: -8, manpower: -10000 });
+          h.setFlag(ctx, 'maximusStands', true);
+          h.chronicle(ctx, 'era', 'The Julian passes are held and the east signs a concord instead of a peace: '
+            + 'three Augusti, one law, and a line on the Alps that nobody calls a border.');
+        }),
+      },
+    ],
+  },
+
   // ── 388 ────────────────────────────────────────────────────────────────────
   {
     id: 'ev351w_callinicum',
@@ -545,6 +784,168 @@ export const EVENTS_351_WORLD = [
           h.setFlag(ctx, 'callinicum', true);
           h.chronicle(ctx, 'era', 'The emperor orders a burned synagogue rebuilt at the arsonist\'s '
             + 'expense, and is talked out of it from his own pulpit.');
+        }),
+      },
+    ],
+  },
+
+  // ── 392 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev351w_eugenius',
+    title: 'The Rhetoric Master in Purple',
+    worldLabel: 'Arbogast raises Eugenius in Italy; the west has a court of its own again',
+    desc: 'The western emperor is found hanged in his own residence at Vienne, and the '
+      + 'Frankish general who had reduced him to a signature says it was suicide, '
+      + 'which it may have been. What Arbogast does next is the century in one '
+      + 'gesture: he cannot take the purple himself — a Frank cannot be Augustus, and '
+      + 'everyone including Arbogast agrees — so he puts it on a professor of '
+      + 'rhetoric from the palace secretariat and governs through him. Eugenius is a '
+      + 'Christian who reopens the subsidies to the old temples because his support '
+      + 'is in a Senate that still keeps them, which turns a constitutional quarrel '
+      + 'into the last religious war the Roman state fights against itself. The east '
+      + 'does not answer his letters. Both sides spend two years preparing, and the '
+      + 'preparation is the point: nobody in this century argues about anything for '
+      + 'two years without an army.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 392, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    historical: 'Valentinian II was found hanged at Vienne in May 392; Arbogast raised Eugenius in August and the two courts fought at the Frigidus in September 394.',
+    options: [
+      {
+        label: 'A professor in purple, and a Frank behind him',
+        tooltip: 'Italy and the Alpine passes go over to a court of their own, at war with the east. Rome −8 legitimacy and "The Altar Reopened" (−10% income, +0.5 unrest everywhere) while it lasts.',
+        effects: guard('ev351w_eugenius:0', (ctx) => {
+          const h = ctx.helpers;
+          const claim = raiseWesternClaim(ctx, {
+            provinces: EUGENIUS_ITALY,
+            share: 0.3,
+            name: 'The Court of Eugenius',
+            color: [140, 116, 128],
+            stability: 0,
+            legitimacy: 30,
+            war: 'The War of the Frigidus',
+            ruler: { name: 'Eugenius', title: 'Augustus', gov: 4, infl: 3, mar: 1, age: 44 },
+            modifier: {
+              id: 'the_senate_and_the_altars', name: 'The Senate and the Altars', months: -1,
+              effects: { incomeMult: 1.06, moraleMult: 1.05, legitimacyAdd: -0.05 },
+            },
+            army: {
+              at: 'Mediolanum',
+              opts: {
+                inf: 10, cav: 4, name: 'The Army of Italy',
+                general: { name: 'Arbogast', fire: 3, shock: 4, maneuver: 3 },
+              },
+            },
+          });
+          if (alive(ctx, 'ROM') && claim) {
+            h.adjust(ctx, 'ROM', { legitimacy: -8 });
+            mod(ctx, 'ROM', 'the_altar_reopened', 'The Altar Reopened',
+              { incomeMult: 0.9, unrestAll: 0.5 }, -1);
+          }
+          h.setFlag(ctx, 'eugenius', !!claim);
+          h.chronicle(ctx, 'era', 'A Frankish general who cannot wear the purple puts it on a professor of rhetoric: '
+            + 'Italy has a court of its own, the old altars have their subsidies back, and the east stops answering letters.');
+        }),
+      },
+    ],
+  },
+
+  // ── 394 · the two roads out of the Frigidus ────────────────────────────────
+  {
+    id: 'ev351w_frigidus',
+    verdict: 'frigidus',
+    title: 'The Wind Out of the Mountains',
+    worldLabel: 'The Frigidus: the west is beaten by a wind, and the old altars close',
+    desc: 'Two days in a river valley in the Julian Alps. On the first, the eastern '
+      + 'army\'s Gothic federates are sent up the valley and destroyed — ten thousand '
+      + 'of them, which both sides afterwards describe as a saving. On the second, a '
+      + 'wind comes down off the mountains into the western line so hard that its own '
+      + 'arrows come back into its faces and its shields cannot be held; the front '
+      + 'breaks, Arbogast kills himself in the hills two days later, and Eugenius is '
+      + 'brought to Theodosius\'s tent and beheaded there. Every account on both sides '
+      + 'reports the wind and none of them can explain it away — the Christians call '
+      + 'it a judgment and the pagans call it the weather, and neither party has ever '
+      + 'quite let it go. The subsidies to the temples end that autumn and are never '
+      + 'restored.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 394, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'eugenius') && theWindRises(ctx),
+    options: [
+      {
+        label: 'A judgment, or the weather',
+        tooltip: 'The western court folds back into the empire and the war ends with it. Rome +12 legitimacy, +1 stability, −8,000 manpower for the Gothic dead, and "The Altar Reopened" lifts. The empire is one government for the last four months it will ever be one.',
+        effects: guard('ev351w_frigidus:0', (ctx) => {
+          const h = ctx.helpers;
+          settleWesternClaim(ctx, 'The Frigidus: a wind out of the mountains blows the west\'s own '
+            + 'arrows back into its faces, Arbogast kills himself in the hills, and the old altars lose '
+            + 'their subsidies for ever.', false);
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: 12, stability: 1, manpower: -8000 });
+            h.removeModifier(ctx, 'ROM', 'the_altar_reopened');
+          }
+          h.setFlag(ctx, 'eugenius', false);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev351w_frigidus_still',
+    verdict: 'frigidus',
+    title: 'The Valley Is Still',
+    worldLabel: 'The west holds the Frigidus; Italy keeps its court and its altars',
+    desc: 'The first day goes the same way — ten thousand federates sent up a valley '
+      + 'and destroyed, which the eastern staff had priced in. The second day the air '
+      + 'does not move. Without the wind the western line is a line: veteran, dug in '
+      + 'across a defile, with the best general of the age behind it, and by evening '
+      + 'the eastern army has spent itself against it and has nothing left to spend. '
+      + 'Theodosius, whose health is worse than his court admits, withdraws to '
+      + 'Constantinople and dies within the year all the same, and the settlement his '
+      + 'successors sign is the one nobody wanted: two empires in fact and in law, '
+      + 'the western one governed by a Frankish general through a professor of '
+      + 'rhetoric, with the subsidies to the old temples still being paid.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 394, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'eugenius') && !theWindRises(ctx),
+    options: [
+      {
+        label: 'Withdraw, and sign what can be signed',
+        tooltip: 'The western court stays on the map and the war ends. Rome −12 legitimacy, −1 stability and −12,000 manpower; "The Altar Reopened" becomes permanent, and the west takes "The Line at the Defile" (+6% morale, +5% income).',
+        effects: guard('ev351w_frigidus_still:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const rome = who(ctx, 'ROM');
+          g.wars = (g.wars || []).filter((w) => {
+            if (!w) return false;
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return !(all.indexOf('USR') >= 0 && all.indexOf(rome) >= 0);
+          });
+          for (const t of [g.tags[rome], g.tags.USR]) {
+            if (t && Array.isArray(t.atWarWith)) {
+              t.atWarWith = t.atWarWith.filter((x) => x !== 'USR' && x !== rome);
+            }
+          }
+          if (g.tags.USR) {
+            h.addTagModifier(ctx, 'USR', {
+              id: 'the_line_at_the_defile', name: 'The Line at the Defile', months: -1,
+              effects: { moraleMult: 1.06, incomeMult: 1.05 },
+            });
+          }
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: -12, stability: -1, manpower: -12000 });
+          h.setFlag(ctx, 'eugeniusStands', true);
+          h.chronicle(ctx, 'era', 'The valley is still on the second morning and the western line holds: '
+            + 'the east withdraws, and the empire is two governments in law as well as in fact.');
         }),
       },
     ],

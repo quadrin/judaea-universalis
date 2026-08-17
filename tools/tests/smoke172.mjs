@@ -165,6 +165,31 @@ const ARCS = [
     claimantMayStand: true,
   },
   {
+    era: '132ce', player: 'JUD', parent: 'ROM', key: 'gallicEmpire',
+    rise: 'ev2_eu_postumus', roads: ['ev2_eu_chalons', 'ev2_eu_gaul_holds'],
+    // The Gallic road, like the Batavian one, ends in a country.
+    claimantMayStand: true, banner: 'USV',
+  },
+  {
+    era: '66ce', player: 'JUD', parent: 'ROM', key: 'saturninus',
+    rise: 'ev_fw_saturninus', roads: ['ev_fw_saturninus_ends', 'ev_fw_saturninus_holds'],
+  },
+  {
+    era: '351ce', player: 'JUD', parent: 'ROM', key: 'maximusWar',
+    // The chapter BOOTS with a claimant on the banner — Magnentius, raised at
+    // the first tick — so the arc thirty years later needs it given back
+    // first, which is the whole reason §239 made the banner singular.
+    pre: ['ev351w_magnentius_falls'],
+    rise: 'ev351w_magnus_maximus', roads: ['ev351w_aquileia', 'ev351w_maximus_holds'],
+    claimantMayStand: true,
+  },
+  {
+    era: '351ce', player: 'JUD', parent: 'ROM', key: 'frigidus',
+    pre: ['ev351w_magnentius_falls'],
+    rise: 'ev351w_eugenius', roads: ['ev351w_frigidus', 'ev351w_frigidus_still'],
+    claimantMayStand: true,
+  },
+  {
     era: '1948ce', player: 'ISR', parent: 'YEM', key: 'yemenWar',
     rise: 'ev_s48_sanaa_officers', roads: ['ev_s48_yemen_compromise', 'ev_s48_yemen_imamate'],
   },
@@ -174,25 +199,29 @@ for (const arc of ARCS) {
   for (const held of [true, false]) {
     const w = boot(arc.era, arc.player);
     if (arc.grantTo) grant(w, arc.parent, arc.grantTo);
+    const banner = arc.banner || 'USR';
+    for (const id of arc.pre || []) play(w, id, 0);
     const whole = owned(w.game, arc.parent);
+    const before = owned(w.game, arc.parent);
     play(w, arc.rise, 0);
-    ok(!!w.game.tags.USR, `${arc.key} (${held ? 'record' : 'the other road'}): the claim is on the map`);
+    ok(!!w.game.tags[banner] && owned(w.game, banner) > 0 && owned(w.game, arc.parent) < before,
+      `${arc.key} (${held ? 'record' : 'the other road'}): the claim is on the map`);
     // Pin the verdict the way a seed would have, then ask the gates.
     w.game.flags._verdicts = { ...(w.game.flags._verdicts || {}), [arc.key]: held };
     const open = arc.roads.filter((id) => gate(w, id));
     ok(open.length === 1, `  exactly one road is open (${open.join(', ') || 'none'})`);
     ok(play(w, open[0], 0), `  ${open[0]} plays`);
-    const stands = !!w.game.tags.USR;
+    const stands = !!w.game.tags[banner];
     if (!arc.claimantMayStand || held) {
       ok(!stands, '  and the banner is free again');
       ok(owned(w.game, arc.parent) === whole,
         `  every province is back under one banner (${owned(w.game, arc.parent)}/${whole})`);
     } else {
       ok(stands, '  the claimant is left standing, which is what that road IS');
-      ok(owned(w.game, 'USR') + owned(w.game, arc.parent) === whole, '  and the two of them hold the whole of it');
+      ok(owned(w.game, banner) + owned(w.game, arc.parent) === whole, '  and the two of them hold the whole of it');
     }
     const stillFighting = w.game.wars.some((x) => x
-      && ((x.attackers || []).concat(x.defenders || [])).indexOf('USR') >= 0
+      && ((x.attackers || []).concat(x.defenders || [])).indexOf(banner) >= 0
       && ((x.attackers || []).concat(x.defenders || [])).indexOf(arc.parent) >= 0);
     ok(!stillFighting, '  with no civil war left running');
   }
@@ -206,7 +235,8 @@ console.log('== 4 · the road not taken never reaches the ledger ==');
   const { skipEventForTest } = {};
   // Retire the road the world did not take, exactly as checkDateEvents does.
   const div = await import(R + '/js/sim/divergence.js');
-  for (const id of ['ev_p_ali_survives', 'ev_p_mecca_holds', 'ev_fw_gauls_stand']) {
+  for (const id of ['ev_p_ali_survives', 'ev_p_mecca_holds', 'ev_fw_gauls_stand',
+    'ev2_eu_gaul_holds', 'ev_fw_saturninus_holds', 'ev351w_maximus_holds', 'ev351w_frigidus_still']) {
     const c = ERAS.flatMap((e) => e.events).find((e) => e && e.id === id);
     ok(!!c && c.verdict, `${id} declares which verdict it is a road of`);
     div.noteRetired(w.ctx, c, 'the world it needed no longer exists');
@@ -257,6 +287,31 @@ console.log('== 5 · nothing in the chrome names the dice ==');
     while ((m = re.exec(src))) bad.push(f + ': ' + m[0].slice(0, 70));
   }
   ok(bad.length === 0, 'no card text quotes a percentage chance' + (bad.length ? ' — ' + bad.join(' | ') : ''));
+}
+
+// ---------------------------------------------------------------------------
+console.log('== 5b · two purples at once, for the century that had three ==');
+{
+  // SPEC §253: the third century is the one case where a single banner cannot
+  // tell the truth. Palmyra and the Gallic empire overlap by four years, and
+  // both have to be on the map at once.
+  const w = boot('132ce', 'JUD');
+  const whole = owned(w.game, 'ROM');
+  play(w, 'ev2_eu_postumus', 0);
+  ok(!!w.game.tags.USV && owned(w.game, 'USV') > 0, 'the Gallic empire flies the second banner');
+  play(w, 'ev2_palmyra_rises', 0);
+  ok(!!w.game.tags.USR && owned(w.game, 'USR') > 0, 'and Palmyra flies the first, in the same decade');
+  ok(owned(w.game, 'USR') + owned(w.game, 'USV') + owned(w.game, 'ROM') === whole,
+    'three Roman governments, and between them the whole of Rome');
+  play(w, 'ev2_aurelian_palmyra', 0);
+  ok(!w.game.tags.USR && !!w.game.tags.USV, 'Aurelian takes the east back and the west is still gone');
+  w.game.flags._verdicts = { gallicEmpire: true };
+  play(w, 'ev2_eu_chalons', 0);
+  ok(!w.game.tags.USV, '…and then Châlons takes the west back too');
+  ok(owned(w.game, 'ROM') === whole, `with the empire whole again (${owned(w.game, 'ROM')}/${whole})`);
+  // The banners are distinct courts, not two names for one.
+  ok(DEFINES.TAGS.USV && DEFINES.TAGS.USV.name !== DEFINES.TAGS.USR.name,
+    'the second banner is its own court with its own name');
 }
 
 // ---------------------------------------------------------------------------

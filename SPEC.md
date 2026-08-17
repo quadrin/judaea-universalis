@@ -17875,3 +17875,56 @@ What the player sees is one card, written for the world that happened, with a
   quotes a percentage; and `roll` reads a number, the default, or nothing.
   `smoke139` (§212's own suite) passes unmoved — `roll: true` still means what
   it meant.
+
+## 253. The second purple, and four more civil wars
+
+§251 swept the chapters for civil wars that were only modifiers and §252 put a
+weighted verdict under them. Both sections stopped at a wall they did not name:
+`USR` is one banner, and a chapter can only show one claimant at a time.
+
+**The century that needed two.** The single thing everybody knows about the
+third century is that the Roman world came apart into three — Gallienus in
+Italy, the Gallic emperors at Trier, Palmyra from Egypt to Ancyra — and the 132
+chapter could only ever show two of them, because Zenobia is flying the banner
+from 269 to 273, which is exactly when Tetricus is flying nothing at all over a
+country that ran from the Antonine Wall to the Pyrenees for fourteen years,
+with its own consuls, its own senate and better silver than Rome's.
+
+`USV`, the second purple, is that hole filled: one more generic banner, dressed
+by the card that raises it, with its own emblem (the same vexillum, hung the
+other way, with a draco beside it). It is not a second rule — it is the same
+rule with the honest number of claimants in it. Nothing seats it in a roster,
+and the raise helpers refuse it exactly as they refuse the first.
+
+**Four more arcs**, each a §239 pair with a §252 verdict:
+
+| chapter | the claim | raised | the record | the other road |
+|---|---|---|---|---|
+| 132 CE | The Gallic Empire (`USV`) | Postumus, 260/9 | Châlons, 274 — 0.75 | nobody changes sides; the west stays a country |
+| 66 CE | The Acclamation at Mogontiacum | Saturninus, 89/1 | the thaw, 89/3 — 0.80 | the ice holds a week longer and the Chatti cross |
+| 351 CE | The West of Magnus Maximus | Britain, 383/6 | Aquileia, 388 — 0.75 | the Julian passes hold and there are three Augusti |
+| 351 CE | The Court of Eugenius | Arbogast, 392/8 | the Frigidus, 394 — 0.60 | the valley is still, and the west holds its line |
+
+Two of those verdicts turn on weather, which is the best argument this section
+has for existing. The Rhine rising of 89 needed the Chatti across a frozen
+river and the river thawed a week early — every source agrees, and a week is
+not a plan. The Frigidus was decided on its second morning by a wind out of the
+mountains that blew the western army's own arrows back into its faces; the
+Christians called it a judgment, the pagans called it the weather, and neither
+party has ever quite let it go. A game that pins those two outcomes is
+pretending it knows something the sources say plainly that nobody knew.
+
+**The 351 chapter now flies its banner three times** — Magnentius from the
+first tick to 353, Maximus from 383 to 388, Eugenius from 392 to 394 — which
+is what the singular rule is FOR, and what `smoke172` checks by settling
+Magnentius before it raises Maximus at all. The 66 chapter flies it three times
+too: Vitellius in January 69, the Gauls in September, Saturninus twenty years
+later.
+
+- **Regression contract**: `smoke172.mjs` carries the four new arcs in its
+  verdict table (one road open on either draw, either road leaving a world that
+  works) and adds the three-government block: Postumus on the second banner and
+  Zenobia on the first in the same decade, between them holding the whole of
+  Rome, each settled by its own card and the empire whole afterwards.
+  `smoke160`/`smoke169` (§239's and §249's tables) and `smoke139` (§212's
+  rolls) pass unmoved.

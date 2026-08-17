@@ -1454,6 +1454,22 @@ export const DEFINES = {
         + 'purple is somebody else\'s, for as long as that lasts.',
       ideas: { moraleMult: 1.08, incomeMult: 0.9, legitimacyAdd: -0.1 },
     },
+    // …and the second one (SPEC §253). §239 made the rival purple deliberately
+    // singular on the reasoning that no two claimants are ever on the map at
+    // the same moment, and for six of the seven centuries this game covers
+    // that is true. The exception is the one everybody remembers: between 260
+    // and 274 there were THREE Roman governments — Gallienus in Italy, the
+    // Gallic emperors at Trier, Palmyra from Egypt to Ancyra — and a banner
+    // that can only be flown once forces a chapter to pick which two-thirds
+    // of that to leave off the map. A second banner is not a second rule; it
+    // is the same rule with the honest number of claimants in it. Dressed by
+    // the card that raises it, exactly like the first.
+    USV: {
+      name: 'The Second Purple', adj: 'Claimant\'s', color: [118, 92, 138], religion: 'hellenism', culture: 'latin', capital: '',
+      description: 'The other claim, in a century that produced more than one at a time: '
+        + 'provinces that answer a third government neither of the first two recognizes.',
+      ideas: { moraleMult: 1.06, incomeMult: 0.92, legitimacyAdd: -0.1 },
+    },
     // The robbers' court (SPEC §217): the two states a rising can found if it
     // walks off the edge of the governed world and stops there. Neither is
     // seated by any bookmark — they exist only if a campaign produces one, and

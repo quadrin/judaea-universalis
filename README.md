@@ -926,6 +926,15 @@ static site, the zero dependencies, or the missing build step changes.
   play with are thumb-sized; long values stack instead of running through their
   labels; the title screen's era card fits the screen; and in landscape the
   panels become a full-height side panel so the map keeps half the screen.
+- **Three Roman governments, when there were three.** The rival banner used to
+  be singular, so the third century could show Palmyra or the Gallic empire but
+  never both — and the Gallic empire, fourteen years of consuls and coinage
+  from the Antonine Wall to the Pyrenees, lost the toss. There is a second
+  banner now, and four more civil wars on the map with it: Postumus' Gaul
+  beside Zenobia's east, the two legions at Mogontiacum whose plan needed a
+  frozen Rhine, Magnus Maximus' five recognized years in the west, and the
+  court Arbogast raised in Italy — each with a verdict of its own, two of them
+  decided by the weather, the way the sources say they were.
 - **The record is likely, not certain.** A civil war used to end the way the
   chronicles ended it, on the month they ended it, in every campaign ever
   played. Now the pivots are drawn: the record is the likelier road, the war

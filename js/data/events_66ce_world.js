@@ -148,6 +148,55 @@ function romeRetakesTheRhine(ctx) {
   });
 }
 
+// 89 · the two legions at Mogontiacum (SPEC §253). The other rising this
+// chapter narrates and never puts on the map — and the one whose outcome turns
+// on the weather, which is as good a definition of a pivot as this game has.
+// The plan needed the Chatti across a frozen Rhine; the river thawed early.
+const SATURNINUS_RHINE = ['Mogontiacum', 'Argentorate', 'Augusta Treverorum', 'Vesontio'];
+function raiseSaturninus(ctx) {
+  const g = ctx.game;
+  const h = ctx.helpers;
+  if (g.tags.USR) return null;
+  const rome = who(ctx, 'ROM');
+  const ground = SATURNINUS_RHINE.filter((n) => {
+    const p = ctx.prov(n);
+    return p && !p.impassable && p.owner === rome;
+  });
+  if (!ground.length) return null;
+  const claim = h.secedeTag(ctx, rome, 'USR', {
+    provinces: ground,
+    share: 0.08,
+    name: 'The Acclamation at Mogontiacum',
+    color: [132, 118, 84],
+    opinion: -180,
+    stability: -1,
+    legitimacy: 20,
+    ruler: { name: 'Antonius Saturninus', title: 'Augustus', gov: 2, infl: 2, mar: 3, age: 48 },
+  });
+  if (!claim) return null;
+  h.declareWar(ctx, rome, 'USR', 'The Rising of the Two Legions');
+  setOpinion(ctx, rome, 'USR', -180);
+  setOpinion(ctx, 'USR', rome, -180);
+  h.addTagModifier(ctx, 'USR', {
+    id: 'the_burial_funds', name: 'The Soldiers\' Burial Funds', months: -1,
+    effects: { moraleMult: 1.06, incomeMult: 0.8, manpowerMult: 0.6 },
+  });
+  h.spawnArmy(ctx, 'USR', ground[0], {
+    inf: 6, cav: 1, name: 'The Two Legions',
+    general: { name: 'Antonius Saturninus', fire: 2, shock: 2, maneuver: 2 },
+  });
+  return claim;
+}
+// Whether the river thaws in time (SPEC §252). This is the rare pivot where
+// the sources agree on the cause and it is meteorological: a week either way
+// and the Chatti are across, and two legions with a German army behind them is
+// a different proposition from two legions alone.
+function theRhineThaws(ctx) {
+  return ctx.helpers.verdict(ctx, 'saturninus', 0.8, {
+    recorded: 'ROM', war: ['ROM', 'USR'], sway: 0.25,
+  });
+}
+
 function settleTheGauls(ctx, line) {
   if (!ctx.game.tags.USR) return false;
   ctx.helpers.dissolveTag(ctx, 'USR', who(ctx, 'ROM'), { chronicle: line });
@@ -469,6 +518,9 @@ export const EVENTS_66_WORLD = [
         tooltip: 'Rome −5 legitimacy and Mogontiacum +2 unrest for 24 months ("The Double Camp Abolished"). The Chatti cool toward Rome (−30 opinion) — the thaw saved them from co-belligerence, not from the list of enemies.',
         effects: guard('ev_fw_saturninus:0', (ctx) => {
           const h = ctx.helpers;
+          // Two legions and a war chest of dead men's savings are a country
+          // for as long as it takes somebody to march (SPEC §253).
+          raiseSaturninus(ctx);
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: -5 });
           stir(ctx, ['Mogontiacum'], {
             id: 'double_camp_abolished', name: 'The Double Camp Abolished', months: 24,
@@ -477,6 +529,90 @@ export const EVENTS_66_WORLD = [
           if (alive(ctx, 'CHA')) setOpinion(ctx, 'CHA', 'ROM', -30);
           h.setFlag(ctx, 'saturninus', true);
           h.chronicle(ctx, 'era', 'Two legions proclaim Saturninus at Mogontiacum and the Rhine thaws before the Chatti can cross; the files are burned, and the double winter camp is abolished forever.');
+        }),
+      },
+    ],
+  },
+
+  // ── W4b · 89 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fw_saturninus_ends',
+    verdict: 'saturninus',
+    title: 'The River Thaws Early',
+    worldLabel: 'The Chatti cannot cross; the Rhine rising ends in one battle',
+    desc: 'The whole plan is a piece of ice. The Chatti are to cross the frozen Rhine '
+      + 'and pin the loyal legions while the two at Mogontiacum march; the river '
+      + 'thaws a week early, and a German army stands on the far bank of moving '
+      + 'water watching a Roman civil war it can no longer join. Lappius Maximus '
+      + 'comes down from Lower Germany and ends the affair in a single battle. Then '
+      + 'he does the one thing anybody remembers warmly about him: he burns the '
+      + 'correspondence in the camp files before the emperor\'s questioners arrive, '
+      + 'exactly as Marcus Aurelius will do with Cassius\' letters a century later, '
+      + 'and for the same reason — a list of names is a machine that runs until '
+      + 'somebody breaks it.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 89, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'saturninus') && theRhineThaws(ctx),
+    options: [
+      {
+        label: 'One battle, and then the files',
+        tooltip: 'The acclamation folds back into Rome and the war ends with it. Rome +5 legitimacy and −2,000 manpower; the double winter camp is abolished, which is the one permanent measure anyone takes.',
+        effects: guard('ev_fw_saturninus_ends:0', (ctx) => {
+          const h = ctx.helpers;
+          settleTheGauls(ctx, 'The Rhine thaws a week early, the Chatti stand on the far bank of '
+            + 'moving water, and the rising ends in one battle and a bonfire of letters.');
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 5, manpower: -2000 });
+          h.setFlag(ctx, 'saturninus', false);
+        }),
+      },
+    ],
+  },
+
+  // ── W4c · 89 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fw_saturninus_holds',
+    verdict: 'saturninus',
+    title: 'The Ice Holds a Week Longer',
+    worldLabel: 'The Chatti cross; the Rhine rising becomes a war',
+    desc: 'A week of cold is the whole difference. The Chatti come over the ice in '
+      + 'strength, the loyal legions of Lower Germany are pinned where they stand, '
+      + 'and what was to be a police action against two mutinous legions becomes a '
+      + 'campaign on a frontier with a German army inside it. Saturninus is not a '
+      + 'great commander and does not need to be; he is the man with the pay chest, '
+      + 'the winter camp and the Germans, and Rome — with Dacia unfinished on the '
+      + 'other frontier — has to buy what it cannot immediately storm. What is '
+      + 'agreed is never called a settlement: an amnesty, an arrangement about the '
+      + 'Rhine command, and a treasury payment recorded as a donative. The emperor\'s '
+      + 'questioners get their lists anyway, and the terror of the last years starts '
+      + 'a season early and runs harder.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 89, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => !!ctx.helpers.getFlag(ctx, 'saturninus') && !theRhineThaws(ctx),
+    options: [
+      {
+        label: 'Buy what cannot be stormed, and call it a donative',
+        tooltip: 'The rising is bought out rather than beaten: the Rhine comes back under one banner, but Rome pays −200 talents, −12 legitimacy and −5,000 manpower, and takes "The Questioners" (+1 unrest everywhere, −5% income) for ten years. The Chatti warm toward whoever paid them (+40 opinion).',
+        effects: guard('ev_fw_saturninus_holds:0', (ctx) => {
+          const h = ctx.helpers;
+          settleTheGauls(ctx, 'The ice holds a week longer and the Chatti come over it: the Rhine '
+            + 'rising is bought out rather than beaten, and the payment is entered in the books as a donative.');
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { treasury: -200, legitimacy: -12, manpower: -5000 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'the_questioners', name: 'The Questioners', months: 120,
+              effects: { unrestAll: 1, incomeMult: 0.95 },
+            });
+          }
+          if (alive(ctx, 'CHA')) setOpinion(ctx, 'CHA', who(ctx, 'ROM'), 40);
+          h.setFlag(ctx, 'saturninus', false);
         }),
       },
     ],
