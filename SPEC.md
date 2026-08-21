@@ -18065,3 +18065,188 @@ side, is the war a client is supposed to be fighting and is left untouched.
   on alone; a client fighting its LORD's war left exactly alone; and the one
   that costs — Herod's war for the crown, Rome not in it, surviving two sweeps
   because his collar never moved.
+
+## 256. The provinces the Republic made
+
+Reported, from the first bookmark: *add more Rome events and wars — the
+conquest of Greece, North Africa, Egypt, and so on.*
+
+The chapter had the Republic's century and did not have its empire.
+
+### What was missing, and how the repository itself says so
+
+§111 gave the 167 chapter a world spine and `events_167bce_republic.js` gave it
+the Republic's own hundred years: Andriscus, Viriathus, Numantia, both Gracchi,
+Jugurtha, Arausio, Vercellae, the Social War, Sulla's march, the lists in the
+Forum, Spartacus. Seventeen cards, and every one of them happens inside Italy or
+Spain. It is the Republic as biography — who was killed, by whom, in which
+street — and a player reading it would conclude that between Pydna and Actium
+Rome acquired the Mediterranean by having interesting politics.
+
+The map said otherwise, and it said so against this repository's own atlases.
+`js/data/political_maps.js` deals nine boards, and three of them are this
+chapter's before, during and after:
+
+| | MAP_167 | MAP_67 | MAP_40 |
+|---|---|---|---|
+| Zeugitana and Byzacena | Carthage | Rome | Rome |
+| Numidia | Masinissa's heirs | Hiempsal, a client | Rome — Africa Nova |
+| Lusitania south of the Tagus | the Lusitani | Rome | Rome |
+| the Baleares | nobody | Rome | Rome |
+| Narbo to Geneva | the Arverni | Rome | Rome |
+| Salona, Tomis | the Delmatae, the Odrysians | Rome | Rome |
+| Gallia Comata | six peoples | six peoples | Rome |
+| Massalia | free since 600 BCE | free | Rome |
+
+This chapter runs from 167 BCE to 6 CE. It crosses both of those transitions
+and moved neither. Played to its last card, a campaign ended with Carthage
+standing, the leagues of Hellas a court, Numidia a kingdom, the Arverni holding
+the road to Spain, and a Ptolemy reigning in Alexandria thirty-six years after
+Octavian took it — while the chapter next door opens on the map that all of
+that was supposed to produce. Two ownership changes in a hundred and
+seventy-three years: Macedonia in 148 and Numantia in 133.
+
+### `js/data/events_167bce_provinces.js` — nineteen cards, and the map moves in sixteen
+
+The package is the century's other half: the wars that made the Mediterranean
+Roman, on the ground rather than in the Forum.
+
+| | | what moves |
+|---|---|---|
+| −149 | The ultimatum to Carthage | the Third Punic War opens, on the map, with an army on each side |
+| −146 | Six days from the harbour to the citadel | Carthage stops being a court; the province of Africa |
+| −146 | Dice on the paintings | Corinth; the leagues dissolved; the East reads the lesson |
+| −138 | The river of forgetfulness | Lusitania south of the Tagus |
+| −123 | The islands that sold slingers | the Baleares |
+| −121 | The silver armour and the road | Narbo, Nemausus, Tolosa, Geneva; the Via Domitia |
+| −96 | A kingdom nobody was sent to | Cyrene by will — and ungoverned for twenty-two years |
+| −86 | The groves of the Academy | Athens; the Piraeus burned |
+| −71 | The two shores | Salona and Tomis; the road east is a road |
+| −67 | The island that would not give up its pirates | Crete, and a governor for Cyrene at last |
+| −58 | The most honest man in Rome is sent to steal an island | Cyprus |
+| −58 | A migration, and a proconsul who needs one | nothing yet — the legions winter in Gaul |
+| −52 | Two walls, one facing each direction | Gallia Comata |
+| −49 | The oldest ally picks a side | Massalia and Emporion |
+| −47 | The road at Pelusium | *the player's* |
+| −46 | Cato reads the Phaedo twice | Numidia stops being a court; Mauretania is paid |
+| −42 | No room for two swords in one scabbard | Rhodes |
+| −30 | The last of Alexander's generals | Egypt stops being a court |
+| −27 | The division of the provinces | Hellas stops being a court |
+
+Four courts end inside it, each by `dissolveTag` — §239's own helper, written
+for a usurper's purple and correct here for the same reason: what a card raises,
+a card puts out, and everything the dead court held goes into the one that
+survives it. Carthage in 146, Numidia in 46, Egypt in 30, the leagues in 27. And
+three peoples deliberately do NOT end, because they did not: the Lusitani keep
+Bracara and Asturica for Augustus to take in 19, Mauretania is still a kingdom
+in 6 CE because Caligula murders its last king in 40, and the Delmatae go back
+to their hills to be put down twice more.
+
+### Nothing here is drawn, and §252 is the reason
+
+§252 put a weighted verdict under the century's pivots and said why: a chapter
+may not draw for an outcome it will contradict twenty cards later. This package
+is the largest case of that rule in the game, and it reads the rule the other
+way round.
+
+Every outcome in this file has a whole chapter written downstream of it. The 67
+board is dealt with Rome holding Africa and Spain; the 40 board with Rome
+holding Gaul and Massalia; the 66 board with Rome holding Egypt and the whole
+west. A Carthage that survives its draw is not a serendipitous alternative — it
+is a chapter contradicting its own siblings' opening map, in a game whose
+bookmarks are meant to be the same world at different hours. The wars this game
+*does* draw are the ones fought inside the Republic, where the loser leaves no
+province behind and §251–§253 have already drawn them.
+
+So the dice stay where §252 put them, and the conquests are fated. What is not
+fated is the one card in the package addressed to Jerusalem.
+
+### §111, one step further in: a card ruins only what it takes
+
+§111's transfer discipline says a world card may not confiscate the player's
+conquests. This package needed the rest of that sentence, because a conquest is
+not the only thing a card can do to a province. Mummius does not merely take
+Corinth; he burns it, and the burning was a `stir` — a province modifier laid on
+a named square regardless of whose square it was. A Judaea that reached the
+Isthmus before Rome did would keep Corinth and have it razed anyway, by a card
+whose own tooltip says it takes nothing off a living court.
+
+So the razings, the ruins, the colonies and the roads in this file all ask who
+is standing there AFTER the transfer, and do nothing where the answer is
+somebody else: if Judaea got to the Isthmus first, what Mummius has is a war,
+not a sack. `mark()` is that rule for a taker's own hand — the ground where
+Carthage stood, the burned Piraeus, everything but the chariot of the Sun, the
+colonists out of Spain, the Via Domitia, the colony on the Isthmus. And `stir()`
+— a foreign card's local weather, a shrine emptied for Sulla's pay chest,
+legions wintering in a country that has not been conquered — is laid on the
+ground it happens to EXCEPT the crown's own, because the border §111 draws
+around ownership is the same border consequence stops at. What Rome does in this
+package, it does abroad, and a province the player is holding is not abroad.
+
+### The card that is the player's
+
+−47, `ev_pv_alexandrian_war`. Caesar is shut in the palace quarter of Alexandria
+with two understrength legions and a city fighting him, and the only road in is
+overland through Pelusium and past the Jewish military district of Onias in the
+Delta, whose men have held the eastern approaches for the Ptolemies for a
+hundred and twenty years and answer to no Greek. Josephus (*Ant.* XIV.127–139)
+says what happened: Antipater rode with the relief column with three thousand
+Jewish troops, and Hyrcanus' letter opened the district and the fortress. The
+privileges Caesar granted for it outlived Caesar, outlived the Republic, and
+were still being cited in Roman courts a century later.
+
+So the card asks. Send the men — four thousand manpower and sixty talents — and
+buy the one thing Rome does not sell, or let two Roman armies fight it out and
+owe nobody anything, and be owed nothing. It is the whole package's argument in
+one card: this century is not scenery, it is the weather a small state's
+foreign policy is conducted in, and occasionally it opens a door.
+
+### The card that was replaced
+
+`ev_w_carthage_corinth` was the old single card for the year 146 — both cities,
+one dispatch, the eastern chanceries' reading of what the Republic had become —
+and it moved no boundary at all. It is deleted. What it carried that the two new
+wars do not duplicate moved onto the Achaean War card, which fires second, in
+the same year, when both cities are ash and the lesson is complete: "The Lesson
+of the Two Cities", the twenty points every eastern court cools that season, and
+the `twoCities` flag.
+
+### What it costs, measured
+
+`node tools/autorun.mjs 8` is **byte-identical** across all nine bookmarks before
+and after: the earliest card in the package is eighteen years past the opening
+date, and the balance harness's default window never reaches it.
+
+Run out to the chapter's full length (`175 167bce`), the intended thing happens
+and is visible: Rome goes 30 → 100 provinces instead of 30 → 49, and holds in
+6 CE approximately what MAP_66 hands it in the chapter after next. `ROM
+SNOWBALL` and `PAR SNOWBALL` were already the documented outcome of that run
+(tools/README, §111's own note). Three flags are new and all three are the
+scripted transfers themselves: `MAU SNOWBALL` is Bocchus and Bogud being paid
+the Masaesyli marches in 46, and `MAS`/`AVN`/`ARO DEAD` are Massalia stripped in
+49 and Gaul conquered in 52. The world also gets quieter — 35 wars instead of
+52, 1,107 battles instead of 1,551 — because the courts that used to spend the
+second century fighting each other in an unhistorical Africa and an
+unhistorical Greece are provinces by the time they would have.
+
+- **Regression contract**: `smoke174.mjs` — the package arrives at the boards
+  its sibling chapters open on, cell by cell, and the four courts the century
+  ended stop being courts while the three it did not are still standing;
+  §111's transfer discipline holds in both directions (a crown that took
+  Cyprus, Corinth, Cyrene, Rhodes, Crete, Athens and Alexandria for itself
+  keeps every one of them, and so does a living third court found standing on
+  the ground) and so does its extension — a city the crown already holds is
+  neither razed, ruined, colonized nor roaded by a Roman card, while every one
+  of those marks still lands where Rome is the one standing there; after every card in turn there is no province, army, fleet or
+  war pointing at a court that stopped existing, and the Third Punic War is a
+  real war that ends with the city; with Rome gone every gate is shut, every
+  effect a no-op and nothing throws, and a court already off the board is not
+  annexed twice; the calendar is dated, ordered, inside the chapter, and has
+  not moved the chapter's 6 CE horizon that the era page measures communities
+  by; the card this replaced is gone while its lesson, its flag and its
+  chanceries' cooling are not, and neither the sack of Corinth nor the
+  ungoverned Cyrenaica outlives the card that ends it; and Pelusium is decided
+  in Jerusalem with two roads that both cost something, while the other
+  eighteen are dispatches Rome decides and Jerusalem reads. `smoke83` and
+  `smoke162` carry the new file in their chapter source lists; `smoke109`'s era
+  spans and `smoke74`'s world clock pass unmoved.

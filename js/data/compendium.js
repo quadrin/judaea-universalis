@@ -9,6 +9,7 @@ import { EVENTS_167_KINGS } from './events_167bce_kings.js';
 import { EVENTS_167_HELLENIZERS } from './events_167bce_hellenizers.js';
 import { EVENTS_167_WORLD } from './events_167bce_world.js';
 import { EVENTS_167_REPUBLIC } from './events_167bce_republic.js';
+import { EVENTS_167_PROVINCES } from './events_167bce_provinces.js';
 import { EVENTS_167_AFTER } from './events_167bce_after.js';
 import { EVENTS_167_EMPIRE } from './events_167bce_empire.js';
 import { EVENTS_167_YEARS } from './events_167bce_years.js';
@@ -145,7 +146,15 @@ export const ERAS = [
   // continued): Macedonia, Numantia, the Gracchi, the Cimbri, the Social
   // War, Sulla and Spartacus — the century in which Rome became the thing
   // the next chapter opens on.
-  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
+  // The provinces package (SPEC §256) is the other half of that century: the
+  // wars that made the Mediterranean Roman, on the ground rather than in the
+  // Forum — Carthage and Corinth in 146, the Tagus, the Balearics, the road
+  // through the Arverni, Cyrene by will, Crete, Cyprus, Gaul, Massalia,
+  // Numidia, Rhodes, Alexandria and the division of 27. It rides beside the
+  // republic package for the reason every chapter's packages ride beside each
+  // other: one chapter, one registry line, and each content file keeps the
+  // zero-import promise its header makes.
+  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, ANTIQUE) },

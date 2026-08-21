@@ -86,6 +86,29 @@ static site, the zero dependencies, or the missing build step changes.
   electing, dying, fighting its own wars — and every province beyond the
   theater carries a levy share (1 / 0.2 / 0.1 by century) so Rome's Rhine
   legions stay on the Rhine instead of doubling the army it brings to Judaea.
+- **And the boundaries between those maps are wars you watch happen.** The 167
+  BCE chapter runs to 6 CE, and it used to move the Mediterranean boundary
+  exactly twice in a hundred and seventy-three years while the chapter next
+  door opened on the map all of it was supposed to produce. Nineteen cards now
+  carry the century's other half — the wars that made the Mediterranean Roman
+  rather than the politics that got written about: the ultimatum that tells
+  Carthage to move its city ten miles inland and the six days in its streets
+  that end it, Mummius' dice on the paintings at Corinth, Brutus carrying the
+  standard across the river of forgetfulness alone, the silver armour of
+  Bituitus and the road to Spain, a kingdom left to Rome by will and then
+  governed by nobody for twenty-two years, Sulla cutting down the Academy for
+  siege timber, the most honest man in Rome sent to steal Cyprus by statute,
+  the two walls at Alesia, Massalia spared for its antiquity and stripped of
+  everything else, Cato reading the Phaedo twice at Utica, Cassius leaving
+  Rhodes nothing but the chariot of the Sun, and the morning the last of
+  Alexander's generals' houses ends in Alexandria and Egypt becomes one man's
+  private estate. Carthage, Numidia, the leagues of Hellas and Ptolemaic
+  Egypt stop being courts on the map inside the chapter; the Lusitani,
+  Mauretania and the Delmatae deliberately do not, because they did not. One
+  of the nineteen is addressed to you: the relief column marching on
+  Alexandria has to come through the Jewish military district in the Delta,
+  and Jerusalem can write the letter that opens the road — or let two Roman
+  armies settle it and owe nobody a favour.
 - Map labels that name the ground: zoom in for province names, out for nations —
   one name per *region* a court holds rather than one per court, so a realm in two
   places reads **JUDAEA** at home and **JUDAEAN GREECE** across the sea instead of

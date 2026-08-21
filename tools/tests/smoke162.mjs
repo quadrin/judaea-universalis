@@ -56,7 +56,8 @@ const PACKAGES = [
 // Every package each chapter plays, for the modifier-id audit.
 const CHAPTER_FILES = {
   '167bce': ['events_167bce', 'events_167bce_kings', 'events_167bce_hellenizers', 'events_167bce_world',
-    'events_167bce_republic', 'events_167bce_after', 'events_167bce_empire', 'events_167bce_years',
+    'events_167bce_republic', 'events_167bce_provinces', 'events_167bce_after', 'events_167bce_empire',
+    'events_167bce_years',
     'events_167bce_neighbours'],
   '67bce': ['events_67bce', 'events_67bce_world', 'events_67bce_after', 'events_67bce_years',
     'events_67bce_neighbours'],

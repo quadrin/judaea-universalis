@@ -302,60 +302,16 @@ export const EVENTS_167_WORLD = [
 
   // ═══ ROME AND THE WORLD, 146–64 ══════════════════════════════════════════
 
-  {
-    id: 'ev_w_carthage_corinth',
-    title: 'Two Cities in One Year',
-    worldLabel: 'Rome destroys Carthage and Corinth',
-    desc: 'In one season the Republic burns the two cities that were the other '
-      + 'possible answers to the question of who runs the Mediterranean. Carthage is '
-      + 'razed after a three-year siege and a week of street fighting; Corinth is '
-      + 'sacked, its men killed, its women and children sold, and its art shipped to '
-      + 'Italy by a general who — Polybius says he watched this — had his soldiers '
-      + 'play dice on the paintings. Neither city was a threat. That is rather the '
-      + 'point: Rome has stopped destroying rivals and started destroying examples, '
-      + 'and every court from Antioch to Alexandria reads the lesson correctly and '
-      + 'begins behaving accordingly.',
-    forTag: 'both',
-    decider: 'ROM',
-    date: { y: -146, m: 4 },
-    world: true,
-    major: true,
-    aiOption: 0,
-    options: [
-      {
-        label: 'Delenda est',
-        tooltip: 'Rome: +400 talents of plunder, +15 legitimacy, +1 stability, and "The Lesson of the Two Cities" (+8% income permanently). Corinth is ruined (−4 development, +3 unrest for 120 months). Every eastern court cools 20 toward Rome and learns to answer its letters the same week they arrive.',
-        effects: guard('ev_w_carthage_corinth:0', (ctx) => {
-          const h = ctx.helpers;
-          const g = ctx.game;
-          if (alive(ctx, 'ROM')) {
-            h.adjust(ctx, 'ROM', { treasury: 400, legitimacy: 15, stability: 1 });
-            h.addTagModifier(ctx, 'ROM', {
-              id: 'lesson_of_two_cities', name: 'The Lesson of the Two Cities', months: -1,
-              effects: { incomeMult: 1.08 },
-            });
-          }
-          const c = ctx.prov && ctx.prov('Corinth');
-          if (c && c.dev) {
-            c.dev.tax = Math.max(1, (c.dev.tax || 1) - 2);
-            c.dev.prod = Math.max(1, (c.dev.prod || 1) - 2);
-          }
-          stir(ctx, ['Corinth'], {
-            id: 'the_sack_of_corinth', name: 'The Sack of Corinth', months: 120,
-            effects: { unrest: 3, taxMult: 0.5 },
-          });
-          for (const t of ['SEL', 'PTO', 'PAR', 'ARM', 'NAB']) {
-            if (alive(ctx, t)) {
-              const tt = g.tags[t];
-              if (tt && tt.opinion) tt.opinion.ROM = Math.max(-200, (tt.opinion.ROM || 0) - 20);
-            }
-          }
-          h.setFlag(ctx, 'twoCities', true);
-          h.chronicle(ctx, 'era', 'Carthage and Corinth are destroyed in the same year; Rome has stopped killing rivals and started killing examples.');
-        }),
-      },
-    ],
-  },
+  // Carthage and Corinth used to be ONE card here — `ev_w_carthage_corinth`,
+  // the eastern chanceries' reading of the year 146, which moved no boundary at
+  // all. §256 gave the two cities the wars they were the ends of, on the map
+  // (`events_167bce_provinces.js`): the Third Punic War from the ultimatum to
+  // the six days in the streets, and the Achaean War from Scarpheia to the dice
+  // on the paintings. What this card carried that those do not duplicate —
+  // "The Lesson of the Two Cities", the twenty points every eastern court cools
+  // in that season, and the `twoCities` flag — moved onto the Corinth card,
+  // which fires second, in the same year, when both cities are ash and the
+  // lesson is complete.
 
   {
     id: 'ev_w_expelled_from_rome',

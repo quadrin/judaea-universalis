@@ -1967,3 +1967,51 @@ If you widen it, the symptom is not a §248 suite failure — it is `smoke7`
 reporting that Rome never enters the war, the alliance is never sealed, and
 Parthian Syria never falls, three chapters' worth of consequences downstream of
 a war that was quietly cancelled before it started.
+
+## §256 — the provinces the Republic made, measured
+
+Two numbers matter for this section and both were taken against a `git worktree`
+of the parent commit, not against a scratch file.
+
+**The default window does not move.** `node tools/autorun.mjs 8` is
+**byte-identical** across all nine bookmarks before and after. The earliest card
+in `events_167bce_provinces.js` is the Carthaginian ultimatum of 149 — eighteen
+game years past the chapter's opening date — so the eight-year harness never
+reaches the package at all. If that run ever stops being identical, something
+other than this section moved.
+
+**The full chapter does what the section exists to do.** `node tools/autorun.mjs
+175 167bce`, baseline versus new:
+
+| | baseline | new |
+|---|---|---|
+| ROM provinces | 30 → 49 | 30 → 100 |
+| ROM development | 335 → 1324 | 335 → 3037 |
+| wars started/ended | 52 / 51 | 35 / 33 |
+| battles | 1551 | 1107 |
+
+`ROM SNOWBALL` and `PAR SNOWBALL` are both in the baseline and are §111's own
+documented outcome for the long 167 run. Three anomaly names are new and all
+three ARE the scripted transfers, which is the accepted class this file has
+carried since v3.1: `MAU SNOWBALL` is Bocchus and Bogud being paid the Masaesyli
+marches after Thapsus (5 → 9 provinces, all of them handed over by one card),
+and `MAS`, `AVN` and `ARO DEAD` are Massalia stripped in 49 and Gaul conquered
+in 52. `CAR`, `GRC`, `NUM` and `PTO` vanish from the table rather than appearing
+as DEAD, because `dissolveTag` deletes the court instead of marking it dead —
+the same thing §239's usurper purples do, and not a new behaviour.
+
+The war and battle counts FALLING is the section working, not breaking. In the
+baseline a living Carthage, a living Numidia, a living Achaean League and a
+living Ptolemaic Egypt spend the first century BCE fighting each other and
+their neighbours across an Africa and a Greece that history had already made
+Roman. They are provinces now by the time those wars would have started.
+
+Whoever measures next: `HAS` comes back DEAD on the baseline 175-year run and
+alive at one province on the new one. That is seeded drift in an all-AI run of a
+chapter whose playable window closes in 140 BCE, not a balance claim — the
+package touches no Judaean card and no Seleucid one. Do not cite it either way.
+
+The battery on the merged tree: **174 of 174 headless suites ALL PASS**, with
+`smoke174.mjs` the new contract. The 52 `uitest*.mjs` files need the `playwright`
+npm package, which is not installed in the container this section was written
+in; they fail identically on the parent commit and were not measured here.
