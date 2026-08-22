@@ -300,10 +300,12 @@ function syrOwn(ctx) {
 }
 
 // Everything Damascus rules, so the union takes all of it and the secession
-// gives all of it back in one piece (SPEC §228 adds the eight districts).
-const SYRIA_CORE = ['Damascus', 'Douma', 'Emesa', 'Qusayr', 'Salamiyah',
-  'Palmyra', 'Rusafa', 'Apamea', 'Idlib', 'Beroea', 'Manbij', 'Cyrrhus',
-  'Laodicea', 'Aradus', 'Dura-Europos', 'Hasakah', 'Bostra', 'Suwayda',
+// gives all of it back in one piece (SPEC §228 adds the districts; §257 folds
+// four of them — Raqqa, Salamiyah, Qusayr and the Jabal Druze — back into
+// Tadmur, Hama, Homs and Daraa, which are on this list and carry their ground).
+const SYRIA_CORE = ['Damascus', 'Douma', 'Emesa',
+  'Palmyra', 'Apamea', 'Idlib', 'Beroea', 'Manbij', 'Cyrrhus',
+  'Laodicea', 'Aradus', 'Dura-Europos', 'Hasakah', 'Bostra',
   'Syrian Desert', 'Nisibis',
   'Caesarea Philippi', 'Mount Hermon', 'Quneitra', 'Batanea', 'Gamala'];
 // SPEC §225: the republic as thirteen districts rather than six cells.

@@ -236,9 +236,17 @@ console.log('== the fold conserves every court\'s economy to the point ==');
     const d = cellOf(nm).dev;
     return [d.tax, d.prod, d.mp];
   };
+  // SPEC §257 folded five Levant districts into cells this chapter DOES tweak,
+  // and a fold hands a district's development back to the cell it was carved
+  // out of — which is the chapter's own figure, not the base atlas's. So the
+  // family sum below, which reads the atlas, is not the accounting for those
+  // five, and they are checked where the claim actually means something:
+  // smoke175 and smoke153 hold all six regional development totals unmoved.
+  // The unreachable-tweak rule still applies to them.
+  const FOLDED_257 = new Set(['Salamiyah', 'Qusayr', 'Suwayda', 'Mafraq', 'Rusafa']);
   const families = {};
   for (const [child, parent] of Object.entries(merges)) {
-    (families[parent] = families[parent] || []).push(child);
+    if (!FOLDED_257.has(child)) (families[parent] = families[parent] || []).push(child);
     ok(!dt[child], child + ' carries no devTweak of its own under the fold');
   }
   for (const [surv, kids] of Object.entries(families)) {

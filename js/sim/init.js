@@ -3956,7 +3956,7 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
   const activeMap = provinceMap || buildProvinceMapping(MAP_DATA, bookmark);
   const migration = bookmark && bookmark.mapProfileMigration;
   const migrationVersion = Math.max(0, num(migration && migration.version, 0) | 0);
-  const upgrading = Math.max(0, num(game.mapProfileVersion, 0) | 0) < migrationVersion;
+  const savedProfileVersion = Math.max(0, num(game.mapProfileVersion, 0) | 0);
   const wantedLength = srcProvs.length + 1;
   if (game.provinces.length < wantedLength) game.provinces.length = wantedLength;
 
@@ -4004,8 +4004,16 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       // from before the overlay must not spend the whole campaign without a
       // well anywhere (every mechanized realm would import at double forever).
       p.good = bookmarkField(bookmark, 'goods', source) || source.good || p.good;
-      const previousDev = upgrading && migration && migration.previousDev
+      // Each row states the migration version it was ADDED at, because the
+      // rows accumulate and a second bump must not replay the first one: a
+      // save already carrying v2's consolidated France would be handed the
+      // difference a second time. A row with no `since` is a pre-§257 row
+      // and belongs to version 2 — which is exactly the old behaviour for
+      // every save below that, and skips them for saves already at it.
+      const migRow = migration && migration.previousDev
         && migration.previousDev[source.name];
+      const rowSince = Math.max(1, num(migRow && migRow.since, 2) | 0);
+      const previousDev = (migRow && savedProfileVersion < rowSince) ? migRow : null;
       if (previousDev) {
         const baseline = bookmarkField(bookmark, 'devTweaks', source) || source.dev || {};
         const current = p.dev || {};

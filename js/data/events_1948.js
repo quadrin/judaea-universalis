@@ -565,8 +565,25 @@ const ARMISTICE_1949_ISR_GAINS = new Set([
   'Gischala', 'Sepphoris', 'Jotapata', "Ma'alot",
   'Lydda', 'Beit Shemesh',
   'Ascalon', 'Azotus', 'Kiryat Gat',
-  'Beersheba', 'Arad', 'Oboda', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
+  // The Negev and the Arabah, down to the gulf. Haluza (Elusa) is on this
+  // list because it is on this side of the line: the §230 cell came out of
+  // Nitzana and starts Egyptian like its parent, and a Negev handed over
+  // without it has a hole in it.
+  'Beersheba', 'Arad', 'Oboda', 'Elusa', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
 ]);
+// The half of that line that was settled at the TABLE rather than in the field
+// (SPEC §257). Everything else Rhodes confirmed had been taken: the Galilee
+// pocket in Dekel and Hiram, Lod and Ramle in Danny, the southern plain in
+// Yoav. The Negev was the exception — the Egyptian agreement of 24 February
+// assigned it and the expeditionary force marched out of it, and Operation
+// Uvda walked the Arabah down to Umm Rashrash in March against nobody, between
+// that signature and the Jordanian one of 3 April. So these cells change hands
+// when the delegations initial the maps, whether or not a column has reached
+// them; the rest of the line is still uti possidetis, because the rest of the
+// line was.
+const ARMISTICE_1949_AT_THE_TABLE = [
+  'Beersheba', 'Arad', 'Oboda', 'Elusa', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
+];
 function ownerOf(ctx, provName) {
   try {
     const p = typeof ctx.prov === 'function' ? ctx.prov(provName) : null;
@@ -1565,7 +1582,7 @@ export const EVENTS_1948 = [
     options: [
       {
         label: 'The lines become the map',
-        tooltip: 'The war ends on the classical 1949 armistice lines. Israel keeps occupied Galilee, Lod, the southern plain and Negev/Arabah cells inside those lines; occupied Gaza, Sinai, the West Bank, Golan and foreign territory return to their prior owners. Every court: −2 war exhaustion.',
+        tooltip: 'The war ends on the classical 1949 armistice lines. Israel keeps the occupied Galilee, Lod and southern-plain cells inside those lines — and the Negev and the Arabah down to Umm Rashrash come over at the table, whether or not its columns have reached them, as they did in February and March 1949. Occupied Gaza, Sinai, the West Bank, Golan and foreign territory return to their prior owners. Every court: −2 war exhaustion.',
         effects: guard('ev_i_armistice:0', (ctx) => {
           // Rhodes was four agreements, not one — Egypt in February, Lebanon in
           // March, Jordan in April, Syria in July — and a scripted peace binds
@@ -1582,6 +1599,26 @@ export const EVENTS_1948 = [
                 && ARMISTICE_1949_ISR_GAINS.has(p.canon || p.name),
             });
           }
+          // …and then the half of the line that was signed rather than taken.
+          // Uti possidetis above keeps only what the army is standing on,
+          // which in this chapter is routinely a Negev still held from Gaza
+          // and Aqaba — so a player who accepts the armistice line and does
+          // not get the Negev or Eilat has been sold somebody else's line.
+          // Only the courts that are signing give anything up, so a front
+          // already settled separately is not reopened at this table; and a
+          // state that has lost Tel Aviv is in no position to be handed a
+          // desert, so then the line is again only what is held.
+          let handed = 0;
+          if (alive(ctx, 'ISR') && ctx.helpers.controls(ctx, 'ISR', 'Joppa')) {
+            for (const name of ARMISTICE_1949_AT_THE_TABLE) {
+              let p = null;
+              try { p = ctx.prov(name); } catch (e) { warnOnce('rhodes:' + name, e); continue; }
+              if (!p || p.impassable || p.owner === 'ISR') continue;
+              if (enemies.indexOf(p.owner) < 0) continue;
+              ctx.helpers.changeOwner(ctx, name, 'ISR');
+              handed++;
+            }
+          }
           for (const t of ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
             if (!ctx.game.tags[t]) continue;
             ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
@@ -1592,7 +1629,9 @@ export const EVENTS_1948 = [
               effects: { noOpportunisticWars: true },
             });
           }
-          ctx.helpers.chronicle(ctx, 'peace', 'The Rhodes armistices: the classical 1949 lines become the lines on the atlas; expeditionary occupations beyond them are handed back.');
+          ctx.helpers.chronicle(ctx, 'peace', 'The Rhodes armistices: the classical 1949 lines become the lines on the atlas'
+            + (handed ? ' — ' + handed + ' cell' + (handed === 1 ? '' : 's') + ' inside them change hands at the table, the Negev and the Arabah among them' : '')
+            + '; expeditionary occupations beyond them are handed back.');
         }),
       },
       {
