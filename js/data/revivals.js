@@ -622,7 +622,10 @@ export const REVIVALS = [
     govType: 'republic',
     from: 1900, to: 2100, minWs: 25,
     cores: ['Laodicea'],
-    lands: ['Qusayr', 'Idlib'],
+    // Qusayr was the hinterland cell here until §257 folded it into Homs, and
+    // Homs is the city the mountain did NOT want to be governed from. Tartus
+    // is the other half of the coast the French state actually was.
+    lands: ['Aradus', 'Idlib'],
     ideas: { hillDefBonus: 1, unrestAll: -0.4, manpowerMult: 1.1 },
     basis: 'France governed the Latakia coast as a separate state for sixteen years '
       + 'on the grounds that the mountain was not Sunni and did not want to be ruled from '
@@ -640,7 +643,12 @@ export const REVIVALS = [
     names: 'arab_modern', title: 'Emir',
     govType: 'monarchy',
     from: 1900, to: 2100, minWs: 25,
-    cores: ['Suwayda'],
+    // The Jabal's own cell folded into Daraa's in 1948 (SPEC §257) — a
+    // district carved inside another cell can only be a circle — so the core
+    // is the province that holds the mountain now. Without this the state
+    // could never be demanded at any table, because no province answers to
+    // the old name in the one century this revival exists in.
+    cores: ['Bostra'],
     lands: ['Quneitra'],
     ideas: { hillDefBonus: 1, moraleMult: 1.12, manpowerMult: 0.8 },
     basis: 'The black basalt mountain was a French state of its own until 1936, and '

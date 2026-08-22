@@ -235,6 +235,41 @@ timeouts in `dump-geometry.mjs` doubled with it. A slow dump is the frame's
 cost and not a flaky selector. (§232's identity dump no longer starts a
 campaign at all, which gives a few of those minutes back.)
 
+## provshape.mjs — the shader in Node, and the circle check (SPEC §257)
+
+    node tools/provshape.mjs                 the theatre, folded for 1948
+    node tools/provshape.mjs 66ce            another chapter
+    node tools/provshape.mjs 1948ce --world  the whole frame (slower)
+    node tools/provshape.mjs --all --png     every province, and a picture
+
+The renderer's ID pass is a weighted Voronoi over the land mask — every land
+pixel to the seed with the smallest `distance / weight`, inside whatever
+country ring is painted under it — and that reproduces here in about two
+seconds for the theatre at full resolution. §229 tuned twenty-odd seeds against
+a preview picture rather than a ten-minute browser dump per attempt and §234
+and §257 argued about province SHAPES with numbers instead of screenshots;
+this is that harness, committed at last.
+
+It does NOT reproduce the ±18px domain warp, the component repairs or the
+country seam heal. Use it for shape, area and adjacency-in-the-large — never
+for byte-comparison against `geom-snapshot.json`, which is the browser's.
+
+`enclosed()` is the check: a province with two neighbours or fewer, 70%+ of its
+border facing a single cell, and no coast, is a CIRCLE — the weighted-Voronoi
+bisector between an interior seed and the seed around it is an arc, and no
+weight fixes it (SPEC §234, §257). The CLI exits non-zero if it finds one.
+A province whose one neighbour is a §232 consolidation survivor is exempt and
+the exemption is real: fifteen cells folded into one bound it with fifteen
+arcs, so it comes out a polygon (Córdoba inside Spain) rather than a coin.
+One chronic case is named rather than fixed — Oxyrhynchus has been a circle
+inside the Libyan Desert since the base atlas was drawn, the same in all nine
+chapters, and taking it back would move eight boards. The CLI prints it under
+its own heading and exits clean; a SECOND name there is the regression.
+`smoke175.mjs` runs the check over all nine chapters, theatre and frame.
+
+The diagram does not depend on the bookmark — only the fold does — so
+`rasterise` once and `fold` per chapter rather than rasterising nine times.
+
 ## coastcheck.mjs — the coastline's invariants, and a picture of it
 
     node tools/coastcheck.mjs            check, and write $JU_OUT/coast.png

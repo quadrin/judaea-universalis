@@ -18250,3 +18250,224 @@ unhistorical Greece are provinces by the time they would have.
   eighteen are dispatches Rome decides and Jerusalem reads. `smoke83` and
   `smoke162` carry the new file in their chapter source lists; `smoke109`'s era
   spans and `smoke74`'s world clock pass unmoved.
+
+## 257. No circles in 1948, and the line is the line
+
+Two reports against the same chapter, in one breath: *fix the 1948 bookmark
+raster (but keep the previous ones as is) — the 1948 map looks all weird with
+circles. And when you accept the offer for the 1948 armistice line, you don't
+even get the Negev and Eilat.*
+
+Both are true, and the first one is §234 arriving late.
+
+### The circles are the districts, again
+
+§234 wrote the diagnosis and then applied it to eight chapters out of nine.
+The shader's assignment is a weighted Voronoi — every land pixel goes to the
+seed with the smallest `distance / weight` — and the bisector between two
+seeds of unequal weight is not a line, it is an **arc of a circle around the
+weaker seed**. So a cell whose seed sits INSIDE another cell's ground, with
+nothing else near enough to compete, comes out a closed loop. Not roughly: the
+1948 raster's Salamiyah had **100%** of its perimeter facing Emesa, which is a
+circle by definition and looks like one from any zoom.
+
+§234 gave the ancient chapters their districts back for exactly this. 1948
+kept every one of them — "density is the point there, and a map of small
+crowded cells reads as a map of small crowded countries" — and that is still
+true of the thirty-odd districts that have neighbours. It was never true of
+the five that do not:
+
+| district | shown in 1948 as | share of its border facing one cell |
+|---|---|---|
+| Salamiyah | Salamiyah | 100% Emesa (Homs) |
+| Suwayda | Suwayda | 96% Bostra (Daraa) |
+| Mafraq | Mafraq | 79% Bostra (Daraa) |
+| Qusayr | Qusayr | 73% Emesa (Homs) |
+| Rusafa | Raqqa | 73% Palmyra (Tadmur) |
+
+(`node tools/provshape.mjs 1948ce`, the theatre at full resolution, against the
+commit before this one.)
+
+The screenshot that came with the report is the Hauran: a brown Jordanian coin
+half-sunk in the Syrian green, with a fainter circle beside it. That is Mafraq
+inside Daraa's cell, and as-Suwayda inside it too. It is the same picture §234
+was sent, one chapter over.
+
+**No seed placement fixes them, and this time that is provable rather than
+asserted.** A district escapes the circle only by reaching its parent's OUTER
+border — the one that faces a cell it does NOT fold into. Let the parent be
+`P`, the district `D`, the foreign neighbour `N`. On the old border,
+`d_P = d_N`. For `D` to own a pixel there it needs `d_D < d_P = d_N` strictly —
+and strict inequality is continuous, so `D` also wins pixels on the far side,
+where `N` used to win. The union `P ∪ D` grows. In every ancient chapter that
+union IS the parent's province, so the growth is an ancient border moving.
+Measured on the real diagram, with the eight ancient folds checked pixel by
+pixel: every escape that gave Mafraq a third neighbour cost 70–255 pixels of
+Bostra–Gerasa and Bostra–Philadelphia, every Suwayda that reached the Jabal's
+own edge cost 147–251 of Bostra–Batanea, and Rusafa cannot move at all in any
+direction — it already owns 885 pixels of the Palmyra–Carrhae border, and
+shrinking it hands those to Carrhae as surely as growing it takes more.
+
+So the five fold, and they fold **here** rather than in the atlas:
+
+```js
+// bookmark_1948.js, mergeProvinces
+'Salamiyah': 'Emesa', 'Qusayr': 'Emesa',
+'Suwayda': 'Bostra',  'Mafraq': 'Bostra',
+'Rusafa': 'Palmyra',
+```
+
+This is the §232 mechanism, not the §234 one, and the difference is the whole
+safety argument. The cells stay in `activeProvinces` — smoke27's rule stands,
+1948 is still the chapter that switches every latent cell on — and then
+consolidate, exactly as Britain's city cells do. **Nothing in
+`js/data/map_data.js` moves.** No seed, no weight, no ring. Every other
+chapter's raster is therefore byte-identical by construction rather than by
+inspection, `tools/geom-snapshot.json` stays valid, and no id shifts under any
+save. And each of the five folds into its OWN `latentParent`, so every pixel
+it holds was already resolving to that province in all eight ancient chapters:
+the fold is a no-op everywhere except the one chapter that was drawing it.
+
+The development comes home the way §228 sent it out — each district's points go
+back to the cell it was carved from, which is the same accounting run
+backwards: Raqqa to Tadmur, al-Qusayr to Homs, Salamiyah to Hama, the Jabal
+Druze to Daraa. **Mafraq's go to Jerash**, not to Daraa: the ground is Syria's
+in this chapter and the men and the money were Jordan's, and a fold is not a
+reason to hand a kingdom's northern district to its neighbour. All six regional
+totals — ISR 183, JOR 173, EGY 213, SYR 187, IRQ 119, LEB 131 — come out where
+they went in, which is the number smoke27 and smoke153 have held since §47.
+
+What 1948 loses is five province chairs: Syria plays the Hauran, the Homs
+country, the Hama steppe and the Palmyrene as four cells instead of eight, and
+Jordan's Mafraq goes back into Daraa's. That is the trade §234 already made on
+the user's own instruction — "get rid of provinces if need be" — and it is
+worth it in the same way: a district that can only be a circle is not a
+district, it is an artifact of the seed formula wearing a district's name.
+
+Two pieces of content were addressed to the folded names and had to move with
+them, because a name that answers to nothing is content nobody can reach. The
+**Jabal al-Druze** revival (`js/data/revivals.js`, 1900–2100) cored `Suwayda`,
+and 1948 is the only century it exists in — its core is Daraa's cell now, which
+is the province the mountain is in. `smoke167` already held that invariant
+("no in-century country asks for a cell its chapter folds away") and it is the
+suite that caught this one. The **Alawite State**'s hinterland land was
+`Qusayr`, which is Homs now, and Homs is precisely the city the mountain did
+not want to be governed from — it takes Tartus instead, the other half of the
+coast the French state actually was. `SYRIA_CORE` in `events_1948_region.js`
+drops the four folded Syrian names, whose survivors were already on the list;
+the union takes the country and the secession gives it back exactly as before.
+Everything else that names them — four ancient revivals — was addressed to
+cells that had already folded in every century those revivals run in, and is
+inert in the same way it was inert before.
+
+### `tools/provshape.mjs` — the shader, in Node
+
+§229 said it in passing: *the shader reproduces in Node in under half a second
+without the warp, so the tuning loop is a preview picture, not a ten-minute
+browser dump per attempt.* It was never committed, and §234 and this section
+both had to write it again. It is committed now.
+
+`buildFrame` rasterises the land mask and the country paint; `rasterise` runs
+the ID pass (`distance / weight`, region-locked, land-masked); `shapes` reports
+every province's area, who it touches and what fraction of its border is one
+neighbour's; `png` draws the thing so a shape argument can be LOOKED at without
+a browser, a server and a WebGL context. The theatre at full resolution is
+about two seconds, and the diagram does not depend on the chapter — only the
+fold does, so nine chapters cost one pass and eight `fold` calls.
+
+It does NOT reproduce the ±18px domain warp, the component repairs or the seam
+heal, and it says so at the top: use it for shape, area and
+adjacency-in-the-large, never for byte-comparison against the snapshot.
+
+`enclosed()` is the check this section exists for. A province is a circle when
+it has two neighbours or fewer, 70% or more of its border faces a single cell,
+and it has no coast to be shaped by. One exception is built in and it is a real
+distinction rather than an excuse: a province whose one neighbour is a
+**consolidation survivor** — the cell fifteen others folded into — is bounded
+by fifteen arcs and comes out a polygon. Córdoba inside Spain is that case and
+looks like Andalusia; Salamiyah inside Homs was the other one and looked like a
+coin.
+
+One CHRONIC case is named rather than fixed. **Oxyrhynchus** is a circle inside
+the Libyan Desert's enormous cell, and it has been one since the base atlas was
+drawn — identically in all nine chapters, because it is not any chapter's
+carving. Taking it back would move eight boards this section promised not to
+touch, which is the same rule that sent the five here in the first place. §234
+already met it from the other side: the §232 land format pinched the
+Oxyrhynchus–Thebes contact out of the raster and `extraLinks` carries the river
+road now. It is listed by name in `provshape.mjs`, the CLI prints it under its
+own heading and still exits clean, and a SECOND name appearing there is the
+regression to look at.
+
+Run over all nine chapters — the theatre at full resolution and the whole frame
+at a quarter of it — the check is otherwise silent. Run against the commit
+before this one it names exactly the five in the table above.
+
+### The armistice line was the front, not the line
+
+`ev_i_armistice` — Rhodes — offered "the lines become the map" and its tooltip
+promised *the classical 1949 armistice lines*. What it applied was uti
+possidetis: end the wars, keep whatever the army is standing on that is inside
+the line, hand back everything else. Those are not the same settlement, and in
+this chapter they are not even close. Beersheba, Arad, Oboda, Elusa, Dimona,
+Mitzpe Ramon, Paran and Eilat all open in Egyptian or Jordanian hands. A player
+who fought the war in the north and the corridor — which is most of them, and
+all of the ones the AI plays — reached February 1949 with the Negev still held
+from Gaza and Aqaba, accepted the armistice line, and got a state that stopped
+at Bir Saba. §131 had already found the same hole in the withdrawal option and
+fixed it there; the peace itself still had it.
+
+The history is not ambiguous about which reading is right, and it is equally
+clear about how far it goes. Most of the 1949 line had been taken: the Galilee
+pocket in Dekel and Hiram, Lod and Ramle in Danny, the southern plain in Yoav.
+Rhodes confirmed those, which is exactly what uti possidetis models. **The
+Negev is the exception, and it is the half the report is about.** The
+Egypt–Israel agreement of 24 February 1949 assigned it and the expeditionary
+force marched out of it; Operation Uvda walked the Arabah down to Umm Rashrash
+in March against nobody at all, between that signature and the Jordanian one of
+3 April, and the line Jordan initialled ran to the gulf.
+
+So the option keeps its uti possidetis and adds one list to it —
+`ARMISTICE_1949_AT_THE_TABLE`, the eight cells from Bir Saba to Umm Rashrash —
+which change hands when the delegations initial the maps whether or not a
+column has reached them. The chronicle says how many did. Handing over the
+WHOLE line instead was tried first and is wrong twice: the Galilee pocket and
+the corridor were not given to anybody at a table, and `node tools/autorun.mjs
+8 1948ce` came back `ISR SNOWBALL` — 22 provinces to 36 in an all-AI run that
+fought one war — in the chapter whose accepted-flag line in tools/README has
+read "1948 none" since v5.8. With the Negev alone the same run is 22 to 30 and
+the line still reads none.
+
+Three guards, because a scripted transfer with no conditions is a cheat code:
+
+- **Only the courts that are signing give anything up.** The transfer reads the
+  war's own belligerent list, so a front already settled separately — a Jordan
+  that made peace in December — is not reopened at somebody else's table.
+- **A state that has lost Tel Aviv is handed no desert.** If Israel does not
+  hold Joppa the line is again only what is held, which is the honest answer:
+  there is no Rhodes to sign in that world.
+- **Nothing outside the line comes with it.** The `keep` predicate is unchanged
+  and still gives back Gaza, the Sinai, the West Bank, the Golan and every
+  expeditionary occupation.
+
+**Elusa** joins both lists while they are open. Haluza is a §230 cell carved out
+of Nitzana, it starts Egyptian like its parent, and it is unambiguously on the
+Israeli side of the 1949 line — a Negev handed over without it has a hole in
+it. `Ma'alot` joins `INSIDE_THE_LINE` for the same reason in the other file:
+Tarshiha is in the chapter's own gains list, and a line kept in two places has
+to be the same line. The two lists now differ over exactly two cells, on
+purpose, and the suite says so out loud: Latrun and the Modi'in hills, which
+§131 keeps with the corridor they command.
+
+- **Regression contract**: `smoke175.mjs` — the five fold into their own latent
+  parents and stay active; no chapter, ancient or modern, has a province
+  enclosed by one neighbour anywhere on the frame (Oxyrhynchus excepted by
+  name); all six regional development totals are unmoved;
+  a v2 save is not handed §232's consolidation difference a second time on its
+  way to v3 (migration rows now carry the version they were added at, because
+  they accumulate) while Homs does pick up the district it just absorbed;
+  Rhodes hands Israel the whole Negev to Umm Rashrash and nothing beyond the
+  line; a state that has lost Tel Aviv is handed nothing; and the two files
+  that write the line down differ only over the corridor. `node
+  tools/autorun.mjs 8` still reports `1948ce none`. `smoke153` carries
+  §228's contract forward with the five named as folded.

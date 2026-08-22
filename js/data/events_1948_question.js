@@ -107,10 +107,13 @@ const WEST_BANK = [
 // Outside Israel's 15-May holdings and inside the 1949 line: the corridor,
 // the lower Galilee, the southern coast and the whole Negev down to the gulf.
 const INSIDE_THE_LINE = [
-  'Gischala', 'Sepphoris', 'Jotapata',
+  'Gischala', 'Sepphoris', 'Jotapata', "Ma'alot",
   'Lydda', 'Beit Shemesh', 'Emmaus', 'Modi\'in Hills',
   'Ascalon', 'Azotus', 'Kiryat Gat',
-  'Beersheba', 'Arad', 'Oboda', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
+  // Haluza with the rest of the Negev, and Tarshiha with the rest of the
+  // Galilee pocket: both are in the chapter's own gains list in
+  // events_1948.js, and a line kept in two places has to be the same line.
+  'Beersheba', 'Arad', 'Oboda', 'Elusa', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
 ];
 const GAZA_STRIP = ['Gaza', 'Khan Yunis', 'Rafah'];
 const SINAI_CELLS = ['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Dizahab'];

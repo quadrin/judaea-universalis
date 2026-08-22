@@ -55,6 +55,16 @@ const CELLS = {
   Shobak: ['Zoara', 'JOR'],
   'Wadi Rum': ['Aila', 'JOR'],
 };
+// SPEC §257: five of the twenty-three are interior cells — a district carved
+// inside its parent's cell can only be a circle, because the weighted-Voronoi
+// bisector between an inside seed and the seed around it is an arc. 1948 folds
+// those five into the province whose ground they stand in (bookmark_1948's
+// mergeProvinces), so they are still latent cells, still ACTIVE here, and no
+// longer provinces of their own. Everything else in this section is untouched.
+const FOLDED_BY_257 = {
+  Rusafa: 'Palmyra', Salamiyah: 'Emesa', Qusayr: 'Emesa',
+  Suwayda: 'Bostra', Mafraq: 'Bostra',
+};
 const byName = new Map(MAP_DATA.provinces.map((p, i) => [p.name, { p, id: i + 1 }]));
 const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
 
@@ -114,15 +124,26 @@ console.log('== 1948 activates them, and the right states own them ==');
   ok(!missing.length, 'and so is every other latent cell on the map (SPEC §47): '
     + (missing.join(', ') || 'none missing'));
   const { ctx } = boot1948();
+  const modernMap = buildProvinceMapping(MAP_DATA, BOOKMARK_1948);
   const wrong = [];
   for (const [name, [, owner]] of Object.entries(CELLS)) {
+    if (FOLDED_BY_257[name]) continue;
     const p = ctx.prov(name);
     if (!p || p.owner !== owner) wrong.push(name + '=' + (p && p.owner));
   }
   ok(!wrong.length, 'each opens under the state that held it: ' + (wrong.join(', ') || 'all correct'));
+  // …and the five §257 folded resolve to the province that now holds their
+  // ground, which is the one they were carved out of.
+  const unfolded = Object.entries(FOLDED_BY_257).filter(([name, into]) =>
+    modernMap[byName.get(name).id] !== byName.get(into).id);
+  ok(!unfolded.length, 'the five interior districts fold into their parents here (SPEC §257): '
+    + (unfolded.map(([n]) => n).join(', ') || 'all folded'));
+  ok(ctx.prov('Mafraq') === ctx.prov('Bostra') && ctx.prov('Bostra').owner === 'SYR',
+    '  the Hauran is one Syrian province again, and Jerash keeps Mafraq\'s development');
   const shown = (n) => (BOOKMARK_1948.provinceNames || {})[n] || n;
   ok(shown('Nineveh') === 'Mosul', 'Nineveh keeps its own name and 1948 shows Mosul');
-  ok(shown('Rusafa') === 'Raqqa', 'Sergiopolis wears Raqqa, the district capital north of it');
+  ok(ctx.prov('Rusafa').name === shown('Palmyra'),
+    'and Sergiopolis wears Tadmur, the cell it folded into (its Raqqa name sleeps in the table)');
   ok(ctx.prov('Kirkuk').good === 'oil' && ctx.prov('Arbela').good !== 'oil',
     'and the field is on Kirkuk now, not on the city beside it');
 }
@@ -226,8 +247,11 @@ console.log('== Syria still leaves the union in one piece ==');
   const listed = new Set((block.match(/'[^']+'/g) || []).map((s) => s.slice(1, -1)));
   const orphans = syrian.filter((n) => !listed.has(n));
   ok(!orphans.length, 'every province Syria opens with is in it: ' + (orphans.join(', ') || 'none left behind'));
-  ok(listed.has('Idlib') && listed.has('Suwayda') && listed.has('Rusafa') && listed.has('Douma'),
-    '  including the eight districts §228 added');
+  ok(listed.has('Idlib') && listed.has('Manbij') && listed.has('Hasakah') && listed.has('Douma'),
+    '  including the districts §228 added that are still provinces here');
+  const foldedOut = Object.keys(FOLDED_BY_257).filter((n) => listed.has(n));
+  ok(!foldedOut.length, '  and not the four §257 folded, whose survivors carry them: '
+    + (foldedOut.join(', ') || 'none listed twice'));
   ok(ctx.prov('Douma').owner === 'SYR', '  and the Ghouta is Syrian to start with');
 }
 

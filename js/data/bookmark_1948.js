@@ -657,6 +657,35 @@ export const BOOKMARK_1948 = {
     'Ripaea': 'Hyperborea',
     'Nisa': 'Hyperborea', 'Antiochia Margiana': 'Hyperborea', 'Dahae': 'Hyperborea',
     'Chorasmia': 'Hyperborea', 'Massagetae': 'Hyperborea', 'Issedones': 'Hyperborea',
+    // ── The five circles (SPEC §257) ──────────────────────────────────────
+    // §234 established the shape of the problem and fixed it everywhere but
+    // here: a cell carved INSIDE another cell is a closed loop around its own
+    // seed by construction, because the weighted-Voronoi bisector between an
+    // interior seed and the seed that surrounds it is an arc of a circle. The
+    // ancient chapters gave their districts back for it. 1948 kept all of
+    // them — "density is the point there" — and five of them are exactly the
+    // interior case, so 1948 kept five circles: Suwayda and Mafraq as bubbles
+    // in the Hauran, Salamiyah as a perfect disc east of Homs, Qusayr as a
+    // smaller one south-west of it, and Raqqa as a green coin in the Palmyrene
+    // steppe. No seed placement fixes them. A district can only escape the
+    // circle by reaching its parent's OUTER border, and the pixel it reaches
+    // it with is a pixel the parent no longer owns — which moves that border
+    // in all eight ancient chapters, where these cells fold into the parent
+    // and the border is the parent's own. Measured, every escape costs
+    // hundreds of pixels of Bostra–Gerasa, Palmyra–Carrhae or Bostra–Batanea.
+    //
+    // So they fold HERE instead, the §232 way rather than the §234 way: the
+    // cells stay ACTIVE (smoke27's rule stands — 1948 still switches every
+    // latent cell on) and then consolidate into the province whose ground
+    // they are standing in. Nothing in js/data/map_data.js moves, so every
+    // other chapter's raster is byte-identical by construction and
+    // tools/geom-snapshot.json stays valid. The development moves with the
+    // fold (devTweaks below), back to the cell each district was carved out
+    // of — so Mafraq's goes to Jerash and not to Syrian Daraa, and Jordan
+    // keeps the men and the money of its own north.
+    'Salamiyah': 'Emesa', 'Qusayr': 'Emesa',
+    'Suwayda': 'Bostra', 'Mafraq': 'Bostra',
+    'Rusafa': 'Palmyra',
   },
   // Italy's blend, stated so the check can ask it: the five old full-share
   // cells inside the fold carry 72 development (Naples and Syracuse stay out
@@ -672,9 +701,19 @@ export const BOOKMARK_1948 = {
   // rows stay for saves old enough to need them, and v2 (SPEC §232) adds the
   // consolidation survivors, whose baselines jump from one city's figures to
   // a whole country's. Fresh campaigns already start at the current version.
+  // Every row added after v2 states its own `since`, because the rows
+  // accumulate: without it a v2 save would be handed France's consolidation
+  // difference a second time on its way to v3.
   mapProfileMigration: {
-    version: 2,
+    version: 3,
     previousDev: {
+      // -- v3 (SPEC §257): the five circles fold back, and the four cells
+      // that take their development home were carrying only their own --
+      'Palmyra': { tax: 3, prod: 4, mp: 2, since: 3 },
+      'Emesa': { tax: 3, prod: 3, mp: 2, since: 3 },
+      'Apamea': { tax: 3, prod: 4, mp: 3, since: 3 },
+      'Bostra': { tax: 2, prod: 2, mp: 2, since: 3 },
+      'Gerasa': { tax: 3, prod: 3, mp: 2, since: 3 },
       // -- v2 (SPEC §232): the survivors' old single-cell baselines --
       'Lutetia': { tax: 3, prod: 4, mp: 3 },
       'Toletum': { tax: 2, prod: 3, mp: 3 },
@@ -821,6 +860,9 @@ export const BOOKMARK_1948 = {
     // town is now its own cell (SPEC §225) — Batanea back under the name of
     // the country it actually is, the Hauran.
     'Caesarea Philippi': 'Banias', 'Batanea': 'Hauran', 'Gamala': 'Golan',
+    // Raqqa's entry sleeps: Sergiopolis folds into Tadmur here (SPEC §257) and
+    // a folded cell wears its parent's name. Kept, because the name is right
+    // and the fold is a mergeProvinces line away from being undone.
     'Heliopolis': 'Baalbek', 'Nineveh': 'Mosul', 'Rusafa': 'Raqqa',
     'Berytus': 'Beirut', 'Tripolis': 'Tripoli', 'Aradus': 'Tartus',
     'Laodicea': 'Latakia', 'Emesa': 'Homs', 'Beroea': 'Aleppo',
@@ -1167,14 +1209,9 @@ export const BOOKMARK_1948 = {
     'Nukhayb': { tax: 1, prod: 1, mp: 0 },
     'Idlib': { tax: 2, prod: 2, mp: 1 },
     'Manbij': { tax: 1, prod: 2, mp: 1 },
-    'Rusafa': { tax: 1, prod: 2, mp: 1 },
     'Hasakah': { tax: 1, prod: 2, mp: 1 },
-    'Salamiyah': { tax: 1, prod: 1, mp: 1 },
-    'Qusayr': { tax: 1, prod: 2, mp: 1 },
     'Douma': { tax: 2, prod: 2, mp: 1 },
-    'Suwayda': { tax: 1, prod: 1, mp: 2 },
     'Zarqa': { tax: 2, prod: 2, mp: 2 },
-    'Mafraq': { tax: 1, prod: 1, mp: 1 },
     'Ruwayshid': { tax: 1, prod: 1, mp: 0 },
     'Shobak': { tax: 1, prod: 1, mp: 1 },
     'Wadi Rum': { tax: 1, prod: 1, mp: 0 },
@@ -1195,20 +1232,23 @@ export const BOOKMARK_1948 = {
     'Uruk': { tax: 1, prod: 1, mp: 1 },
     'Charax': { tax: 5, prod: 6, mp: 4 },
     'Seleucia-Ctesiphon': { tax: 9, prod: 8, mp: 7 },
-    // Syria: Idlib and Manbij off Aleppo, Rusafa off Tadmur, Hasakah off
-    // Qamishli, Qusayr off Homs, Salamiyah off Hama, Douma off the Ghouta,
-    // the Jabal Druze off Daraa.
+    // Syria: Idlib and Manbij off Aleppo, Hasakah off Qamishli, Douma off the
+    // Ghouta — and Raqqa off Tadmur, Qusayr off Homs, Salamiyah off Hama and
+    // the Jabal Druze off Daraa until §257 folded those four back. A fold is
+    // that accounting run backwards: every point goes to the cell it came
+    // from, which is why these four are the pre-§228 figures again.
     'Beroea': { tax: 6, prod: 5, mp: 3 },
-    'Palmyra': { tax: 3, prod: 4, mp: 2 },
+    'Palmyra': { tax: 4, prod: 6, mp: 3 },       // with Raqqa again (SPEC §257)
     'Nisibis': { tax: 3, prod: 3, mp: 3 },
-    'Emesa': { tax: 3, prod: 3, mp: 2 },
-    'Apamea': { tax: 3, prod: 4, mp: 3 },
-    'Bostra': { tax: 2, prod: 2, mp: 2 },
+    'Emesa': { tax: 4, prod: 5, mp: 3 },         // with Qusayr again
+    'Apamea': { tax: 4, prod: 5, mp: 4 },        // with Salamiyah again
+    'Bostra': { tax: 3, prod: 3, mp: 4 },        // with the Jabal Druze again
     'Dura-Europos': { tax: 2, prod: 3, mp: 2 },
     'Laodicea': { tax: 3, prod: 4, mp: 3 },
-    // Jordan: Zarqa off Amman, Mafraq off Jerash, Shobak off Ma'an, and Wadi
-    // Rum off Aqaba.
-    'Gerasa': { tax: 3, prod: 3, mp: 2 },
+    // Jordan: Zarqa off Amman, Shobak off Ma'an, and Wadi Rum off Aqaba —
+    // and Mafraq off Jerash until §257 folded it back and Jerash took the
+    // development home.
+    'Gerasa': { tax: 4, prod: 4, mp: 3 },         // with Mafraq again (SPEC §257)
     'Petra': { tax: 3, prod: 5, mp: 2 },          // less Auara (SPEC §230)
     'Aila': { tax: 1, prod: 3, mp: 1 },
     'Gadora': { tax: 1, prod: 1, mp: 1 },         // Salt, less Hesban (SPEC §230)
