@@ -2099,3 +2099,13 @@ under and the `smoke175` slot: **176 of 176 headless suites ALL PASS**, with
 `smoke176.mjs` the new contract. The `uitest*.mjs` files still need the
 `playwright` npm package, absent from this container, and were not measured.
 
+**Re-measured after the merge with §257.** `node tools/autorun.mjs 8` on the
+merged tree is byte-identical to the same run on §257's own commit — the whole
+file, anomaly block included: `167bce PAR · 67bce SEL, ARI, KSH · 40bce HER,
+ATG, KSH · 66ce ADI · 132ce JUD · 351ce ROM · 529ce JUD · 614ce none · 1948ce
+none`. The three names that are new against §256's baseline (`66ce ADI`,
+`132ce JUD`, `351ce ROM`) belong to §257 and are present on its commit without
+this branch; the 529 chapter run in isolation is byte-identical on both trees.
+Two chapters were changed by two sections in the same week and neither moved
+the other.
+
