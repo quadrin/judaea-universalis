@@ -1,4 +1,4 @@
-// Headless regression — SPEC §257: the wars the conquest took.
+// Headless regression — SPEC §258: the wars the conquest took.
 //
 // §256 moved the boundary and was reported back on twice: the conquest of
 // Greece and Egypt is not absolute, and there are too few wars. Both were
@@ -280,5 +280,5 @@ console.log('== 6 · the chapter did not grow ==');
     'and every card says what actually happened, for the divergence ledger to read');
 }
 
-console.log(failures ? `smoke175: ${failures} FAILURES` : 'smoke175: ALL PASS');
+console.log(failures ? `smoke176: ${failures} FAILURES` : 'smoke176: ALL PASS');
 process.exit(failures ? 1 : 0);

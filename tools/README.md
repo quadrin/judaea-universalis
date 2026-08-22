@@ -2016,7 +2016,7 @@ The battery on the merged tree: **174 of 174 headless suites ALL PASS**, with
 npm package, which is not installed in the container this section was written
 in; they fail identically on the parent commit and were not measured here.
 
-## §257 — the wars, and the rest of the conquest, measured
+## §258 — the wars, and the rest of the conquest, measured
 
 Same two numbers, same method: a `git worktree` of the parent, not a scratch
 file.
@@ -2029,7 +2029,7 @@ twenty-one game years past the opening date.
 **The full chapter**, `node tools/autorun.mjs 175 167bce`, across the three
 trees:
 
-| | parent of §256 | §256 | §257 |
+| | parent of §256 | §256 | §258 |
 |---|---|---|---|
 | ROM provinces | 30 → 49 | 30 → 100 | 30 → 135 |
 | ROM development | 335 → 1324 | 335 → 3037 | 335 → 4398 |
@@ -2038,7 +2038,7 @@ trees:
 
 The war count going back UP is the section working. §256 replaced emergent
 second-century wars in an unhistorical Africa and Greece with provinces, and
-the count fell; §257 puts the wars the Republic actually fought in their place,
+the count fell; §258 puts the wars the Republic actually fought in their place,
 and it comes back past where it started. Zero stderr on the run.
 
 **The anomaly set is long and every name in it is a scripted conquest.**
@@ -2059,6 +2059,6 @@ the board. The names to watch are ones NOT on that list — a court dying that n
 card kills.
 
 The battery on the merged tree: **175 of 175 headless suites ALL PASS**, with
-`smoke175.mjs` the new contract. The `uitest*.mjs` files still need the
+`smoke176.mjs` the new contract. The `uitest*.mjs` files still need the
 `playwright` npm package, absent from this container, and were not measured.
 

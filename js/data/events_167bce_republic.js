@@ -1071,7 +1071,7 @@ export const EVENTS_167_REPUBLIC = [
             h.setRuler(ctx, 'PNT', { name: 'Mithridates VI Eupator', title: 'King of Kings of Pontus', gov: 3, infl: 4, mar: 4, age: 60 });
             h.adjust(ctx, 'PNT', { mar: 15 });
             setOpinion(ctx, 'PNT', 'ROM', -100);
-            // §257: the card already says he invades within the year, so it
+            // §258: the card already says he invades within the year, so it
             // opens the war it describes. Lucullus (-69) and Pompey (-63) are
             // the middle and the end of THIS war, not three separate notices.
             if (alive(ctx, 'ROM')) {

@@ -189,7 +189,7 @@ const TIGRANES_SYRIA = [
 // and the Cappadocian marches stayed client kingdoms and are deliberately
 // absent, and so is everything across the Euphrates.
 // Pompey's settlement, by name. The Anatolian interior is on this list since
-// §257: Cappadocia and Lycaonia were organized in exactly this settlement, and
+// §258: Cappadocia and Lycaonia were organized in exactly this settlement, and
 // leaving them off meant a chapter that ran to 6 CE handed the 40 BCE board a
 // Roman Anatolia with four Armenian and Seleucid holes in it.
 const POMPEY_SYRIA = [

@@ -18251,7 +18251,7 @@ unhistorical Greece are provinces by the time they would have.
   `smoke162` carry the new file in their chapter source lists; `smoke109`'s era
   spans and `smoke74`'s world clock pass unmoved.
 
-## 257. The wars the conquest took
+## 258. The wars the conquest took
 
 Reported, on §256: *make the Roman conquest of Greece and Egypt absolute —
 they still don't conquer everything. Too few wars.*
@@ -18373,7 +18373,7 @@ courts and every one of them is a card in this package with a date on it —
 tools/README names them one by one, so that a future reader does not read the
 length of the list as a regression.
 
-- **Regression contract**: `smoke175.mjs` runs the chapter's whole dated
+- **Regression contract**: `smoke176.mjs` runs the chapter's whole dated
   calendar with the clock advancing, so truces, windows and gates answer the way
   a campaign makes them answer. Rome holds every cell of Greece, Egypt, Pontus,
   the Anatolian interior, Syria, Africa, Hispania, Gaul and the Danube that the

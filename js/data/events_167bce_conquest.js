@@ -1,4 +1,4 @@
-// Judaea Universalis — the wars the conquest took, 146 BCE–7 BCE (SPEC §257).
+// Judaea Universalis — the wars the conquest took, 146 BCE–7 BCE (SPEC §258).
 // Content package. Zero imports; all effects run through ctx.helpers at
 // runtime. Concatenated onto EVENTS_167 by the era registry. BCE years are
 // negative.

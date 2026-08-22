@@ -155,7 +155,7 @@ export const ERAS = [
   // republic package for the reason every chapter's packages ride beside each
   // other: one chapter, one registry line, and each content file keeps the
   // zero-import promise its header makes.
-  // The conquest package (SPEC §257) is the wars those provinces cost, and the
+  // The conquest package (SPEC §258) is the wars those provinces cost, and the
   // ground §256 still left outside the empire: the Achaean League's own war,
   // Aristonicus, all three Mithridatic wars, the fetial spear thrown at
   // Cleopatra and Actium, and the Augustan decades — Illyricum, Moesia,
