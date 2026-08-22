@@ -395,6 +395,8 @@ export const EVENTS_167_PROVINCES = [
         effects: guard('ev_pv_achaean_war:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
+          // §257 declares this war two months before this card settles it.
+          h.endWar(ctx, 'ROM', 'GRC', 'att');
           transfer(ctx, ['Corinth'], 'ROM', 'GRC');
           raze(ctx, 'Corinth', 2, 2);
           mark(ctx, ['Corinth'], {
@@ -1181,6 +1183,9 @@ export const EVENTS_167_PROVINCES = [
         effects: guard('ev_pv_egypt_annexed:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM') || !alive(ctx, 'PTO')) return;
+          // §257 declares this war in 32 and decides it at Actium in 31; the
+          // annexation is its peace, and dissolveTag would drop the war anyway.
+          h.endWar(ctx, 'ROM', 'PTO', 'att');
           h.dissolveTag(ctx, 'PTO', 'ROM');
           h.adjust(ctx, 'ROM', { treasury: 900, legitimacy: 20, stability: 1 });
           h.addTagModifier(ctx, 'ROM', {

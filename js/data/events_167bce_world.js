@@ -188,10 +188,15 @@ const TIGRANES_SYRIA = [
 // Pompey's province of Syria, plus Cilicia: what Rome kept in 64. Commagene
 // and the Cappadocian marches stayed client kingdoms and are deliberately
 // absent, and so is everything across the Euphrates.
+// Pompey's settlement, by name. The Anatolian interior is on this list since
+// §257: Cappadocia and Lycaonia were organized in exactly this settlement, and
+// leaving them off meant a chapter that ran to 6 CE handed the 40 BCE board a
+// Roman Anatolia with four Armenian and Seleucid holes in it.
 const POMPEY_SYRIA = [
   'Antioch', 'Seleucia Pieria', 'Laodicea', 'Apamea', 'Emesa', 'Beroea',
   'Cyrrhus', 'Zeugma', 'Damascus', 'Chalcis', 'Aradus', 'Tripolis', 'Byblos',
   'Berytus', 'Sidon', 'Tyre', 'Tarsus', 'Seleucia Trachea',
+  'Caesarea Mazaca', 'Tyana', 'Iconium', 'Melitene',
 ];
 
 // Hand a named list over, but never take a province off a living court that is
@@ -618,11 +623,11 @@ export const EVENTS_167_WORLD = [
     options: [
       {
         label: 'Syria becomes a province',
-        tooltip: 'The province of Syria and the province of Cilicia — Antioch to Tyre, and the Cilician coast — taken off Armenia and off the Seleucid rump, but never off a living court that holds its own. Commagene and the Cappadocian marches stay client kingdoms; the Euphrates stays Parthia\'s frontier. Rome +20 legitimacy, +250 talents and "The Settlement of the East" (+10% income permanently). Armenia is reduced to Armenia. A great Judaea now has a Roman border.',
+        tooltip: 'The province of Syria and the province of Cilicia — Antioch to Tyre, the Cilician coast and the Anatolian interior as far as Mazaca and Melitene — taken off Armenia, off both Seleucid crowns and off Commagene\'s Melitene, but never off a living court that holds its own. Commagene and the Cappadocian marches stay client kingdoms; the Euphrates stays Parthia\'s frontier. Rome +20 legitimacy, +250 talents and "The Settlement of the East" (+10% income permanently). Armenia is reduced to Armenia. A great Judaea now has a Roman border.',
         effects: guard('ev_w_pompey_organizes:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
-          const took = transfer(ctx, POMPEY_SYRIA, 'ROM', ['SEL', 'ARM']);
+          const took = transfer(ctx, POMPEY_SYRIA, 'ROM', ['SEL', 'ARM', 'CYZ', 'CMG']);
           if (alive(ctx, 'ARM') && took) {
             h.adjust(ctx, 'ARM', { legitimacy: -20, stability: -1 });
             h.addTagModifier(ctx, 'ARM', {

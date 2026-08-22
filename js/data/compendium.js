@@ -10,6 +10,7 @@ import { EVENTS_167_HELLENIZERS } from './events_167bce_hellenizers.js';
 import { EVENTS_167_WORLD } from './events_167bce_world.js';
 import { EVENTS_167_REPUBLIC } from './events_167bce_republic.js';
 import { EVENTS_167_PROVINCES } from './events_167bce_provinces.js';
+import { EVENTS_167_CONQUEST } from './events_167bce_conquest.js';
 import { EVENTS_167_AFTER } from './events_167bce_after.js';
 import { EVENTS_167_EMPIRE } from './events_167bce_empire.js';
 import { EVENTS_167_YEARS } from './events_167bce_years.js';
@@ -154,7 +155,13 @@ export const ERAS = [
   // republic package for the reason every chapter's packages ride beside each
   // other: one chapter, one registry line, and each content file keeps the
   // zero-import promise its header makes.
-  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
+  // The conquest package (SPEC §257) is the wars those provinces cost, and the
+  // ground §256 still left outside the empire: the Achaean League's own war,
+  // Aristonicus, all three Mithridatic wars, the fetial spear thrown at
+  // Cleopatra and Actium, and the Augustan decades — Illyricum, Moesia,
+  // Galatia, Cantabria, the Alps, the Rhine, Pannonia and the German province
+  // that lasted sixteen years.
+  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_CONQUEST, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, ANTIQUE) },

@@ -18250,3 +18250,139 @@ unhistorical Greece are provinces by the time they would have.
   eighteen are dispatches Rome decides and Jerusalem reads. `smoke83` and
   `smoke162` carry the new file in their chapter source lists; `smoke109`'s era
   spans and `smoke74`'s world clock pass unmoved.
+
+## 257. The wars the conquest took
+
+Reported, on §256: *make the Roman conquest of Greece and Egypt absolute —
+they still don't conquer everything. Too few wars.*
+
+Both halves are right, and the second is the diagnosis of the first.
+
+### Too few wars
+
+§256 shipped nineteen cards and exactly one declared war. Everything else was a
+transfer: a card fired, provinces changed colour, and a tooltip explained the
+arithmetic. Greece changed hands in a card about a sack and Egypt in a card
+about a queen's death — an aftermath each, with the war that produced it
+nowhere on the board.
+
+That is the wrong shape for this chapter specifically. The 167 board's whole
+argument is that a small state in Judaea is doing its foreign policy inside
+somebody else's century, and the way a century is legible from Jerusalem is as
+wars: who is fighting, who is winning, whether the legions in Asia are coming
+back. A boundary that jumps tells the player an outcome. Mithridates taking
+Roman Asia and Greece in one season, and Sulla taking them back four years
+later with an army his own government has outlawed, tells the player what kind
+of world they are negotiating in.
+
+### And they still don't conquer everything
+
+Measured rather than felt. Fire every dated card in the chapter, advance the
+clock as you go, and read the map at 6 CE against what this chapter is supposed
+to hand the chapters after it — `political_maps.js`' 40 BCE board and
+`bookmark_40bce.js`' own owners table:
+
+| still outside the empire in 6 CE | Roman on the 40 board because |
+|---|---|
+| Sinope, Trapezus, Phasis | Pontus, 63 — a chapter with three Mithridatic wars in it had no Pontic card |
+| Caesarea Mazaca, Tyana, Iconium, Melitene | Pompey's settlement organized every one and the chapter's Pompey card listed none |
+| Damascus, Emesa | held by the SOUTHERN Seleucid crown (`CYZ`), which that card did not name as a loser — Pompey annexed Syria around the two cities he actually took it from |
+| Halicarnassus | the province of Asia, 129 |
+| Toletum | Celtiberia, in a chapter whose own card says Celtiberia is finished |
+| Colonia Agrippina, Mogontiacum, Batavia, Atuatuca, Argentorate | Caesar took the west bank; the Alesia list stopped short of the river |
+| Bracara, Asturica | the Cantabrian war, 29–19 — well inside a chapter that runs to 6 CE |
+| Virunum, Augusta Vindelicorum | the Alps, 16–15 |
+| Delminium, Siscia | Octavian's own war, 35–33 |
+| Novae, Singidunum, Sirmium, Naissus | Moesia, 29–28 |
+| Carnuntum, Aquincum | Pannonia, 12–9 |
+| Frisia, Chatti, Teutoburgium | a province from 7 BCE, and this chapter's last page is 6 CE |
+
+### `js/data/events_167bce_conquest.js` — eighteen cards, nine of them war
+
+Ten of the eighteen belong to one of five declared wars, each with a card that
+opens it and a card that ends it — and two of the five end in §256's own cards,
+which is why that package's Corinth and Alexandria cards now call `endWar`.
+Greece and Egypt are each taken BY a war instead of announced. The other eight
+are the Augustan decades, where the fighting is a frontier being drawn rather
+than a rival being killed, and there is nobody left to declare war on.
+
+| | | |
+|---|---|---|
+| −146 | War declared on Sparta, and therefore on Rome | the Achaean League cancels its debts and raises an army; **§256's sack is now this war's peace** |
+| −129 | The citizens of the Sun | Aristonicus; Halicarnassus; the tax contract for Asia auctioned in the Forum |
+| −88 | A king who has been preparing since he was eleven | Mithridates takes Asia and Greece; the Vespers |
+| −86 | Two battles in Boeotia | Chaeronea and Orchomenus; Greece cleared |
+| −85 | The peace Sulla had to make | Dardanus: Asia back, the king keeps his crown, the province is fined twenty thousand talents |
+| −74 | *(the Bithynian bequest, amended)* | the card already said he invades within the year — **now it opens the war** |
+| −69 | Too many for an embassy | Tigranocerta, and the interest rate capped at twelve per cent |
+| −63 | The king who could not be poisoned | Pontus stops being a kingdom |
+| −35 | The gangway at Metulum | the Illyrian war opens |
+| −33 | The wound at Setovia | Siscia kept as a depot; Illyricum Roman |
+| −32 | War declared on a foreign queen | the will read in the Senate, the fetial spear, the oath of all Italy |
+| −31 | The squadron that went through the line | Actium; **§256's annexation is now this war's peace** |
+| −28 | The spoils he was not allowed to dedicate | Moesia and the Danube frontier |
+| −25 | A kingdom left by a king killed by a widow | Galatia and the Anatolian interior |
+| −19 | Two hundred years for a corner | Cantabria; Hispania entire |
+| −15 | Forty-five tribes on one trophy | the Alps and Noricum |
+| −12 | A line with sixty forts on it | the Rhine, and the canal to the northern sea |
+| −9 | The country between the rivers | Pannonia |
+| −7 | A province for sixteen years | Germania to the Elbe |
+
+Three edits outside the package make the rest of it true: `POMPEY_SYRIA` gains
+the Anatolian interior and names `CYZ` and `CMG` among its losers; the Achaean
+and Egyptian settlement cards end the wars this package declares; and the
+Bithynian bequest opens the war its own paragraph describes.
+
+### What is deliberately NOT taken
+
+The complaint was that Rome conquers too little, and the answer is not to hand
+it everything. Every court still standing at 6 CE is standing for a date this
+chapter does not reach, and a card that took it would be a lie the player can
+check against the next bookmark:
+
+- **Thrace** keeps Serdica and Philippopolis — a client crown until 46 CE.
+- **Commagene** keeps Samosata (72), **Osroene** Edessa and Carrhae (Parthia's
+  business), **Ituraea** Chalcis, **the Bosporus** Panticapaeum, **Mauretania**
+  the Moorish west (40 CE), **Britain** everything (43 CE).
+- **Armenia** is beaten at Tigranocerta and reduced by Pompey and annexed never,
+  which is the whole of what Armenia is for.
+- **Palmyra** is nobody's province until 17 CE and stays off every list.
+
+**Germania is the one that needs saying out loud.** It is Roman from 7 BCE and
+tribal again in 9 CE, and this chapter's last page is 6 CE. The card takes it,
+and its own text says that the man who will destroy the province is at this
+moment a Cheruscan equestrian in Roman service, that the forum at Waldgirmes is
+being laid out, and that on the date printed on the card everybody expects it to
+last. A chapter that stops in 6 CE is allowed to stop there; what it is not
+allowed to do is pretend Germania was never a province because of what happened
+after its last page.
+
+### What it costs, measured
+
+`node tools/autorun.mjs 8` is byte-identical across all nine bookmarks, again:
+the earliest card here is 146 BCE, twenty-one years past the opening date.
+
+At full chapter length (`175 167bce`) Rome goes 30 → 135 provinces where §256
+left it at 100 and the parent left it at 49. The number that matters more is the
+one that went back UP: 47 wars started and 1,609 battles, against §256's 35 and
+1,107 and the parent's 52 and 1,551. §256 replaced the second century's
+emergent wars in an unhistorical Africa and Greece with provinces and the count
+fell; this section puts the wars the Republic actually fought where they were,
+and it comes back past where it started. The anomaly set gains fifteen DEAD
+courts and every one of them is a card in this package with a date on it —
+tools/README names them one by one, so that a future reader does not read the
+length of the list as a regression.
+
+- **Regression contract**: `smoke175.mjs` runs the chapter's whole dated
+  calendar with the clock advancing, so truces, windows and gates answer the way
+  a campaign makes them answer. Rome holds every cell of Greece, Egypt, Pontus,
+  the Anatolian interior, Syria, Africa, Hispania, Gaul and the Danube that the
+  40 BCE board holds; five courts end and nine deliberately do not, each named
+  with the date that keeps it; six Roman wars open on the map and six close, with
+  Greece declared-then-settled and Egypt declared-then-Actium-then-annexed in
+  that order; Mithridates crosses with armies and a fleet and Chaeronea clears
+  them out; the whole calendar runs with no orphan and no war left hanging; with
+  Rome gone nothing throws and no province moves; a crown holding twelve of the
+  century's prizes keeps all twelve and so does a living third court; and the
+  chapter's 6 CE horizon has not moved. `smoke174` (§256's own suite) passes
+  unmoved, as do `smoke83`, `smoke162`, `smoke109` and `smoke74`.

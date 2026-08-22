@@ -2015,3 +2015,50 @@ The battery on the merged tree: **174 of 174 headless suites ALL PASS**, with
 `smoke174.mjs` the new contract. The 52 `uitest*.mjs` files need the `playwright`
 npm package, which is not installed in the container this section was written
 in; they fail identically on the parent commit and were not measured here.
+
+## §257 — the wars, and the rest of the conquest, measured
+
+Same two numbers, same method: a `git worktree` of the parent, not a scratch
+file.
+
+**The default window still does not move.** `node tools/autorun.mjs 8` is
+byte-identical across all nine bookmarks. The earliest card in
+`events_167bce_conquest.js` is the Achaean League's defiance in 146 BCE,
+twenty-one game years past the opening date.
+
+**The full chapter**, `node tools/autorun.mjs 175 167bce`, across the three
+trees:
+
+| | parent of §256 | §256 | §257 |
+|---|---|---|---|
+| ROM provinces | 30 → 49 | 30 → 100 | 30 → 135 |
+| ROM development | 335 → 1324 | 335 → 3037 | 335 → 4398 |
+| wars started / ended | 52 / 51 | 35 / 33 | 47 / 44 |
+| battles | 1551 | 1107 | 1609 |
+
+The war count going back UP is the section working. §256 replaced emergent
+second-century wars in an unhistorical Africa and Greece with provinces, and
+the count fell; §257 puts the wars the Republic actually fought in their place,
+and it comes back past where it started. Zero stderr on the run.
+
+**The anomaly set is long and every name in it is a scripted conquest.**
+`ROM`, `PAR` and `MAU SNOWBALL` are documented above (§111's outcome, and
+Bocchus being paid after Thapsus). The DEAD list — `MAS CTB LUS AVN AED SEQ BLG
+ARO NOR CHE CHA FRS DLM SCO DRD` — is, court by court: Massalia stripped in 49,
+Celtiberia and Lusitania finished by the Cantabrian war of 19, the five Gallic
+peoples by Alesia and the Rhine, Noricum annexed without a war in 15, the three
+German peoples by Drusus, and the Delmatae, Scordisci and Dardani by Illyricum
+and Moesia. Every one is a card in `events_167bce_conquest.js` with a date on
+it. `GBA` is the pre-existing Greco-Bactrian death this file has documented
+since §205.
+
+Do NOT "fix" any of them, and do not read the length of the list as a
+regression: a 173-year run of a chapter that now contains the Roman conquest of
+the Mediterranean is supposed to end with the Mediterranean's other courts off
+the board. The names to watch are ones NOT on that list — a court dying that no
+card kills.
+
+The battery on the merged tree: **175 of 175 headless suites ALL PASS**, with
+`smoke175.mjs` the new contract. The `uitest*.mjs` files still need the
+`playwright` npm package, absent from this container, and were not measured.
+

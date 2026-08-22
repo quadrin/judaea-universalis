@@ -1063,7 +1063,7 @@ export const EVENTS_167_REPUBLIC = [
     options: [
       {
         label: 'The Senate accepts another estate',
-        tooltip: 'Rome +100 talents of Bithynian revenue. Pontus: Mithridates VI Eupator is confirmed on his throne with +15 martial points and −100 opinion of Rome — the king who has been preparing for this war since he was a boy finally gets it.',
+        tooltip: 'Rome +100 talents of Bithynian revenue, and the Third Mithridatic War opens — the one that will not stop. Pontus: Mithridates VI Eupator is confirmed on his throne with +15 martial points, an army on the Bithynian road and −100 opinion of Rome — the king who has been preparing for this war since he was a boy finally gets it.',
         effects: guard('ev_rw_bithynia_will:0', (ctx) => {
           const h = ctx.helpers;
           if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 100 });
@@ -1071,6 +1071,17 @@ export const EVENTS_167_REPUBLIC = [
             h.setRuler(ctx, 'PNT', { name: 'Mithridates VI Eupator', title: 'King of Kings of Pontus', gov: 3, infl: 4, mar: 4, age: 60 });
             h.adjust(ctx, 'PNT', { mar: 15 });
             setOpinion(ctx, 'PNT', 'ROM', -100);
+            // §257: the card already says he invades within the year, so it
+            // opens the war it describes. Lucullus (-69) and Pompey (-63) are
+            // the middle and the end of THIS war, not three separate notices.
+            if (alive(ctx, 'ROM')) {
+              h.declareWar(ctx, 'PNT', 'ROM', 'The Third Mithridatic War');
+              h.adjust(ctx, 'PNT', { manpower: 12000, treasury: 150 });
+              h.spawnArmy(ctx, 'PNT', 'Sinope', {
+                inf: 13, cav: 3, name: 'The Army of the Third War',
+                general: { name: 'Mithridates Eupator', fire: 3, shock: 3, maneuver: 3 },
+              });
+            }
           }
           h.setFlag(ctx, 'bithyniaBequest', true);
           h.chronicle(ctx, 'era', 'Bithynia is left to Rome by testament, as Pergamon was; Mithridates reads the will as a declaration of war, which by now it is.');

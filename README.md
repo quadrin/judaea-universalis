@@ -109,6 +109,26 @@ static site, the zero dependencies, or the missing build step changes.
   Alexandria has to come through the Jewish military district in the Delta,
   and Jerusalem can write the letter that opens the road — or let two Roman
   armies settle it and owe nobody a favour.
+- **And they are wars, not boundary changes.** Nine more cards put the
+  century's Roman wars on the board with armies on both sides and a peace at
+  the end: the Third Punic War from the ultimatum to the six days in the
+  streets; the Achaean League cancelling its debts to raise the army Mummius
+  destroys; Mithridates VI taking Roman Asia and Greece in a single season
+  and having eighty thousand Italians killed on one appointed day, then Sulla
+  clearing Greece at Chaeronea and Orchomenus with an army his own government
+  has outlawed, then the peace at Dardanus that gives the king his kingdom
+  back because the proconsul has a civil war to get to; the third war that
+  ends with a king immune to his own poisons asking a Gaul of his guard to do
+  it with a sword; Octavian on the collapsing gangway at Metulum; and Antony's
+  will read out in the Senate so that war can be declared on a foreign queen
+  with a fetial spear rather than on a Roman — and then Actium, and then
+  Alexandria. Between them they close the map: by 6 CE Rome holds Greece and
+  Egypt entire, Pontus, the Anatolian interior, the Rhine bank, the Spanish
+  northwest, the Alps, Illyricum, Moesia, Pannonia and a German province that
+  history gives it for sixteen years. What it does **not** hold is everything
+  whose date falls past the chapter's last page — client Thrace, Commagene,
+  Osroene, the Bosporus, Mauretania, Britain — and Armenia, which is beaten
+  twice here and annexed never.
 - Map labels that name the ground: zoom in for province names, out for nations —
   one name per *region* a court holds rather than one per court, so a realm in two
   places reads **JUDAEA** at home and **JUDAEAN GREECE** across the sea instead of
