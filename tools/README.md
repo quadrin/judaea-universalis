@@ -2109,3 +2109,28 @@ this branch; the 529 chapter run in isolation is byte-identical on both trees.
 Two chapters were changed by two sections in the same week and neither moved
 the other.
 
+## §259 — a mission's land is land held, measured
+
+The section changes what a mission chain asks about ground (owned AND
+controlled, not merely occupied), so every court that was banking medallions
+for wartime occupations now banks them later or not at all — and a mission
+reward is money, manpower and modifiers, which means the seeded stream moves
+from the first month a chain would have paid. Expect the numbers to re-roll;
+what to check is the anomaly set.
+
+`node tools/autorun.mjs 8` on this branch: `167bce HAS: BLEEDING · 67bce SEL:
+DEAD, ARI: BLEEDING, KSH: EXHAUSTED · 40bce HER: SNOWBALL · 66ce none · 132ce
+JUD: SNOWBALL · 351ce ROM: SNOWBALL · 529ce JUD: DEAD · 614ce none · 1948ce
+none`. Nine names against the parent's eleven, every one of them in a family
+this file already documents — Hasmonean and Aristobulan bleeding (the
+plunder-funded underdogs and the brothers' stalemate), Pompey's arc killing
+SEL, Kush exhausted in both ancient chapters, Herod's crown war, the Return
+that is never crushed, Rome's scripted 351 annexations, and the 529 rump. The
+two that dropped (`66ce ADI: BLEEDING`, `40bce HER: DEBT-SPIRAL` — HER now
+flags SNOWBALL instead) are the stream moving, not the section fixing
+anything: Adiabene and Herod are exactly where §257 and §226 left them.
+
+The battery: **177 of 177 headless suites ALL PASS**, with `smoke177.mjs` the
+new contract and `smoke111.mjs` (the mission tree's own suite) unmoved. The
+`uitest*.mjs` files still need the `playwright` npm package, absent from this
+container, and were not measured.

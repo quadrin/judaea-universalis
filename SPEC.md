@@ -18607,3 +18607,78 @@ length of the list as a regression.
   century's prizes keeps all twelve and so does a living third court; and the
   chapter's 6 CE horizon has not moved. `smoke174` (§256's own suite) passes
   unmoved, as do `smoke83`, `smoke162`, `smoke109` and `smoke74`.
+
+## 259. A mission's land is land held, not land stood in
+
+Reported, from the 66 chapter: *my column walked into Caesarea in the second
+year of the war and "The Coastal Road" lit up, paid me the procurator's
+treasury, and three months later the white peace handed the city back. I never
+owned it for a day.*
+
+Every mission chain in the game asked its land question through
+`helpers.controls` and `helpers.countControlled` — a hundred and fifty
+predicates across nine chapters and the formables — and those two answer
+*whose flag flies there this month*. That is the right question for a siege, a
+supply lane, a trade route and a war card, and the wrong one for the only thing
+a mission ever says about ground: that it is **ours**. A province an army is
+standing in during an unfinished war is not part of the realm. It is a
+bargaining chip, and §31's own peace table may hand it straight back.
+
+**The rule.** A mission's land means land HELD: owned AND controlled. That is
+not a new invention — it is §80's rule for a crown ("ownership as well as
+control matters, so a temporary occupation cannot manufacture a crown"),
+finally applied to the trees that ask for the same thing in the same words.
+The two halves both matter, and the mirror case is deliberate: a province the
+realm owns with an enemy army sitting in it is not held either, so a chain
+cannot be paid for ground the realm has lost the use of. §229 already says a
+claim must be made while the terms hold; this says what the terms are.
+
+**Where it lives.** Two helpers say it — `holds` and `countHeld`, beside
+§146's `countOwned` — and one view enforces it. `missionCtx(ctx)`
+(`military.js`) returns the same world with `controls` and `countControlled`
+reading as possession, and `checkMissions`, `claimMission` and §254's
+difficulty ladder each run their checks against it. The chains themselves are
+untouched, which is the point: they are content, and content the sim can
+silently get right is worth more than a hundred and fifty hand-edited
+predicates that the hundred and fifty-first mission would forget. A chain that
+genuinely means *my men are standing in it* still has the raw board —
+`ctx.game.provinces`, `p.controller` — and has to say so in as many words. A
+mission's `reward` still runs on the live ctx; no reward in the game asks a
+land question, and one that wants the flags should have them.
+
+**Nothing else moves.** Sieges, supply, war score, occupation unrest, the peace
+table and every event card read control exactly as before — an event that fires
+when our men enter Antioch is asking about our men entering Antioch. The
+difficulty ladder measures through the view for the same reason the panel
+draws through it: the probe hands its realm both halves at once, so the two
+readings agree on everything the ladder itself moves, and where they differ
+possession is the honest answer.
+
+**What the panel says.** A player whose armies are standing exactly where the
+medallion asked would otherwise read their own tree as broken, so `getMissions`
+runs the check twice — once through possession, once through the flags — and a
+mission satisfied by the flags alone comes back with `occupation: true`. The
+tooltip stops saying *the realm may work at this now* and says the true thing
+instead: our men are standing in it, which is not the same as holding it, and
+the peace is what makes it ours.
+
+**The formables came with it.** §80 wrote the rule for MLI and the six settled
+crowns took it up (`ownsAndControls`, `ownedControlledCount`), but the four
+dynastic restorations of 67/40 BCE, the 1948 pair and the imperial crowns still
+asked `controls` under labels that read **Hold Jerusalem** — so an occupation
+manufactured exactly the crown §80 says it may not. Those rows now ask
+possession, and `formables.js`'s own `holds()`, which was a one-line alias for
+`controls`, means what its name says.
+
+- **Regression contract**: `smoke177.mjs` — `holds`/`countHeld` against
+  `controls`/`countOwned` on both cases (their city with our flag, our city
+  with their army); the view reading as possession while the live ctx still
+  reads the flags, sharing one world and one helpers table; the 66 chapter's
+  "The Coastal Road" refusing to light, refusing a claim as `unmet`, and
+  banking nothing while Caesarea is merely occupied, then lighting, claiming
+  and paying its 200 talents once the deed moves; the same rule on an AI
+  court's calendar (§102's symmetry); §254's ladder still measuring the tree it
+  now measures through the view; and §80's own family — standing in Jerusalem
+  no longer satisfying "Hold Jerusalem", and three provinces under enemy
+  occupation breaking a twelve-province count that ownership alone would pass.
+  `smoke111.mjs` (§177/§229/§254's own suite) passes unmoved.

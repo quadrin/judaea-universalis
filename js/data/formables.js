@@ -48,7 +48,17 @@ function ownedControlledCount(ctx, tag, religion) {
 // men, ministries, and a second permanent modifier that says what this
 // particular kingdom is FOR — plus a chain of missions addressed to the new
 // identity, so proclaiming a kingdom fills the panel instead of emptying it.
-function holds(ctx, tag, name) { return ctx.helpers.controls(ctx, tag, name); }
+// HOLD means hold (SPEC §259): owned and controlled, not merely stood in.
+// These are mission predicates, and a mission chain is a list of things the
+// realm has become — an occupation in an unfinished war is a bargaining chip
+// the treaty may hand straight back, so it buys no medallion until the peace
+// makes it ownership. (`checkMissions` reads every chain through the same
+// rule; this says it in the file where the word is written.)
+function holds(ctx, tag, name) {
+  return typeof ctx.helpers.holds === 'function'
+    ? ctx.helpers.holds(ctx, tag, name)
+    : ctx.helpers.controls(ctx, tag, name);
+}
 function ownedCount(ctx, tag, religion) {
   return ctx.game.provinces.filter((p) => p && !p.impassable
     && p.owner === tag && p.controller === tag
@@ -2393,8 +2403,8 @@ export const FORMABLES = [
       + 'throne, one Temple, and one name on the coins.',
     bookmarks: ['67bce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold twelve provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 12 },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Hold twelve provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 12 },
       { label: "Aristobulus' cause broken (dead, client, or a rump of 3)", check: (ctx) => broken(ctx, 'ARI') },
       { label: 'Legitimacy 50', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 50 },
     ],
@@ -2421,8 +2431,8 @@ export const FORMABLES = [
       + 'will grumble about the succession; victors write the genealogies.',
     bookmarks: ['67bce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold twelve provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 12 },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Hold twelve provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 12 },
       { label: "Hyrcanus' cause broken (dead, client, or a rump of 3)", check: (ctx) => broken(ctx, 'HYR') },
       { label: 'Legitimacy 50', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 50 },
     ],
@@ -2450,9 +2460,9 @@ export const FORMABLES = [
       + 'decree, no Antony.',
     bookmarks: ['40bce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold Hebron', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Hebron') },
-      { label: 'Hold ten provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 10 },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Hold Hebron', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Hebron']) },
+      { label: 'Hold ten provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 10 },
       { label: "Herod's cause broken (dead, client, or a rump of 3)", check: (ctx) => broken(ctx, 'HER') },
       { label: 'Owe fealty to no one', check: (ctx, tag) => !ctx.game.tags[tag].overlord },
     ],
@@ -2480,8 +2490,8 @@ export const FORMABLES = [
       + 'as well as parchment.',
     bookmarks: ['40bce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold ten provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 10 },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Hold ten provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 10 },
       { label: "Antigonus' cause broken (dead, client, or a rump of 3)", check: (ctx) => broken(ctx, 'ATG') },
       { label: 'Legitimacy 40', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 40 },
     ],
@@ -2521,7 +2531,7 @@ export const FORMABLES = [
         label: 'The rising is ended — no court flies the banner of Judaea',
         check: (ctx) => !ctx.game.tags.JUD || ctx.game.tags.JUD.alive === false,
       },
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
       {
         // The country the rising held, not the coast Rome governs from:
         // Caesarea Maritima is the procurator's own seat, and a client king
@@ -2671,10 +2681,10 @@ export const FORMABLES = [
       + 'reduced to a governorate.',
     bookmarks: ['1948ce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold Tel Aviv-Jaffa (Joppa)', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Joppa') },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Hold Tel Aviv-Jaffa (Joppa)', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Joppa']) },
       { label: "Israel's cause broken (dead, client, or a rump of 3)", check: (ctx) => broken(ctx, 'ISR') },
-      { label: 'Hold twenty provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 20 },
+      { label: 'Hold twenty provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 20 },
     ],
     bonus: {
       legitimacy: 25, stability: 1,
@@ -2697,10 +2707,10 @@ export const FORMABLES = [
       + 'promised — and takes the mantle with it: one crown from the desert to the sea.',
     bookmarks: ['1948ce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold Tel Aviv-Jaffa (Joppa)', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Joppa') },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Hold Tel Aviv-Jaffa (Joppa)', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Joppa']) },
       { label: "Israel's cause broken (dead, client, or a rump of 3)", check: (ctx) => broken(ctx, 'ISR') },
-      { label: 'Hold twenty provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 20 },
+      { label: 'Hold twenty provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 20 },
     ],
     bonus: {
       legitimacy: 25, stability: 1,
@@ -2725,10 +2735,10 @@ export const FORMABLES = [
       + 'dare write "Byzantine." The Empire is Rome again, in fact and in name.',
     bookmarks: ['614ce'],
     requires: [
-      { label: 'Hold Antioch', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Antioch') },
-      { label: 'Hold Alexandria', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Alexandria') },
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold Seleucia-Ctesiphon', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Seleucia-Ctesiphon') },
+      { label: 'Hold Antioch', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Antioch']) },
+      { label: 'Hold Alexandria', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Alexandria']) },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Jerusalem']) },
+      { label: 'Hold Seleucia-Ctesiphon', check: (ctx, tag) => ownsAndControls(ctx, tag, ['Seleucia-Ctesiphon']) },
     ],
     bonus: {
       legitimacy: 30, stability: 1,

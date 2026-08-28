@@ -41,7 +41,7 @@
 // `military.js` only: the probe borrows the LIVE ctx's helpers rather than
 // importing the sim's entry point, which would make this module and init.js a
 // cycle for the sake of one object that is already in the ctx it is handed.
-import { num, clamp, tagDef, livingTag } from './military.js';
+import { num, clamp, tagDef, livingTag, missionCtx } from './military.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -242,11 +242,18 @@ export function missionCosts(ctx, tag, list) {
   const out = new Map();
   try {
     const order = conquestOrder(ctx, live);
+    // Measured through the same lens the tree is judged by (SPEC §259): a
+    // mission's land question means land OWNED and controlled, so the ladder
+    // rates "hold Damascus" at what holding it costs and not at what marching
+    // through it costs. The probe hands its realm both halves at once, so the
+    // two readings agree on everything the ladder itself moves; where they
+    // differ is the board the probe left alone, and there possession is the
+    // honest answer.
+    const rungs = [];
+    for (let r = 0; r <= RUNGS; r++) rungs.push(missionCtx(probeAt(ctx, live, r / RUNGS, order)));
     // Rung zero first: a check already true of a realm with nothing is not
     // measuring growth, and must keep its author's seat rather than sorting
     // to the top of every tree in the game.
-    const rungs = [];
-    for (let r = 0; r <= RUNGS; r++) rungs.push(probeAt(ctx, live, r / RUNGS, order));
     for (let i = 0; i < list.length; i++) {
       const m = list[i];
       if (!m || typeof m.check !== 'function') { out.set(String(m && m.id ? m.id : 'm' + i), null); continue; }

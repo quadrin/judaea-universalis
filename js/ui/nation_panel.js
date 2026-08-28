@@ -1103,6 +1103,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // strokes from smearing under the non-uniform scale. Rows are fixed-height
   // (grid-auto-rows) for exactly this reason — fractional y must mean the
   // same thing in every row.
+
+  // What a medallion says when the map already looks like the mission asked
+  // for. A mission's land question means land HELD — ours in law and in fact —
+  // so an army standing in a city during an unfinished war lights nothing; the
+  // treaty does. Without this line a player reads their own tree as broken.
+  const SWORD_ONLY = 'Our men are standing in it, which is not the same as holding it. '
+    + 'Land counts for a mission once the realm owns it — an occupation in an unfinished war '
+    + 'is a bargaining chip until the peace makes it ours.';
+
   function refreshMissions() {
     let list = [];
     if (actions && typeof actions.getMissions === 'function') {
@@ -1153,7 +1162,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         : m.status === 'ready' ? 'The terms are met — click to claim it. Nothing is paid until you do, and the terms must still hold when you click.'
           : m.status === 'shut' ? 'Shut. This campaign took the other road'
             + (m.roadTaken ? ' — ' + m.roadTaken + '.' : '.')
-            : m.status === 'current' ? 'The realm may work at this now.'
+            : m.status === 'current' ? (m.occupation ? SWORD_ONLY : 'The realm may work at this now.')
               : 'Locked — first: ' + (m.requiresNames && m.requiresNames.length
                 ? m.requiresNames.join(', ') : 'the missions before it') + '.';
       const strand = m.civil === 'govt' ? 'The Government'

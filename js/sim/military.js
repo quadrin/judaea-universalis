@@ -269,6 +269,52 @@ export function humanChairs(game) {
   return out;
 }
 
+// ------------------------------------------- land held, and land stood upon
+// SPEC §259. A mission that says HOLD is a claim about the realm, and a
+// province an army is standing in during an unfinished war is not part of the
+// realm — it is a bargaining chip, and the table may hand it straight back.
+// Every mission chain in the game asked its land question through
+// `helpers.controls` and `helpers.countControlled`, which answer "whose flag
+// flies there this month": march a column into Damascus in the second year of
+// a war and the medallion lit, the reward was paid, and the white peace three
+// months later took the city away again with nothing to give back.
+//
+// This is the one place that says otherwise. A mission's `check` runs against
+// a VIEW of the ctx in which those two helpers mean POSSESSION — owned and
+// controlled, §80's own rule for a crown — so an occupation counts for a
+// mission only once the peace has made it ownership. Nothing else in the game
+// changes: a siege, a supply lane, an event card and a war score still ask
+// where the armies are, because that is the question they are actually asking.
+//
+// The view is the whole mechanism, deliberately: the chains are content, and
+// content the sim can silently get right is better than a hundred and fifty
+// hand-edited predicates that a hundred and fifty-first mission will forget.
+// A chain that genuinely means "my men are standing in it" still has the raw
+// board — `ctx.game.provinces`, `p.controller` — and says so in as many words.
+//
+// Memoized per ctx: the monthly pass, the panel and the difficulty ladder all
+// ask, and they should all get the same object.
+const MISSION_VIEWS = new WeakMap();
+export function missionCtx(ctx) {
+  if (!ctx || !ctx.helpers) return ctx;
+  const had = MISSION_VIEWS.get(ctx);
+  if (had) return had;
+  const base = ctx.helpers;
+  const helpers = Object.create(base);
+  // A helpers table without the possession pair is one a test built by hand;
+  // it keeps the answer it had rather than throwing inside somebody's check.
+  helpers.controls = typeof base.holds === 'function'
+    ? (c, tag, name) => base.holds(c || ctx, tag, name)
+    : base.controls;
+  helpers.countControlled = typeof base.countHeld === 'function'
+    ? (c, tag, opts) => base.countHeld(c || ctx, tag, opts)
+    : base.countControlled;
+  const view = Object.create(ctx);
+  view.helpers = helpers;
+  MISSION_VIEWS.set(ctx, view);
+  return view;
+}
+
 // ------------------------------------------------------- the arms market
 // SPEC §181: where the bookmark declares `armsMarket`, only its arsenal
 // states raise the gated arms (air wings, armor) from their own works;

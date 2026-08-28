@@ -8,7 +8,7 @@ import {
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag, tagDef,
-  isOffmapTag, armsSupplierOf, armsDealState, armsGate, isArsenal, armsMarketOn,
+  isOffmapTag, armsSupplierOf, armsDealState, armsGate, isArsenal, armsMarketOn, missionCtx,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   retireAffinityCore, secedeTagCore, dissolveTagCore,
@@ -1040,6 +1040,19 @@ export const simHelpers = {
     const p = ctx.prov(provName);
     return !!p && p.controller === L(ctx, tag);
   },
+  // Held, as against stood upon (SPEC §259). `controls` answers "whose flag
+  // flies there this month" — the right question for a siege, a supply lane
+  // and a war card, and the wrong one for anything that says the land is OURS.
+  // A province occupied in an unfinished war is a bargaining chip: the treaty
+  // may hand it straight back, and until the deed moves nothing should be
+  // built on having marched into it. Owned AND controlled, which is the rule §80
+  // already wrote for a crown so that a temporary occupation could not
+  // manufacture one.
+  holds(ctx, tag, provName) {
+    const p = ctx.prov(provName);
+    const t = L(ctx, tag);
+    return !!p && p.owner === t && p.controller === t;
+  },
   // Is this cell a diaspora community rather than part of the land (SPEC
   // §133)? Takes a province or a name, so a `keep` predicate can ask directly.
   isDiaspora(ctx, prov) {
@@ -1080,6 +1093,24 @@ export const simHelpers = {
     for (let i = 1; i < g.provinces.length; i++) {
       const p = g.provinces[i];
       if (!p || p.impassable || p.owner !== tag) continue;
+      if (opts && opts.religion && p.religion !== opts.religion) continue;
+      n++;
+    }
+    return n;
+  },
+  // How many provinces the realm HOLDS (SPEC §259): owned and controlled both,
+  // the counting half of `holds`. `countControlled` inflates with every
+  // province an army is standing in and deflates the month the peace is
+  // signed; `countOwned` counts land an enemy is sitting on as if the flag
+  // still flew there. A mission that asks for twenty provinces means twenty
+  // provinces that are the realm's in law and in fact.
+  countHeld(ctx, tag, opts) {
+    const g = ctx.game;
+    tag = L(ctx, tag);
+    let n = 0;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
       if (opts && opts.religion && p.religion !== opts.religion) continue;
       n++;
     }
@@ -3732,6 +3763,23 @@ export function gameActions(ctx) {
             if (!moved) break;
           }
         }
+        // Why a medallion the map looks ready for is not lit (SPEC §259). A
+        // mission's land question means land HELD — owned and controlled —
+        // so a realm whose columns are standing in the city it was told to
+        // take reads its own tree as broken unless the panel says otherwise.
+        // Two readings of the same check answer it: satisfied by the flags
+        // this month, unsatisfied by possession, and the only thing missing
+        // is the treaty. Asked only of the workable few, and only when the
+        // monthly pass has not already called them ready.
+        const swordOnly = (m, i) => {
+          if (typeof m.check !== 'function') return false;
+          if (done.has(ids[i]) || closed.has(ids[i]) || ready.has(ids[i])) return false;
+          if (!missionUnlocked(list, i, done, tree)) return false;
+          try {
+            if (m.check(missionCtx(ctx))) return false;
+            return !!m.check(ctx);
+          } catch (e) { warnOnce('mcheck:' + ids[i], 'mission check threw', ids[i], e); return false; }
+        };
         return list.map((m, i) => {
           const id = ids[i];
           const requires = tree
@@ -3768,6 +3816,10 @@ export function gameActions(ctx) {
               : closed.has(id) ? 'shut'
                 : !missionUnlocked(list, i, done, tree) ? 'locked'
                   : ready.has(id) ? 'ready' : 'current',
+            // The terms are met by the sword alone (SPEC §259): the armies
+            // stand where the mission asked, and the peace has not yet made
+            // the ground the realm's.
+            occupation: swordOnly(m, i),
           };
         });
       } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }

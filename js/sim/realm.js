@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag, isHumanChair } from './military.js';
+import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag, isHumanChair, missionCtx } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { CHAPTER_PATHS } from '../data/chapter_paths.js';
 import { TRADE_ROUTES } from '../data/trade.js';
@@ -953,6 +953,13 @@ export function missionPaceMonths() {
 export function checkMissions(ctx) {
   const g = ctx.game;
   const all = ctx.bookmark && ctx.bookmark.missions;
+  // What every `check` in this file is asked against (SPEC §259): the same
+  // world, read through possession. A chain's land questions — "hold
+  // Jerusalem", "hold twenty provinces" — mean land the realm owns and
+  // controls, so a column standing in a city during an unfinished war earns
+  // nothing until the peace makes the occupation ownership. Everything else
+  // the check can see is the live board, unchanged.
+  const mctx = missionCtx(ctx);
   // Every living tag with a mission chain of its own — the bookmark's tables
   // plus any formed crown carrying its own (SPEC §102).
   const tags = new Set(Object.keys(all || {}));
@@ -998,7 +1005,7 @@ export function checkMissions(ctx) {
           if (done.has(id) || closed.has(id)) continue;
           if (!missionUnlocked(list, i, done, tree)) continue;
           let ok = false;
-          try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
+          try { ok = !!m.check(mctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
           if (!ok) continue;
           ready.push(id);
           if (!was.has(id)) fresh.push(m.name || id);
@@ -1050,7 +1057,7 @@ export function checkMissions(ctx) {
           if (done.has(id) || closed.has(id)) continue;
           if (!missionUnlocked(list, i, done, tree)) continue;
           let ok = false;
-          try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
+          try { ok = !!m.check(mctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
           if (!ok) continue;
           try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + id, 'mission reward threw', id, e); }
           done.add(id);
@@ -1089,7 +1096,10 @@ export function claimMission(ctx, id) {
     if (closed.has(mid)) return { ok: false, why: 'shut' };
     if (!missionUnlocked(list, i, done, tree)) return { ok: false, why: 'locked' };
     let ready = false;
-    try { ready = typeof m.check === 'function' && !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + mid, 'mission check threw', mid, e); }
+    // Read through possession, exactly as the monthly pass reads it (SPEC
+    // §259) — a claim decided on a looser question than the one that lit the
+    // medallion would be a way of paying for an occupation after all.
+    try { ready = typeof m.check === 'function' && !!m.check(missionCtx(ctx)); } catch (e) { warnOnce('mcheck:' + mid, 'mission check threw', mid, e); }
     if (!ready) return { ok: false, why: 'unmet' };
     try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + mid, 'mission reward threw', mid, e); }
     done.add(mid);
