@@ -1661,6 +1661,19 @@ export const DEFINES = {
     hoardCapMonths: 18,                // months of gross income a court may hold…
     hoardCapFloor: 150,                // …never less than this, so paupers can still save
     hoardDecayPerMonth: 0.06,          // share of the EXCESS that drains each month
+    // Legitimacy is maintained, not banked (SPEC §260). Every source in the
+    // game added to it and nothing took anything away, so a crown reached 100
+    // in its first decade and stayed there for three centuries — the number
+    // stopped saying anything about the realm. It now settles where the
+    // realm's own institutions hold it: the drip (`legitimacyAdd` from
+    // government, reforms, ideas, wonders, holy sites, offices) pushes up, and
+    // the ordinary friction of ruling pulls toward `legitimacySettle` in
+    // proportion to how far above it the crown sits. A court with no standing
+    // claim on its people's belief comes to rest at the settle point; one that
+    // has built every institution the age offers holds an unquestioned crown.
+    // The equilibrium is settle + (drip / legitimacyErosion) × (100 − settle).
+    legitimacySettle: 50,              // where a crown with nothing behind it rests
+    legitimacyErosion: 0.8,            // …and the monthly pull at 100, scaled by the distance
     // What a conquering or absorbing crown actually inherits: the treasury of
     // a state is not a chest that travels. A share comes to the new capital;
     // the rest was already spent, owed, or is in somebody's cellar.
@@ -1861,6 +1874,7 @@ export const DEFINES = {
     incorporateMonthsBase: 12,   // the weaving of two realms takes at least a year...
     incorporateMonthsPerDev: 0.5, // ...and longer for every point of their development
     incorporateInfamyPerDev: 0.25, // the world counts absorption at half a conquest
+    bondOpinion: 50,             // where a standing collar settles when nothing else moves it
     loyalOpinion: -25,           // below this a client refuses the overlord's war calls
     revoltOpinion: -75,          // at/below this a client may rise for independence
     revoltStrength: 0.4,         // rebel strength needed (with co-rebels), × the overlord's

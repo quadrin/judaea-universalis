@@ -448,6 +448,128 @@ export function askTagCommunity(ctx, tag, askId) {
   } catch (e) { warnOnce('tagask', 'askTagCommunity failed', e); return { ok: false, why: 'The letter did not go.' }; }
 }
 
+// ------------------------------------------------- one hand, one crown's Jews
+// SPEC §261. The dispersion is written to one congregation at a time, which is
+// right — every letter is its own risk to its own people. It is also twenty
+// provinces of clicking for a crown that wants to put the same question to the
+// Jews of one empire, and the question is nearly always the same one: the
+// half-shekel early, the letters, a word with the patrons, the sons.
+//
+// So a court answers for its own. `hostSeats` is every community living under
+// one crown — the cells its empire owns, plus the community the court itself
+// hosts (§195) — and the two verbs below read and write that whole list. What
+// is NOT collapsed is the part that matters: each congregation is asked
+// separately, tests its own standing, its own cooldown and its own influence,
+// and rolls its own risk of the letter being read. One click, twenty answers,
+// twenty dice.
+export function hostSeats(ctx, hostTag) {
+  const g = ctx.game;
+  const me = jewishCrown(ctx);
+  const out = [];
+  if (!me || !hostTag || hostTag === me) return out;
+  const host = g.tags[hostTag];
+  if (!host || !host.alive) return out;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== hostTag) continue;
+    const def = communityDef(ctx, p);
+    if (!def) continue;
+    out.push({ seat: provSeat(ctx, p, def), provId: i });
+  }
+  // …and the community the court itself hosts, which has no cell (SPEC §195).
+  const courtDef = tagCommunityDef(ctx, hostTag);
+  if (courtDef) out.push({ seat: tagSeat(ctx, hostTag, courtDef), provId: 0 });
+  return out;
+}
+
+// What the crown of one empire's Jews would answer, ask by ask: how many of
+// them can, what it would come to, and — where none can — why not.
+export function hostDiasporaInfo(ctx, hostTag) {
+  try {
+    const me = jewishCrown(ctx);
+    if (!me) return null;
+    const seats = hostSeats(ctx, hostTag);
+    if (seats.length < 2) return null; // one congregation needs no ledger of its own
+    const g = ctx.game;
+    const host = g.tags[hostTag];
+    const asks = DIASPORA_ASKS.map((ask) => {
+      const gain = { treasury: 0, manpower: 0, infl: 0, opinion: 0 };
+      let ready = 0;
+      let infl = 0;
+      let whyNot = '';
+      for (const { seat } of seats) {
+        const a = askInfo(ctx, seat, ask);
+        if (!a.can) { if (!whyNot) whyNot = a.whyNot; continue; }
+        ready++;
+        infl += num(ask.infl);
+        gain.treasury += num(a.gain.treasury);
+        gain.manpower += num(a.gain.manpower);
+        gain.infl += num(a.gain.infl);
+        gain.opinion += num(a.gain.opinion);
+      }
+      return {
+        id: ask.id,
+        name: ask.name,
+        verb: ask.verb,
+        desc: ask.desc,
+        need: ask.need,
+        risk: ask.risk,
+        standingCost: ask.standing,
+        ready,
+        total: seats.length,
+        gain,
+        infl,
+        can: ready > 0,
+        whyNot: ready > 0 ? '' : (whyNot || 'None of them will go that far for us.'),
+      };
+    });
+    return {
+      host: hostTag,
+      hostName: (host && host.name) || hostTag,
+      seats: seats.length,
+      names: seats.map(({ seat }) => seat.def.name),
+      asks,
+    };
+  } catch (e) { warnOnce('hostinfo', 'hostDiasporaInfo failed', e); return null; }
+}
+
+// The same question, put to every congregation under one crown. Each is asked
+// on its own terms and rolls its own dice; the ones that cannot answer are
+// passed over in silence and named in the result.
+export function askHostCommunities(ctx, hostTag, askId) {
+  try {
+    const me = jewishCrown(ctx);
+    if (!me) return { ok: false, why: 'This crown has no dispersion to write to.' };
+    const ask = DIASPORA_ASKS.find((a) => a && a.id === askId);
+    if (!ask) return { ok: false, why: 'No such request.' };
+    const seats = hostSeats(ctx, hostTag);
+    if (!seats.length) return { ok: false, why: 'There is no community there.' };
+    const sent = [];
+    const caught = [];
+    const passed = [];
+    const gain = { treasury: 0, manpower: 0, infl: 0, opinion: 0 };
+    for (const { seat } of seats) {
+      const r = performAsk(ctx, seat, askId);
+      if (!r || !r.ok) { passed.push({ name: seat.def.name, why: (r && r.why) || '' }); continue; }
+      sent.push(r.name);
+      if (r.caught) caught.push(r.name);
+      gain.treasury += num(r.gain.treasury);
+      gain.manpower += num(r.gain.manpower);
+      gain.infl += num(r.gain.infl);
+      gain.opinion += num(r.gain.opinion);
+    }
+    if (!sent.length) {
+      return { ok: false, why: (passed[0] && passed[0].why) || 'None of them would answer.' };
+    }
+    return {
+      ok: true, ask: ask.id, verb: ask.verb, name: ask.name,
+      host: hostTag,
+      hostName: (ctx.game.tags[hostTag] && ctx.game.tags[hostTag].name) || hostTag,
+      sent, caught, passed, gain,
+    };
+  } catch (e) { warnOnce('hostask', 'askHostCommunities failed', e); return { ok: false, why: 'The letters did not go.' }; }
+}
+
 // Every community on the board, for the ledger and for a "who will answer us"
 // read that does not require clicking twenty provinces. Court-hosted seats
 // (§195) ride along with provId 0 — the ledger names their host instead.

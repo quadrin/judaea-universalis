@@ -618,6 +618,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
+      // One question to every congregation under this crown (SPEC §261).
+      const npDiaAll = e.target.closest('[data-np-diaall]');
+      if (npDiaAll && viewTag) {
+        if (!npDiaAll.classList.contains('disabled') && actions && typeof actions.askCourtCommunities === 'function') {
+          try { actions.askCourtCommunities(viewTag, npDiaAll.dataset.npDiaall); } catch (err) { warnOnce('np-dia-all', err); }
+        }
+        refresh();
+        return;
+      }
       const npDiaProv = e.target.closest('[data-np-diaprov]');
       if (npDiaProv && onProvinceClick) { onProvinceClick(npDiaProv.dataset.npDiaprov | 0); return; }
       const pc = e.target.closest('[data-peace]');
@@ -945,7 +954,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if ((t.atWarWith || []).indexOf(me) >= 0) { standing = 'At war with us'; cls = 'neg'; }
       else if (t.overlord === me) { standing = 'Our client kingdom'; cls = 'pos'; }
       else if (meT.overlord === tag) { standing = 'Our overlord'; }
-      else if ((t.allies || []).indexOf(me) >= 0) { standing = 'Allied with us'; cls = 'pos'; }
+      else if ((t.allies || []).indexOf(me) >= 0) {
+        // …and whether the pact would answer if it were called (SPEC §260).
+        let call = null;
+        try { call = (actions && typeof actions.getDiplomacy === 'function') ? (actions.getDiplomacy(tag) || {}).allyCall : null; }
+        catch (e) { call = null; }
+        standing = !call || call.marches ? 'Allied with us'
+          : call.defends ? 'Allied with us — defensive only' : 'Allied with us — will not march';
+        cls = call && !call.marches && !call.defends ? 'neg' : 'pos';
+      }
       else {
         const key = me < tag ? me + '|' + tag : tag + '|' + me;
         const tr = (g.truces || {})[key];
@@ -1599,9 +1616,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         const btn = (key, label, can, tt, on) =>
           `<button class="pp-dip${can ? '' : ' disabled'}${on ? ' pp-dip-on' : ''}" data-np-dip="${key}" data-tt="${esc(tt)}">${label}</button>`;
         let row = btn('improve', 'Improve Relations', d.canImprove,
-          d.whyNotImprove || d.improveCost + ' influence points → their opinion of us +15.');
+          d.whyNotImprove || d.improveCost + ' influence points → their opinion of us +' + (d.improveGain || 20) + '.'
+            + (d.ourClient || d.ourOverlord
+              ? ' A bond already stands between the courts, and the mission lands warmer for it.' : ''));
         row += btn('gift', 'Send Gift', d.canGift,
-          d.whyNotGift || d.giftCost + ' talents → their opinion of us +20.');
+          d.whyNotGift || d.giftCost + ' talents → their opinion of us +' + (d.giftGain || 20) + '.');
         if (d.arms && (d.arms.offered || d.arms.isSupplier)) {
           const a = d.arms;
           if (a.isSupplier) {
@@ -1653,6 +1672,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         const rep = typeof actions.getDiaspora === 'function' ? actions.getDiaspora() : null;
         hosted = (rep || []).filter((r) => r && r.host === who && r.provId);
       } catch (e) { hosted = []; }
+      let court = null;
+      try { court = typeof actions.getCourtDiaspora === 'function' ? actions.getCourtDiaspora(who) : null; } catch (e) { court = null; }
       if (dia || hosted.length) {
         html += `<div class="np-dip-sec">The Dispersion</div>`;
         if (dia) {
@@ -1690,6 +1711,35 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           html += `<div class="np-dip-row np-dia-row" data-np-diaprov="${r.provId}" data-tt="${esc('A community of the dispersion on this court\'s soil — standing ' + r.standing + ' of 100. Click to open ' + r.prov + '; the letters are written from the province.')}">`
             + `<span class="np-dip-name">${esc(r.name)}</span>`
             + `<span class="np-dip-ws${r.standing >= 55 ? ' pos' : r.standing <= 40 ? ' neg' : ''}">${esc(r.prov)} · ${r.standing}</span></div>`;
+        }
+        // One question, every congregation under this crown (SPEC §261). The
+        // letters still go out one at a time — each community tests its own
+        // standing and its own cooldown, and rolls its own risk of being read
+        // — but the crown no longer has to click twenty provinces to send them.
+        if (court && court.asks && court.asks.some((a) => a.total > 1)) {
+          // Rome hosts twenty-two of them; the note names a few and counts the rest.
+          const shown = court.names.slice(0, 5);
+          const rest = court.names.length - shown.length;
+          html += `<div class="np-dip-note">${esc(court.seats + ' congregations under ' + court.hostName
+            + ' — ' + shown.join(', ') + (rest > 0 ? ' and ' + rest + ' more' : '')
+            + '. One letter each, one risk each.')}</div>`;
+          html += `<div class="pp-diplo-btns np-dip-verbs">` + court.asks.map((a) => {
+            const bits = [];
+            if (a.gain.treasury) bits.push(a.gain.treasury + ' talents');
+            if (a.gain.manpower) bits.push(a.gain.manpower + ' men');
+            if (a.gain.infl) bits.push(a.gain.infl + ' influence');
+            if (a.gain.opinion) bits.push('+' + a.gain.opinion + ' with ' + court.hostName);
+            const tt = a.desc
+              + '\n――――――\n' + a.ready + ' of ' + a.total + ' will answer'
+              + (bits.length ? ', and would send ' + bits.join(', ') : '')
+              + '.\nEach is asked separately: its own standing (' + a.need + ' needed), its own '
+              + 'cooldown, its own roll at ' + Math.round(a.risk * 100) + '% that the letter is read '
+              + '— and that reprisal falls on them.'
+              + (a.infl ? '\nCosts us ' + a.infl + ' influence in all.' : '')
+              + (a.can ? '' : '\n' + (a.whyNot || ''));
+            return `<button class="pp-dip${a.can ? '' : ' disabled'}" data-np-diaall="${esc(a.id)}" data-tt="${esc(tt)}">`
+              + `${esc(a.name)} · ${a.ready}/${a.total}</button>`;
+          }).join('') + `</div>`;
         }
       }
     }

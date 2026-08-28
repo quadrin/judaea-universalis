@@ -287,9 +287,21 @@ export function monthlyOpinionDrift(ctx) {
       const V = ctx.DEFINES.VASSALS || {};
       const weaving = t.incorporating && t.incorporating.by === other;
       const allied = (t.allies || []).indexOf(other) >= 0;
+      // The bond of fealty warms the same way an alliance does (SPEC §260).
+      // A client's regard for its lord — and a lord's for its client — used to
+      // drift to INDIFFERENCE like any two strangers, so a kingdom crowned at
+      // our own hand at +60 gratitude, or a court subjugated into devotion,
+      // slid a point a month to zero and then sat one bad year away from
+      // §61's refusal to march. The collar is a relationship; the thing that
+      // sours it is the strain of holding too many (`monthlyChancery`), not
+      // the calendar.
+      const bonded = allied || weaving
+        || t.overlord === other || (g.tags[other] && g.tags[other].overlord === tag);
       let target = allied ? 60
         : weaving ? num(V.incorporateOpinion, 80)
-          : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
+          : (t.overlord === other || (g.tags[other] && g.tags[other].overlord === tag))
+            ? num(V.bondOpinion, 50)
+            : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
       // A live arms pipeline anchors its supplier's regard (SPEC §181), the
       // way §57's pacts once floored a standing: purchasing missions, spares
       // contracts and attachés keep the door from swinging shut by pure
@@ -299,6 +311,16 @@ export function monthlyOpinionDrift(ctx) {
         target = Math.max(target, num((ctx.DEFINES.ARMS || {}).anchor, 40));
       }
       const v = Math.round(num(t.opinion[other]));
+      // Where a bond stands, the target is a FLOOR and not a level (SPEC
+      // §260). Regard below it warms toward it, month by month, the way it
+      // always did; regard ABOVE it stays where it was earned. What a court
+      // spent envoys, silver, weddings and a war's worth of gratitude to build
+      // was previously being taken back at a point a month for as long as the
+      // friendship lasted, which made every diplomatic verb above the target a
+      // rented one. Nothing else changes: an embargo, a broken word, a seizure
+      // or a rivalry still strikes, and the strain of a wide client empire
+      // still chafes.
+      if (bonded && v > target) continue;
       t.opinion[other] = v === target ? v : clamp(v > target ? v - 1 : v + 1, -200, 200);
     }
   }

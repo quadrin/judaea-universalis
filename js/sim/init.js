@@ -9,6 +9,7 @@ import {
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag, tagDef,
   isOffmapTag, armsSupplierOf, armsDealState, armsGate, isArsenal, armsMarketOn, missionCtx,
+  imposeCeasefire, ceasefireHolds, allyAnswersCall,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   retireAffinityCore, secedeTagCore, dissolveTagCore,
@@ -83,6 +84,7 @@ import { schoolsReport, issueRulingCore } from './schools.js';
 import { climateReport, attentionReport, harvestOdds } from './weather.js';
 import {
   communityInfo, diasporaReport, askCommunity as askCommunityCore,
+  hostDiasporaInfo, askHostCommunities as askHostCommunitiesCore,
   tagCommunityInfo, askTagCommunity as askTagCommunityCore,
 } from './diaspora.js';
 
@@ -259,6 +261,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     tagAliases: {}, // three letters a greater crown retired → who wears them now (SPEC §135)
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
+    ceasefire: null, // a truce ordered from outside the war, in force to an end month (SPEC §261)
     armsDeals: {}, // who feeds whose arsenal: { client: supplier } (SPEC §181)
     rngSeed, rngState: rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null },
@@ -578,6 +581,16 @@ export const simHelpers = {
     if (!p || !ctx.game.tags[to]) return;
     changeOwnerCore(ctx, p, to);
     if (!opts || opts.alsoController !== false) changeControllerCore(ctx, p, to);
+  },
+  // A cease-fire ordered from outside the war (SPEC §261): for `months` the
+  // guns stop everywhere — no march, no battle, no siege progress, no sortie.
+  // Content calls this; the tick enforces it.
+  imposeCeasefire(ctx, name, months) {
+    return imposeCeasefire(ctx, name, months);
+  },
+  ceasefire(ctx) {
+    const cf = ceasefireHolds(ctx);
+    return cf ? { name: cf.name, y: cf.y, m: cf.m } : null;
   },
   changeController(ctx, provName, tag) {
     const p = ctx.prov(provName);
@@ -1225,6 +1238,27 @@ export function gameActions(ctx) {
       res.caught ? 'bad' : 'good');
     return res;
   };
+  // The same, for a whole empire's congregations at once (SPEC §261). One
+  // card, because twenty letters that went out together are one act — but the
+  // card names what each of them cost, because they were twenty separate
+  // risks and some of them will have been read.
+  const sayHostAskResult = (res) => {
+    if (!res || !res.ok) { say('No answer', (res && res.why) || 'The letters did not go.', 'bad'); return res || { ok: false }; }
+    const bits = [];
+    if (res.gain.treasury) bits.push(res.gain.treasury + ' talents');
+    if (res.gain.manpower) bits.push(res.gain.manpower + ' men');
+    if (res.gain.infl) bits.push(res.gain.infl + ' influence');
+    if (res.gain.opinion) bits.push('a word in the right ears');
+    const text = res.sent.length + ' of ' + (res.sent.length + res.passed.length) + ' answer'
+      + (res.sent.length === 1 ? 's' : '') + ': ' + res.sent.join(', ')
+      + (bits.length ? ' — ' + bits.join(', ') + '.' : '.')
+      + (res.caught.length
+        ? ' The letter was read in ' + res.caught.join(', ') + '; they will answer for it, not us.'
+        : '');
+    say(res.caught.length ? 'Letters out, and one of them read' : res.verb, text,
+      res.caught.length ? 'bad' : 'good');
+    return res;
+  };
   // The campaign contract as it stands NOW: the bookmark's win/loss lines
   // until the chapter's verdict is in, then a single settled line. Shared by
   // getObjectives (realm panel) and getCampaignGuidance (outliner) so no
@@ -1243,6 +1277,18 @@ export function gameActions(ctx) {
 
   // ---- diplomacy (frozen action contract) ---------------------------------
   const dipKey = (them, kind) => g.playerTag + '>' + them + ':' + kind;
+  // What one mission of envoys buys (SPEC §260). Courting a stranger and
+  // tending a bond are not the same errand: where a collar already stands
+  // between the two courts — theirs on us or ours on them — our people are
+  // already at their court and theirs at ours, and the same influence goes
+  // further. The multiplier is the whole of the difference; everything else
+  // about the verb is unchanged.
+  const improveGainFor = (c, me, them) => {
+    const a = c.game.tags[me];
+    const b = c.game.tags[them];
+    const bond = !!(a && b && (a.overlord === them || b.overlord === me));
+    return Math.round(num(DIPLO.improveGain, 20) * (bond ? num(DIPLO.improveBondMult, 1.5) : 1));
+  };
   // Every cooldown book is per COURT (SPEC §216). `dipKey` already had the
   // acting realm in it; the books below did not, and at a table with two
   // Jewish states that meant one shared clock — a guest holding a festival
@@ -1298,6 +1344,26 @@ export function gameActions(ctx) {
       } : null;
       const rival = rivalDeclareInfo(ctx, me, tag);
       const clientOffer = clientOfferInfo(ctx, me, tag);
+      // What an envoy is worth (SPEC §260). A bond already standing between the
+      // two courts — our client, or the crown we answer to — has a household
+      // at the other end already, so the same mission lands warmer.
+      const improveGain = improveGainFor(ctx, me, tag);
+      // …and what the alliance is worth on the day it is called (SPEC §260).
+      // A player who signs a pact is entitled to know whether it would answer,
+      // and to be told which of the two questions it fails.
+      let allyCall = null;
+      if (allied) {
+        try {
+          const off = allyAnswersCall(ctx, tag, me, false);
+          const def = allyAnswersCall(ctx, tag, me, true);
+          allyCall = {
+            marches: !!off.ok, defends: !!def.ok,
+            why: off.ok ? '' : off.why,
+            defendWhy: def.ok ? '' : def.why,
+            joinOpinion: DIPLO.allyJoinOpinion, defendOpinion: DIPLO.allyDefendOpinion,
+          };
+        } catch (e) { allyCall = null; }
+      }
       let whyNotImprove = '';
       if (grudgeWall) whyNotImprove = grudgeWall;
       else if (diploCdActive(ctx, dipKey(tag, 'improve'))) {
@@ -1384,10 +1450,19 @@ export function gameActions(ctx) {
       // Our word is our establishment's to keep (SPEC §202) — theirs is not
       // asked, because a guarantee binds only the guarantor.
       else whyNotGuarantee = chanceryFullWhy(ctx, me, true);
+      // A subsidy is a policy, not a lever (SPEC §260): it costs influence to
+      // write like any other standing bond, and the same court cannot be
+      // subsidized again for years — which is what closed the treadmill of
+      // signing a payment order for the regard and cancelling it the same day.
       let whyNotSubsidize = '';
       if (subOut) whyNotSubsidize = 'A subsidy already flows (' + subOut.monthsLeft + ' months left).';
       else if (atWarWithUs) whyNotSubsidize = 'We are at war with them.';
-      else if (num(mine.treasury) < 60) whyNotSubsidize = 'The treasury is too thin (60 talents in hand required).';
+      else if (diploCdActive(ctx, dipKey(tag, 'subsidy'))) {
+        whyNotSubsidize = 'Their court has had our silver too recently ('
+          + diploCdMonthsLeft(ctx, dipKey(tag, 'subsidy')) + ' months).';
+      } else if (num(mine.points && mine.points.infl) < DIPLO.subsidyInfl) {
+        whyNotSubsidize = 'Not enough influence (' + DIPLO.subsidyInfl + ' required to write the order).';
+      } else if (num(mine.treasury) < 60) whyNotSubsidize = 'The treasury is too thin (60 talents in hand required).';
       else whyNotSubsidize = chanceryFullWhy(ctx, me, true);
       // Incorporation (SPEC §61): a willing client can join the realm outright.
       let inc = null;
@@ -1484,7 +1559,10 @@ export function gameActions(ctx) {
         canImprove: !whyNotImprove, canGift: !whyNotGift, canAlly: !whyNotAlly, canBreak: allied,
         canWar: !whyNotWar,
         whyNotImprove, whyNotGift, whyNotAlly, whyNotWar,
-        improveCost: DIPLO.improveCost, giftCost: DIPLO.giftCost,
+        improveCost: DIPLO.improveCost, improveGain, giftCost: DIPLO.giftCost, giftGain: DIPLO.giftGain,
+        allyCall,
+        subsidyInfl: DIPLO.subsidyInfl, subsidyGain: DIPLO.subsidyGain,
+        subsidyCancelOpinion: DIPLO.subsidyCancelOpinion, subsidyCdMonths: DIPLO.subsidyCdMonths,
         weGuarantee, theyGuarantee,
         subsidyOut: subOut ? { amount: subOut.amount, monthsLeft: subOut.monthsLeft, reparation: !!subOut.reparation } : null,
         subsidyIn: subIn ? { amount: subIn.amount, monthsLeft: subIn.monthsLeft, reparation: !!subIn.reparation } : null,
@@ -1762,6 +1840,12 @@ export function gameActions(ctx) {
         const a = g.armies[armyId];
         if (!a) return;
         if (a.tag !== g.playerTag) return;
+        const truce = ceasefireHolds(ctx);
+        if (truce) {
+          say('Orders refused', (truce.name || 'The cease-fire') + ' holds: not a column moves this month, '
+            + 'on either side of the line.', 'bad');
+          return;
+        }
         if (a.inBattle) { say('Orders refused', a.name + ' is locked in battle.', 'bad'); return; }
         if (a.retreating) { say('Orders refused', a.name + ' is retreating and will not rally yet.', 'bad'); return; }
         if ((a.shatteredDays || 0) > 0) { say('Orders refused', a.name + ' is shattered and must reform (' + a.shatteredDays + ' days).', 'bad'); return; }
@@ -2277,10 +2361,11 @@ export function gameActions(ctx) {
         if (!d) return;
         if (!d.canImprove) { say('Improve relations', d.whyNotImprove || 'We cannot court ' + d.name + ' now.', 'bad'); return; }
         const mine = g.tags[g.playerTag];
+        const gain = improveGainFor(ctx, g.playerTag, tag);
         mine.points.infl = num(mine.points.infl) - DIPLO.improveCost;
-        addOpinion(ctx, tag, g.playerTag, DIPLO.improveGain);
+        addOpinion(ctx, tag, g.playerTag, gain);
         setDiploCd(ctx, dipKey(tag, 'improve'), DIPLO.improveCdMonths);
-        say('Improve relations', 'Our envoys are warmly received in ' + d.name + ' (+' + DIPLO.improveGain + ' opinion).', 'good');
+        say('Improve relations', 'Our envoys are warmly received in ' + d.name + ' (+' + gain + ' opinion).', 'good');
       } catch (e) { warnOnce('improveRel', 'improveRelations failed', e); }
     },
     sendGift(tag) {
@@ -2325,9 +2410,14 @@ export function gameActions(ctx) {
         if (!d) return;
         if (!d.canSubsidize) { say('Subsidy', d.whyNotSubsidize || 'No subsidy can reach ' + d.name + '.', 'bad'); return; }
         if (!Array.isArray(g.subsidies)) g.subsidies = [];
-        g.subsidies.push({ from: g.playerTag, to: tag, amount: 10, monthsLeft: 12 });
-        addOpinion(ctx, tag, g.playerTag, 20);
-        say('Subsidy', 'Our silver will flow to ' + d.name + ': 10 talents a month for a year (+20 opinion).', 'good');
+        const mine = g.tags[g.playerTag];
+        mine.points.infl = Math.max(0, num(mine.points.infl) - DIPLO.subsidyInfl);
+        g.subsidies.push({ from: g.playerTag, to: tag, amount: 10, monthsLeft: 12, gave: DIPLO.subsidyGain });
+        addOpinion(ctx, tag, g.playerTag, DIPLO.subsidyGain);
+        // The same court will not be bought twice in a decade (SPEC §260).
+        setDiploCd(ctx, dipKey(tag, 'subsidy'), DIPLO.subsidyCdMonths);
+        say('Subsidy', 'Our silver will flow to ' + d.name + ': 10 talents a month for a year (+'
+          + DIPLO.subsidyGain + ' opinion, ' + DIPLO.subsidyInfl + ' influence).', 'good');
       } catch (e) { warnOnce('sendSubsidy', 'sendSubsidy failed', e); }
     },
     cancelSubsidy(tag) {
@@ -2335,9 +2425,14 @@ export function gameActions(ctx) {
         if (!Array.isArray(g.subsidies)) return;
         const at = g.subsidies.findIndex((s) => s && s.from === g.playerTag && s.to === tag && !s.reparation);
         if (at < 0) { say('Subsidy', 'Reparations cannot be cancelled — only paid.', 'bad'); return; }
+        // Ending it early costs back exactly what starting it bought (SPEC
+        // §260). The old asymmetry — +20 to sign, −10 to tear up — WAS the
+        // exploit: the round trip paid ten points of regard and cost nothing.
+        const row = g.subsidies[at];
+        const back = -Math.abs(num(row && row.gave, Math.abs(num(DIPLO.subsidyCancelOpinion, -20))));
         g.subsidies.splice(at, 1);
-        addOpinion(ctx, tag, g.playerTag, -10);
-        say('Subsidy ended', 'The silver stops (−10 opinion).', 'info');
+        addOpinion(ctx, tag, g.playerTag, back);
+        say('Subsidy ended', 'The silver stops (' + back + ' opinion).', 'info');
       } catch (e) { warnOnce('cancelSubsidy', 'cancelSubsidy failed', e); }
     },
     offerAlliance(tag) {
@@ -2786,6 +2881,11 @@ export function gameActions(ctx) {
       try {
         const f = (g.fleets || {})[fleetId];
         if (!f || f.tag !== g.playerTag) return;
+        const truce = ceasefireHolds(ctx);
+        if (truce) {
+          say('Orders refused', (truce.name || 'The cease-fire') + ' holds: the squadrons stay in port this month.', 'bad');
+          return;
+        }
         if (!isCoastal(ctx, provId | 0)) { say('No harbor there', 'Fleets sail port to port — pick a coastal province.', 'bad'); return; }
         issueFleetMove(ctx, f, provId | 0);
       } catch (e) { warnOnce('moveFleet', 'moveFleet failed', e); }
@@ -3608,6 +3708,17 @@ export function gameActions(ctx) {
         return sayAskResult(askTagCommunityCore(ctx, String(tag), String(askId)));
       } catch (e) { warnOnce('askTagCommunity', 'askTagCommunity failed', e); return { ok: false }; }
     },
+    // Every congregation under one crown, read and written to at once (SPEC
+    // §261) — one question per button, and one roll of the dice per community.
+    getCourtDiaspora(tag) {
+      try { return hostDiasporaInfo(ctx, String(tag)); }
+      catch (e) { warnOnce('getCourtDiaspora', 'getCourtDiaspora failed', e); return null; }
+    },
+    askCourtCommunities(tag, askId) {
+      try {
+        return sayHostAskResult(askHostCommunitiesCore(ctx, String(tag), String(askId)));
+      } catch (e) { warnOnce('askCourtCommunities', 'askCourtCommunities failed', e); return { ok: false }; }
+    },
 
     // ---- the years, and the eye (nation panel, SPEC §170) -------------------
     getClimate() {
@@ -4187,6 +4298,11 @@ export function reviveGame(saved) {
     const t = saved.tags[k];
     if (!t || !Array.isArray(t.modifiers)) continue;
     t.modifiers = t.modifiers.filter((m) => !(m && typeof m.id === 'string' && m.id.startsWith('power_')));
+  }
+  // A cease-fire is an end month and nothing else (SPEC §261); a save from
+  // before it, or one with a malformed record, simply has no truce in force.
+  if (saved.ceasefire && !(Number.isFinite(saved.ceasefire.y) && Number.isFinite(saved.ceasefire.m))) {
+    saved.ceasefire = null;
   }
   if (!saved.rivals) saved.rivals = {}; // pre-rivalry saves (SPEC §86): nobody named yet
   if (!Array.isArray(saved.divergences)) saved.divergences = []; // pre-ledger saves (SPEC §89)

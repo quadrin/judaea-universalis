@@ -4,7 +4,7 @@ import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
   sweepAirfields, flyPendingRaids, monthlyIncorporation, monthlyClaimFabrications,
-  monthlyChancery, declaredRivals, num,
+  monthlyChancery, declaredRivals, ceasefireHolds, num,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -159,12 +159,23 @@ export function tickDay(ctx) {
   const g = ctx.game;
   try {
     advanceDate(ctx);
-    safe('move', () => moveArmiesDaily(ctx));
-    safe('fleets', () => fleetsDaily(ctx));
+    // A cease-fire stops the war and nothing else (SPEC §261): for its month
+    // no column marches, no squadron sails, no battle is fought, no siege line
+    // advances and no aircraft flies — on every front and for every court,
+    // the player's included. The merchants still sail, because the whole
+    // point of a truce is that the country goes on living.
+    let truce = null;
+    safe('ceasefire', () => { truce = ceasefireHolds(ctx); });
+    if (!truce) {
+      safe('move', () => moveArmiesDaily(ctx));
+      safe('fleets', () => fleetsDaily(ctx));
+    }
     safe('merchants', () => merchantVoyagesDaily(ctx));
-    safe('battles', () => tickBattles(ctx));
-    safe('sieges', () => tickSieges(ctx));
-    safe('raids', () => flyPendingRaids(ctx)); // ordered strikes fly when time moves
+    if (!truce) {
+      safe('battles', () => tickBattles(ctx));
+      safe('sieges', () => tickSieges(ctx));
+      safe('raids', () => flyPendingRaids(ctx)); // ordered strikes fly when time moves
+    }
     safe('airfields', () => sweepAirfields(ctx)); // wings caught on fallen fields
     safe('dateEvents', () => checkDateEvents(ctx));
     const monthly = g.date.d === 1;

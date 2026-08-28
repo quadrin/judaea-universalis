@@ -238,7 +238,9 @@ const era167 = ERAS.find((e) => e.bookmark.id === '167bce');
     'and it arrives holding Tyre and Sidon (' + (pho ? pho.provNames.join(', ') : '—') + ')');
   ok(pho && pho.name === 'Phoenicia' && !/State of/.test(pho.name),
     'named for itself rather than for a culture and a town');
-  ok(pho && pho.cost === Math.max(10, Math.round(pho.dev * 0.5)),
+  // §260 raised the clause; the suite reads the constants so the next retune
+  // moves it without a diff here.
+  ok(pho && pho.cost === Math.max(mil.PEACE.releaseCostMin, Math.round(pho.dev * mil.PEACE.releaseCostPerDev)),
     'priced by development like every other release: ' + (pho ? pho.cost : '—') + ' war score');
   // §109 holds for these rows too, over the real adjacency graph.
   const broken = rev.filter((r) => pieces(geom, r.provIds).length > 1);

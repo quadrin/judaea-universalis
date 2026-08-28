@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag, isHumanChair, missionCtx } from './military.js';
+import { num, clamp, B, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag, isHumanChair, missionCtx } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { CHAPTER_PATHS } from '../data/chapter_paths.js';
 import { TRADE_ROUTES } from '../data/trade.js';
@@ -253,12 +253,29 @@ export function monthlySuccession(ctx) {
 // the province adopts the state faith. Occupation or a change of owner voids it.
 export function monthlyIntegration(ctx) {
   const g = ctx.game;
-  // Reforms and modifiers can grant a steady legitimacy drip.
+  // Reforms and modifiers grant a steady legitimacy drip — and the ordinary
+  // friction of ruling takes some of it back (SPEC §260). Every source in the
+  // game pushed legitimacy UP and nothing pushed it down but disasters, so
+  // every court in every chapter pinned at 100 inside a decade and the number
+  // stopped meaning anything: a usurper who had bought two reforms was as
+  // unquestioned as the House of David.
+  //
+  // The pull is proportional to the height: nothing at the settle point, its
+  // full weight at 100. So a crown comes to rest where its institutions hold
+  // it — settle + (drip / erosion) × (100 − settle) — and a court that lets
+  // them go slides back down to where it began. Below the settle point the
+  // same arithmetic warms upward: an ordinary reign recovers from a disaster
+  // over years, which is the other half of what the number is for.
+  const settle = clamp(B(ctx, 'legitimacySettle', 50), 0, 99);
+  const erosion = Math.max(0, B(ctx, 'legitimacyErosion', 0.8));
   for (const k of Object.keys(g.tags)) {
     const t = g.tags[k];
     if (!t || !t.alive || k === 'REB') continue;
     const drip = resolveTagAdd(ctx, k, 'legitimacyAdd');
-    if (drip) t.legitimacy = Math.max(0, Math.min(100, num(t.legitimacy) + drip));
+    const legit = num(t.legitimacy);
+    const pull = erosion ? erosion * ((settle - legit) / (100 - settle)) : 0;
+    if (!drip && !pull) continue;
+    t.legitimacy = clamp(legit + drip + pull, 0, 100);
   }
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];

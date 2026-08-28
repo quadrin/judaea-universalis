@@ -151,7 +151,12 @@ function setOpinionAtLeast(game, a, b, floor) {
   } catch (e) { warnOnce('setOpinionAtLeast', e); }
 }
 
-// A UN truce: every belligerent's AI stands down for a month.
+// A UN truce, and the whole of what a truce means (SPEC §261). The modifier
+// stands — a court under it makes no new plans for a month — but the truce
+// itself is now enforced on the map rather than recommended to the AI: for its
+// month nothing marches, no battle is joined, no siege line advances and no
+// aircraft leaves the ground, on either side of the line and for the player
+// exactly as for everybody else. That is what Bernadotte's four weeks were.
 function imposeTruce(ctx, id, name) {
   for (const t of ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
     if (!ctx.game.tags[t]) continue;
@@ -159,6 +164,9 @@ function imposeTruce(ctx, id, name) {
       id, name, months: 1, effects: { aiPassive: true },
     });
   }
+  try {
+    if (typeof ctx.helpers.imposeCeasefire === 'function') ctx.helpers.imposeCeasefire(ctx, name, 1);
+  } catch (e) { warnOnce('truce:' + id, e); }
 }
 
 // ── The long armistice, 1958–79: shared plumbing ────────────────────────────

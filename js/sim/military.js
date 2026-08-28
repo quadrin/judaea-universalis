@@ -616,7 +616,70 @@ export function hopDays(ctx, fromId, destId, army) {
   }
   return clamp(Math.round((4 + dist / 24) * mc * interdict / spd), 2, 40);
 }
+// ------------------------------------------------------------- the cease-fire
+// SPEC §261. A truce ordered by somebody with no army of their own — Bernadotte
+// in June 1948, the Security Council in July — used to be a modifier that made
+// the AI *reluctant*: `aiPassive` for a month, while the columns kept marching,
+// the sieges kept ticking and the squadrons kept flying. A cease-fire that only
+// discourages one side is not a cease-fire; it is a difficulty setting.
+//
+// A cease-fire now STOPS the war for its month, on every front and for every
+// court, the player's included: nothing marches, nothing sails, no battle is
+// joined, no siege line advances by a day, and no aircraft leaves the ground.
+// Everything else about the world goes on — the treasury, the recruiting
+// depots, the politics, and the clock that runs the truce out.
+//
+// Stored as an inclusive END MONTH on the game, so it survives a save with no
+// migration and reads the same on either side of a reload.
+export function imposeCeasefire(ctx, name, months) {
+  const g = ctx.game;
+  const n = Math.max(1, Math.round(num(months, 1)));
+  let y = num(g.date.y);
+  let m = num(g.date.m, 1) + n - 1;
+  while (m > 12) { m -= 12; y += 1; if (y === 0) y = 1; }
+  const had = ceasefireHolds(ctx);
+  // A second order while one holds extends it rather than shortening it.
+  if (had && monthsBetween({ y, m }, { y: had.y, m: had.m }) > 0) return had;
+  g.ceasefire = { name: String(name || 'The cease-fire'), y, m };
+  try {
+    chronicle(ctx, 'war', g.ceasefire.name + ': the guns stop on every front. '
+      + 'No column moves, no siege advances and no aircraft flies until it runs out.');
+    if (ctx.bus) {
+      ctx.bus.emit('notify', {
+        title: g.ceasefire.name,
+        text: 'The guns stop on every front. Nothing marches, no siege line advances and no '
+          + 'aircraft flies while it holds — on both sides of the line.',
+        type: 'info',
+      });
+    }
+  } catch (e) { warnOnce('ceasefire', 'cease-fire notice failed', e); }
+  return g.ceasefire;
+}
+// The cease-fire in force right now, or null. Expired records are swept here
+// (with the notice that the war is on again) rather than on a monthly pass, so
+// a save loaded past the end date behaves the same as one ticked past it.
+export function ceasefireHolds(ctx) {
+  const g = ctx && ctx.game;
+  const cf = g && g.ceasefire;
+  if (!cf || !Number.isFinite(cf.y) || !Number.isFinite(cf.m)) return null;
+  if (monthsBetween(g.date, { y: cf.y, m: cf.m }) >= 0) return cf;
+  g.ceasefire = null;
+  try {
+    chronicle(ctx, 'war', (cf.name || 'The cease-fire') + ' runs out.');
+    if (ctx.bus) {
+      ctx.bus.emit('notify', {
+        title: (cf.name || 'The cease-fire') + ' is over',
+        text: 'The month is up. The armies may move again.',
+        type: 'war',
+      });
+    }
+  } catch (e) { warnOnce('ceasefire-end', 'cease-fire lapse notice failed', e); }
+  return null;
+}
+
 export function issueMove(ctx, army, targetId) {
+  // Nothing marches under a cease-fire (SPEC §261), whoever gives the order.
+  if (ceasefireHolds(ctx)) return false;
   if (!army || army.inBattle) return false;
   if (army.prov === targetId) { army.path = []; army.moveDaysLeft = 0; return true; }
   const path = findPath(ctx, army.tag, army.prov, targetId);
@@ -1279,6 +1342,8 @@ export function airRaidCore(ctx, tag, wingId, provId) {
 // when the wing actually flies, not when the order is given.
 export function orderAirRaid(ctx, tag, wingId, provId) {
   const g = ctx.game;
+  const cf = ceasefireHolds(ctx);
+  if (cf) return { ok: false, why: (cf.name || 'the cease-fire') + ' holds — nothing flies this month' };
   const w = (g.airwings || {})[wingId];
   if (!w || w.tag !== tag) return { ok: false, why: 'no such wing' };
   if ((w.raidCd | 0) > 0) return { ok: false, why: 'rearming (' + w.raidCd + ' more days)' };
@@ -1373,6 +1438,8 @@ export function hireWingLeaderCore(ctx, tag, wingId) {
 }
 export function rebaseAirWing(ctx, tag, wingId, provId) {
   const g = ctx.game;
+  const cf = ceasefireHolds(ctx);
+  if (cf) return { ok: false, why: (cf.name || 'the cease-fire') + ' holds — nothing flies this month' };
   const w = (g.airwings || {})[wingId];
   const p = ctx.byId(provId);
   if (!w || w.tag !== tag || !p) return { ok: false, why: 'no such wing or field' };
@@ -3538,8 +3605,21 @@ export function declareWar(ctx, atk, def, name, cb) {
     refusals.push({ v, lord });
     return false;
   };
+  // An alliance is a promise to be asked, not a promise to be enrolled (SPEC
+  // §260). Every ally is put the two questions — does it think well enough of
+  // the court that called, and can it march — and the ones that answer no stay
+  // home and are named to their principal.
+  const callAlly = (side, al, principal, defending) => {
+    if (!g.tags[al] || !g.tags[al].alive) return;
+    if (attackers.indexOf(al) >= 0 || defenders.indexOf(al) >= 0) return;
+    let ans = { ok: true, why: '' };
+    try { ans = allyAnswersCall(ctx, al, principal, defending); }
+    catch (e) { warnOnce('allyCall:' + al, 'ally call failed', al, e); }
+    if (!ans.ok) { refusals.push({ v: al, lord: principal, ally: true, why: ans.why }); return; }
+    join(side, al);
+  };
   for (const al of A.allies || []) {
-    if (al !== def && (D.allies || []).indexOf(al) < 0) join(attackers, al);
+    if (al !== def && (D.allies || []).indexOf(al) < 0) callAlly(attackers, al, atk, false);
   }
   for (const v of vassalsOf(ctx, atk)) if (loyal(v, atk)) join(attackers, v, true);
   // A punitive league (SPEC §21 extended): when the coalition itself declares
@@ -3559,7 +3639,7 @@ export function declareWar(ctx, atk, def, name, cb) {
     join(defenders, lord, true);
     for (const v of vassalsOf(ctx, lord)) if (v === def || loyal(v, lord)) join(defenders, v, true);
   }
-  for (const al of D.allies || []) join(defenders, al);
+  for (const al of D.allies || []) callAlly(defenders, al, def, true);
   for (const v of vassalsOf(ctx, def)) if (loyal(v, def)) join(defenders, v, true);
   // The coalition answers: realms leagued against an infamous conqueror
   // defend anyone he attacks (anti-snowball, SPEC §21).
@@ -3636,11 +3716,23 @@ export function declareWar(ctx, atk, def, name, cb) {
   if (attackers.indexOf(g.playerTag) >= 0 || defenders.indexOf(g.playerTag) >= 0) {
     ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
     const mine = refusals.filter((r) => r.lord === g.playerTag);
-    if (mine.length) {
+    const clients = mine.filter((r) => !r.ally);
+    if (clients.length) {
       ctx.bus.emit('notify', {
         title: 'A client stays home',
-        text: mine.map((r) => (g.tags[r.v] && g.tags[r.v].name) || r.v).join(', ')
-          + ' refuse' + (mine.length === 1 ? 's' : '') + ' our call to war — their court thinks too ill of us to march.',
+        text: clients.map((r) => (g.tags[r.v] && g.tags[r.v].name) || r.v).join(', ')
+          + ' refuse' + (clients.length === 1 ? 's' : '') + ' our call to war — their court thinks too ill of us to march.',
+        type: 'bad',
+      });
+    }
+    // …and the same courtesy for an alliance that does not answer (SPEC §260),
+    // with the reason, because the reason is the thing the player can change.
+    const allies = mine.filter((r) => r.ally);
+    if (allies.length) {
+      ctx.bus.emit('notify', {
+        title: allies.length === 1 ? 'An ally stays home' : 'The alliances stay home',
+        text: allies.map((r) => ((g.tags[r.v] && g.tags[r.v].name) || r.v) + ' ' + (r.why || 'will not march'))
+          .join('; ') + '.',
         type: 'bad',
       });
     }
@@ -3731,10 +3823,43 @@ export const DIPLO = {
   clientOfferRefuseOpinion: -30, // the sting of being asked and saying no
   clientOfferCdMonths: 60,   // ...and how long before they will hear it again
   clientOfferAcceptOpinionHit: -15, // even a yes costs a little pride
-  improveCost: 25, improveGain: 15, improveCdMonths: 4,
+  improveCost: 25, improveGain: 20, improveCdMonths: 3,
+  // …and warmer still where the bond already exists (SPEC §260). An envoy to
+  // our own client kingdom — or to the crown we answer to — is not opening a
+  // relationship, it is tending one, and the household is already there.
+  improveBondMult: 1.5,
   giftCost: 75, giftGain: 20, giftCdMonths: 6,
   allyMinOpinion: 60, allyAcceptOpinion: 110, allyRefuseOpinion: -5, allyCdMonths: 6,
   breakOpinion: -50,
+  // A subsidy is a policy, not a lever (SPEC §260). It used to be free and
+  // instant: +20 regard for signing a payment order, then `cancelSubsidy` for
+  // −10 and sign it again — a treadmill that walked any court in the world up
+  // to adoration in an afternoon. Now the order costs influence like every
+  // other standing bond, the same court cannot be re-subsidized for years, and
+  // ending one early costs back exactly the goodwill starting it bought.
+  subsidyInfl: 25,
+  subsidyGain: 20,
+  subsidyCancelOpinion: -20,
+  subsidyCdMonths: 24,
+  // ------------------------------------------------- whom an alliance marches for
+  // SPEC §260. An alliance used to be an automatic belligerent: every ally of
+  // either principal was enrolled the moment the herald left, whatever it
+  // thought of the war, the cause, or the court that started it — so a chain
+  // of three alliances turned one border quarrel into a world war, and a court
+  // that merely tolerated us spent its levies on our conquests.
+  //
+  // Two questions now, asked of every ally on the day it is called. Does it
+  // think well enough of us to march? And can it march at all? The bar is
+  // lower for a war of OUR defense than for one we started: an ally that
+  // merely tolerates us will still answer an invasion, and none but a friend
+  // will answer an adventure.
+  allyJoinOpinion: 50,       // to join a war we START
+  allyDefendOpinion: 25,     // ...and to answer an attack on us
+  allyReadyExhaustion: 10,   // a court this tired of war stays home from ours...
+  allyReadyDefendExhaustion: 18, // ...and is a little braver about its own side of the map
+  allyReadyMen: 2000,        // men in the field plus manpower in hand...
+  allyReadyMenShare: 0.25,   // ...or this share of what it could ever raise, whichever is less
+  allyReadyTreasury: -100,   // and a court this deep in the red is not paying for a campaign
   // Recognition (SPEC §96): the peace available where an alliance is not.
   // Cheaper in goodwill than an alliance and far dearer in politics — it is
   // signed across a grudge, not on top of a friendship.
@@ -3762,6 +3887,46 @@ export const DIPLO = {
   // is the argument for the number.
   marryBreakOpinion: -35,
 };
+// Will this ally actually march (SPEC §260)? `defending` is the half of the
+// question that decides which bar is read: an ally of the DEFENDER is being
+// asked to answer an attack, an ally of the ATTACKER to join an adventure.
+//
+// Returns { ok, why } — the `why` is the sentence the player is shown when
+// their own alliance stays home, so it names the reason and not the rule.
+export function allyAnswersCall(ctx, ally, principal, defending) {
+  const g = ctx.game;
+  const t = g.tags[ally];
+  if (!t || !t.alive) return { ok: false, why: 'is no longer a court' };
+  // The bond of fealty is not this bond: a client marches under §75's rule
+  // (its own loyalty test), and never reaches this one.
+  const bar = num(defending ? DIPLO.allyDefendOpinion : DIPLO.allyJoinOpinion, defending ? 25 : 50);
+  const view = opinionOf(ctx, ally, principal);
+  if (view < bar) {
+    return { ok: false, why: 'thinks too little of us to spend its levies on this (' + view + ' of ' + bar + ')' };
+  }
+  // …and can it march? A court already carrying a war of its own has no army
+  // to lend to ours — that one is waived when the call is to defend us, since
+  // an ally under arms already has its host in the field.
+  if (!defending && (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) {
+    return { ok: false, why: 'has a war of its own already' };
+  }
+  const weary = num(defending ? DIPLO.allyReadyDefendExhaustion : DIPLO.allyReadyExhaustion, 10);
+  if (num(t.warExhaustion) > weary) {
+    return { ok: false, why: 'is too tired of war (exhaustion ' + Math.round(num(t.warExhaustion)) + ')' };
+  }
+  if (num(t.treasury) < num(DIPLO.allyReadyTreasury, -100)) {
+    return { ok: false, why: 'cannot pay for a campaign (' + Math.round(num(t.treasury)) + ' talents)' };
+  }
+  let men = num(t.manpower);
+  try { for (const a of armiesOf(ctx, ally)) men += num(a && a.men); } catch (e) { warnOnce('allyMen:' + ally, e); }
+  const need = Math.min(num(DIPLO.allyReadyMen, 2000),
+    Math.round(num(t.maxManpower) * num(DIPLO.allyReadyMenShare, 0.25)));
+  if (men < need) {
+    return { ok: false, why: 'has no host to send (' + Math.round(men) + ' men of ' + need + ')' };
+  }
+  return { ok: true, why: '' };
+}
+
 export function opinionOf(ctx, whose, of) {
   const t = ctx.game.tags[whose];
   return t && t.opinion ? clamp(Math.round(num(t.opinion[of])), -200, 200) : 0;
@@ -4846,8 +5011,16 @@ export const PEACE = {
   subjugateBase: 25,     // warscore to make the enemy leader a client kingdom...
   subjugatePerDev: 0.25, // ...plus this per point of their total development
   subjugateMax: 100,
-  releaseCostPerDev: 0.5, // warscore per point of development set free or returned
-  releaseCostMin: 10,     // floor per released/created nation
+  // Breaking a state off an enemy at the table (SPEC §260). This used to be
+  // the cheapest clause on the sheet — half the price per point of development
+  // of simply ANNEXING the same ground (provCostPerDev, 0.9) — so the winning
+  // move at every peace table was to dismantle: carve four permanent rivals
+  // out of a beaten empire for the warscore of one province apiece, and take
+  // the land off them at leisure afterwards. A state raised on somebody's
+  // patrimony is a larger thing to demand than the patrimony, not a smaller
+  // one, and it is now priced that way.
+  releaseCostPerDev: 1.1, // warscore per point of development set free or returned
+  releaseCostMin: 20,     // floor per released/created nation
   transferVassalBase: 15, // warscore to take over an enemy client...
   transferVassalPerDev: 0.25, // ...plus this per point of the client's own development
   transferVassalMax: 80,

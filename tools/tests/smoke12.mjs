@@ -63,6 +63,10 @@ ok(!diF.tax.can && /Not our province/.test(diF.tax.why), 'foreign land refuses: 
 
 console.log('== subsidies flow ==');
 jud.treasury = 200;
+// Since §260 the payment order costs influence like any other standing bond,
+// and the same court cannot be subsidized twice in a decade — so this fixture
+// funds the chancery, and the re-subsidy below waits out the cooldown book.
+jud.points.infl = 400;
 actions.sendSubsidy('PAR');
 ok(game.subsidies.length === 1 && game.subsidies[0].to === 'PAR', 'the silver is promised');
 const bdJud = eco.incomeBreakdown(ctx, 'JUD');
@@ -70,6 +74,7 @@ const bdPar = eco.incomeBreakdown(ctx, 'PAR');
 ok(bdJud.subsOut === 10 && bdPar.subsIn === 10, 'both ledgers carry the flow: −10 / +10');
 for (let i = 0; i < 12; i++) eco.monthlySubsidies(ctx);
 ok(game.subsidies.length === 0, 'twelve months later the subsidy completes');
+game.diploCooldowns = {};
 actions.sendSubsidy('PAR');
 actions.cancelSubsidy('PAR');
 ok(game.subsidies.length === 0, 'a subsidy can be ended early');

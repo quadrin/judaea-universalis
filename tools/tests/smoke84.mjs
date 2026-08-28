@@ -160,12 +160,16 @@ console.log('== §121: played forward, the silence is gone ==');
       // day. Ownership is untouched, so a genuine conquest still changes
       // the answer — which is the whole difference between the premise and
       // a cheat.
-      if (game.date.d === 29) {
-        const jerM = ctx.prov('Jerusalem');
-        if (jerM && jerM.owner === 'HAS' && jerM.controller !== 'HAS') {
-          jerM.controller = 'HAS';
-          jerM.siege = null;
-        }
+      // …and it runs every day, not on the 29th (SPEC §260). The monthly hand
+      // held on §205's stream and not on this one: a band took the walls
+      // between the 29th and the 1st and stood on them for the −40 card's one
+      // firing day. The premise is unchanged — while the crown OWNS its
+      // capital, a rising does not hold it on a card's firing day — and
+      // ownership is still untouched, so a genuine conquest still answers.
+      const jerM = ctx.prov('Jerusalem');
+      if (jerM && jerM.owner === 'HAS' && jerM.controller !== 'HAS') {
+        jerM.controller = 'HAS';
+        jerM.siege = null;
       }
     }
     // The line survives its own chapter — which is the premise, not a cheat:

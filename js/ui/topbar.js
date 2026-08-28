@@ -196,9 +196,19 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     refs.buyStab.classList.toggle('afford', (pts.gov || 0) >= 75 && (t.stability || 0) < 3);
     refs.buyMp.classList.toggle('afford', (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0));
 
-    // Date, pause, speed pips
-    setText(refs.date, fmtDate(g.date, DEFINES.MONTH_NAMES));
+    // Date, pause, speed pips — and the cease-fire, if one is in force (SPEC
+    // §261). A month in which nothing marches has to be legible from the top
+    // bar, or the player is left clicking at armies that will not answer.
+    const truce = g.ceasefire && Number.isFinite(g.ceasefire.y) ? g.ceasefire : null;
+    setText(refs.date, fmtDate(g.date, DEFINES.MONTH_NAMES) + (truce ? ' · cease-fire' : ''));
     refs.date.classList.toggle('paused', !!g.paused);
+    refs.date.classList.toggle('truce', !!truce);
+    if (truce) {
+      refs.date.dataset.tt = (truce.name || 'A cease-fire') + ' holds. Nothing marches, no siege '
+        + 'line advances and no aircraft flies until it runs out — on every front, for every court.';
+    } else if (refs.date.dataset.tt) {
+      delete refs.date.dataset.tt; // an empty tooltip is still a tooltip
+    }
     const pauseGlyph = g.paused ? 'play' : 'pause';
     if (refs.pause.dataset.glyph !== pauseGlyph) {
       refs.pause.dataset.glyph = pauseGlyph;

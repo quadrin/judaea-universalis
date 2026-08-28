@@ -4,7 +4,7 @@
 // open water (straight line — the Mediterranean has no walls). Each ship
 // carries 1000 men. Armies aboard (a.aboard=true) are out of land play.
 
-import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding, opinionOf, devTotal } from './military.js';
+import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding, opinionOf, devTotal, ceasefireHolds } from './military.js';
 import { unlockedGen, cappedGen, genMult, navalGenName, MODERNIZE_COST_PER_SHIP_PER_GEN } from '../data/tech.js';
 import { queueUnitRecruitment } from './recruitment.js';
 
@@ -489,6 +489,8 @@ export function hireAdmiralCore(ctx, fleet) {
 }
 
 export function issueFleetMove(ctx, fleet, targetId) {
+  // The truce is on the water too (SPEC §261).
+  if (ceasefireHolds(ctx)) return false;
   if (!fleet || fleet.ships <= 0) return false;
   if (!isCoastal(ctx, targetId)) return false;
   if (targetId === fleet.prov) { fleet.path = []; fleet.moveDaysLeft = 0; return true; }

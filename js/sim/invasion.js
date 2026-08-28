@@ -23,7 +23,7 @@
 import {
   num, clamp, armiesOf, armiesInProv, regCount, isHostile, sameSide, canEnter,
   issueMove, findPath, bfsDistances, hasBuilding, devTotal, disciplineOf,
-  engageIfNeeded, splitArmyCore, tagDef,
+  engageIfNeeded, splitArmyCore, tagDef, ceasefireHolds,
 } from './military.js';
 import {
   isCoastal, seaHopDays, buildShipCore, issueFleetMove, embarkCore,
@@ -247,6 +247,11 @@ export function aiNavalOperation(ctx, tag, passive) {
   const g = ctx.game;
   const t = g.tags[tag];
   if (!t || !t.alive || tag === 'REB') return;
+  // A cease-fire month is not a month a landing is planned in, and it is not a
+  // month a planned one is abandoned in either (SPEC §261): every march order
+  // is refused while it holds, and the sail-to-the-port step reads a refusal
+  // as "no road to the sea" and scraps the operation. So the whole pass waits.
+  if (ceasefireHolds(ctx)) return;
   const enemies = (t.atWarWith || []).filter((e) => g.tags[e] && g.tags[e].alive);
   let op = opOf(t);
 

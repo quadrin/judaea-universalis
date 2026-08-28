@@ -2134,3 +2134,47 @@ The battery: **177 of 177 headless suites ALL PASS**, with `smoke177.mjs` the
 new contract and `smoke111.mjs` (the mission tree's own suite) unmoved. The
 `uitest*.mjs` files still need the `playwright` npm package, absent from this
 container, and were not measured.
+
+## §260/§261 — the diplomatic ledger, measured
+
+§260 changes five prices at once (who answers a call to arms, whether a bond's
+regard decays, where legitimacy comes to rest, what a release costs at the
+peace table, what a subsidy costs to write) and §261 stops the war outright for
+a cease-fire month. Wars are smaller and shorter as a result — an alliance is
+no longer an automatic belligerent — so the seeded stream re-rolls from the
+first month a coalition would have formed. Read the anomaly set, not the
+numbers.
+
+`node tools/autorun.mjs 8` on this branch: `167bce HAS: BLEEDING · 67bce SEL:
+DEAD, ARI: BLEEDING, KSH: EXHAUSTED · 40bce HER: SNOWBALL · 66ce none · 132ce
+JUD: SNOWBALL · 351ce ROM: SNOWBALL · 529ce JUD: DEAD · 614ce none · 1948ce
+JOR: BLEEDING`. Nine names, eight of them the same families §259 measured. The
+one new name is `1948ce JOR`, and it is the Arab Legion buying more army than
+Jordan's revenue carries — income −10.5 and a treasury at −45 with 24,000 men
+in the field, which is the self-limiting overbuild class this file already
+documents for HYR/ARI, not a spiral (the flag's own threshold is −200). The
+1948 board around it reads BETTER than the parent's, which is the section
+working: Israel's income goes −20.8 → −1.4 and Egypt's −29.9 → +22, because a
+war that everybody's allies pile into is a war nobody can pay for.
+
+Legitimacy was retuned against a measurement rather than a guess. Traced over
+25 years per chapter with the court on AI: before §260 every chapter pinned at
+100 between year 5 and year 13 and stayed there; after it, the Hasmonean revolt
+swings 39–77 with its fortunes, Herod sits at 62 for a decade and climbs to 89
+as he builds, the Great Revolt reaches 100 in year 12 instead of year 6, and
+1948 Israel — 0.9 legitimacy a month of institutions — still holds 100 from
+year 5. The knobs are `BASE.legitimacySettle` (50) and
+`BASE.legitimacyErosion` (0.8); a court's resting place is
+settle + (drip / erosion) × (100 − settle).
+
+The battery: **178 of 178 headless suites ALL PASS**, `smoke178.mjs` the new
+contract. Four existing suites moved with the prices and are updated in the
+same commit: `smoke12` funds a chancery before writing a subsidy order (it
+costs influence now, and the same court has a cooldown); `smoke47` and
+`smoke167` read `PEACE.releaseCostPerDev` / `releaseCostMin` off the constants
+instead of the old 0.5 / 10; and `smoke84`'s premise hand — the one that keeps
+a §87 band off the walls of a capital the crown OWNS — runs daily instead of on
+the 29th, because on the re-rolled stream a band took Jerusalem between the
+29th and the 1st and stood there for the −40 card's one firing day. The
+`uitest*.mjs` files still need the `playwright` npm package, absent from this
+container, and were not measured.

@@ -1010,7 +1010,12 @@ const RISING_LABELS = {
     if (d.atWarWithUs) { status = 'At war'; cls = 'neg'; }
     else if (d.ourClient) { status = 'Our client kingdom'; cls = 'pos'; }
     else if (d.ourOverlord) { status = 'Our overlord'; }
-    else if (d.allied) { status = 'Allied'; cls = 'pos'; }
+    else if (d.allied) {
+      // What the pact is worth on the day it is called (SPEC §260).
+      const c = d.allyCall;
+      status = c && !c.marches ? (c.defends ? 'Allied — defensive only' : 'Allied — will not march') : 'Allied';
+      cls = c && !c.marches && !c.defends ? 'neg' : 'pos';
+    }
     else if (d.truceUntil) {
       const mn = (DEFINES.MONTH_NAMES || [])[d.truceUntil.m - 1] || ('M' + d.truceUntil.m);
       status = `Truce until ${mn} ${fmtYear(d.truceUntil.y)}`;
@@ -1042,6 +1047,19 @@ const RISING_LABELS = {
           : '\nThe wound is NOT closing — a war between us, or a rivalry named by either court, holds it open.';
       }
       refs.dipStatus.dataset.tt = tt;
+    } else if (d.allied && d.allyCall) {
+      // Whether the pact would actually answer, and which question it fails
+      // (SPEC §260). An alliance is a promise to be asked, not to be enrolled.
+      const c = d.allyCall;
+      refs.dipStatus.dataset.tt = (c.marches
+        ? 'They would march with us in a war we started, and answer an attack on us.'
+        : (c.defends
+          ? 'They would answer an attack on us, but not join a war we started — '
+            + (c.why || 'they are not ready for one') + '.'
+          : 'They would not answer a call to arms at all — ' + (c.why || 'they are in no state to march') + '.'))
+        + '\n――――――\nAn ally joins a war we START at ' + c.joinOpinion + ' regard and answers an attack '
+        + 'on us at ' + c.defendOpinion + ' — and either way it must be in a state to march: no war of '
+        + 'its own, not sick of war, a treasury out of the red, and men to send.';
     } else if (refs.dipStatus.dataset) {
       delete refs.dipStatus.dataset.tt;
     }
@@ -1058,9 +1076,10 @@ const RISING_LABELS = {
       : '';
 
     setDipBtn(refs.dipImprove, d.canImprove, d.whyNotImprove,
-      `Improve relations: ${d.improveCost} influence points → +15 opinion`);
+      `Improve relations: ${d.improveCost} influence points → +${d.improveGain || 20} opinion`
+      + (d.ourClient || d.ourOverlord ? '\nThe bond is already standing — our envoys are at their court and theirs at ours, and the mission lands warmer.' : ''));
     setDipBtn(refs.dipGift, d.canGift, d.whyNotGift,
-      `Send a gift: ${d.giftCost} talents from the treasury → +20 opinion`);
+      `Send a gift: ${d.giftCost} talents from the treasury → +${d.giftGain || 20} opinion`);
     setDipBtn(refs.dipAlly, d.canAlly, d.whyNotAlly,
       'Offer a formal alliance — a refusal sours relations for six months' + seatLine);
     // Royal marriage (SPEC §62): hidden entirely in the ages without it.
@@ -1162,11 +1181,14 @@ const RISING_LABELS = {
         refs.dipSubsidize.dataset.tt = `We pay them reparations: ${s.amount} talents/month for ${s.monthsLeft} more months. A debt of defeat cannot be cancelled.`;
       } else {
         refs.dipSubsidize.classList.remove('disabled');
-        refs.dipSubsidize.dataset.tt = `Our subsidy: ${s.amount} talents/month, ${s.monthsLeft} months left.\nEnding it early costs 10 opinion.`;
+        refs.dipSubsidize.dataset.tt = `Our subsidy: ${s.amount} talents/month, ${s.monthsLeft} months left.`
+          + `\nEnding it early costs back the ${Math.abs(d.subsidyCancelOpinion || 20)} opinion it bought.`;
       }
     } else {
       setDipBtn(refs.dipSubsidize, d.canSubsidize, d.whyNotSubsidize,
-        'Subsidize their court: 10 talents a month for a year → +20 opinion.'
+        `Subsidize their court: ${d.subsidyInfl || 25} influence to write the order, then 10 talents a month `
+        + `for a year → +${d.subsidyGain || 20} opinion.`
+        + `\nOne court, one subsidy every ${d.subsidyCdMonths || 24} months — and ending it early costs the regard back.`
         + (d.subsidyIn ? `\nThey pay US ${d.subsidyIn.amount}/month (${d.subsidyIn.monthsLeft} months${d.subsidyIn.reparation ? ', reparations' : ''}).` : '')
         + seatLine);
     }

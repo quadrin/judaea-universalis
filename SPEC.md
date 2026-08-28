@@ -18682,3 +18682,155 @@ possession, and `formables.js`'s own `holds()`, which was a one-line alias for
   no longer satisfying "Hold Jerusalem", and three provinces under enemy
   occupation breaking a twelve-province count that ownership alone would pass.
   `smoke111.mjs` (§177/§229/§254's own suite) passes unmoved.
+
+## 260. What an alliance is worth, what a bond is worth, and what a crown is worth
+
+Five reports from one campaign, and they turn out to be one complaint: the
+diplomatic ledger had no prices in it. Everything was free, automatic, or
+permanent, and a number that is any of those three stops saying anything.
+
+**An alliance was an automatic belligerent.** `declareWar` enrolled every ally
+of either principal the moment the herald left — whatever that ally thought of
+the war, of the cause, or of the court that started it — so one border quarrel
+between two courts with three alliances apiece opened as a nine-court world
+war, and a state that merely tolerated us spent its levies on our conquests. A
+client had been asked this question since §61 (`loyalOpinion`, and it stays
+home below it); an ally had never been asked anything.
+
+Now it is asked two questions on the day it is called, and both have to answer.
+**Does it think well enough of the court that called?** — `allyJoinOpinion`
+(50) for a war we started, `allyDefendOpinion` (25) for an attack on us,
+because an ally that merely tolerates us will still answer an invasion and none
+but a friend will answer an adventure. **And can it march?** — no war of its
+own already (waived when it is our defense: a court already under arms has its
+host in the field), war exhaustion under `allyReadyExhaustion` — or the more
+forgiving `allyReadyDefendExhaustion` when the call is to defend us — a
+treasury out of collapse, and men enough to be worth calling
+(`allyReadyMen`, or a quarter of what it could ever raise, whichever is less). `allyAnswersCall` is the whole
+test, it runs for the AI and the player's own court alike, and an alliance that
+stays home is NAMED to its principal with the reason, because the reason is the
+thing a player can change.
+
+**A standing bond cooled a point a month.** `monthlyOpinionDrift` moved every
+pair toward a target and allies toward +60 — so regard bought with envoys,
+silver, a wedding or a war's worth of gratitude drained back to the target at a
+point a month, and every diplomatic verb above +60 was a rented one. A client's
+regard for its lord drifted to INDIFFERENCE, so a kingdom crowned at our own
+hand at +60 gratitude sat, three years later, one bad month from §61's refusal
+to march. Where a bond stands — an alliance, a collar in either direction, or an
+incorporation under way — the target is now a FLOOR and not a level: below it the pair warms as it always did, above it the regard
+stays where it was earned. A collar's own floor is `VASSALS.bondOpinion` (50). §181's
+arms pipeline keeps its own rule unchanged — its anchor is a target a
+supplier's regard still cools toward from above, which is what that section
+says it is. Nothing else moves: an embargo, a broken word, a seizure, a rivalry and the
+strain of a wide client empire (`monthlyChancery`) all still strike.
+
+**Legitimacy only ever went up.** Every source in the game added to it — the
+government type, reforms, era ideas, wonders, holy sites, sacred and academic
+offices — and nothing took anything away but disasters, so every court in every
+chapter pinned at 100 inside a decade and stayed there for three centuries. It
+is now MAINTAINED rather than banked: `monthlyIntegration` applies the drip and
+a pull toward `legitimacySettle` (50) proportional to how far above it the
+crown sits, at `legitimacyErosion` (0.8) a month at 100. A crown comes to rest
+where its institutions hold it — settle + (drip / erosion) × (100 − settle) —
+and the same arithmetic warms a shaken crown back up from a disaster over
+years. Measured across the chapters: the Hasmonean revolt now swings between 39
+and 77 with its fortunes, Herod sits at 62 for a decade and climbs to 89 as he
+builds, the Great Revolt reaches 100 in its twelfth year rather than its sixth,
+and 1948 Israel — whose institutions run at 0.9 a month — is not in doubt at
+all. That last is the point: 100 is a statement about a realm, not a ceiling
+everybody reaches.
+
+**Dismantling an enemy cost half what robbing one did.** `PEACE.releaseCostPerDev`
+was 0.5 against annexation's 0.9, so the winning move at every peace table was
+to carve four permanent rivals out of a beaten empire for the warscore of one
+province apiece and take the land off them at leisure. A state raised on
+somebody's patrimony is a larger thing to demand than the patrimony: 1.1 per
+point of development now, floor 20 per state.
+
+**And a subsidy was a lever, not a policy.** It cost no influence, granted +20
+regard instantly, and `cancelSubsidy` gave back only −10 — so signing a payment
+order and tearing it up paid ten points of regard per round trip and any court
+in the world could be walked to adoration in an afternoon. The order now costs
+`subsidyInfl` (25) like every other standing bond, ending it early costs back
+exactly the regard starting it bought, and the same court cannot be subsidized
+again for `subsidyCdMonths` (24).
+
+The other half of that last complaint was that courting anybody was too slow to
+be worth it, which was mostly the drift taking it back. With the floor above,
+an envoy's work now sticks — and the envoy is better besides: `improveGain` 15
+→ 20 on a 3-month cooldown instead of 4, and half again as warm
+(`improveBondMult`) toward a court already bound to us, where our people are at
+their court and theirs at ours.
+
+- **Regression contract**: `smoke178.mjs` — the ally at +90 marching and the one
+  at +30 staying home from the same war, and that same court answering a
+  defensive call; each readiness bar in turn (another war, exhaustion, an empty
+  treasury, no host) with the defensive waiver where it applies; an ally at +140
+  and a client at +90 holding both after two years while a bound-by-nothing
+  court still cools to neutral, and a soured client warming back toward its
+  floor; a crown at 100 sliding without institutions, a crown at 10 recovering,
+  and the whole thing coming to rest; the release clause pricing above the
+  annexation clause; the subsidy round trip netting zero ten times over and the
+  cooldown refusing the eleventh; the client hearing an envoy better than a
+  stranger does; and the diplomacy card reading a devoted ally, a cool one and
+  a cold one as march / defend-only / nothing. Four existing suites move with
+  the prices: `smoke12` funds a
+  chancery before writing a subsidy order, `smoke47` and `smoke167` read the
+  release clause off `PEACE` rather than off the old numbers, and `smoke84`'s
+  premise hand runs daily — on the re-rolled stream a §87 band took Jerusalem
+  between the 29th and the 1st and stood on the walls for one card's firing
+  day.
+
+## 261. The cease-fire, and one crown's Jews
+
+Two quality-of-life reports from the 1948 chapter and the dispersion, and both
+turn out to be the same shape: a thing the game modelled honestly and then made
+the player click through one province at a time.
+
+**A cease-fire that only discourages one side is a difficulty setting.**
+Bernadotte's four weeks in June 1948 and the Security Council's truce in July
+were `aiPassive` modifiers: the AI made no new plans for a month while the
+columns kept marching, the siege lines kept ticking and the squadrons kept
+flying — for the player at once, and for the AI wherever its standing orders
+already pointed. A cease-fire now STOPS the war for its month. Nothing marches,
+no squadron sails, no battle is joined, no siege line advances by a day, and no
+aircraft leaves the ground: on every front, for every court, the player's
+included. Everything else goes on, because the whole point of a truce is that
+the country keeps living — the treasury, the depots, the politics, the
+merchantmen, and the clock that runs the truce out.
+
+It is one field on the game (`g.ceasefire`, an inclusive end month), one
+imposer (`imposeCeasefire`, exposed to content as `helpers.imposeCeasefire`),
+and one reader (`ceasefireHolds`, which sweeps its own expiry so a save loaded
+past the end date behaves like one ticked past it). `tickDay` skips movement,
+fleets, battles, sieges and sorties while it holds; `issueMove`,
+`issueFleetMove`, `orderAirRaid` and `rebaseAirWing` refuse with the truce
+named, so the player is told rather than left clicking at armies that will not
+answer; and the top bar wears the word for the month. 1948's `imposeTruce`
+raises one for each of the two UN truces, alongside the modifier it always set.
+
+**And the dispersion answers by empire.** Writing to the communities is one
+letter at a time by design — every letter is its own risk to its own people,
+and the reprisal falls on them (§172). What was NOT by design is that a crown
+putting the same question to the Jews of one empire had to open twenty
+provinces to ask it. A host court's panel now carries the question once per
+ask — silver, letters, patrons, sons — over every congregation living under
+that crown, its own court-hosted seat (§195) included, with the count that will
+answer on the button and the total yield in the tooltip.
+
+What is not collapsed is the part that matters. Each congregation is still
+asked separately: its own standing against the bar, its own cooldown, its own
+influence, and **its own roll** of the risk that the letter is read. One click,
+twenty answers, twenty dice — and the card afterwards names what came back and
+which of them were caught.
+
+- **Regression contract**: `smoke178.mjs` — a road open in an ordinary month
+  and shut in a truce; no sortie ordered; a month of daily ticks moving nobody
+  and advancing no siege line; the truce lapsing on its own and the columns
+  moving again; the record riding a save and a malformed one loading as no
+  truce at all; the 1948 First Truce card raising one when it is accepted, with
+  the standing-down modifier still set beside it; and, for the dispersion, a
+  court that hosts twenty-two
+  communities offering the question once, sending twenty-two letters on one
+  click, and reporting twenty-two cooldowns afterwards.

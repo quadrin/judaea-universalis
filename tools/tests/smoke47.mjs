@@ -12,7 +12,7 @@ const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx } = await import(R + '/js/sim/init.js');
 const {
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, releasableNations,
-  truceActive, armiesOf,
+  truceActive, armiesOf, PEACE,
 } = await import(R + '/js/sim/military.js');
 
 let failures = 0;
@@ -69,7 +69,11 @@ console.log('== the fallen are on the table; the living and the crowned are not 
   ok(nab && nab.provIds.length === nabProvs.length && nab.provIds.includes(idOf('Petra')),
     'the whole Nabataean patrimony is in the release — Petra included ('
     + (nab ? nab.provIds.length : 0) + ' provinces, ' + (nab ? nab.dev : 0) + ' dev)');
-  ok(nab && nab.cost >= 10 && nab.cost === Math.max(10, Math.round(nab.dev * 0.5)),
+  // §260 raised the clause: breaking a state off an enemy prices above
+  // annexing the same ground, not at half of it. The suite reads the constants
+  // rather than the numbers, so the next retune moves it without a diff here.
+  ok(nab && nab.cost >= PEACE.releaseCostMin
+    && nab.cost === Math.max(PEACE.releaseCostMin, Math.round(nab.dev * PEACE.releaseCostPerDev)),
     'the restoration is priced by development: ' + (nab ? nab.cost : '—') + ' war score');
   ok(!rows.some((r) => r.tag === 'AGR'), 'living Agrippa is a cession matter, not a release');
   ok(!rows.some((r) => r.tag === 'WASTE' || r.tag === 'REB'), 'the waste and the rebels are never nations');
