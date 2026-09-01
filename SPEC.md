@@ -18834,3 +18834,86 @@ which of them were caught.
   court that hosts twenty-two
   communities offering the question once, sending twenty-two letters on one
   click, and reporting twenty-two cooldowns afterwards.
+
+## 262. The map's borders come from a distance field, and the ground shows through the paint
+
+Three things about the map's rendering that were structural rather than
+tuning, done together because the second and third only read once the first
+is fixed.
+
+**The border was a one-texel test.** `FS_MAIN` drew a border wherever the
+province-ID raster changed between a texel and its neighbour `ceil(1/zoom)`
+texels away: fully inked or not at all, no anti-aliasing, no width. At zoom 8
+that is an eight-pixel staircase (the §233 wobble bends it, it does not
+smooth it); at zoom 0.12 a single sample cannot catch a one-texel feature
+eight texels off, so borders broke into dotted fragments at exactly the zoom
+the game opens at. And the shoreline — the one boundary every map draws first
+— had no line on it at all, because the whole block was gated on `id != 0`.
+
+Now the renderer builds a **distance field** once per map profile:
+`distanceToBorderRaster` runs a chamfer 3-4 transform over the mapped raster
+(the same `idArray` and province mapping `computeGeometry` reads, so merged
+cells (§47) draw no border between them) and uploads it as one byte a texel.
+Both banks of every land–land border are zero; the field climbs a texel a
+step; sea is a wall, so a coast facing another province's coast across a
+strait draws no border of its own. The shader samples it bilinearly at the
+same wobbled coordinate as the fill, averages four taps a third of a texel out
+to round the corners the chamfer inherits from the grid, and draws each border
+as a `smoothstep` over the distance **in screen space**: a floor width when
+the map is far, a ceiling when it fills the screen, anti-aliased at every zoom
+in between. Which border it is — province or country — comes from a ring of
+samples just past the field's distance: a different owner class (§173's alpha
+byte) on any of them makes it a country border. The shoreline is a separate
+ink: a screen-width line on the bilinear land mask, `fwidth` for its width, so
+it holds at one to two pixels from the strategic view to the closest. The
+selection rim rides the same field, soft instead of a hard pulsing ring, with
+a blurred land mask standing in on the coast side where there is no other
+province to measure from.
+
+The field is 46 MB of video memory at this frame and about a second of main
+thread to build (1.26 s on a synthetic raster of the same size, in Node). It
+runs where the province mapping changes — boot, and the first line of a
+campaign — which is where `computeGeometry` already pays a full-raster pass.
+
+**The relief terraced.** The height plane was R8 at full frame. The normal
+amplifies the height's gradient 26×, so one 8-bit step tilted it a tenth and
+every gentle slope — most of the map — showed contour bands. The plane is now
+**R16F at half the frame** (the field is coast falloff, Gaussian primitives
+and noise at a fifty-texel wavelength; nothing in it is sharper than two
+texels), mipmapped, with a fallback to R8 where `EXT_color_buffer_float` is
+missing or will not complete a framebuffer. It costs 31 MB where the R8 plane
+cost 46, which is most of what pays for the field: §104's bill goes from 249 MB
+to 278, still under the 320 it holds. Three lighting changes ride on the
+better plane: the gradient step follows the zoom (2 to 12 texels, with the
+slope normalised back, so the relief neither shimmers far out nor goes flat
+close in), a second low lamp from the south-east fills what the north-west
+key left black, and the height against its own blur — one mip read — puts
+valleys in shadow and a touch of light on ridges.
+
+**The paint was a slab.** Every province a nation held was byte-identical,
+laid flat over terrain it never touched, and the political map — the one
+people play in — was the worst-looking mode the renderer had. The main pass
+now carries the terrain palette per province (`DEFINES.TERRAINS`, the same
+colours the terrain mode paints) and three per-mode parameters: `terrMix`,
+how much the terrain's chroma and brightness tint the fill; `jitter`, a shade
+of its own per province; `desat`, a pull toward grey. Political takes half
+its ground back; the flat-fill modes (diplomatic, religion, culture, trade)
+about a third; the modes whose colour IS the data — development, unrest, the
+estates, the dispersion, the works — a whisper and no jitter, so the ramp
+still reads; terrain mode nothing, being the terrain already. The parchment
+crossfade blends against the tinted fill, so the strategic view inherits a
+little of it too. Also fixed on the way: the wobble could land a shore pixel
+on a sea texel while the land mask said land, which painted a sawtooth of
+sand along every coast; the unwobbled texel is read first, and only where
+that is sea too is it really the beach.
+
+- **Regression contract**: `smoke179.mjs` — the field on a synthetic raster:
+  zero on both banks, three a texel, 255 at sea and never across a strait, a
+  merged pair drawing no border, a missing mapping reading the raster as
+  provinces, a short raster refused as far-everywhere; the shader sampling
+  the field at the wobbled coordinate and smoothstepping province and
+  country borders over it with the one-texel test gone; the shoreline
+  inked; the terrain palette reaching the fill with political mixing and
+  the ramps not; the relief target R16F at half frame with its zoom-following
+  step, second lamp and occlusion read. `smoke104.mjs` re-costs the bill:
+  five planes, 278 MB, 29 over §232's, under 320.

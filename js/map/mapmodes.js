@@ -120,18 +120,24 @@ function buildCultureDisplay(DEFINES) {
   return out;
 }
 
+// Per-mode shading (renderer contract). `relief` is the hillshade strength;
+// `terrMix`, `jitter` and `desat` are SPEC §262's ground-through-the-paint:
+// how much the terrain's hue tints the fill, whether each province carries a
+// shade of its own, and how far the fill is pulled toward grey. The modes
+// whose colour IS the data — a development or unrest ramp, an estate's share —
+// take a whisper of terrain and no jitter, so the ramp still reads.
 const MODE_PARAMS = {
-  trade: { relief: 0.35, flat: 0 },
-  political: { relief: 0.55, flat: 0 },
-  terrain: { relief: 1.0, flat: 0 },
-  religion: { relief: 0.35, flat: 0 },
-  culture: { relief: 0.35, flat: 0 },
-  development: { relief: 0.3, flat: 0 },
-  unrest: { relief: 0.3, flat: 0 },
-  diplomatic: { relief: 0.35, flat: 0 },
-  estates: { relief: 0.3, flat: 0 },
-  diaspora: { relief: 0.3, flat: 0 },
-  structures: { relief: 0.3, flat: 0 },
+  trade: { relief: 0.35, flat: 0, terrMix: 0.3, jitter: 1, desat: 0.06 },
+  political: { relief: 0.6, flat: 0, terrMix: 0.5, jitter: 1, desat: 0.1 },
+  terrain: { relief: 1.0, flat: 0, terrMix: 0, jitter: 0.5, desat: 0 },
+  religion: { relief: 0.35, flat: 0, terrMix: 0.35, jitter: 1, desat: 0.06 },
+  culture: { relief: 0.35, flat: 0, terrMix: 0.35, jitter: 1, desat: 0.06 },
+  development: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
+  unrest: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
+  diplomatic: { relief: 0.35, flat: 0, terrMix: 0.35, jitter: 1, desat: 0.06 },
+  estates: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
+  diaspora: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
+  structures: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
 };
 
 // Diplomatic mode palette (colors relative to the player).
@@ -482,5 +488,8 @@ export function computeMapmodeColors(ctx, mode) {
   }
 
   const p = MODE_PARAMS[mode];
-  return { primary, secondary, flags, params: { relief: p.relief, flat: p.flat } };
+  return {
+    primary, secondary, flags,
+    params: { relief: p.relief, flat: p.flat, terrMix: p.terrMix, jitter: p.jitter, desat: p.desat },
+  };
 }

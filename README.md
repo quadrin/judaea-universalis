@@ -1281,6 +1281,18 @@ static site, the zero dependencies, or the missing build step changes.
   through it. Orders you cannot afford are shown greyed with the arithmetic in
   the tooltip, because deciding what to save for needs the price.
 
+- **Borders that are lines, and ground under the paint.** The map's borders
+  were a one-texel test on the province raster — a hard eight-pixel staircase
+  at the closest zoom, dotted fragments at the farthest, and no line at all on
+  the shoreline. They now come from a distance field built once per map
+  profile: anti-aliased at every zoom, one width when the map is far and
+  another when it fills the screen, the shore inked, the selection rim soft.
+  The relief plane is sixteen bits (it terraced at eight) and lit twice, with
+  valleys in shadow; and a nation's colour is no longer a flat slab — the
+  terrain's own hue and brightness tint it and every province carries a shade
+  of its own, so a red held on desert and a red held on farmland differ. The
+  modes whose colour is the data keep their ramps clean.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

@@ -73,34 +73,45 @@ const MEASURED_MAX_TEXTURE = 8192;
 // ---------------------------------------------------------------------------
 console.log('== what the renderer actually allocates ==');
 {
-  // Four full-size textures, and the two canvas-built planes carry mipmaps
-  // (§232: the land plane uploads via byteTexture so its bytes also gate the
-  // region seam heal; the decor plane still goes through canvasTexture).
+  // Five textures at the frame's scale since §262: the two canvas-built planes
+  // (mipmapped R8 — §232: the land plane uploads via byteTexture so its bytes
+  // also gate the region seam heal; the decor plane still goes through
+  // canvasTexture), the ID plane (RG8), the relief plane (R16F, at HALF the
+  // frame, mipmapped for the occlusion term) and the border distance field
+  // (R8, full frame, no mips).
   const full = [...SRC.matchAll(/=\s*(canvasTexture|targetTexture|byteTexture)\(/g)]
     .filter((m) => !/return byteTexture/.test(m.input.slice(Math.max(0, m.index - 40), m.index)))
     .map((m) => m[1]);
-  ok(full.length === 4, 'four textures are allocated at full map size (' + full.length + ')');
+  ok(full.length === 5, 'five textures are allocated at the frame\'s scale (' + full.length + ')');
   const mipped = [...SRC.matchAll(/(?:canvasTexture|byteTexture)\([^;]*?,\s*true\)/g)].length;
-  ok(mipped === 2, '  two of them mipmapped, which costs a third again each (' + mipped + ')');
+  ok(mipped === 2, '  two of the byte planes mipmapped, which costs a third again each (' + mipped + ')');
+  ok(/gl\.R16F, gl\.RED, gl\.HALF_FLOAT, HW, HH/.test(SRC) && /Math\.ceil\(W \/ 2\)/.test(SRC),
+    '  the relief plane is half float at half the frame (§262)');
+  ok(/EXT_color_buffer_float/.test(SRC) && /falling back to R8/.test(SRC),
+    '  and falls back to a byte plane where half float cannot be a render target');
+  ok(/const distTex = byteTexture\(null, W, H, false\)/.test(SRC),
+    '  the border field is one byte a texel at full frame, no mips (§262)');
 
   const texels = MAP_DATA.MAP_W * MAP_DATA.MAP_H;
-  // What the renderer allocates, in the formats it actually uses since §232:
-  // two mipmapped R8 canvases (land mask, river decor — three dead bytes a
-  // texel each until then), the ID plane at RG8, relief at R8.
-  const shipped = texels * (4 / 3) * 2 + texels * 2 + texels;
-  // What the same frame would have cost before any of the format work.
-  const asRGBA8 = texels * 4 * (4 / 3) * 2 + texels * 4 * 2;
+  // What the renderer allocates, in the formats it actually uses since §262:
+  // two mipmapped R8 canvases, the ID plane at RG8, relief at R16F on a
+  // quarter of the texels with mips, and the R8 border field.
+  const reliefTexels = Math.ceil(MAP_DATA.MAP_W / 2) * Math.ceil(MAP_DATA.MAP_H / 2);
+  const shipped = texels * (4 / 3) * 2 + texels * 2 + reliefTexels * 2 * (4 / 3) + texels;
+  // What the same planes would cost if every one were RGBA8 at full frame.
+  const asRGBA8 = texels * 4 * (4 / 3) * 2 + texels * 4 * 3;
   ok(shipped > 0, 'this frame costs ' + MB(shipped).toFixed(0) + ' MB of texture');
-  // The saving is not a threshold to guess at: it is exactly the two channels
-  // per texel the ID plane gave up (RGBA8 -> RG8), the three the relief plane
-  // gave up (RGBA8 -> R8), and the three-with-mips each canvas plane gave up
-  // (§232). If a format ever silently widens again, this is the line that
-  // notices.
-  const narrowing = texels * 2 + texels * 3 + texels * 8;
-  ok(asRGBA8 - shipped === narrowing,
-    '  which is ' + MB(narrowing).toFixed(0) + ' MB less than the ' + MB(asRGBA8).toFixed(0)
-    + ' MB it would cost in RGBA8 — 2 bytes a texel off the ID plane, 3 off relief '
-    + 'and 8 off the two mipmapped canvas planes (§158–159, §232)');
+  // The relief plane's move to half the frame pays for the border field: the
+  // field is a byte a texel (46 MB here) and the plane gave back 46 MB of R8
+  // for 31 MB of mipmapped R16F on a quarter of the texels. Net, §262 adds
+  // under 31 MB to the §232 bill — this is the line that notices if a format
+  // ever silently widens again.
+  const before262 = texels * (4 / 3) * 2 + texels * 2 + texels;
+  ok(shipped - before262 < texels * 0.7,
+    '  which is ' + MB(shipped - before262).toFixed(0) + ' MB over the §232 bill of '
+    + MB(before262).toFixed(0) + ' MB — the border field, less what the relief plane gave back');
+  ok(asRGBA8 > shipped * 2,
+    '  and less than half the ' + MB(asRGBA8).toFixed(0) + ' MB the same planes would cost in RGBA8');
 }
 
 // ---------------------------------------------------------------------------
@@ -115,18 +126,19 @@ console.log('== the frame that was costed, against the frame that shipped ==');
   // point: the next person to propose a frame still gets numbers.
   const bigW = Math.round(79 * pxPerLon), bigH = Math.round(60 * pxPerLat);
   const bigTexels = bigW * bigH;
-  const bigBill = bigTexels * (4 / 3) * 2 + bigTexels * 2 + bigTexels;
+  const bigBill = bigTexels * (4 / 3) * 2 + bigTexels * 2 + (bigTexels / 4) * 2 * (4 / 3) + bigTexels;
   ok(bigW <= MEASURED_MAX_TEXTURE && bigH <= MEASURED_MAX_TEXTURE,
     'the §156 proposal fits the ceiling too (' + bigW + '×' + bigH + ')');
   const texels = MAP_DATA.MAP_W * MAP_DATA.MAP_H;
-  const shipped = texels * (4 / 3) * 2 + texels * 2 + texels;
+  const reliefTexels = Math.ceil(MAP_DATA.MAP_W / 2) * Math.ceil(MAP_DATA.MAP_H / 2);
+  const shipped = texels * (4 / 3) * 2 + texels * 2 + reliefTexels * 2 * (4 / 3) + texels;
   ok(MB(bigBill) > MB(shipped),
     '  §156\'s frame costs ' + MB(bigBill).toFixed(0) + ' MB against this frame\'s '
     + MB(shipped).toFixed(0) + ' — what its margin still buys is the Urals, west '
     + 'Africa\'s bulge and the equator, and that is still not worth it');
   ok(MB(shipped) < 320,
-    '  and the §232 diet holds the bill under 320 MB — less than half the 694 '
-    + 'the §156 costing was refused at');
+    '  and the §232 diet, with §262\'s border field on top, holds the bill under '
+    + '320 MB — less than half the 694 the §156 costing was refused at');
 }
 
 // ---------------------------------------------------------------------------
