@@ -38,6 +38,15 @@ const CFG = {
   NEUTRAL_TAN: [212, 199, 170],     // pre-game province fill
   COAST_SAND: [0.78, 0.72, 0.58],   // id-0 fragments inside the drawn coastline
   SELECT_GOLD: [1.0, 0.90, 0.52],
+  // Borders and the shoreline (SPEC §262): half-widths in CSS px, a floor for
+  // when the map is far away and a ceiling for when it fills the screen.
+  PROV_HALF_PX: [0.55, 0.42, 3.4],  // floor, px per unit zoom, ceiling
+  CTRY_HALF_PX: [1.05, 0.8, 5.0],
+  PROV_INK: [0.14, 0.11, 0.08],
+  CTRY_INK: [0.09, 0.065, 0.05],
+  COAST_INK: [0.12, 0.10, 0.08],
+  AO_STRENGTH: 0.24,     // valley shadow against the height's own blur
+  FILL_LIGHT: 0.16,      // the second lamp, low from the south-east
 };
 
 // Province seeds live in a float texture rather than a fragment-uniform array.
@@ -154,7 +163,8 @@ const FS_HEIGHT = `#version 300 es
 precision highp float;
 precision highp int;
 uniform sampler2D uLand;
-uniform vec2 uMapSize;
+uniform vec2 uTargetSize;    // the relief plane's own size (half the frame since SPEC §262)
+uniform float uScale;        // frame px per relief texel
 uniform vec4 uPrimA[${MAX_HEIGHT_PRIMS}];   // ridge/basin: ax,ay,bx,by · dome: cx,cy,0,0
 uniform vec4 uPrimB[${MAX_HEIGHT_PRIMS}];   // h(pre-scaled), width px, type(0 ridge,1 dome,2 basin), 0
 uniform int uPrimCount;
@@ -166,8 +176,8 @@ float distSeg(vec2 p, vec2 a, vec2 b){
   return distance(p, a + ab * t);
 }
 void main(){
-  vec2 px = gl_FragCoord.xy;
-  vec2 uv = px / uMapSize;
+  vec2 uv = gl_FragCoord.xy / uTargetSize;
+  vec2 px = gl_FragCoord.xy * uScale;     // primitives are placed in frame px
   float land = texture(uLand, uv).r;
   float coarse = textureLod(uLand, uv, 5.0).r;   // smoothed mask -> coast falloff
   float h = 0.045 + 0.15 * coarse + 0.055 * land; // sea ~0.05, plains ~0.25
@@ -207,6 +217,14 @@ uniform sampler2D uLookB;
 uniform sampler2D uFlagsTex;
 uniform sampler2D uTerr;
 uniform sampler2D uProvinceMap;
+uniform sampler2D uDist;     // chamfer 3-4 distance to the nearest other province (SPEC §262)
+uniform sampler2D uLookT;    // the terrain palette, per province
+uniform float uTerrMix;      // how much of the ground shows through the paint
+uniform float uJitter;       // per-province shade wobble, 0 or 1
+uniform float uDesat;        // how far the paint is pulled toward grey
+const vec3 LUMA = vec3(0.299, 0.587, 0.114);
+const ivec2 RING[8] = ivec2[8](ivec2(1, 0), ivec2(-1, 0), ivec2(0, 1), ivec2(0, -1),
+                                ivec2(1, 1), ivec2(-1, 1), ivec2(1, -1), ivec2(-1, -1));
 ${GLSL_NOISE}
 int cellIdAt(ivec2 ip){
   ip = clamp(ip, ivec2(0), ivec2(uMapSize) - 1);
@@ -237,12 +255,34 @@ void main(){
   ivec2 ip = ivec2(clamp(jmap, vec2(0.0), uMapSize - vec2(1.0)));
   int id = inMap ? idAt(ip) : 0;
   float land = inMap ? texture(uLand, uv).r : 0.0;
+  // The wobble can land a shore pixel on a sea texel while the land mask says
+  // land: that used to paint a sawtooth of sand along every coast. Read the
+  // unwobbled texel first; only where that is sea too is it really the beach.
+  if (id == 0 && inMap && land > 0.5) {
+    ivec2 ip0 = ivec2(clamp(map, vec2(0.0), uMapSize - vec2(1.0)));
+    int id0 = idAt(ip0);
+    if (id0 != 0) { id = id0; ip = ip0; }
+  }
   float coarse = inMap ? textureLod(uLand, uv, 4.5).r : 0.0;
   int flags = flagsOf(id);
 
   // ---- fill (mapmode lookup + stripes/hatch) ----
   vec3 fill = texelFetch(uLookA, ivec2(id, 0), 0).rgb;
   if (id == 0) fill = vec3(${f3(CFG.COAST_SAND)}); // jitter can land just past the coastline: beach, not black
+  // ---- the ground under the paint (SPEC §262) ----
+  // A nation's colour used to be byte-identical on every province it held,
+  // laid flat over the terrain. Now the terrain's own hue and brightness tint
+  // the paint, and every province carries a shade of its own, so a realm reads
+  // as ground it holds rather than a slab.
+  if (id != 0 && uTerrMix > 0.001) {
+    vec3 tc = texelFetch(uLookT, ivec2(id, 0), 0).rgb;
+    float lt = max(dot(tc, LUMA), 0.05);
+    float lf = dot(fill, LUMA);
+    fill = mix(fill, vec3(lf), uDesat);
+    fill *= mix(vec3(1.0), tc / lt, uTerrMix);
+    fill *= mix(1.0, lt / 0.70, uTerrMix * 0.5);
+  }
+  if (id != 0) fill *= 1.0 + (hash21(vec2(float(id) * 0.731, 3.17)) - 0.5) * 0.10 * uJitter;
   vec3 fillB = texelFetch(uLookB, ivec2(id, 0), 0).rgb;
   float pulse = 0.5 + 0.5 * sin(uTime * 3.0);
   float stripeMix = ((flags & 4) != 0) ? (0.5 + 0.5 * pulse) : 0.92;
@@ -264,13 +304,25 @@ void main(){
 
   // ---- relief lighting (normals from height gradient, NW light) ----
   float h = inMap ? texture(uHeight, uv).r : 0.05;
-  vec2 e = 1.5 / uMapSize;
+  // The gradient step follows the zoom (SPEC §262): a fixed 1.5-texel step
+  // shimmered when eight texels shared a pixel and went flat when one texel
+  // covered eight. The slope is normalised back, so the relief keeps one
+  // strength at every distance.
+  float et = clamp(1.5 / uZoom, 2.0, 12.0);
+  vec2 e = et / uMapSize;
   float hx = texture(uHeight, uv + vec2(e.x, 0.0)).r - texture(uHeight, uv - vec2(e.x, 0.0)).r;
   float hy = texture(uHeight, uv + vec2(0.0, e.y)).r - texture(uHeight, uv - vec2(0.0, e.y)).r;
   float rs = uRelief * (1.0 - 0.85 * uFlat) * (1.0 - 0.72 * uPaper);
-  vec3 nrm = normalize(vec3(-hx * ${fN(CFG.NORMAL_STRENGTH)}, -hy * ${fN(CFG.NORMAL_STRENGTH)}, 1.0));
+  float ns = ${fN(CFG.NORMAL_STRENGTH)} * 1.5 / et;
+  vec3 nrm = normalize(vec3(-hx * ns, -hy * ns, 1.0));
   float lambert = clamp(dot(nrm, normalize(vec3(-0.5, -0.7, 0.6))), 0.0, 1.0);
-  float shade = mix(1.0, 0.56 + lambert * 0.77, rs);
+  float fillL = clamp(dot(nrm, normalize(vec3(0.6, 0.55, 0.5))), 0.0, 1.0);
+  float shade = mix(1.0, 0.50 + lambert * 0.72 + fillL * ${fN(CFG.FILL_LIGHT)}, rs);
+  // Valleys sit in shadow and ridges catch the light: the height against its
+  // own blur is a cheap occlusion term, one mip read.
+  float hb = inMap ? textureLod(uHeight, uv, 4.0).r : h;
+  shade *= 1.0 - ${fN(CFG.AO_STRENGTH)} * rs * clamp((hb - h) * 16.0, 0.0, 1.0);
+  shade *= 1.0 + 0.06 * rs * clamp((h - hb) * 16.0, 0.0, 1.0);
   vec3 tinted = mix(fill, fill * vec3(0.93, 0.87, 0.78) + vec3(0.05), smoothstep(0.45, 0.95, h) * rs * 0.65);
   vec3 landCol = tinted * shade;
 
@@ -323,35 +375,61 @@ void main(){
   vec3 pcol = mix(paperSea, paperLand, lm);
   col = mix(col, pcol, uPaper);
 
-  // ---- borders from ID discontinuities (screen-width compensated) ----
-  if (id != 0) {
-    int b1 = int(max(1.0, 1.0 / uZoom) + 0.5);
-    int idR = idAt(ip + ivec2(b1, 0));
-    int idD = idAt(ip + ivec2(0, b1));
-    bool provB = (idR != id && idR != 0) || (idD != id && idD != 0);
-    // Owner class rides lookA's alpha byte (SPEC §173) — the flags byte's
-    // 5-bit field topped out at 30 owners and one era now seats nearly fifty;
-    // two clamped neighbors lost the border between them. Alpha was uploaded
-    // as a constant 255 and never read, so the full 8-bit class costs nothing.
-    int cSelf = classOf(id);
-    int iL = idAt(ip - ivec2(b1, 0));
-    int iU = idAt(ip - ivec2(0, b1));
-    bool ctryB =
-      (idR != 0 && classOf(idR) != cSelf) ||
-      (idD != 0 && classOf(idD) != cSelf) ||
-      (iL != 0 && classOf(iL) != cSelf) ||
-      (iU != 0 && classOf(iU) != cSelf);
-    float bs = mix(1.0, 1.55, uPaper);
-    if (provB) col = mix(col, vec3(0.14, 0.11, 0.08), clamp(${fN(CFG.BORDER_PROV)} * bs, 0.0, 0.85));
-    if (ctryB) col = mix(col, vec3(0.09, 0.065, 0.05), clamp(${fN(CFG.BORDER_CTRY)} * bs, 0.0, 0.92));
+  // ---- the shoreline (SPEC §262) ----
+  // The land/sea edge was the one boundary on the map with no line on it.
+  float lw = fwidth(land) + 1e-5;
+  float coastInk = 1.0 - smoothstep(0.0, lw * 1.4 + 0.015, abs(land - 0.5));
+  col = mix(col, vec3(${f3(CFG.COAST_INK)}), coastInk * (0.55 + 0.30 * uPaper));
 
-    // ---- selected province: brighten + pulsing gold rim ----
+  // ---- borders from the distance field (SPEC §262) ----
+  // uDist carries, per texel, a chamfer distance to the nearest texel of a
+  // different province — zero on both banks of every border. A border is a
+  // smoothstep over that field in screen space: anti-aliased at every zoom,
+  // one width far away and another close up, instead of a one-texel test that
+  // broke into dots at strategic zoom and drew an eight-pixel staircase at
+  // the closest. Four taps a third of a texel out round the corners the
+  // chamfer inherits from the raster.
+  if (id != 0) {
+    vec2 uvj = jmap / uMapSize;
+    vec2 tx = 0.33 / uMapSize;
+    float dT = (texture(uDist, uvj + vec2( tx.x,  tx.y)).r + texture(uDist, uvj + vec2(-tx.x,  tx.y)).r
+              + texture(uDist, uvj + vec2( tx.x, -tx.y)).r + texture(uDist, uvj + vec2(-tx.x, -tx.y)).r)
+              * (0.25 * 255.0 / 3.0);          // texels to the nearest other province
+    float aaT = 0.7 / uZoom;                   // ~0.7 css px of ramp
+    float bs = mix(1.0, 1.4, uPaper);
+    // Half-widths in texels. The two banks' zero plateau is already a texel
+    // wide, so the field's threshold is the half-width less half a texel.
+    float hp = max(0.5, clamp(${fN(CFG.PROV_HALF_PX[1])} * uZoom, ${fN(CFG.PROV_HALF_PX[0])}, ${fN(CFG.PROV_HALF_PX[2])}) * bs / uZoom) - 0.5;
+    float hc = max(0.5, clamp(${fN(CFG.CTRY_HALF_PX[1])} * uZoom, ${fN(CFG.CTRY_HALF_PX[0])}, ${fN(CFG.CTRY_HALF_PX[2])}) * bs / uZoom) - 0.5;
+    float covP = 1.0 - smoothstep(hp - aaT, hp + aaT, dT);
+    float covC = 0.0;
+    if (dT < hc + aaT + 1.0) {
+      // Which border is this? Look across it: a ring of samples just past the
+      // field's distance, and a different owner class on any of them makes it
+      // a country border. Owner class rides lookA's alpha byte (SPEC §173).
+      int r = int(dT + 1.5);
+      int cSelf = classOf(id);
+      bool ctry = false;
+      for (int k = 0; k < 8; k++) {
+        int q = idAt(ip + RING[k] * r);
+        if (q != 0 && classOf(q) != cSelf) ctry = true;
+      }
+      if (ctry) covC = 1.0 - smoothstep(hc - aaT, hc + aaT, dT);
+    }
+    col = mix(col, vec3(${f3(CFG.PROV_INK)}), covP * clamp(${fN(CFG.BORDER_PROV)} * bs, 0.0, 0.85));
+    col = mix(col, vec3(${f3(CFG.CTRY_INK)}), covC * clamp(${fN(CFG.BORDER_CTRY)} * bs, 0.0, 0.92));
+
+    // ---- selected province: brighten + a soft gold rim ----
     if (id == uSelected) {
-      col *= 1.10;
-      int rr = int(max(2.0, 2.0 / uZoom) + 0.5);
-      bool rim = idAt(ip + ivec2(rr, 0)) != id || idAt(ip - ivec2(rr, 0)) != id
-              || idAt(ip + ivec2(0, rr)) != id || idAt(ip - ivec2(0, rr)) != id;
-      if (rim) col = mix(col, vec3(${f3(CFG.SELECT_GOLD)}), 0.45 + 0.35 * sin(uTime * 4.0));
+      col *= 1.08;
+      float rimT = clamp(2.2 * uZoom, 2.0, 14.0) / uZoom;
+      float rim = 1.0 - smoothstep(rimT * 0.35, rimT, dT);
+      // The coast side has no other province to measure from: a blurred land
+      // mask at a matching radius stands in for the field there.
+      float lodR = clamp(log2(max(rimT * 0.5, 1.0)), 0.0, 6.0);
+      float nearCoast = 1.0 - smoothstep(0.55, 0.92, textureLod(uLand, uv, lodR).r);
+      rim = max(rim, nearCoast);
+      col = mix(col, vec3(${f3(CFG.SELECT_GOLD)}), rim * (0.45 + 0.20 * sin(uTime * 3.0)));
     }
   }
 
@@ -502,6 +580,71 @@ function insideRing(ring, x, y) {
 // edge texels — a real island has interior pixels at full 255 and keeps
 // itself at any size; a ribbon is all edge and cannot.
 const DESPECKLE_MIN = 12;
+// The border distance field (SPEC §262). Per texel, a chamfer 3-4 distance
+// to the nearest texel of a DIFFERENT province — zero on both banks of every
+// border, 255 (never reached) at sea and far inland. Units are thirds of a
+// texel (3 straight, 4 diagonal), so a byte holds 85 texels of reach, which
+// is more than any border width the shader asks for. Sea is a wall: the
+// field does not cross a strait, so a coast facing another province's coast
+// draws no border of its own. Two raster passes over the frame, ~46M texels
+// at this frame, measured around a second on a desktop; it runs once per
+// map profile, where computeGeometry already pays the same.
+export function distanceToBorderRaster(idArray, provinceMap, W, H) {
+  W |= 0; H |= 0;
+  const n = W * H;
+  const d = new Uint8Array(n);
+  if (!idArray || idArray.length < n || W < 1 || H < 1) return d.fill(255);
+  const pm = provinceMap;
+  const provOf = pm ? (i) => pm[idArray[i]] : (i) => idArray[i];
+  d.fill(255);
+  // seeds: both banks of every land-land border
+  for (let y = 0; y < H; y++) {
+    const row = y * W;
+    for (let x = 0; x < W; x++) {
+      const i = row + x;
+      const a = provOf(i);
+      if (!a) continue;
+      if (x + 1 < W) { const b = provOf(i + 1); if (b && b !== a) { d[i] = 0; d[i + 1] = 0; } }
+      if (y + 1 < H) { const b = provOf(i + W); if (b && b !== a) { d[i] = 0; d[i + W] = 0; } }
+    }
+  }
+  // forward sweep
+  for (let y = 0; y < H; y++) {
+    const row = y * W;
+    for (let x = 0; x < W; x++) {
+      const i = row + x;
+      let v = d[i];
+      if (v === 0 || !provOf(i)) continue;
+      let t;
+      if (x > 0) { t = d[i - 1] + 3; if (t < v) v = t; }
+      if (y > 0) {
+        t = d[i - W] + 3; if (t < v) v = t;
+        if (x > 0) { t = d[i - W - 1] + 4; if (t < v) v = t; }
+        if (x + 1 < W) { t = d[i - W + 1] + 4; if (t < v) v = t; }
+      }
+      d[i] = v > 255 ? 255 : v;
+    }
+  }
+  // backward sweep
+  for (let y = H - 1; y >= 0; y--) {
+    const row = y * W;
+    for (let x = W - 1; x >= 0; x--) {
+      const i = row + x;
+      let v = d[i];
+      if (v === 0 || !provOf(i)) continue;
+      let t;
+      if (x + 1 < W) { t = d[i + 1] + 3; if (t < v) v = t; }
+      if (y + 1 < H) {
+        t = d[i + W] + 3; if (t < v) v = t;
+        if (x + 1 < W) { t = d[i + W + 1] + 4; if (t < v) v = t; }
+        if (x > 0) { t = d[i + W - 1] + 4; if (t < v) v = t; }
+      }
+      d[i] = v > 255 ? 255 : v;
+    }
+  }
+  return d;
+}
+
 export function despeckleProvinceRaster(idArray, MAP_DATA, landBytes) {
   const W = MAP_DATA.MAP_W | 0;
   const H = MAP_DATA.MAP_H | 0;
@@ -877,11 +1020,11 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   // change and not a rewrite: the shaders are untouched, because a fragment
   // may write a vec4 to a narrower target and the extra channels are simply
   // discarded — which is exactly what was happening to the alpha already.
-  function targetTexture(filter, internal, format) {
+  function targetTexture(filter, internal, format, type, w, h) {
     const t = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texImage2D(gl.TEXTURE_2D, 0, internal || gl.RGBA8, W, H, 0,
-      format || gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internal || gl.RGBA8, w || W, h || H, 0,
+      format || gl.RGBA, type || gl.UNSIGNED_BYTE, null);
     setTexParams(filter, false);
     return t;
   }
@@ -894,12 +1037,30 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   const landTex = byteTexture(landBytes, W, H, true);
   const decorTex = canvasTexture(buildDecorCanvas(MAP_DATA), true);
   const idTex = targetTexture(gl.NEAREST, gl.RG8, gl.RG); // NEAREST, no mips — texelFetch in the main pass
-  const heightTex = targetTexture(gl.LINEAR, gl.R8, gl.RED);
+  // The relief plane at half the frame, sixteen bits a texel (SPEC §262). R8
+  // at full size terraced: the normal amplifies the height's gradient 26×,
+  // so one 8-bit step tilted it a tenth and every gentle slope showed
+  // contour bands. Half float wants EXT_color_buffer_float (or its half
+  // cousin) to be a render target; where neither exists the plane falls back
+  // to R8. Half the frame is enough: the field is coast falloff, Gaussian
+  // primitives and noise at a fifty-texel wavelength, nothing sharper — and it
+  // costs 23 MB in R16F where the full R8 plane cost 46.
+  const HW = Math.max(1, Math.ceil(W / 2));
+  const HH = Math.max(1, Math.ceil(H / 2));
+  const floatTargets = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
+  let heightIsHalfFloat = floatTargets;
+  let heightTex = heightIsHalfFloat
+    ? targetTexture(gl.LINEAR, gl.R16F, gl.RED, gl.HALF_FLOAT, HW, HH)
+    : targetTexture(gl.LINEAR, gl.R8, gl.RED, gl.UNSIGNED_BYTE, HW, HH);
+  // The border distance field (SPEC §262): one byte a texel at full size,
+  // bilinear, no mips — the field is 1-Lipschitz, so one sample a pixel is an
+  // honest coverage estimate at any zoom. Filled by setProvinceMapping.
+  const distTex = byteTexture(null, W, H, false);
 
   // -- generation passes -----------------------------------------------------
   const idArray = new Uint16Array(W * H);
   const fbo = gl.createFramebuffer();
-  function runPass(prog, target, label, setup) {
+  function runPass(prog, target, label, setup, tw, th) {
     if (!prog) return false;
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target, 0);
@@ -908,7 +1069,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       return false;
     }
-    gl.viewport(0, 0, W, H);
+    gl.viewport(0, 0, tw || W, th || H);
     gl.useProgram(prog);
     gl.bindVertexArray(vao);
     setup(prog);
@@ -1044,16 +1205,33 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       warnOnce('prim-bad', 'skipping malformed height primitive', pr, e);
     }
   }
-  runPass(heightProg, heightTex, 'height-pass', (prog) => {
+  const heightSetup = (prog) => {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, landTex);
     gl.uniform1i(gl.getUniformLocation(prog, 'uLand'), 0);
-    gl.uniform2f(gl.getUniformLocation(prog, 'uMapSize'), W, H);
+    gl.uniform2f(gl.getUniformLocation(prog, 'uTargetSize'), HW, HH);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uScale'), W / HW);
     gl.uniform4fv(gl.getUniformLocation(prog, 'uPrimA[0]'), primA);
     gl.uniform4fv(gl.getUniformLocation(prog, 'uPrimB[0]'), primB);
     gl.uniform1i(gl.getUniformLocation(prog, 'uPrimCount'), primCount);
-  });
+  };
+  let heightOk = runPass(heightProg, heightTex, 'height-pass', heightSetup, HW, HH);
+  if (!heightOk && heightIsHalfFloat) {
+    // The extension was advertised and the target still would not complete:
+    // take the byte plane rather than a flat map.
+    warnOnce('height-r16f', 'R16F relief target incomplete; falling back to R8');
+    gl.deleteTexture(heightTex);
+    heightIsHalfFloat = false;
+    heightTex = targetTexture(gl.LINEAR, gl.R8, gl.RED, gl.UNSIGNED_BYTE, HW, HH);
+    heightOk = runPass(heightProg, heightTex, 'height-pass', heightSetup, HW, HH);
+  }
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  if (heightOk) {
+    // The mip chain feeds the occlusion term (height against its own blur).
+    gl.bindTexture(gl.TEXTURE_2D, heightTex);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    setTexParams(gl.LINEAR, true);
+  }
 
   // -- lookup textures ((N+1)x1, NEAREST; rebuilt on every setProvinceColors) --
   function lookupTexture(internal) {
@@ -1093,16 +1271,43 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     drylands: 6, steppe: 7, marsh: 8, wasteland: 0,
   };
   const terrTex = lookupTexture(gl.R8);
+  // The terrain palette per province (SPEC §262): what the political paint is
+  // tinted with, so a red held on desert and a red held on farmland differ.
+  const lookTTex = lookupTexture(gl.RGBA8);
+  const TERRAINS = (DEFINES && DEFINES.TERRAINS) || {};
   function uploadProvinceTerrains(states) {
     const t0 = new Uint8Array(lookW);
+    const tc = new Uint8Array(lookW * 4);
     for (let id = 1; id <= N; id++) {
       const pr = (states && states[id]) || provinces[id - 1] || {};
       t0[id] = TERRAIN_CLASS[pr.terrain] || 0;
+      const col = (TERRAINS[pr.terrain] && TERRAINS[pr.terrain].color) || [180, 170, 140];
+      tc[id * 4] = col[0]; tc[id * 4 + 1] = col[1]; tc[id * 4 + 2] = col[2]; tc[id * 4 + 3] = 255;
     }
     gl.bindTexture(gl.TEXTURE_2D, terrTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, lookW, 1, 0, gl.RED, gl.UNSIGNED_BYTE, t0);
+    gl.bindTexture(gl.TEXTURE_2D, lookTTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, lookW, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, tc);
   }
   uploadProvinceTerrains(null);
+
+  // The border field follows the province mapping (SPEC §262): merged cells
+  // share a province and the border between them must not draw.
+  let distKey = '';
+  function uploadDistanceField() {
+    const key = Array.prototype.join.call(provinceMap, ',');
+    if (key === distKey) return;
+    distKey = key;
+    const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : 0;
+    const field = distanceToBorderRaster(idArray, provinceMap, W, H);
+    gl.bindTexture(gl.TEXTURE_2D, distTex);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RED, gl.UNSIGNED_BYTE, field);
+    if (t0) {
+      const ms = Math.round(performance.now() - t0);
+      if (ms > 2500) warnOnce('dist-slow', 'border distance field took ' + ms + ' ms');
+    }
+  }
+  if (idOk) uploadDistanceField();
 
   function uploadLookups(primary, secondary, flags) {
     gl.bindTexture(gl.TEXTURE_2D, lookATex);
@@ -1163,7 +1368,8 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.useProgram(mainProg);
     for (const name of ['uOffsetScale', 'uMapSize', 'uTime', 'uZoom', 'uPaper', 'uRelief',
       'uFlat', 'uDpr', 'uSelected', 'uMaxId', 'uId', 'uHeight', 'uLand', 'uDecor',
-      'uLookA', 'uLookB', 'uFlagsTex', 'uTerr', 'uProvinceMap']) {
+      'uLookA', 'uLookB', 'uFlagsTex', 'uTerr', 'uProvinceMap', 'uDist', 'uLookT',
+      'uTerrMix', 'uJitter', 'uDesat']) {
       U[name] = gl.getUniformLocation(mainProg, name);
     }
     gl.uniform1i(U.uId, 0);
@@ -1175,13 +1381,16 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.uniform1i(U.uFlagsTex, 6);
     gl.uniform1i(U.uTerr, 7);
     gl.uniform1i(U.uProvinceMap, 8);
+    gl.uniform1i(U.uDist, 9);
+    gl.uniform1i(U.uLookT, 10);
     gl.uniform2f(U.uMapSize, W, H);
     gl.uniform1i(U.uMaxId, N);
   }
-  const texUnits = [idTex, heightTex, landTex, decorTex, lookATex, lookBTex, flagsTex, terrTex,
-    provinceMapTex];
+  const texUnits = () => [idTex, heightTex, landTex, decorTex, lookATex, lookBTex, flagsTex, terrTex,
+    provinceMapTex, distTex, lookTTex];
 
-  const state = { relief: 1, flat: 0, selected: 0 };
+  // Pre-game: the title screen's tan gets a little ground through it too.
+  const state = { relief: 1, flat: 0, selected: 0, terrMix: 0.35, jitter: 1, desat: 0 };
 
   function syncSize() {
     const cont = canvas.parentElement || document.body;
@@ -1215,6 +1424,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
           return;
         }
         uploadProvinceMap(mapping);
+        if (idOk) uploadDistanceField();
       } catch (e) {
         warnOnce('province-map-throw', 'setProvinceMapping failed', e);
       }
@@ -1245,6 +1455,9 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       const p = params || {};
       state.relief = Math.min(1, Math.max(0, p.relief === undefined ? 1 : p.relief));
       state.flat = Math.min(1, Math.max(0, p.flat === undefined ? 0 : p.flat));
+      state.terrMix = Math.min(1, Math.max(0, p.terrMix === undefined ? 0 : p.terrMix));
+      state.jitter = Math.min(1, Math.max(0, p.jitter === undefined ? 0 : p.jitter));
+      state.desat = Math.min(1, Math.max(0, p.desat === undefined ? 0 : p.desat));
     },
 
     setSelected(provId) {
@@ -1259,9 +1472,10 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.useProgram(mainProg);
         gl.bindVertexArray(vao);
-        for (let i = 0; i < texUnits.length; i++) {
+        const units = texUnits();
+        for (let i = 0; i < units.length; i++) {
           gl.activeTexture(gl.TEXTURE0 + i);
-          gl.bindTexture(gl.TEXTURE_2D, texUnits[i]);
+          gl.bindTexture(gl.TEXTURE_2D, units[i]);
         }
         const vw = (camera.viewport && camera.viewport.w) || canvas.clientWidth || 1;
         const vh = (camera.viewport && camera.viewport.h) || canvas.clientHeight || 1;
@@ -1273,6 +1487,9 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
         gl.uniform1f(U.uPaper, 1 - smoothstepJs(CFG.PAPER_ZOOM_LO, CFG.PAPER_ZOOM_HI, zoom));
         gl.uniform1f(U.uRelief, state.relief);
         gl.uniform1f(U.uFlat, state.flat);
+        gl.uniform1f(U.uTerrMix, state.terrMix);
+        gl.uniform1f(U.uJitter, state.jitter);
+        gl.uniform1f(U.uDesat, state.desat);
         gl.uniform1f(U.uDpr, window.devicePixelRatio || 1);
         gl.uniform1i(U.uSelected, state.selected);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
