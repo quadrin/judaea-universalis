@@ -170,6 +170,7 @@ export function initUI(staticCtx) {
     onProvinceClick(id) { setSelectedProv(id | 0); },
   });
   const outliner = createOutliner(els.outliner, {
+    onGatherClick(id) { gatherNearby(id); },
     onPeaceClick(warId) { openPeaceDialog(warId); },
     onWarClick(warId) { openWarOverview(warId); },
     onArmyClick(id, shift) {
@@ -1188,6 +1189,7 @@ export function initUI(staticCtx) {
   }
 
   function setSelectedArmy(id) {
+    clearGather();
     const g = state.ctx && state.ctx.game;
     if (!g) return;
     if (id != null) {
@@ -1227,6 +1229,7 @@ export function initUI(staticCtx) {
   }
 
   function clearSelectedUnits() {
+    clearGather();
     const g = state.ctx && state.ctx.game;
     if (!g) return;
     g.ui.selectedArmy = null;
@@ -1237,9 +1240,51 @@ export function initUI(staticCtx) {
     outliner.refresh(true);
   }
 
+  // Gather (SPEC §263). One standard calls every host of ours within a ring
+  // of provinces: they join the selection, and the next right-click on a
+  // province is a single gather order that marches them all there. Pressing
+  // again on the same standard widens the ring; any other selection change
+  // drops the call. `gather` remembers whose standard it is and how wide.
+  let gather = null; // { armyId, radius }
+  function clearGather() { gather = null; }
+  function gatherNearby(armyId) {
+    const g = state.ctx && state.ctx.game;
+    if (!g || !state.actions || typeof state.actions.getArmiesNear !== 'function') return;
+    const D = state.ctx.DEFINES || {};
+    const a = g.armies && g.armies[armyId];
+    if (!a || a.tag !== g.playerTag) return;
+    const base = Number(D.GATHER_RADIUS) || 2;
+    const max = Number(D.GATHER_RADIUS_MAX) || 6;
+    const radius = (gather && gather.armyId === armyId) ? Math.min(max, gather.radius + 1) : base;
+    let near = [];
+    try { near = state.actions.getArmiesNear(armyId, radius) || []; } catch (err) { warnOnce('gather', err); }
+    g.ui.selectedFleet = null;
+    g.ui.selectedWing = null;
+    g.ui.selectedArmies = [armyId].concat(near);
+    g.ui.selectedArmy = armyId;
+    gather = { armyId, radius };
+    bus.emit('selectArmy', armyId);
+    outliner.refresh(true);
+    const ring = radius + (radius === 1 ? ' province' : ' provinces');
+    if (near.length) {
+      toasts.push({
+        type: 'info', title: near.length + (near.length === 1 ? ' host answers' : ' hosts answer') + ' the standard',
+        text: 'Within ' + ring + ' of ' + a.name + '. Right-click the meeting province to gather them there'
+          + (radius < max ? ', or press G again to call wider.' : '.'),
+      });
+    } else {
+      toasts.push({
+        type: 'info', title: 'No host within ' + ring,
+        text: 'Nothing else of ours stands within reach of ' + a.name
+          + (radius < max ? '. Press G again to call wider.' : '.'),
+      });
+    }
+  }
+
   // Banner click on a stack: every army under the standard is selected at once,
   // so one click grabs the whole host and one right-click marches it together.
   function selectArmyStack(ids) {
+    clearGather();
     const g = state.ctx && state.ctx.game;
     if (!g || !ids.length) return;
     g.ui.selectedFleet = null;
@@ -1253,6 +1298,7 @@ export function initUI(staticCtx) {
   // Shift+click: grow/shrink the group. The last-added army is the primary
   // (split/hire act on it); orders move the whole group.
   function toggleArmyInGroup(id) {
+    clearGather();
     const g = state.ctx && state.ctx.game;
     if (!g) return;
     g.ui.selectedFleet = null;
@@ -1383,6 +1429,16 @@ export function initUI(staticCtx) {
     const grp = Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.length
       ? g.ui.selectedArmies
       : (g.ui.selectedArmy != null ? [g.ui.selectedArmy] : []);
+    // A gather in force is one order (SPEC §263): the standard's host and
+    // every host it called march together and are reported together.
+    if (gather && g.ui.selectedArmy === gather.armyId && grp.indexOf(gather.armyId) >= 0
+        && typeof state.actions.gatherArmies === 'function') {
+      const call = gather;
+      clearGather();
+      state.actions.gatherArmies(call.armyId, provId, call.radius);
+      outliner.refresh(true);
+      return;
+    }
     for (const id of grp) state.actions.moveArmy(id, provId);
   }
 
@@ -1421,6 +1477,9 @@ export function initUI(staticCtx) {
       toggleChronicle();
     } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
       toggleHelp();
+    } else if (e.key === 'g' || e.key === 'G') {
+      const g = state.ctx.game;
+      if (g.ui.selectedArmy != null) gatherNearby(g.ui.selectedArmy);
     }
   });
 
@@ -1529,6 +1588,7 @@ export function initUI(staticCtx) {
               <div class="help-row"><b>H</b> this help · <b>Esc</b> close / deselect</div>
               <div class="help-row"><b>Click</b> select a province, army, fleet, or air wing · <b>Shift-click</b> group armies</div>
               <div class="help-row"><b>Right-click</b> move the selected unit (air wings rebase between airfields)</div>
+              <div class="help-row"><b>G</b> gather: every host of ours near the selected army answers the standard; right-click the meeting province. Press again to call wider</div>
             </div>
             <div>
               <div class="peace-sec">The pieces</div>

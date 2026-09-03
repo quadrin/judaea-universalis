@@ -18917,3 +18917,41 @@ that is sea too is it really the beach.
   the ramps not; the relief target R16F at half frame with its zoom-following
   step, second lamp and occlusion read. `smoke104.mjs` re-costs the bill:
   five planes, 278 MB, 29 over §232's, under 320.
+
+## 263. Gather: one standard calls the hosts around it
+
+Moving a front used to be one army at a time, or a shift-click for every
+banner you wanted in the group — and on a phone, a group-mode toggle and a
+tap for each. A rally to one point, which is most of what a campaign asks of
+a player between battles, was a dozen orders that all said the same thing.
+
+**One standard calls.** Select an army and press **G**, or the flag on its
+outliner row, and every host of ours within `DEFINES.GATHER_RADIUS` (two)
+provinces of it joins the selection. Press again on the same standard and
+the ring widens by one, to `GATHER_RADIUS_MAX` (six). The next right-click on
+a province is one order: the standard's host and every host it called march
+there, each by its own road. Any other change of selection drops the call.
+
+**The ring is measured along ground we may march through** — `armiesNear` in
+`js/sim/military.js` runs `bfsDistances` under the same `canEnter` a move
+order uses — so a host on the far side of a neutral we are not at war with is
+not near, and becomes near the day we are. A host at sea does not answer.
+Hosts are listed nearest first.
+
+**One order, one notice.** `gatherArmies` in the actions asks `marchOrder`
+for every host and reports the answers together: "*7 hosts gather — 21k men
+in 7 columns march on Jerusalem*", and if any could not, "*One host stays —
+the Galilean Militia cannot march: it is locked in battle.*" `marchOrder` is
+`moveArmy`'s own checks, factored out so a single order still refuses with
+the same words it always did. `getArmiesNear` is a query (`MP_QUERY_RE`), so a
+guest's chair answers it locally; `gatherArmies` is an order and goes to the
+host.
+
+- **Regression contract**: `smoke180.mjs` — the ring stops at the radius and
+  at ground we cannot enter, opens when war opens the road, caps at
+  `GATHER_RADIUS_MAX`, excludes a host at sea and another court's hosts; the
+  order marches everyone it can by its own road, holds the host already at
+  the meeting place, names the host in battle and why, refuses an unknown
+  standard quietly; the single move order still says why it is refused; the
+  query is a query and the order is an order; G, the widening press, the
+  primer line and the outliner button are all in the chrome.

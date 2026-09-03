@@ -2178,3 +2178,41 @@ the 29th, because on the re-rolled stream a band took Jerusalem between the
 29th and the 1st and stood there for the −40 card's one firing day. The
 `uitest*.mjs` files still need the `playwright` npm package, absent from this
 container, and were not measured.
+
+## §262 — the border distance field, measured
+
+The renderer's borders now come from a chamfer distance field built by
+`distanceToBorderRaster` in `js/map/renderer.js`, once per map profile. Its
+cost on this frame (7264×6337, 46M texels): **1.26 s** in Node on a synthetic
+raster of the same size, and **3.07 s** on the main thread of the headless
+SwiftShader Chromium these suites run under, which is the slowest thing that
+will ever run it; the renderer logs a warning past 2.5 s so a slow device says
+so. It runs where `computeGeometry` already pays a full-raster pass — boot and
+the first line of a campaign — so the added wait sits beside an existing one
+rather than in a new place.
+
+The texture bill moved from 249 MB to 278: the field is 46 MB of R8 at full
+frame, and the relief plane gave back most of it by going from 46 MB of R8 at
+full frame to 31 MB of mipmapped R16F at half. `smoke104` re-costs it and
+holds the 320 MB line.
+
+The battery: **179 of 179 headless suites ALL PASS**, `smoke179.mjs` the new
+contract. Measured once more in a browser: the map rendered in headless
+Chromium at zooms 0.15, 0.3, 0.7, 1.8, 4 and 8 and in seven mapmodes with no
+shader error, and `uitest.mjs` boots and opens the realm panel on the new
+renderer. That suite then times out at the peace dove
+(`#nation-panel [data-peace=…]`) — and it times out at the same locator on
+`main` before this section, so it is the §260 ledger's to answer, not the
+renderer's.
+
+## §263 — the gather order, measured
+
+`smoke180.mjs` is the contract. Measured with it: every suite that exercises
+a move order — `smoke2, 4, 5, 11, 14, 38, 113, 122, 145, 178, 180` — ALL
+PASS, and `smoke163` (the mapmode registry) with them. In headless Chromium
+on the 66 CE opening: G on the Host of Jerusalem selected it and the Men of
+Perea (the one host within two provinces), a second G widened the ring to
+three, and a right-click on Jericho produced one order — *2 hosts gather —
+16k men in 2 columns march on Jericho* — with a road set on both; the flag on
+the outliner row did the same; no page error. The full battery is re-run on
+this tree in the background and its note follows if anything moves.
