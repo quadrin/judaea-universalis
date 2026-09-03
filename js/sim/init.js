@@ -3,7 +3,7 @@
 
 import { createRng } from '../core/rng.js';
 import {
-  num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
+  num, clamp, B, armiesOf, armiesNear, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
   declareWar, joinWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
@@ -1222,6 +1222,37 @@ export const DECISIONS = {
 export function gameActions(ctx) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
+  const fmtMenK = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n | 0));
+  // One march order, every reason it can be refused, said once (SPEC §263
+  // factored it out of moveArmy so a gather can ask it for a dozen hosts and
+  // report the answers together).
+  function marchOrder(a, provId) {
+    const truce = ceasefireHolds(ctx);
+    if (truce) {
+      return { ok: false, why: (truce.name || 'The cease-fire') + ' holds: not a column moves this month, on either side of the line.' };
+    }
+    if (a.inBattle) return { ok: false, why: a.name + ' is locked in battle.' };
+    if (a.retreating) return { ok: false, why: a.name + ' is retreating and will not rally yet.' };
+    if ((a.shatteredDays || 0) > 0) return { ok: false, why: a.name + ' is shattered and must reform (' + a.shatteredDays + ' days).' };
+    if (a.aboard) return { ok: false, why: a.name + ' is at sea and must be landed first.' };
+    const p = ctx.byId(provId);
+    if (!p || p.impassable) return { ok: false, why: '' };
+    if (!canEnter(ctx, a.tag, provId)) return { ok: false, why: 'We are not at war with the rulers of ' + p.name + '.' };
+    if (!issueMove(ctx, a, provId)) {
+      const overseas = isCoastal(ctx, provId) || isCoastal(ctx, a.prov);
+      return { ok: false, why: overseas
+        ? 'No land route to ' + p.name + ' — the sea is in the way. Build ships, embark the army, and sail.'
+        : 'No route to ' + p.name + '.' };
+    }
+    return { ok: true, why: '' };
+  }
+  function marchCue(a) {
+    const arm = dominantArmOf(a.regiments);
+    ctx.bus.emit('armyMarch', {
+      armyId: a.id, tag: a.tag, arm, gen: num(a.gen, 0),
+      cue: unitMoveCue(num(a.gen, 0), arm),
+    });
+  }
   // One voice for both kinds of community seat (§172 provinces, §195 courts):
   // the ask's outcome, toasted the same whichever panel it was asked from.
   const sayAskResult = (res) => {
@@ -1840,37 +1871,56 @@ export function gameActions(ctx) {
         const a = g.armies[armyId];
         if (!a) return;
         if (a.tag !== g.playerTag) return;
-        const truce = ceasefireHolds(ctx);
-        if (truce) {
-          say('Orders refused', (truce.name || 'The cease-fire') + ' holds: not a column moves this month, '
-            + 'on either side of the line.', 'bad');
-          return;
-        }
-        if (a.inBattle) { say('Orders refused', a.name + ' is locked in battle.', 'bad'); return; }
-        if (a.retreating) { say('Orders refused', a.name + ' is retreating and will not rally yet.', 'bad'); return; }
-        if ((a.shatteredDays || 0) > 0) { say('Orders refused', a.name + ' is shattered and must reform (' + a.shatteredDays + ' days).', 'bad'); return; }
-        const p = ctx.byId(provId);
-        if (!p || p.impassable) return;
-        if (!canEnter(ctx, a.tag, provId)) {
-          say('Orders refused', 'We are not at war with the rulers of ' + p.name + '.', 'bad');
-          return;
-        }
-        if (!issueMove(ctx, a, provId)) {
-          const overseas = isCoastal(ctx, provId) || isCoastal(ctx, a.prov);
-          say('Orders refused', overseas
-            ? 'No land route to ' + p.name + ' — the sea is in the way. Build ships, embark the army, and sail.'
-            : 'No route to ' + p.name + '.', 'bad');
-          return;
-        }
+        const r = marchOrder(a, provId);
+        if (!r.ok) { if (r.why) say('Orders refused', r.why, 'bad'); return; }
         // The column takes the road (SPEC §191): what you HEAR is the arm that
         // sets its pace — hooves, tramping feet, or an engine. The cue is the
         // dominant arm's, so a mixed host sounds like whatever most of it is.
-        const arm = dominantArmOf(a.regiments);
-        ctx.bus.emit('armyMarch', {
-          armyId: a.id, tag: a.tag, arm, gen: num(a.gen, 0),
-          cue: unitMoveCue(num(a.gen, 0), arm),
-        });
+        marchCue(a);
       } catch (e) { warnOnce('moveArmy', 'moveArmy failed', e); }
+    },
+    // The hosts a standard can call (SPEC §263) — a query, so a guest's chair
+    // answers it locally (MP_QUERY_RE in main.js).
+    getArmiesNear(armyId, radius) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return [];
+        return armiesNear(ctx, a.tag, armyId, radius);
+      } catch (e) { warnOnce('armiesNear', 'getArmiesNear failed', e); return []; }
+    },
+    // Gather (SPEC §263): the named army and every host of ours within
+    // `radius` provinces of it march on one meeting province. One order, one
+    // notice — the hosts that answered, and the ones that could not, by name.
+    gatherArmies(armyId, provId, radius) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return null;
+        const p = ctx.byId(provId);
+        if (!p) return null;
+        const ids = [a.id].concat(armiesNear(ctx, a.tag, armyId, radius));
+        const marched = [];
+        const refused = [];
+        let firstWhy = '';
+        for (const id of ids) {
+          const b = g.armies[id];
+          if (!b) continue;
+          const r = marchOrder(b, provId);
+          if (r.ok) marched.push(b);
+          else { refused.push(b); if (!firstWhy && r.why) firstWhy = r.why; }
+        }
+        if (marched.length) {
+          marchCue(marched[0]);
+          const men = marched.reduce((n, b) => n + regCount(b) * 1000, 0);
+          say(marched.length === 1 ? 'One host marches' : marched.length + ' hosts gather',
+            (marched.length === 1 ? marched[0].name + ' marches' : fmtMenK(men) + ' men in ' + marched.length + ' columns march')
+            + ' on ' + p.name + '.', 'good');
+        }
+        if (refused.length) {
+          say(refused.length === 1 ? 'One host stays' : refused.length + ' hosts stay',
+            refused.map((b) => b.name).join(', ') + (refused.length === 1 ? ' cannot march: ' : ' cannot march. ') + firstWhy, 'bad');
+        }
+        return { marched: marched.map((b) => b.id), refused: refused.map((b) => b.id) };
+      } catch (e) { warnOnce('gather', 'gatherArmies failed', e); return null; }
     },
     mergeArmies(fromId, intoId) {
       try {

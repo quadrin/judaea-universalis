@@ -1293,6 +1293,14 @@ static site, the zero dependencies, or the missing build step changes.
   of its own, so a red held on desert and a red held on farmland differ. The
   modes whose colour is the data keep their ramps clean.
 
+- **One standard calls the hosts around it.** Select an army and press **G**
+  (or the flag on its outliner row): every host of yours within two provinces
+  joins the selection, and the next right-click on a province marches them
+  all there, each by its own road. Press G again to call wider, up to six
+  provinces out. One notice reports who marched and, by name, who could not
+  and why. The ring is measured along ground you may march through, so a
+  host past a neutral's border is not near until war opens the road.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

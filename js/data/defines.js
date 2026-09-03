@@ -1807,6 +1807,12 @@ export const DEFINES = {
   // sea from an unblockaded friendly port while the side keeps a warship
   // afloat and an open home harbor. Out of supply: no reinforcements, slow
   // morale, mounting attrition, and a breaking host after weakenAtMonths.
+  // Gather (SPEC §263): how far, in provinces, a standard calls. Every host
+  // of ours within this many hops of the selected army answers a gather order
+  // and marches to the meeting province; pressing again widens the ring.
+  GATHER_RADIUS: 2,
+  GATHER_RADIUS_MAX: 6,
+
   SUPPLY: {
     moraleRecoveryMult: 0.25, // out-of-supply armies mend at a quarter pace
     attritionBase: 2,         // extra attrition %/month the month the line is cut...

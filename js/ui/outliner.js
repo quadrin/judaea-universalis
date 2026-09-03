@@ -7,7 +7,7 @@ import { armGenName, dominantArm } from '../data/units.js';
 import { armSpeedOf } from '../sim/military.js';
 
 export function createOutliner(el, {
-  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick,
+  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick, onGatherClick,
 }) {
   let ctx = null;
   let actions = null;
@@ -35,6 +35,11 @@ export function createOutliner(el, {
     const sp = e.target.closest('[data-split]');
     if (sp) {
       if (!sp.classList.contains('disabled')) runArmyAction('splitArmy', Number(sp.dataset.split));
+      return;
+    }
+    const ga = e.target.closest('[data-gather]');
+    if (ga) {
+      if (onGatherClick) onGatherClick(Number(ga.dataset.gather));
       return;
     }
     const hg = e.target.closest('[data-hire]');
@@ -145,7 +150,9 @@ export function createOutliner(el, {
     const disbandTT = aa.canDisband
       ? `Stand down this army and end its upkeep${aa.disbandReturn ? `; ${fmtMen(aa.disbandReturn)} men return to manpower here` : '; no manpower returns outside controlled home territory'}`
       : (aa.whyDisband || 'This army cannot stand down now');
+    const gatherTT = 'Gather: every host of ours within reach answers this standard — then right-click the meeting province. Press again to widen the call (G)';
     return `<span class="ol-acts">` +
+      `<button class="ol-act" data-gather="${a.id}" data-tt="${esc(gatherTT)}">${icon('flag')}</button>` +
       `<button class="ol-act${aa.canSplit ? '' : ' disabled'}" data-split="${a.id}" data-tt="${esc(splitTT)}">${icon('split')}</button>` +
       `<button class="ol-act${aa.canHire ? '' : ' disabled'}" data-hire="${a.id}" data-tt="${esc(hireTT)}">${icon('helmet')}</button>` +
       `<button class="ol-act" data-mergeall="${a.id}" data-tt="Merge every other army of ours in this province into this one">${icon('shield')}</button>` +
