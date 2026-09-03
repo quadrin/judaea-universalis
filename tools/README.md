@@ -2204,3 +2204,15 @@ renderer. That suite then times out at the peace dove
 (`#nation-panel [data-peace=…]`) — and it times out at the same locator on
 `main` before this section, so it is the §260 ledger's to answer, not the
 renderer's.
+
+## §263 — the gather order, measured
+
+`smoke180.mjs` is the contract. Measured with it: every suite that exercises
+a move order — `smoke2, 4, 5, 11, 14, 38, 113, 122, 145, 178, 180` — ALL
+PASS, and `smoke163` (the mapmode registry) with them. In headless Chromium
+on the 66 CE opening: G on the Host of Jerusalem selected it and the Men of
+Perea (the one host within two provinces), a second G widened the ring to
+three, and a right-click on Jericho produced one order — *2 hosts gather —
+16k men in 2 columns march on Jericho* — with a road set on both; the flag on
+the outliner row did the same; no page error. The full battery is re-run on
+this tree in the background and its note follows if anything moves.
