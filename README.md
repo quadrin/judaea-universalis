@@ -1293,13 +1293,14 @@ static site, the zero dependencies, or the missing build step changes.
   of its own, so a red held on desert and a red held on farmland differ. The
   modes whose colour is the data keep their ramps clean.
 
-- **One standard calls the hosts around it.** Select an army and press **G**
-  (or the flag on its outliner row): every host of yours within two provinces
-  joins the selection, and the next right-click on a province marches them
-  all there, each by its own road. Press G again to call wider, up to six
-  provinces out. One notice reports who marched and, by name, who could not
-  and why. The ring is measured along ground you may march through, so a
-  host past a neutral's border is not near until war opens the road.
+- **A group marches on a click.** Shift-click the armies — banners on the map
+  or rows in the outliner; on a phone, the group toggle stands in for the key
+  — then click a province: every army in the group marches there by its own
+  road, and the group stays selected for the next order. One army selected
+  keeps the old reading, click to inspect and right-click to move. The
+  outliner's roster is sorted largest first, and every row says what the
+  column is made of: each arm's face and regiment count under the name, so a
+  mixed host reads as one at a glance.
 
 ## Architecture
 

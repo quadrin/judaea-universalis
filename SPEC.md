@@ -18955,3 +18955,40 @@ host.
   standard quietly; the single move order still says why it is refused; the
   query is a query and the order is an order; G, the widening press, the
   primer line and the outliner button are all in the chrome.
+
+## 264. A group marches on a click, and the roster says what it holds
+
+§263's gather — a flag on the outliner row, a G key, a ring of provinces — was
+a second way of doing what shift-click already did, with a button nobody
+asked for. Withdrawn. What replaces it is the habit every EU4 hand already
+has: **shift-click the armies** (banners on the map or rows in the outliner;
+on a phone, the group toggle stands in for the key), **then click the
+province**. With two or more of our armies selected, a plain click on a
+province is the order — every army in the group takes its own road, and the
+group stays selected for the next one. One army selected keeps the old
+reading: a click inspects the province, a right-click moves the army.
+Right-click still moves any selection, group or single.
+
+What §263 factored out stays: `marchOrder` in the actions is `moveArmy`'s own
+refusals — cease-fire, battle, retreat, shattered, at sea, no road — said
+once each, and a group order is one call per army, so the refusal names the
+host it belongs to. `armiesNear`, `gatherArmies`, `getArmiesNear` and the
+`GATHER_*` defines are gone.
+
+**The roster is sorted by size**, largest first, ties by name (`armyOrder`
+in `js/ui/outliner.js`). **And every row says what the column is made of**:
+under the name, each arm present with its pattern's face and its regiment
+count — *6 · 2 · 1* under the spears, the horse and the guns — so a mixed
+host reads as one at a glance instead of behind a tooltip
+(`armyCompositionHtml`).
+
+- **Regression contract**: `smoke180.mjs` (rewritten) — a move order
+  marches silently; a host in battle and a host at sea are each refused in
+  their own words; a group order names the one host that cannot march and
+  moves the others; the roster sorts largest first and ties by name; a mixed
+  host lists every arm with its count, a single-arm host only its own, an
+  empty formation says so; the outliner sorts and prints with those
+  functions and carries no gather button; the chrome marches a group of two
+  or more on a click, keeps a group on a shift-click, orders one `moveArmy`
+  per army, has no G key and no gather call, and the primer says shift-click
+  then click.

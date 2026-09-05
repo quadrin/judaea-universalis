@@ -6,8 +6,29 @@ import { armGenName, dominantArm } from '../data/units.js';
 // the outliner prints is the number `hopDays` actually divides by.
 import { armSpeedOf } from '../sim/military.js';
 
+// The armies list is a roster, largest first (SPEC §264): the host that
+// decides a campaign sits at the top, the militia at the bottom, ties by
+// name so the order is stable between refreshes.
+export function armyOrder(a, b) {
+  const d = (b && b.men || 0) - (a && a.men || 0);
+  if (d) return d;
+  return String((a && a.name) || '').localeCompare(String((b && b.name) || ''));
+}
+
+// What a column is made of, in the row itself (SPEC §264): each arm present,
+// its pattern's face and its regiment count. A single-arm host shows one
+// pair; a mixed host shows the mix, which is the thing the roster used to
+// hide behind a tooltip.
+export function armyCompositionHtml(a) {
+  const regs = (a && a.regiments) || {};
+  const gen = (a && a.gen) | 0;
+  const parts = ['inf', 'cav', 'art'].filter((k) => (regs[k] | 0) > 0)
+    .map((k) => `<span class="ol-arm" data-arm="${k}">${unitIcon(gen, k, 'icon-row')}${regs[k] | 0}</span>`);
+  return `<span class="ol-comp">${parts.join('') || '<span class="ol-arm ol-arm-none">no regiments</span>'}</span>`;
+}
+
 export function createOutliner(el, {
-  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick, onGatherClick,
+  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick,
 }) {
   let ctx = null;
   let actions = null;
@@ -35,11 +56,6 @@ export function createOutliner(el, {
     const sp = e.target.closest('[data-split]');
     if (sp) {
       if (!sp.classList.contains('disabled')) runArmyAction('splitArmy', Number(sp.dataset.split));
-      return;
-    }
-    const ga = e.target.closest('[data-gather]');
-    if (ga) {
-      if (onGatherClick) onGatherClick(Number(ga.dataset.gather));
       return;
     }
     const hg = e.target.closest('[data-hire]');
@@ -150,9 +166,7 @@ export function createOutliner(el, {
     const disbandTT = aa.canDisband
       ? `Stand down this army and end its upkeep${aa.disbandReturn ? `; ${fmtMen(aa.disbandReturn)} men return to manpower here` : '; no manpower returns outside controlled home territory'}`
       : (aa.whyDisband || 'This army cannot stand down now');
-    const gatherTT = 'Gather: every host of ours within reach answers this standard — then right-click the meeting province. Press again to widen the call (G)';
     return `<span class="ol-acts">` +
-      `<button class="ol-act" data-gather="${a.id}" data-tt="${esc(gatherTT)}">${icon('flag')}</button>` +
       `<button class="ol-act${aa.canSplit ? '' : ' disabled'}" data-split="${a.id}" data-tt="${esc(splitTT)}">${icon('split')}</button>` +
       `<button class="ol-act${aa.canHire ? '' : ' disabled'}" data-hire="${a.id}" data-tt="${esc(hireTT)}">${icon('helmet')}</button>` +
       `<button class="ol-act" data-mergeall="${a.id}" data-tt="Merge every other army of ours in this province into this one">${icon('shield')}</button>` +
@@ -213,7 +227,7 @@ export function createOutliner(el, {
     }
 
     // Armies
-    const armies = Object.values(g.armies || {}).filter((a) => a && a.tag === player);
+    const armies = Object.values(g.armies || {}).filter((a) => a && a.tag === player).sort(armyOrder);
     html += `<div class="ol-sec">Armies <span class="ol-count">${armies.length}</span></div>`;
     if (!armies.length) html += `<div class="ol-empty">No armies in the field</div>`;
     for (const a of armies) {
@@ -242,7 +256,7 @@ export function createOutliner(el, {
       const tt = `${a.name || 'Army'} — at ${provName(g, a.prov)}\n${comp}${paceTxt}\nMorale: ${(a.morale || 0).toFixed(1)} / ${(a.maxMorale || 0).toFixed(1)}${gen}${flagsTxt}`;
       html += `
         <div class="ol-row ol-army${sel ? ' sel' : ''}${oos ? ' ol-oos' : ''}" data-army="${a.id}" data-tt="${esc(tt)}">
-          <span class="ol-name">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${oos ? '<span class="ol-oos-badge">✂</span> ' : ''}${face} ${esc(a.name || ('Army ' + a.id))}</span>
+          <span class="ol-name"><span class="ol-title">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${oos ? '<span class="ol-oos-badge">✂</span> ' : ''}${face} ${esc(a.name || ('Army ' + a.id))}</span>${armyCompositionHtml(a)}</span>
           <span class="ol-men">${fmtMen(a.men)}</span>
           <span class="morale"><span class="morale-fill" style="width:${moralePct}%"></span></span>
           ${sel ? armyActionsHtml(a) : ''}

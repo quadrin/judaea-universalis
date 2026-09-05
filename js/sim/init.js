@@ -3,7 +3,7 @@
 
 import { createRng } from '../core/rng.js';
 import {
-  num, clamp, B, armiesOf, armiesNear, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
+  num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
   declareWar, joinWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
@@ -1222,10 +1222,9 @@ export const DECISIONS = {
 export function gameActions(ctx) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
-  const fmtMenK = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n | 0));
-  // One march order, every reason it can be refused, said once (SPEC §263
-  // factored it out of moveArmy so a gather can ask it for a dozen hosts and
-  // report the answers together).
+  // One march order, every reason it can be refused, said once (factored out
+  // of moveArmy in SPEC §263; §264 keeps it, and a group order is one call
+  // per army so each refusal names its own host).
   function marchOrder(a, provId) {
     const truce = ceasefireHolds(ctx);
     if (truce) {
@@ -1878,49 +1877,6 @@ export function gameActions(ctx) {
         // dominant arm's, so a mixed host sounds like whatever most of it is.
         marchCue(a);
       } catch (e) { warnOnce('moveArmy', 'moveArmy failed', e); }
-    },
-    // The hosts a standard can call (SPEC §263) — a query, so a guest's chair
-    // answers it locally (MP_QUERY_RE in main.js).
-    getArmiesNear(armyId, radius) {
-      try {
-        const a = g.armies[armyId];
-        if (!a || a.tag !== g.playerTag) return [];
-        return armiesNear(ctx, a.tag, armyId, radius);
-      } catch (e) { warnOnce('armiesNear', 'getArmiesNear failed', e); return []; }
-    },
-    // Gather (SPEC §263): the named army and every host of ours within
-    // `radius` provinces of it march on one meeting province. One order, one
-    // notice — the hosts that answered, and the ones that could not, by name.
-    gatherArmies(armyId, provId, radius) {
-      try {
-        const a = g.armies[armyId];
-        if (!a || a.tag !== g.playerTag) return null;
-        const p = ctx.byId(provId);
-        if (!p) return null;
-        const ids = [a.id].concat(armiesNear(ctx, a.tag, armyId, radius));
-        const marched = [];
-        const refused = [];
-        let firstWhy = '';
-        for (const id of ids) {
-          const b = g.armies[id];
-          if (!b) continue;
-          const r = marchOrder(b, provId);
-          if (r.ok) marched.push(b);
-          else { refused.push(b); if (!firstWhy && r.why) firstWhy = r.why; }
-        }
-        if (marched.length) {
-          marchCue(marched[0]);
-          const men = marched.reduce((n, b) => n + regCount(b) * 1000, 0);
-          say(marched.length === 1 ? 'One host marches' : marched.length + ' hosts gather',
-            (marched.length === 1 ? marched[0].name + ' marches' : fmtMenK(men) + ' men in ' + marched.length + ' columns march')
-            + ' on ' + p.name + '.', 'good');
-        }
-        if (refused.length) {
-          say(refused.length === 1 ? 'One host stays' : refused.length + ' hosts stay',
-            refused.map((b) => b.name).join(', ') + (refused.length === 1 ? ' cannot march: ' : ' cannot march. ') + firstWhy, 'bad');
-        }
-        return { marched: marched.map((b) => b.id), refused: refused.map((b) => b.id) };
-      } catch (e) { warnOnce('gather', 'gatherArmies failed', e); return null; }
     },
     mergeArmies(fromId, intoId) {
       try {
