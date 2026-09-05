@@ -583,6 +583,13 @@ button {
   color: var(--parch);
 }
 .ol-men { font-weight: bold; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+/* The roster row's two lines (SPEC §264): the name, and under it the mix. */
+.ol-army .ol-name { white-space: normal; }
+.ol-army .ol-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ol-comp { display: flex; gap: 8px; font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 1px; }
+.ol-arm { display: inline-flex; align-items: center; gap: 2px; }
+.ol-arm .icon-row { margin-right: 0; opacity: 0.75; }
+.ol-row.sel .ol-comp { color: var(--parch-dark); }
 .ol-sub { color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .ol-sub.pos { color: #8fbf7a; }
 .ol-sub.neg { color: #e06a5a; }

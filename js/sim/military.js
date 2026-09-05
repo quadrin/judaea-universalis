@@ -442,30 +442,6 @@ export function armiesOf(ctx, tag) {
   }
   return out;
 }
-
-// The hosts within reach of a standard (SPEC §263): every army of `tag` on
-// land within `radius` provinces of the named army, measured along ground
-// that tag may march through — the same passability a move order uses, so
-// a host on the far side of a neutral we are not at war with is not "near".
-// The named army itself is not in the list. Sorted by distance, then id, so
-// the order is stable for the UI and for tests.
-export function armiesNear(ctx, tag, armyId, radius) {
-  const g = ctx.game;
-  const a = g && g.armies && g.armies[armyId];
-  if (!a || a.tag !== tag) return [];
-  const D = ctx.DEFINES || {};
-  const r = Math.max(0, Math.min(num(D.GATHER_RADIUS_MAX, 6), num(radius, num(D.GATHER_RADIUS, 2))) | 0);
-  const dist = bfsDistances(ctx, a.prov, (id) => canEnter(ctx, tag, id), r);
-  const out = [];
-  for (const b of armiesOf(ctx, tag)) {
-    if (b.id === a.id || b.aboard) continue;
-    const d = dist.get(b.prov);
-    if (d === undefined || d > r) continue;
-    out.push({ id: b.id, dist: d });
-  }
-  out.sort((x, y) => (x.dist - y.dist) || (x.id - y.id));
-  return out.map((o) => o.id);
-}
 export function armiesInProv(ctx, provId) {
   const out = [];
   for (const id in ctx.game.armies) {
