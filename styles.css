@@ -590,6 +590,10 @@ button {
 .ol-arm { display: inline-flex; align-items: center; gap: 2px; }
 .ol-arm .icon-row { margin-right: 0; opacity: 0.75; }
 .ol-row.sel .ol-comp { color: var(--parch-dark); }
+/* A selected army's orders sit on their own line under the row, so the name
+   and the mix stay readable instead of being squeezed to an ellipsis. */
+.ol-army.sel { flex-wrap: wrap; }
+.ol-army.sel .ol-acts { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 4px; margin-top: 2px; }
 .ol-sub { color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .ol-sub.pos { color: #8fbf7a; }
 .ol-sub.neg { color: #e06a5a; }
