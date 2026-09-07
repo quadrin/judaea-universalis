@@ -891,7 +891,7 @@ async function boot() {
       const running = ctx && !ctx.game.paused && !ctx.game.over;
       const dayFrac = running ? Math.min(1, acc / (DEFINES.SPEED_MS[ctx.game.speed] || 450)) : 0;
       overlay.draw(ctx ? ctx.game : null, camera, now, dayFrac);
-      labels.update(ctx, camera, mapmode);
+      labels.update(ctx, camera, mapmode, overlay.labelObstacles());
     } catch (e) {
       if (!frameWarned) { frameWarned = true; console.error('[frame]', e); }
     }

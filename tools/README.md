@@ -7,6 +7,34 @@ browser.
 
     node tools/autorun.mjs [years] [bookmarkId]
 
+The default still runs one historical seed and the first playable faction.
+For a campaign matrix:
+
+```sh
+node tools/autorun.mjs 8 --factions=all --seeds=30 --quiet --json=balance.json
+node tools/autorun.mjs 8 66ce --factions=AGR --seed=1234567 --seeds=5 --profiles=historical,cautious,bold --difficulty=hard --json=agrippa.json
+```
+
+On Node 20, add `--experimental-default-type=module` before the script path;
+newer Node versions can detect the browser ES modules automatically.
+`--help` lists all switches. Invalid selectors fail rather than silently running
+no campaigns. Seeds are consecutive unsigned integers starting at `--seed`.
+
+Each run uses a private event bus and resolves both authored and dynamically
+created event cards through the live event registry. An unknown or stuck card
+fails the run; crashed runs have a separate summary count and a nonzero exit
+status. JSON includes yearly nation trajectories, first campaign verdict and
+day, first elimination, minimum treasury, first day below -200, first bankruptcy
+(stage 3), and months with negative operating cash flow. Day 0 is the opening;
+all financial measurements cover the full requested horizon, including years
+after a campaign verdict. `unresolved` means no verdict inside that horizon.
+The player's metrics follow their chair if a country changes tag.
+
+The cautious and bold profiles override the selected faction's aggression and
+caution; all other factions retain their authored personalities. These are AI
+sensitivity checks, not human strategies or estimates of human win rates.
+Use matching bookmark/faction/seed/profile/difficulty combinations for comparisons.
+
 Runs every bookmark (or one) with EVERY nation on AI for N game years
 (default 8) against the real map adjacency, then prints each nation's
 trajectory (provinces, dev, income, treasury, troops, manpower, reforms)
@@ -2217,3 +2245,37 @@ group, a click on Jericho set a road on both and kept the group selected
 with no province selected, and a single army plus a click still opened the
 province panel; the roster read 15k / 8k / 2k / 1k with the mix under each
 name; no page error.
+
+
+## §267 — campaign matrix and map readability, measured
+
+The initial matrix covers all 17 playable bookmark/faction combinations,
+five seeds each, for eight years on Normal: 85 completed runs, no runner
+crashes. A paired baseline uses the pre-fix economy and the same runner for
+three seeds per combination (51 runs); the tribute correction changes none
+of their first verdicts or final survival results. Twelve additional Veteran
+runs cover all three 66 CE factions with cautious/bold personalities and two
+seeds, also without runner crashes. This is a pilot, not a human win-rate study.
+
+The new timing fields expose bankruptcies that an end-of-run treasury alone
+can conceal. Several AI campaigns still declare bankruptcy across
+these horizons; all five 1948 observations include at least one bankruptcy,
+and their matched baseline already does so. A follow-up economy pass should
+compare bankruptcy dates with campaign verdict dates and actual human play.
+
+`smoke183.mjs` checks matrix selection and summary denominators, label/banner
+collision behavior, and tribute conservation across every bookmark.
+`smoke184.mjs` checks that an AGR campaign run by itself exactly matches the
+same campaign inside the 66 CE faction matrix, including counters and metrics.
+
+The map-content comparison against 4926f69 is identical outside relief:
+415 cells and all province geography and starting resources are preserved.
+Browser inspection of the 66 CE opening covered political/terrain views at
+1280×720 and 390×844, with readable capital labels and no browser warnings
+or errors. The viewport was restored after the check.
+
+The full headless battery passes: **184 of 184 suites**, including the six
+299-year trajectories in smoke81. The cloud mock suite (smoke68) was rerun
+with local-socket permission after the sandbox initially blocked its server.
+After the final label changes, smoke128, smoke179, smoke183 and smoke184
+were checked again and pass.

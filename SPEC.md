@@ -19069,3 +19069,29 @@ verdict (`checkVictory`) says the rest, at whichever chair the player sits.
   waits moves nothing; Masada takes what Rome holds, closes the war, keeps
   the hills Judaean and sends the Roman town home; and a Judaea with nothing
   left is stood down under IVDAEA CAPTA.
+
+
+## §267 — Legible campaign ground and reproducible balance measurements
+
+Small provinces compete for label space by importance: selection, the player's
+capital, wonders, sieges, player territory, other capitals, then area. Names
+use measured text bounds and deterministic placement near their centroids.
+The overlay supplies the rectangles of the banners and landmarks it actually
+drew, so text avoids those objects. Nation labels retain their regional anchors.
+Political fill saturation and interface texture are reduced; desert grain uses
+patches rather than continuous stripes. Narrower central highlands and a small
+Jezreel basin distinguish the Levant's relief. These are rendering changes:
+no province seed, ownership, adjacency, development, or manpower changes.
+The prior §234 withdrawal of district activation remains in force.
+
+Tribute uses one domestic-revenue calculation on both ledgers: tax, production,
+trade, and pilgrimage. Transfers from other clients do not themselves become
+part of that base, so client chains neither recurse nor double-tax transfers.
+
+The balance runner accepts seed ranges, all playable factions, historical or
+alternative AI personalities, and Normal/Veteran settings. Each run owns its
+event bus. Dynamic cards resolve through findEventById; missing or stuck cards
+fail visibly. JSON records trajectories, first verdict, elimination, deficits,
+and bankruptcy timing. Aggregates distinguish unresolved runs from losses and
+crashes from completed observations. These measurements describe AI campaigns,
+not human win probabilities. See tools/README.md for commands and validation.

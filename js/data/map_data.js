@@ -2837,8 +2837,11 @@ const HEIGHT_PRIMITIVES = [
   { type: 'ridge', a: [35.55, 33.25], b: [36.25, 34.55], h: 0.95, w: 0.45 }, // Mount Lebanon
   { type: 'ridge', a: [36.00, 33.25], b: [36.65, 34.40], h: 0.70, w: 0.40 }, // Anti-Lebanon
   { type: 'dome', c: [35.85, 33.42], r: 0.35, h: 1.00 },                     // Mount Hermon
-  { type: 'ridge', a: [34.98, 31.25], b: [35.30, 32.45], h: 0.55, w: 0.45 }, // Judean-Samarian highlands
-  { type: 'dome', c: [35.40, 32.95], r: 0.45, h: 0.50 },                     // Galilee
+  { type: 'ridge', a: [34.98, 31.25], b: [35.30, 32.45], h: 0.55, w: 0.28 }, // Judean-Samarian highlands
+  { type: 'dome', c: [35.40, 32.95], r: 0.34, h: 0.50 },                     // Galilee
+  // Visual relief only: the valley separates Galilee from the central hills.
+  // Province seeds, raster borders, adjacency and all campaign resources stay fixed.
+  { type: 'basin', a: [35.12, 32.70], b: [35.48, 32.53], h: -0.18, w: 0.12 }, // Jezreel valley
   { type: 'ridge', a: [35.05, 32.50], b: [34.97, 32.82], h: 0.40, w: 0.20 }, // Mount Carmel
   { type: 'basin', a: [35.60, 33.10], b: [35.45, 30.55], h: -0.50, w: 0.35 },// Jordan rift / Dead Sea / Arabah
   { type: 'ridge', a: [35.60, 30.00], b: [35.85, 31.40], h: 0.55, w: 0.55 }, // Edomite-Moabite plateau

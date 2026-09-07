@@ -23,6 +23,20 @@ python3 -m http.server 8613 --directory .
 # open http://localhost:8613
 ```
 
+## Map readability and balance coverage
+
+The Levant now keeps small capitals, selected provinces, and important towns
+readable at campaign zoom. Province labels avoid army banners and landmark
+icons; political colors are softer, desert texture is quieter, and the Jezreel
+valley separates the Galilee relief from the central hills. Campaign clocks
+use larger text, and mapmode buttons expose their names and selection state
+to assistive technology. Province borders, development and manpower are unchanged.
+
+Client tribute now reaches the overlord in full, including the trade and
+pilgrimage share already deducted from the client. The [balance harness](tools/README.md)
+can compare every playable faction across reproducible seeds, AI personalities
+and difficulty settings, and export campaign outcomes and financial trajectories.
+
 ## Saves
 
 Saved campaigns go into your browser's own database (IndexedDB) and are listed
