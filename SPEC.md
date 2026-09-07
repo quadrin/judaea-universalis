@@ -19035,3 +19035,37 @@ or a guest at another chair, holds the table up exactly as before.
   Agrippa card lands, takes the rising's road, sets its modifier and its
   flag, and no longer nulls the bond by hand; and with a human Agrippa in it
   the Great Revolt settles at Rome's table in a month and the client is told.
+
+## 266. Rome makes a province of what it holds, and Masada closes the war
+
+The Ninth of Av burned the House and moved no ground. The Nine Hundred and
+Sixty fell and the war ran on. Both are wrong about the thing the chapter is
+about: Judaea did not lose a war in 70, it stopped being a country.
+
+**Iudaea, a Province of the Roman People** (`ev_provincia_iudaea`) follows
+the fire: once the Temple has burned, Rome holds Jerusalem and the war still
+runs, Rome decides — the card is Rome's, a notice at Judaea's chair — whether
+to *enter the land in the census*. If it does, every Judaean province the
+legions themselves hold changes hands now, mid-war, the way a conquest does
+at the table (autonomy 0.6, *Recent Conquest*), and is no longer Judaea's to
+win back there; what Agrippa's horse or the Nabataeans hold is theirs to
+settle, and what still flies the standard is still Judaea's to fight for.
+Rome takes +10 legitimacy, +15 governance and the fiscus Iudaicus (+8%
+income); Judaea −20 legitimacy. A Rome that would rather wait holds it as
+occupied ground until the peace.
+
+**Masada closes the war.** The Nine Hundred and Sixty now takes what Rome
+holds the same way, then closes the Great Revolt by the sword with the
+field belonging to Rome and its party — what a Judaea of the hills still
+held it keeps, at peace with the province beside it, and the Roman towns
+under its standard go home. A Judaea left with nothing on the census stands
+down its last men, the chronicle reads IVDAEA CAPTA, and the chapter's own
+verdict (`checkVictory`) says the rest, at whichever chair the player sits.
+
+- **Regression contract**: `smoke182.mjs` — the province card is Rome's and
+  fires only after the fire with Rome in the city; it enters the ground the
+  legions hold and leaves Agrippa's and the standard's alone; the war goes
+  on; the fiscus is collected and the notice names the ground; a Rome that
+  waits moves nothing; Masada takes what Rome holds, closes the war, keeps
+  the hills Judaean and sends the Roman town home; and a Judaea with nothing
+  left is stood down under IVDAEA CAPTA.

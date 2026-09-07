@@ -1312,6 +1312,14 @@ static site, the zero dependencies, or the missing build step changes.
   where the lord stands on the same side, the lord signs, the client keeps
   what its own standards hold, and is told.
 
+- **Rome makes a province of what it holds.** Once the Temple has burned and
+  Rome holds Jerusalem, a card of Rome's enters every Judaean province the
+  legions hold in the census — Roman ground now, mid-war, no longer yours to
+  win back at the table — while what still flies the standard is still yours
+  to fight for. And when Masada falls the war closes by the sword: Rome keeps
+  what it holds, a Judaea of the hills keeps what it held, and a Judaea with
+  nothing left is stood down under IVDAEA CAPTA.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free
