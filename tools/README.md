@@ -2258,7 +2258,7 @@ runs cover all three 66 CE factions with cautious/bold personalities and two
 seeds, also without runner crashes. This is a pilot, not a human win-rate study.
 
 The new timing fields expose bankruptcies that an end-of-run treasury alone
-can conceal. Several AI campaigns still declare bankruptcy repeatedly across
+can conceal. Several AI campaigns still declare bankruptcy across
 these horizons; all five 1948 observations include at least one bankruptcy,
 and their matched baseline already does so. A follow-up economy pass should
 compare bankruptcy dates with campaign verdict dates and actual human play.
@@ -2273,3 +2273,9 @@ The map-content comparison against 4926f69 is identical outside relief:
 Browser inspection of the 66 CE opening covered political/terrain views at
 1280×720 and 390×844, with readable capital labels and no browser warnings
 or errors. The viewport was restored after the check.
+
+The full headless battery passes: **184 of 184 suites**, including the six
+299-year trajectories in smoke81. The cloud mock suite (smoke68) was rerun
+with local-socket permission after the sandbox initially blocked its server.
+After the final label changes, smoke128, smoke179, smoke183 and smoke184
+were checked again and pass.
