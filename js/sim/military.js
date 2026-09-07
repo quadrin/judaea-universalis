@@ -5302,14 +5302,36 @@ export function independenceInfo(ctx, tag) {
     can: false,
     why: '',
   };
+  // The wars this court stands in (SPEC §265). A client declares no wars of
+  // its own (§248), so nearly every war it is in is its lord's — it was called
+  // under the lord's banner and, when the collar comes off, it goes home from
+  // them at status quo (`withdrawFromWar`), the way §258 sends a new client
+  // home from the wars it was carrying for its old master. Agrippa's kingdom
+  // opens the Great Revolt on Rome's side; that war used to bar the rising
+  // for as long as it ran, which was the whole chapter.
+  //
+  // What still bars it is a war of the court's OWN — one the lord does not
+  // stand in beside it. The mirror of §219's one refusal, read from the other
+  // end of the bond: a realm that breaks its word in the middle of somebody
+  // else's war is not declaring independence, it is changing sides.
+  const lordWars = [];
+  const ownWars = [];
+  for (const w of g.wars || []) {
+    const onAtt = (w.attackers || []).indexOf(tag) >= 0;
+    const onDef = (w.defenders || []).indexOf(tag) >= 0;
+    if (!onAtt && !onDef) continue;
+    const mySide = onAtt ? w.attackers : w.defenders;
+    const foes = onAtt ? w.defenders : w.attackers;
+    if (!(foes || []).some((e) => g.tags[e] && g.tags[e].alive)) continue;
+    (mySide.indexOf(lordTag) >= 0 ? lordWars : ownWars).push(w);
+  }
+  out.sheds = lordWars.map((w) => w.name || 'a war');
   if (truceActive(ctx, tag, lordTag)) {
     out.why = 'The ink on our truce with ' + out.name + ' is still wet.';
-  } else if ((me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) {
-    // The mirror of §219's one refusal, read from the other end of the bond: a
-    // realm that breaks its word in the middle of somebody else's war is not
-    // declaring independence, it is changing sides.
-    out.why = 'Not in the middle of another war. A crown that breaks its word while its '
-      + 'levies stand in somebody else\'s line has not won its freedom — it has changed sides.';
+  } else if (ownWars.length) {
+    out.why = 'Not in the middle of a war of our own (' + ownWars.map((w) => w.name || 'a war').join(', ')
+      + '). A crown that breaks its word while its levies stand in somebody else\'s line has not '
+      + 'won its freedom — it has changed sides.';
   }
   out.can = !out.why;
   return out;
@@ -5323,6 +5345,25 @@ export function declareIndependenceCore(ctx, tag) {
   const me = g.tags[tag];
   const lordTag = me.overlord;
   const lord = g.tags[lordTag];
+  // The lord's wars are left first (SPEC §265): the client goes home from
+  // every war it stood in beside its lord, at status quo and truced to the
+  // side it leaves, so the rising is a war with one enemy and not a court on
+  // both sides of the same line. Done before the bond is struck, so
+  // withdrawFromWar still reads the court as the lord's client.
+  const shed = [];
+  for (const w of (g.wars || []).slice()) {
+    const onAtt = (w.attackers || []).indexOf(tag) >= 0;
+    const onDef = (w.defenders || []).indexOf(tag) >= 0;
+    if (!onAtt && !onDef) continue;
+    const mySide = onAtt ? w.attackers : w.defenders;
+    if (mySide.indexOf(lordTag) < 0) continue;
+    shed.push(w.name || 'a war');
+    withdrawFromWar(ctx, w, tag);
+  }
+  // …and the alliance that came with the collar (§248): a court about to
+  // send a herald to its lord is nobody's ally there.
+  if (Array.isArray(me.allies)) me.allies = me.allies.filter((a) => a !== lordTag);
+  if (lord && Array.isArray(lord.allies)) lord.allies = lord.allies.filter((a) => a !== tag);
   me.overlord = null;
   me.incorporating = null; // a union half-woven dies with the bond (§219's terms)
   const war = declareWar(ctx, tag, lordTag,
@@ -5336,7 +5377,7 @@ export function declareIndependenceCore(ctx, tag) {
     + ((lord && lord.name) || lordTag) + ': the tribute stops with the declaration, and '
     + 'what the crown is worth is now a question for the field.');
   ctx.bus.emit('provinceOwner', {}); // the diplomatic map is drawn off the bond
-  return { ok: true, tag: lordTag, name: (lord && lord.name) || lordTag, warId: war.id };
+  return { ok: true, tag: lordTag, name: (lord && lord.name) || lordTag, warId: war.id, shed };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

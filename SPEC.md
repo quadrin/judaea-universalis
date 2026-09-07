@@ -18992,3 +18992,46 @@ host reads as one at a glance instead of behind a tooltip
   or more on a click, keeps a group on a shift-click, orders one `moveArmy`
   per army, has no G key and no gather call, and the primer says shift-click
   then click.
+
+## 265. A client goes free from its lord's wars, and its lord signs for it while it stays
+
+Three faults in one bond, all found in Agrippa's chair in 66 CE.
+
+**The rising was barred by the lord's own war.** `independenceInfo` refused
+"Throw Off the Yoke" while the court stood in *any* war, and Agrippa's
+kingdom opens the chapter in the Great Revolt on Rome's side — so the one
+declaration a client keeps (§226, §248) was refused for as long as the
+chapter's war ran, which was the chapter. Now the wars are read by who
+stands beside us: a war the lord stands in on our side is the lord's, and
+the rising leaves it — `withdrawFromWar`, status quo, truced to the side we
+faced, the way §258 sends a new client home from the wars it carried for its
+old master. What still bars the rising is a war of the court's *own*, one the
+lord does not stand in beside it; that refusal names the war. The alliance
+that came with the collar goes with it, and the panel's notice names the
+wars we went home from.
+
+**The Agrippa card bypassed the rule and broke the world.** *The crown comes
+out of Rome's gift* nulled the overlord by hand and declared, which left the
+Babylonian horse at war with Rome and in Rome's line against Judaea in the
+same month, and eight years later still in both. The card now takes the same
+road as the button — `helpers.declareIndependence` — and if the herald cannot
+go it says so in the chronicle instead of half-applying.
+
+**A human client's war never ended.** A client cannot send envoys (§248), and
+`monthlyWarDiplomacy` would not settle a war over a human — so a human
+Agrippa's Great Revolt ran until the campaign did, and the client could
+neither end it nor leave it. Where the human's lord stands on the same side,
+the lord speaks: the war settles at the lord's table as any AI war does, the
+client keeps what its own standards hold (uti possidetis is per court), and
+the client is told — *Our lord has signed*. A human in a war of their own,
+or a guest at another chair, holds the table up exactly as before.
+
+- **Regression contract**: `smoke181.mjs` — Agrippa may declare on day one
+  and the info names the Great Revolt as the war it would leave; the
+  declaration strikes the bond, leaves the Great Revolt to Rome and Judaea,
+  ends the war with Judaea and truces it, hands back the Judaean ground it
+  held, keeps its home, drops the alliance, and leaves one war against one
+  enemy; a client in a war of its own is refused and told which war; the
+  Agrippa card lands, takes the rising's road, sets its modifier and its
+  flag, and no longer nulls the bond by hand; and with a human Agrippa in it
+  the Great Revolt settles at Rome's table in a month and the client is told.

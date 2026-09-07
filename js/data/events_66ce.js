@@ -2623,9 +2623,17 @@ export const EVENTS_66 = [
         effects: guard('ev_ag_the_clients_war:0', (ctx) => {
           const h = ctx.helpers;
           const g = ctx.game;
-          const agr = g.tags && g.tags.AGR;
-          if (agr) agr.overlord = null;
-          h.declareWar(ctx, 'AGR', 'ROM', 'Agrippa\'s War of Independence', 'independence');
+          // The same road the panel's button takes (SPEC §265): the kingdom
+          // goes home from the Great Revolt at status quo, the bond is struck,
+          // and only then is the herald sent. It used to null the overlord
+          // and declare, which left the Babylonian horse at war with Rome and
+          // in Rome's line against Judaea in the same month.
+          const rose = h.declareIndependence(ctx, 'AGR');
+          if (!rose || !rose.ok) {
+            h.chronicle(ctx, 'era', 'The last of the Herods drafts the letter that would end a century '
+              + 'of Roman convenience, and does not send it: ' + ((rose && rose.why) || 'the herald could not go') + '.');
+            return;
+          }
           h.addTagModifier(ctx, 'AGR', {
             id: 'the_kingdom_declared', name: 'The Kingdom Declared', months: 36,
             effects: { moraleMult: 1.1, manpowerMult: 1.15 },
