@@ -2217,3 +2217,18 @@ group, a click on Jericho set a road on both and kept the group selected
 with no province selected, and a single army plus a click still opened the
 province panel; the roster read 15k / 8k / 2k / 1k with the mix under each
 name; no page error.
+
+## §265/§266 — the collar and the census, measured
+
+`smoke181.mjs` (the rising leaves the lord's wars; the lord signs for a
+human client) and `smoke182.mjs` (Rome enters what it holds after the fire;
+Masada closes the war) are the contracts. Measured on the merged tree: the
+full battery, **182 of 182 headless suites ALL PASS**; every one of the 43
+suites that load the 66 CE events, and the diplomacy suites `smoke129, 151,
+168, 178`, pass beside them. `smoke151`'s refusal assertion follows §265's
+wording — Herod's War for the Crown is a war of his own, Rome outside it, and
+is still refused. Headless 66 CE runs with real adjacency (the repro harness
+in the session scratchpad, not shipped): a human Agrippa's Great Revolt, which
+used to run for the whole campaign, settles at Rome's table in the month the
+table opens; the Agrippa card forced in June 69 leaves one war against one
+enemy where it used to leave three.
