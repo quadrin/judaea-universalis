@@ -1,7 +1,7 @@
 import { layoutProvinceLabels } from './label_layout.js';
 
 // js/map/labels.js — absolutely-positioned DOM labels in #labels-layer. SPEC §5.6.
-// Zoom >= 1.1: province names at pixel-mass centroids, sized by sqrt(area)·zoom.
+// Zoom >= 1.1: province names near pixel-mass centroids, prioritized and decluttered.
 // Zoom <  1.1: nation names, ONE PER REGION a court holds, in darkened tag colors.
 // Divs are pooled and reused; style writes are skipped when unchanged.
 // EU4-style legibility: dark ink over a layered parchment halo. The halo /
@@ -247,7 +247,7 @@ export function createLabels(el, MAP_DATA, geom) {
             const p = provs[id];
             if (!p || !p.name) continue;
             const c = geom.centroids[id];
-            if (!c) continue;
+            if (!c || !(geom.areas[id] > 0)) continue; // folded-away cells have no label
             const raw = Math.sqrt(Math.max(1, geom.areas[id])) * zoom * PROV_SIZE_K;
             const canon = p.canon || p.name;
             const selected = ctx.game.ui?.selectedProv === id;

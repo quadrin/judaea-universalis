@@ -2245,3 +2245,31 @@ group, a click on Jericho set a road on both and kept the group selected
 with no province selected, and a single army plus a click still opened the
 province panel; the roster read 15k / 8k / 2k / 1k with the mix under each
 name; no page error.
+
+
+## §267 — campaign matrix and map readability, measured
+
+The initial matrix covers all 17 playable bookmark/faction combinations,
+five seeds each, for eight years on Normal: 85 completed runs, no runner
+crashes. A paired baseline uses the pre-fix economy and the same runner for
+three seeds per combination (51 runs); the tribute correction changes none
+of their first verdicts or final survival results. Twelve additional Veteran
+runs cover all three 66 CE factions with cautious/bold personalities and two
+seeds, also without runner crashes. This is a pilot, not a human win-rate study.
+
+The new timing fields expose bankruptcies that an end-of-run treasury alone
+can conceal. Several AI campaigns still declare bankruptcy repeatedly across
+these horizons; all five 1948 observations include at least one bankruptcy,
+and their matched baseline already does so. A follow-up economy pass should
+compare bankruptcy dates with campaign verdict dates and actual human play.
+
+`smoke183.mjs` checks matrix selection and summary denominators, label/banner
+collision behavior, and tribute conservation across every bookmark.
+`smoke184.mjs` checks that an AGR campaign run by itself exactly matches the
+same campaign inside the 66 CE faction matrix, including counters and metrics.
+
+The map-content comparison against 4926f69 is identical outside relief:
+415 cells and all province geography and starting resources are preserved.
+Browser inspection of the 66 CE opening covered political/terrain views at
+1280×720 and 390×844, with readable capital labels and no browser warnings
+or errors. The viewport was restored after the check.
