@@ -75,7 +75,7 @@ console.log('== the collar thrown off from below (SPEC §226) ==');
   const { game, ctx } = boot(BOOKMARK_40, 'HER');
   const w = crownWar(game);
   const midWar = mil.independenceInfo(ctx, 'HER');
-  ok(midWar && !midWar.can && /middle of another war/i.test(midWar.why),
+  ok(midWar && !midWar.can && /war of our own/i.test(midWar.why),
     'not while our levies stand in somebody else\'s line: ' + (midWar && midWar.why));
   // The crown war settled; now the collar is the only thing left.
   game.tags.HER.atWarWith = [];

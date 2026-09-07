@@ -1320,9 +1320,22 @@ function monthlyWarDiplomacy(ctx) {
     // a multiplayer guest's war must not settle behind their back either.
     const humans = (Array.isArray(g.humanTags) && g.humanTags.length ? g.humanTags : [player])
       .filter((t) => g.tags[t] && !g.tags[t].ai);
-    const humanIn = humans.some((t) => w.attackers.indexOf(t) >= 0 || w.defenders.indexOf(t) >= 0);
+    // A client keeps no foreign policy (SPEC §248), so a human sitting in a
+    // client's chair does not hold up its lord's war (SPEC §265): where the
+    // lord stands on the same side, the lord signs, and the client is told.
+    // Agrippa's Great Revolt used to run for as long as the campaign did,
+    // because a client could not send envoys and the table would not settle
+    // over a human.
+    const speaksFor = (t) => {
+      const c = g.tags[t];
+      const lordTag = c && c.overlord;
+      if (!lordTag || !g.tags[lordTag] || !g.tags[lordTag].alive) return false;
+      const side = w.attackers.indexOf(t) >= 0 ? w.attackers : w.defenders.indexOf(t) >= 0 ? w.defenders : null;
+      return !!side && side.indexOf(lordTag) >= 0;
+    };
+    const humanIn = humans.some((t) => (w.attackers.indexOf(t) >= 0 || w.defenders.indexOf(t) >= 0) && !speaksFor(t));
     const playerIn = humanIn && (w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0)
-      && g.tags[player] && !g.tags[player].ai;
+      && g.tags[player] && !g.tags[player].ai && !speaksFor(player);
     if (humanIn && !playerIn) continue; // a guest's war: no auto-deal, their own cards come via MP
     if (playerIn) {
       const theirSide = w.attackers.indexOf(player) >= 0 ? w.defenders : w.attackers;
@@ -1383,7 +1396,19 @@ function monthlyWarDiplomacy(ctx) {
       if (Math.abs(wsAtt) < 50 && months < num(w.settleMonths, 36)) continue;
       const winner = wsAtt >= 0 ? attLead : defLead;
       const deal = buildAiPeaceDeal(ctx, w, winner);
+      const clientChair = (w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0)
+        && g.tags[player] && !g.tags[player].ai;
+      const lordName = clientChair && g.tags[player].overlord
+        ? ((g.tags[g.tags[player].overlord] || {}).name || g.tags[player].overlord) : '';
       executePeaceDeal(ctx, w, winner, deal);
+      if (clientChair) {
+        ctx.bus.emit('notify', {
+          title: 'Our lord has signed',
+          text: (w.name || 'The war') + ' is settled at ' + lordName + '\'s table, not ours — a client keeps '
+            + 'no foreign policy. What our own standards held, we keep.',
+          type: 'info',
+        });
+      }
     }
   }
 }

@@ -726,6 +726,12 @@ export const simHelpers = {
   reconcileRivalry(ctx, a, b) {
     return reconcileRivalryCore(ctx, L(ctx, a), L(ctx, b));
   },
+  // A scripted rising (SPEC §265): the same road the panel's button takes —
+  // the lord's wars left at status quo, the bond struck, the herald sent —
+  // so a card cannot leave a court at war with its lord and beside it at once.
+  declareIndependence(ctx, tag) {
+    return declareIndependenceCore(ctx, L(ctx, tag));
+  },
   // ...and the friendship a change of dynasty annuls (SPEC §104).
   retireAffinity(ctx, a, b) {
     return retireAffinityCore(ctx, L(ctx, a), L(ctx, b));
@@ -1615,6 +1621,7 @@ export function gameActions(ctx) {
         independence: independence ? {
           can: independence.can, why: independence.why, name: independence.name,
           dev: independence.dev, ourDev: independence.ourDev, allies: independence.allies,
+          sheds: independence.sheds || [],
         } : null,
         marriage,
         recognition,
@@ -3407,9 +3414,11 @@ export function gameActions(ctx) {
       try {
         const res = declareIndependenceCore(ctx, g.playerTag);
         if (!res.ok) { say('The collar stays on', res.why, 'bad'); return; }
+        const left = Array.isArray(res.shed) && res.shed.length
+          ? ' We go home from ' + res.shed.join(' and ') + ' at status quo, truced to the courts we faced there.' : '';
         say('The fealty renounced', 'We answer to ' + res.name + ' no longer. The tribute stops '
           + 'with the declaration and the crown stands on its own — for as long as the field '
-          + 'agrees. Lose this war and the yoke can be written back on at the table.', 'war');
+          + 'agrees.' + left + ' Lose this war and the yoke can be written back on at the table.', 'war');
       } catch (e) { warnOnce('independence', 'declareIndependence failed', e); }
     },
 

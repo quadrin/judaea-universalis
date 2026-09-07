@@ -2205,14 +2205,15 @@ renderer. That suite then times out at the peace dove
 `main` before this section, so it is the §260 ledger's to answer, not the
 renderer's.
 
-## §263 — the gather order, measured
+## §263/§264 — a group marches on a click, measured
 
-`smoke180.mjs` is the contract. Measured with it: every suite that exercises
-a move order — `smoke2, 4, 5, 11, 14, 38, 113, 122, 145, 178, 180` — ALL
-PASS, and `smoke163` (the mapmode registry) with them. In headless Chromium
-on the 66 CE opening: G on the Host of Jerusalem selected it and the Men of
-Perea (the one host within two provinces), a second G widened the ring to
-three, and a right-click on Jericho produced one order — *2 hosts gather —
-16k men in 2 columns march on Jericho* — with a road set on both; the flag on
-the outliner row did the same; no page error. The full battery is re-run on
-this tree in the background and its note follows if anything moves.
+§263's gather was withdrawn by §264 for the EU4 habit (shift-click, then
+click); `smoke180.mjs` was rewritten as the §264 contract. Measured on the
+§264 tree: the full battery, **180 of 180 headless suites ALL PASS**, and
+the suites that exercise a move order — `smoke2, 4, 5, 11, 14, 38, 113, 122,
+145, 178, 180` — with `smoke163` and `smoke179` beside them. In headless
+Chromium on the 66 CE opening: shift-click on two outliner rows built the
+group, a click on Jericho set a road on both and kept the group selected
+with no province selected, and a single army plus a click still opened the
+province panel; the roster read 15k / 8k / 2k / 1k with the mix under each
+name; no page error.

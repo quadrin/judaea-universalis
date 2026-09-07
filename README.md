@@ -1302,6 +1302,24 @@ static site, the zero dependencies, or the missing build step changes.
   column is made of: each arm's face and regiment count under the name, so a
   mixed host reads as one at a glance.
 
+- **A client goes free from its lord's wars.** Throw Off the Yoke was refused
+  for as long as the court stood in any war — and Agrippa's kingdom opens the
+  Great Revolt on Rome's side, so it was refused for the whole chapter. The
+  rising now leaves the lord's wars at status quo, truced to the side it
+  faced, and is barred only by a war of the court's own. The Agrippa card
+  takes the same road instead of leaving the kingdom at war with Rome and
+  beside Rome at once. And a human client no longer holds up its lord's war:
+  where the lord stands on the same side, the lord signs, the client keeps
+  what its own standards hold, and is told.
+
+- **Rome makes a province of what it holds.** Once the Temple has burned and
+  Rome holds Jerusalem, a card of Rome's enters every Judaean province the
+  legions hold in the census — Roman ground now, mid-war, no longer yours to
+  win back at the table — while what still flies the standard is still yours
+  to fight for. And when Masada falls the war closes by the sword: Rome keeps
+  what it holds, a Judaea of the hills keeps what it held, and a Judaea with
+  nothing left is stood down under IVDAEA CAPTA.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

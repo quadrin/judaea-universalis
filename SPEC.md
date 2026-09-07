@@ -18992,3 +18992,80 @@ host reads as one at a glance instead of behind a tooltip
   or more on a click, keeps a group on a shift-click, orders one `moveArmy`
   per army, has no G key and no gather call, and the primer says shift-click
   then click.
+
+## 265. A client goes free from its lord's wars, and its lord signs for it while it stays
+
+Three faults in one bond, all found in Agrippa's chair in 66 CE.
+
+**The rising was barred by the lord's own war.** `independenceInfo` refused
+"Throw Off the Yoke" while the court stood in *any* war, and Agrippa's
+kingdom opens the chapter in the Great Revolt on Rome's side — so the one
+declaration a client keeps (§226, §248) was refused for as long as the
+chapter's war ran, which was the chapter. Now the wars are read by who
+stands beside us: a war the lord stands in on our side is the lord's, and
+the rising leaves it — `withdrawFromWar`, status quo, truced to the side we
+faced, the way §258 sends a new client home from the wars it carried for its
+old master. What still bars the rising is a war of the court's *own*, one the
+lord does not stand in beside it; that refusal names the war. The alliance
+that came with the collar goes with it, and the panel's notice names the
+wars we went home from.
+
+**The Agrippa card bypassed the rule and broke the world.** *The crown comes
+out of Rome's gift* nulled the overlord by hand and declared, which left the
+Babylonian horse at war with Rome and in Rome's line against Judaea in the
+same month, and eight years later still in both. The card now takes the same
+road as the button — `helpers.declareIndependence` — and if the herald cannot
+go it says so in the chronicle instead of half-applying.
+
+**A human client's war never ended.** A client cannot send envoys (§248), and
+`monthlyWarDiplomacy` would not settle a war over a human — so a human
+Agrippa's Great Revolt ran until the campaign did, and the client could
+neither end it nor leave it. Where the human's lord stands on the same side,
+the lord speaks: the war settles at the lord's table as any AI war does, the
+client keeps what its own standards hold (uti possidetis is per court), and
+the client is told — *Our lord has signed*. A human in a war of their own,
+or a guest at another chair, holds the table up exactly as before.
+
+- **Regression contract**: `smoke181.mjs` — Agrippa may declare on day one
+  and the info names the Great Revolt as the war it would leave; the
+  declaration strikes the bond, leaves the Great Revolt to Rome and Judaea,
+  ends the war with Judaea and truces it, hands back the Judaean ground it
+  held, keeps its home, drops the alliance, and leaves one war against one
+  enemy; a client in a war of its own is refused and told which war; the
+  Agrippa card lands, takes the rising's road, sets its modifier and its
+  flag, and no longer nulls the bond by hand; and with a human Agrippa in it
+  the Great Revolt settles at Rome's table in a month and the client is told.
+
+## 266. Rome makes a province of what it holds, and Masada closes the war
+
+The Ninth of Av burned the House and moved no ground. The Nine Hundred and
+Sixty fell and the war ran on. Both are wrong about the thing the chapter is
+about: Judaea did not lose a war in 70, it stopped being a country.
+
+**Iudaea, a Province of the Roman People** (`ev_provincia_iudaea`) follows
+the fire: once the Temple has burned, Rome holds Jerusalem and the war still
+runs, Rome decides — the card is Rome's, a notice at Judaea's chair — whether
+to *enter the land in the census*. If it does, every Judaean province the
+legions themselves hold changes hands now, mid-war, the way a conquest does
+at the table (autonomy 0.6, *Recent Conquest*), and is no longer Judaea's to
+win back there; what Agrippa's horse or the Nabataeans hold is theirs to
+settle, and what still flies the standard is still Judaea's to fight for.
+Rome takes +10 legitimacy, +15 governance and the fiscus Iudaicus (+8%
+income); Judaea −20 legitimacy. A Rome that would rather wait holds it as
+occupied ground until the peace.
+
+**Masada closes the war.** The Nine Hundred and Sixty now takes what Rome
+holds the same way, then closes the Great Revolt by the sword with the
+field belonging to Rome and its party — what a Judaea of the hills still
+held it keeps, at peace with the province beside it, and the Roman towns
+under its standard go home. A Judaea left with nothing on the census stands
+down its last men, the chronicle reads IVDAEA CAPTA, and the chapter's own
+verdict (`checkVictory`) says the rest, at whichever chair the player sits.
+
+- **Regression contract**: `smoke182.mjs` — the province card is Rome's and
+  fires only after the fire with Rome in the city; it enters the ground the
+  legions hold and leaves Agrippa's and the standard's alone; the war goes
+  on; the fiscus is collected and the notice names the ground; a Rome that
+  waits moves nothing; Masada takes what Rome holds, closes the war, keeps
+  the hills Judaean and sends the Roman town home; and a Judaea with nothing
+  left is stood down under IVDAEA CAPTA.

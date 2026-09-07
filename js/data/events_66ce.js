@@ -120,6 +120,76 @@ function judaeaFree(ctx) {
 // Scripted warscore swings persist in the war's eventScore side-bucket, which
 // sideGross folds into every monthly rebuild (writing w.warscore directly gets
 // clobbered by updateWarscores within the month).
+// The Judaean ground the legions hold (SPEC §266): every province Judaea owns
+// whose controller is Rome itself — not Agrippa's, not Nabataea's, theirs is
+// theirs to settle at the table — and not wasteland.
+function romanHeldJudaea(ctx) {
+  const g = ctx.game;
+  const jud = who(ctx, 'JUD');
+  const rom = who(ctx, 'ROM');
+  const out = [];
+  for (let i = 1; i < (g.provinces || []).length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    if (p.owner === jud && p.controller === rom) out.push(p);
+  }
+  return out;
+}
+
+// Rome enters what it holds in the census (SPEC §266): the province changes
+// hands now, mid-war, as a conquest does at the table — high autonomy, the
+// unrest of a recent conquest — and is no longer Judaea's to win back there.
+function annexHeldByRome(ctx) {
+  const h = ctx.helpers;
+  const taken = [];
+  for (const p of romanHeldJudaea(ctx)) {
+    h.changeOwner(ctx, p.canon || p.name, 'ROM');
+    p.autonomy = Math.max(Number(p.autonomy) || 0.25, 0.6);
+    p.integration = 0;
+    p.integrating = null;
+    p.conversion = null;
+    h.addProvinceModifier(ctx, p.name, {
+      id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 },
+    });
+    taken.push(p.name);
+  }
+  return taken;
+}
+
+// Does Judaea still hold anything at all?
+function judaeaHoldsGround(ctx) {
+  const g = ctx.game;
+  const jud = who(ctx, 'JUD');
+  for (let i = 1; i < (g.provinces || []).length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && (p.owner === jud || p.controller === jud)) return true;
+  }
+  return false;
+}
+
+// The last fortress was the last of the war (SPEC §266): what Rome holds is
+// Rome's, and the Great Revolt is closed by the sword — the field belongs to
+// Rome and its party, everything else goes home. A Judaea left with nothing
+// stands down its last men; the chapter's verdict (checkVictory) reads it.
+function masadaClosesTheWar(ctx) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  const taken = annexHeldByRome(ctx);
+  if (findJudRomWar(g)) h.endWar(ctx, 'JUD', 'ROM', 'def');
+  if (!judaeaHoldsGround(ctx)) {
+    const jud = who(ctx, 'JUD');
+    for (const id of Object.keys(g.armies || {})) {
+      const a = g.armies[id];
+      if (a && a.tag === jud) h.removeArmy(ctx, a.id);
+    }
+    h.chronicle(ctx, 'era', 'IVDAEA CAPTA. The last standard is taken down at Masada; there is '
+      + 'no Judaea left on the census, only a province.');
+  } else {
+    h.chronicle(ctx, 'era', 'Masada closes the war: ' + (taken.length ? taken.join(', ') + ' pass to Rome, and ' : '')
+      + 'what still flies the standard keeps it — a Judaea of the hills, at peace with the province beside it.');
+  }
+}
+
 function addWarscore(ctx, tag, amount) {
   try {
     const w = findJudRomWar(ctx.game);
@@ -1045,6 +1115,73 @@ export const EVENTS_66 = [
     ],
   },
 
+  // ── 16b ── Iudaea, a province (SPEC §266) ─────────────────────────────────
+  {
+    id: 'ev_provincia_iudaea',
+    title: 'Iudaea, a Province of the Roman People',
+    requiresWar: ['JUD', 'ROM'],
+    desc: 'The House is ash and the city is a camp. The Tenth Fretensis pitches its tents on '
+      + 'the western hill among the three towers Titus left standing to show what he had '
+      + 'taken, and a legate of praetorian rank, not a procurator, writes from Caesarea. The '
+      + 'land the legions hold is entered in the census as a province: Iudaea, taxed to the '
+      + 'last olive, its fields sold by the state to whoever will farm them, and the '
+      + 'didrachm every Jew once sent to Jerusalem now the fiscus Iudaicus, paid to Jupiter '
+      + 'on the Capitol. What the legions do not yet hold — the desert rocks, whatever hills '
+      + 'still fly the standard — is a matter for the next campaigning season.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    trigger: safeTrigger('ev_provincia_iudaea', (ctx) => {
+      const h = ctx.helpers;
+      if (!h.getFlag(ctx, 'templeBurned')) return false;
+      if (!alive(ctx, 'JUD') || !alive(ctx, 'ROM')) return false;
+      if (!findJudRomWar(ctx.game)) return false;
+      if (!h.controls(ctx, 'ROM', 'Jerusalem')) return false;
+      return romanHeldJudaea(ctx).length > 0;
+    }),
+    aiOption: 0,
+    historical: 'Judaea became a praetorian province under its own legate in 70, garrisoned by '
+      + 'Legio X Fretensis in the ruins of Jerusalem; Vespasian kept the land as his own '
+      + 'property and sold it, and the Temple tax was redirected to Jupiter Capitolinus.',
+    options: [
+      {
+        label: 'Enter the land in the census',
+        tooltip: 'Every Judaean province the legions hold becomes Roman ground now, with the war '
+          + 'still running over the rest — it is no longer Judaea\'s to win back at the table. '
+          + 'Rome: +10 legitimacy, +15 governance, and the fiscus Iudaicus (+8% income, permanent). '
+          + 'Judaea: −20 legitimacy.',
+        effects: guard('ev_provincia_iudaea:0', (ctx) => {
+          const h = ctx.helpers;
+          const taken = annexHeldByRome(ctx);
+          h.adjust(ctx, 'ROM', { legitimacy: 10, gov: 15 });
+          h.addTagModifier(ctx, 'ROM', {
+            id: 'fiscus_iudaicus', name: 'The Fiscus Iudaicus', months: -1,
+            effects: { incomeMult: 1.08 },
+          });
+          h.adjust(ctx, 'JUD', { legitimacy: -20 });
+          h.setFlag(ctx, 'provinciaIudaea', true);
+          h.chronicle(ctx, 'era', 'Iudaea is entered in the census as a province of the Roman '
+            + 'people: ' + (taken.length ? taken.join(', ') : 'the ground the legions hold')
+            + ' pass under the legate at Caesarea, and the Temple tax goes to Jupiter.');
+          h.notify(ctx, {
+            title: 'Iudaea, a Roman province', type: 'bad', provName: 'Jerusalem',
+            text: (taken.length ? taken.join(', ') + (taken.length === 1 ? ' is' : ' are') : 'The ground the legions hold is')
+              + ' Roman ground now. What still flies the standard is still ours to fight for.',
+          });
+        }),
+      },
+      {
+        label: 'Hold it as occupied ground until the war is over',
+        tooltip: 'The province waits on the peace: nothing changes hands yet, and what the table '
+          + 'gives it gives. Rome: +5 governance.',
+        effects: guard('ev_provincia_iudaea:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ROM', { gov: 5 });
+          ctx.helpers.setFlag(ctx, 'provinciaDeferred', true);
+        }),
+      },
+    ],
+  },
+
   // ── 17 ────────────────────────────────────────────────────────────────────
   {
     id: 'ev_masada_epilogue',
@@ -1938,6 +2075,7 @@ export const EVENTS_66 = [
             title: 'Masada Has Fallen', type: 'bad', provName: 'Masada',
             text: 'Nine hundred and sixty dead by their own hands. The storehouses were full.',
           });
+          masadaClosesTheWar(ctx);
         }),
       },
       {
@@ -1957,6 +2095,7 @@ export const EVENTS_66 = [
             title: 'Masada Has Fallen', type: 'bad', provName: 'Masada',
             text: 'Two women and five children climbed out of the cisterns to tell it.',
           });
+          masadaClosesTheWar(ctx);
         }),
       },
     ],
@@ -2623,9 +2762,17 @@ export const EVENTS_66 = [
         effects: guard('ev_ag_the_clients_war:0', (ctx) => {
           const h = ctx.helpers;
           const g = ctx.game;
-          const agr = g.tags && g.tags.AGR;
-          if (agr) agr.overlord = null;
-          h.declareWar(ctx, 'AGR', 'ROM', 'Agrippa\'s War of Independence', 'independence');
+          // The same road the panel's button takes (SPEC §265): the kingdom
+          // goes home from the Great Revolt at status quo, the bond is struck,
+          // and only then is the herald sent. It used to null the overlord
+          // and declare, which left the Babylonian horse at war with Rome and
+          // in Rome's line against Judaea in the same month.
+          const rose = h.declareIndependence(ctx, 'AGR');
+          if (!rose || !rose.ok) {
+            h.chronicle(ctx, 'era', 'The last of the Herods drafts the letter that would end a century '
+              + 'of Roman convenience, and does not send it: ' + ((rose && rose.why) || 'the herald could not go') + '.');
+            return;
+          }
           h.addTagModifier(ctx, 'AGR', {
             id: 'the_kingdom_declared', name: 'The Kingdom Declared', months: 36,
             effects: { moraleMult: 1.1, manpowerMult: 1.15 },
