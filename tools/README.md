@@ -7,6 +7,34 @@ browser.
 
     node tools/autorun.mjs [years] [bookmarkId]
 
+The default still runs one historical seed and the first playable faction.
+For a campaign matrix:
+
+```sh
+node tools/autorun.mjs 8 --factions=all --seeds=30 --quiet --json=balance.json
+node tools/autorun.mjs 8 66ce --factions=AGR --seed=1234567 --seeds=5 --profiles=historical,cautious,bold --difficulty=hard --json=agrippa.json
+```
+
+On Node 20, add `--experimental-default-type=module` before the script path;
+newer Node versions can detect the browser ES modules automatically.
+`--help` lists all switches. Invalid selectors fail rather than silently running
+no campaigns. Seeds are consecutive unsigned integers starting at `--seed`.
+
+Each run uses a private event bus and resolves both authored and dynamically
+created event cards through the live event registry. An unknown or stuck card
+fails the run; crashed runs have a separate summary count and a nonzero exit
+status. JSON includes yearly nation trajectories, first campaign verdict and
+day, first elimination, minimum treasury, first day below -200, first bankruptcy
+(stage 3), and months with negative operating cash flow. Day 0 is the opening;
+all financial measurements cover the full requested horizon, including years
+after a campaign verdict. `unresolved` means no verdict inside that horizon.
+The player's metrics follow their chair if a country changes tag.
+
+The cautious and bold profiles override the selected faction's aggression and
+caution; all other factions retain their authored personalities. These are AI
+sensitivity checks, not human strategies or estimates of human win rates.
+Use matching bookmark/faction/seed/profile/difficulty combinations for comparisons.
+
 Runs every bookmark (or one) with EVERY nation on AI for N game years
 (default 8) against the real map adjacency, then prints each nation's
 trajectory (provinces, dev, income, treasury, troops, manpower, reforms)

@@ -30,14 +30,18 @@ const MAPMODES = [
 
 function buildMapmodeBar(bar, bus) {
   bar.innerHTML = MAPMODES.map((m) =>
-    `<button class="mm-btn${m.id === 'political' ? ' active' : ''}" data-mode="${m.id}" data-tt="${m.name} mapmode">${m.ico}</button>`
+    `<button class="mm-btn${m.id === 'political' ? ' active' : ''}" data-mode="${m.id}" aria-label="${m.name} mapmode" aria-pressed="${m.id === 'political'}" data-tt="${m.name} mapmode">${m.ico}</button>`
   ).join('');
   // The lit button follows the EVENT, not the click: the realm panel's
   // "Their ground" lever (SPEC §197) switches to the estates mode from
   // outside this bar, and a bar that only watched its own clicks would keep
   // the old button lit and lie about what the map is showing.
   bus.on('mapmode', (m) => {
-    bar.querySelectorAll('.mm-btn').forEach((x) => x.classList.toggle('active', x.dataset.mode === m));
+    bar.querySelectorAll('.mm-btn').forEach((x) => {
+      const active = x.dataset.mode === m;
+      x.classList.toggle('active', active);
+      x.setAttribute('aria-pressed', String(active));
+    });
   });
   bar.addEventListener('click', (e) => {
     const b = e.target instanceof Element ? e.target.closest('[data-mode]') : null;

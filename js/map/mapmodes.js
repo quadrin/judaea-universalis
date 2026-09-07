@@ -128,7 +128,7 @@ function buildCultureDisplay(DEFINES) {
 // take a whisper of terrain and no jitter, so the ramp still reads.
 const MODE_PARAMS = {
   trade: { relief: 0.35, flat: 0, terrMix: 0.3, jitter: 1, desat: 0.06 },
-  political: { relief: 0.6, flat: 0, terrMix: 0.5, jitter: 1, desat: 0.1 },
+  political: { relief: 0.65, flat: 0, terrMix: 0.55, jitter: 1, desat: 0.22 },
   terrain: { relief: 1.0, flat: 0, terrMix: 0, jitter: 0.5, desat: 0 },
   religion: { relief: 0.35, flat: 0, terrMix: 0.35, jitter: 1, desat: 0.06 },
   culture: { relief: 0.35, flat: 0, terrMix: 0.35, jitter: 1, desat: 0.06 },

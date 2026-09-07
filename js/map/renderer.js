@@ -332,8 +332,12 @@ void main(){
     int tc = int(texelFetch(uTerr, ivec2(id, 0), 0).r * 255.0 + 0.5);
     float d = 0.0;
     if (tc == 5) {              // desert: wind-banded dunes
-      float band = sin(map.x * 0.55 + map.y * 0.22 + fbm2(map * 0.05) * 6.0);
-      d = band * (0.3 + 0.7 * fbm2(map * 0.11)) * 0.6;
+      // Dune fields interrupt one another; rocky desert stays quieter. The
+      // broad noise is fixed in map space so zoom and movement never shimmer.
+      float field = fbm2(map * 0.012);
+      float band = sin(map.x * 0.24 + map.y * 0.10 + fbm2(map * 0.014) * 4.0);
+      d = band * smoothstep(0.25, 0.7, field) * 0.35
+        + (fbm2(map * 0.11) - 0.5) * 0.18;
     } else if (tc == 4) {       // mountains: craggy ridged noise
       d = (1.0 - abs(fbm2(map * 0.10) * 2.0 - 1.0)) - 0.55;
     } else if (tc == 3) {       // hills: soft rolling lumps

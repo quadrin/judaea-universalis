@@ -1103,7 +1103,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
+  let labelObstacles = [];
   function draw(game, camera, timeMs, dayFrac) {
+    labelObstacles = [];
     try {
       const { cw, ch, dpr } = syncSize();
       x2.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1139,6 +1141,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         if (showWonders && p.wonder) {
           const [sx, sy] = camera.mapToScreen(c.x, c.y);
           if (onScreen(sx, sy)) {
+            labelObstacles.push({ x: sx - 9, y: sy + 7, w: 18, h: 18 });
             // eight-point star: dark halo stroke under a gold fill
             x2.save();
             x2.translate(sx, sy + 16);
@@ -1162,6 +1165,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
               const step = 13 * s;
               const keys = STRUCT_ORDER.filter((k) => built.indexOf(k) >= 0);
               const gy = sy + (p.wonder ? 30 : 26);
+              labelObstacles.push({ x: sx - keys.length * step / 2, y: gy - 8 * s, w: keys.length * step, h: 16 * s });
               let gx = sx - ((keys.length - 1) * step) / 2;
               for (const k of keys) { drawStructGlyph(k, gx, gy, s); gx += step; }
             }
@@ -1236,6 +1240,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
 
       // army chips on top
       const chips = chipList(game, camera);
+      labelObstacles.push(...chips.map(c => ({ x: c.x - 3, y: c.y - 2, w: c.w + 6, h: c.h + 4 })));
       for (const chp of chips) drawChip(game, chp, timeMs);
 
       // bombing raids fly above everything (SPEC §30)
@@ -1330,5 +1335,5 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  return { draw, hitTestArmy, hitTestStack, hitTestFleet, hitTestWing, hitTestBattle, addRaidFx };
+  return { draw, labelObstacles: () => labelObstacles, hitTestArmy, hitTestStack, hitTestFleet, hitTestWing, hitTestBattle, addRaidFx };
 }

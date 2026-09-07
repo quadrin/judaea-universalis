@@ -7,7 +7,8 @@
 // and prints per-nation trajectories plus anomaly flags: snowballs, debt
 // spirals, dead economies, manpower famines. Player-facing events are
 // resolved with their aiOption, exactly as the AI would.
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
+import { PROFILES, parseOptions, experiments, summarize } from './balance/options.mjs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -16,11 +17,12 @@ const R = join(HERE, '..');
 
 const { DEFINES } = await import(join(R, 'js/data/defines.js'));
 const { MAP_DATA } = await import(join(R, 'js/data/map_data.js'));
-const { bus } = await import(join(R, 'js/core/bus.js'));
+const { bus: sharedBus } = await import(join(R, 'js/core/bus.js'));
 const { initGame, makeCtx, gameActions } = await import(join(R, 'js/sim/init.js'));
 const { buildProvinceMapping } = await import(join(R, 'js/data/map_profile.js'));
 const { tickDay } = await import(join(R, 'js/sim/tick.js'));
 const eco = await import(join(R, 'js/sim/economy.js'));
+const { findEventById } = await import(join(R, 'js/sim/events.js'));
 
 // The harness reads the era registry, not the era FILES (SPEC §105). It used
 // to import each bookmark's own events module by name, which quietly meant it
@@ -32,8 +34,19 @@ const eco = await import(join(R, 'js/sim/economy.js'));
 const { ERAS } = await import(join(R, 'js/data/compendium.js'));
 const BOOKS = ERAS.map((e) => [e.bookmark.id, e.bookmark, e.events]);
 
-const YEARS = Math.max(1, Number(process.argv[2]) || 8);
-const ONLY = process.argv[3] || null;
+let options;
+try { options = parseOptions(process.argv.slice(2)); }
+catch (e) { console.error(e.message); process.exit(1); }
+if (options.help) {
+  console.log(`node tools/autorun.mjs [years] [bookmarkId]
+  --seeds=30 --seed=1234567   Consecutive reproducible seeds
+  --factions=first|all|TAG    Player-facing campaign to observe
+  --profiles=historical,cautious,bold  AI personality sensitivity, not human play
+  --difficulty=normal|hard   Campaign difficulty
+  --quiet --json=report.json Compact output and full machine-readable trajectories`);
+  process.exit(0);
+}
+const log = (...args) => { if (!options.quiet) console.log(...args); };
 
 // Real adjacency, headless: the snapshot is regenerated from the browser
 // whenever the map changes (see tools/README.md). It is full-resolution
@@ -86,13 +99,21 @@ function fmt(n, w) {
   return String(n).padStart(w);
 }
 
-async function runBookmark(entry, rawGeom) {
+async function runBookmark(experiment, rawGeom) {
+  const { entry, tag: playable, seed, profile, years: YEARS, difficulty } = experiment;
   const [id, bookmark, events] = entry;
-  const playable = bookmark.playableTags[0].tag;
+  // Each simulation owns its subscriptions. A failed run cannot leave battle
+  // counters attached to later runs (bus.on returns a disposer, not bus.off).
+  const bus = { ...sharedBus, _h: new Map() };
+  const defines = PROFILES[profile] ? { ...DEFINES, PERSONALITIES: {
+    ...DEFINES.PERSONALITIES, [playable]: {
+      ...DEFINES.PERSONALITIES[playable], ...PROFILES[profile],
+    },
+  } } : DEFINES;
   const provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
   const geom = foldGeom(rawGeom, provinceMap);
-  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag: playable, rngSeed: 1234567, provinceMap });
-  const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, provinceMap });
+  const game = initGame({ DEFINES: defines, MAP_DATA, geom, bookmark, events, playerTag: playable, rngSeed: seed, provinceMap, difficulty });
+  const ctx = makeCtx({ game, DEFINES: defines, MAP_DATA, geom, bus, bookmark, events, provinceMap });
   const actions = gameActions(ctx);
   game.tags[playable].ai = true; // nobody home: the whole world runs itself
   game.paused = false;
@@ -114,6 +135,27 @@ async function runBookmark(entry, rawGeom) {
   bus.on('war', onWar);
   bus.on('battleStart', onBattle);
 
+  const metrics = { firstDebtSpiralDay: null, firstBankruptcyDay: null,
+    firstEliminationDay: null, result: null, resultDay: null, aliveAtEnd: true,
+    minTreasury: game.tags[playable].treasury, monthsInDeficit: 0,
+    observedMonths: 0 };
+  const sample = (day, monthly = false) => {
+    const currentTag = game.playerTag; // Forming or renaming a realm keeps the player's chair.
+    const t = game.tags[currentTag];
+    metrics.finalTag = currentTag;
+    const alive = !!t && t.alive !== false;
+    metrics.aliveAtEnd = alive;
+    if (!alive && metrics.firstEliminationDay === null) metrics.firstEliminationDay = day;
+    if (game.result && metrics.result === null) { metrics.result = game.result; metrics.resultDay = day; }
+    if (!t) return;
+    metrics.minTreasury = Math.min(metrics.minTreasury, t.treasury);
+    if (t.treasury < -200 && metrics.firstDebtSpiralDay === null) metrics.firstDebtSpiralDay = day;
+    if (t.crises?.bankruptcy?.stage >= 3 && metrics.firstBankruptcyDay === null) metrics.firstBankruptcyDay = day;
+    if (monthly && alive) {
+      metrics.observedMonths++;
+      if (eco.incomeBreakdown(ctx, currentTag).net < 0) metrics.monthsInDeficit++;
+    }
+  };
   const tags = Object.keys(game.tags).filter((t) => t !== 'REB' && game.tags[t].alive);
   const yearly = []; // [{tag -> {provs, dev, income, treasury, troops, manpower}}]
   const snapshotYear = () => {
@@ -143,6 +185,7 @@ async function runBookmark(entry, rawGeom) {
   };
 
   yearly.push(snapshotYear());
+  sample(0);
   const dpm = DEFINES.DAYS_PER_MONTH || 30;
   for (let y = 0; y < YEARS; y++) {
     for (let d = 0; d < dpm * 12; d++) {
@@ -150,22 +193,26 @@ async function runBookmark(entry, rawGeom) {
       // resolve player-facing cards the way the AI would
       while (game.pendingEvents.length) {
         const pe = game.pendingEvents[0];
-        const ev = events.find((e) => e && e.id === pe.eventId);
-        try { actions.chooseEventOption(pe.instanceId, (ev && ev.aiOption) || 0); } catch (e) { game.pendingEvents.shift(); }
+        const ev = findEventById(ctx, pe.eventId);
+        if (!ev) throw new Error('Unknown pending event: ' + pe.eventId);
+        actions.chooseEventOption(pe.instanceId, ev.aiOption || 0);
+        if (game.pendingEvents[0]?.instanceId === pe.instanceId)
+          throw new Error('Event did not resolve: ' + pe.eventId);
         game.paused = false;
       }
+      sample(y * dpm * 12 + d + 1, game.date.d === 1);
       if (game.paused) game.paused = false;
       if (game.over) game.over = false; // observe on: the world keeps turning
     }
     yearly.push(snapshotYear());
   }
-  bus.off ? bus.off('war', onWar) : null;
+  bus._h.clear();
 
   // ---- report -------------------------------------------------------------
   const start = yearly[0];
   const end = yearly[yearly.length - 1];
-  console.log(`\n=== ${bookmark.name} (${id}) — ${YEARS} years all-AI ===`);
-  console.log('tag    provs      dev        income        treasury          troops        manpower   ref  flags');
+  log(`\n=== ${bookmark.name} (${id}) — ${YEARS} years all-AI · ${playable} · seed ${seed} · ${profile} · ${difficulty} ===`);
+  log('tag    provs      dev        income        treasury          troops        manpower   ref  flags');
   const flagsOut = [];
   for (const t of tags) {
     const s = start[t], e = end[t];
@@ -184,7 +231,7 @@ async function runBookmark(entry, rawGeom) {
     if (mid && mid.income < 0 && e.income < 0) flags.push('BLEEDING');
     if (e.manpower === 0 && e.troops < 1000) flags.push('EXHAUSTED');
     if (flags.length) flagsOut.push(t + ': ' + flags.join(','));
-    console.log(
+    log(
       t.padEnd(5)
       + fmt(s.provs, 3) + '→' + fmt(e.provs, 3)
       + fmt(s.dev, 5) + '→' + fmt(e.dev, 4)
@@ -196,26 +243,34 @@ async function runBookmark(entry, rawGeom) {
       + '  ' + (flags.join(',') || '-'),
     );
   }
-  console.log(`wars: ${counters.warsStarted} started, ${counters.warsEnded} ended`
+  log(`wars: ${counters.warsStarted} started, ${counters.warsEnded} ended`
     + (counters.warsJoined ? `, ${counters.warsJoined} joined` : '')
     + (counters.warsLeft ? `, ${counters.warsLeft} settled out` : '')
     + ` · battles: ${counters.battles}`
     + ` · date reached: ${game.date.y}/${game.date.m}`);
-  return { id, flags: flagsOut, counters };
+  return { id, tag: playable, seed, profile, difficulty, years: YEARS, flags: flagsOut, counters, metrics, yearly };
 }
 
+let cases;
+try { cases = experiments(BOOKS, options); }
+catch (e) { console.error(e.message); process.exit(1); }
 const geom = loadGeom();
 const results = [];
-for (const entry of BOOKS) {
-  if (ONLY && entry[0] !== ONLY) continue;
-  try {
-    results.push(await runBookmark(entry, geom));
-  } catch (e) {
-    console.error(`!! ${entry[0]} crashed:`, e);
-    results.push({ id: entry[0], flags: ['CRASHED'], counters: {} });
+console.log(`Balance matrix: ${cases.length} runs, ${options.years} years each. AI outcomes are not human win rates.`);
+for (const experiment of cases) {
+  const { entry, tag, seed, profile, difficulty } = experiment;
+  try { results.push(await runBookmark(experiment, geom)); }
+  catch (e) {
+    console.error(`!! ${entry[0]} / ${tag} / ${seed} / ${profile} crashed:`, e);
+    results.push({ id: entry[0], tag, seed, profile, difficulty, error: String(e), flags: ['CRASHED'] });
+    process.exitCode = 1;
   }
+  if (options.quiet) console.log(`${results.length}/${cases.length} ${entry[0]} ${tag} ${seed} ${profile}`);
 }
 console.log('\n=== anomalies ===');
 for (const r of results) {
-  console.log(r.id.padEnd(7) + (r.flags.length ? r.flags.join(' | ') : 'none'));
+  log([r.id, r.tag, r.seed, r.profile].join(' ') + ' ' + (r.flags.length ? r.flags.join(' | ') : 'none'));
 }
+const summary = summarize(results);
+console.table(summary);
+if (options.json) writeFileSync(options.json, JSON.stringify({ schemaVersion: 1, options, summary, runs: results }, null, 2) + '\n');

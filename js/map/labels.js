@@ -1,3 +1,5 @@
+import { layoutProvinceLabels } from './label_layout.js';
+
 // js/map/labels.js — absolutely-positioned DOM labels in #labels-layer. SPEC §5.6.
 // Zoom >= 1.1: province names at pixel-mass centroids, sized by sqrt(area)·zoom.
 // Zoom <  1.1: nation names, ONE PER REGION a court holds, in darkened tag colors.
@@ -168,6 +170,18 @@ export function tagLabelParts(ctx, geom, MAP_DATA) {
 
 export function createLabels(el, MAP_DATA, geom) {
   const pool = [];
+  const measure = document.createElement('canvas').getContext('2d');
+  const widths = new Map();
+  function textWidth(text, size) {
+    const key = size + ':' + text;
+    if (!widths.has(key)) {
+      measure.font = `600 ${size}px ${FONT_STACK}`;
+      // Uppercase is a conservative bound for CSS small caps, plus tracking.
+      widths.set(key, measure.measureText(text.toUpperCase()).width + text.length * size * 0.05);
+      if (widths.size > 2048) widths.delete(widths.keys().next().value);
+    }
+    return widths.get(key);
+  }
 
   try {
     el.style.pointerEvents = 'none';
@@ -205,7 +219,7 @@ export function createLabels(el, MAP_DATA, geom) {
     if (d._shown !== true) { d.style.display = 'block'; d._shown = true; }
   }
 
-  function update(ctx, camera, mapmode) {
+  function update(ctx, camera, mapmode, obstacles = []) {
     let used = 0;
     try {
       if (ctx && ctx.game && camera) {
@@ -216,18 +230,43 @@ export function createLabels(el, MAP_DATA, geom) {
         const N = provs.length - 1;
 
         if (zoom >= PROV_LABEL_ZOOM) {
-          // province names
+          const candidates = [];
+          const capitals = new Set();
+          const definitions = ctx.DEFINES?.TAGS || {};
+          const tweaks = ctx.bookmark?.tagTweaks || {};
+          let homeCapital = '';
+          for (const [tag, live] of Object.entries(ctx.game.tags || {})) {
+            if (!live || live.alive === false) continue;
+            const name = tweaks[tag]?.capital || definitions[tag]?.capital;
+            if (name) capitals.add(name);
+            if (tag === ctx.game.playerTag) homeCapital = name;
+          }
+          // Important small districts remain named even when their area alone
+          // would hide them; nearby labels compete for actual screen space.
           for (let id = 1; id <= N; id++) {
             const p = provs[id];
             if (!p || !p.name) continue;
             const c = geom.centroids[id];
             if (!c) continue;
             const raw = Math.sqrt(Math.max(1, geom.areas[id])) * zoom * PROV_SIZE_K;
-            if (raw < PROV_MIN_PX) continue; // hidden below the readable floor
+            const canon = p.canon || p.name;
+            const selected = ctx.game.ui?.selectedProv === id;
+            const capital = capitals.has(canon);
+            const home = canon === homeCapital;
+            const ours = p.owner === ctx.game.playerTag;
+            const important = selected || capital || p.wonder || p.siege || (ours && zoom >= 1.5);
+            if (raw < PROV_MIN_PX && !important) continue;
             const [sx, sy] = camera.mapToScreen(c.x, c.y);
             if (sx < -120 || sy < -60 || sx > vw + 120 || sy > vh + 60) continue;
             const color = p.impassable ? INK_WASTE : INK;
-            place(used++, p.name, sx, sy, Math.min(22, raw), color, 'prov');
+            const px = Math.round(Math.min(20, Math.max(important ? 12 : PROV_MIN_PX, raw)) * 10) / 10;
+            const priority = (selected ? 1000 : home ? 900 : p.wonder ? 700 : p.siege ? 600 : ours ? 400 : capital ? 300 : 0)
+              + Math.min(99, raw);
+            candidates.push({ id, text: p.name, x: sx, y: sy, w: textWidth(p.name, px), h: px,
+              px, color, priority });
+          }
+          for (const label of layoutProvinceLabels(candidates, obstacles, camera.viewport)) {
+            place(used++, label.text, label.x, label.y, label.px, label.color, 'prov');
           }
         } else {
           // nation names: one per region a court holds. A foreign part is sized
