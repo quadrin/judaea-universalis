@@ -19241,3 +19241,60 @@ fifty call sites, and `player`/`both` cards are left exactly as they were.
   each Iron Age chapter plays, and the §216 binding proved from BOTH chairs:
   Judah's cards answered in an Israelite campaign must move Judah's ledger
   and must not move Israel's, and the mirror.
+
+## §269 — Twenty-one courts had no flag, and nothing noticed
+
+§268 seated twenty-one new courts and drew emblems for none of them. The
+whole battery stayed green, the browser booted clean, and Israel and Judah
+went to the start screen — the one chapter in this game with two playable
+crowns — wearing the strings `ISL` and `JDH`.
+
+**Why it was silent.** `flagChip` falls back to the tag set in text when
+`FLAGS` has no entry, and that fallback has a class and a stylesheet rule
+behind it (`.fchip-abbr`). A missing emblem therefore renders as a tidy
+three-letter chip rather than as a hole, which is the correct behaviour for
+an unexpected tag out of a hand-edited save and exactly the wrong signal for
+a court the game ships. The two flag suites that existed both check NAMED
+tags — `smoke71` asks after CMG, CYZ and ITU, `smoke152` after the crowns —
+so a whole chapter's worth of new courts fell between them. Neither suite was
+wrong; there was simply no suite asking the general question.
+
+**The emblems.** Each is drawn from what that court actually put on its
+seals, its gate reliefs, its coins or its cult, in the table's own
+parchment-and-gold hand: Israel's calf of Bethel and Dan, Judah's lion of
+Genesis 49, Ashur in the winged disk, Marduk's spade, Egypt's double crown,
+Hadad's forked lightning, Tyre's murex, the Philistine plumed headdress, the
+Mesha stele, Rabbah's citadel, the cleft rock of Sela, the Neo-Hittite
+double-headed eagle, the Qedarite camel, Urartu's sacred tree, the Phrygian
+cap, the Lydian double axe, the Elamite serpent, the Nisean horse, the
+four-winged genius of Pasargadae, the Anatolian stag, and Kubaba's
+pomegranate.
+
+**Legibility beat accuracy twice, on purpose.** These are read at 22px on a
+coloured field, and two first drafts were faithful and useless. Judah began
+as a couchant lion and lost its legs and its outline to the shrink; it is now
+the lion MASK, which keeps its mane, its ears and its stare all the way down.
+Babylon began as the mushhushshu of the Ishtar Gate — the famous picture —
+which in profile loses its horn and its tail and becomes a giraffe; it is now
+Marduk's spade, the sign that stands for the god on every boundary stone in
+Babylonia. The dragon is better history and the spade is better at 22px.
+
+**And the two the sweep missed.** `HEZ` and `LUK` are in no bookmark's
+`activeTags` — the Party of God and the Host of Lukuas are raised
+mid-campaign by a card — so a check scoped to seated courts stepped over both,
+and both had been bare far longer than the Iron Age twenty-one. They are drawn
+now: for Cyrene the broken column and the diadem, which are the two halves of
+what that rising did and what it proclaimed; for the party the device on its
+own banner, drawn as the 1948 chapter draws every other belligerent in that
+war. Its rifle is dark ink rather than gold, because the field is already gold
+and parchment on parchment loses the top half of the emblem at chip size.
+
+- **Regression contract**: `smoke186` asks the general question rather than a
+  named one — EVERY court in the table carries an emblem, none of them is a
+  stub, each is body content the chip can wrap, no two courts anywhere share
+  art, and the chip itself draws the emblem on the court's own colour rather
+  than falling through to text. The first cut was scoped to seated courts so
+  that it would pass while `HEZ` and `LUK` were still bare; that would have
+  written an older gap into the contract as though it were intended, so the
+  two were drawn and the scope widened. `WASTE` is the only exemption, and it
+  is not a court.
