@@ -28,7 +28,16 @@ await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
-await page.locator('.bm-card.current').click(); // 167 BCE
+// SPEC §268 put three chapters in front of 167 BCE, so the carousel no longer
+// opens on the Maccabean Revolt. Walk to it by name rather than taking
+// whatever card happens to be showing — this suite's assertions are written
+// against that chapter and quietly test a different one otherwise.
+for (let i = 0; i < 12; i++) {
+  const txt = (await page.locator('.bm-card.current').textContent()) || '';
+  if (txt.includes('Maccabean')) { await page.locator('.bm-card.current').click(); break; }
+  await page.locator('.ss-next').click();
+  await page.waitForTimeout(420);
+}
 await page.waitForSelector('.nation-card');
 await page.locator('.nation-card').first().click(); // HAS
 await page.waitForFunction(() => !!window._ctx);
