@@ -19295,6 +19295,17 @@ down because the next emblem added here will be subject to all three:
    built at Bethel, which is the altar its own quarrel `altars_and_the_house`
    is named for.
 
+**Judah's lion came back, and cost eleven drafts.** It is the one emblem in
+this table asked for by name, and every attempt to draw it with an interior
+failed in a different way: frontal it was a sun, in profile the muzzle came
+out as a beak and then as a sheep's, striding with the others it was the same
+blob as the calf and the stag, and rampant it was a handful of spikes. The
+version that works is a flat SILHOUETTE with no interior at all — no eye, no
+nose, no drawn mane, one shape. The eye completes the animal from the outline,
+which is the reason heraldry has drawn beasts this way since it started
+putting them on seals, and the reason every ring-and-face lion is a sun. Good
+at 14 to 34, wolfish at 96, and 96 is a size nothing in this game asks for.
+
 **A fourth rule, learned the hard way: look at the silhouette on its own.**
 Israel's calf went through four drafts — a frontal face that was a cartoon
 cat, a profile bull indistinguishable from the lion and the stag, and then the
