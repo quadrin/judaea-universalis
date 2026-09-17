@@ -1325,22 +1325,26 @@ export const FLAGS = {
 
   // Judah: the lion of the blessing — "Judah is a lion's whelp... he couched
   // as a lion, and as an old lion; who shall rouse him up?" (Genesis 49:9).
-  // Passant, as a flat silhouette, after the lion cut on the Megiddo seal.
+  // The mask: the face ringed by the mane, with the points of it standing out
+  // round the rim like a sun's.
   //
-  // One shape and no interior, which is the whole of the fix. This took
-  // eleven drafts and it took all eleven to see why the other ten failed: the
-  // internal detail was fighting the outline every time. A mane drawn as a
-  // ring is a sun, which is what the frontal mask became. A muzzle drawn long
-  // is a sheep, drawn open is a beak. An eye and a nose on a head this small
-  // is a cartoon. Rampant, the whole beast was a handful of spikes. Take the
-  // interior away entirely and the eye completes the animal from the outline,
-  // which is why heraldry has drawn beasts this way since it started putting
-  // them on things the size of a seal.
-  //
-  // It is a good lion at the sizes this chip is drawn at, 14 to 34, and it is
-  // a wolfish one at 96, which is a size nothing in this game asks for.
+  // This is the first lion this table had, restored verbatim from the commit
+  // that drew it. Eleven drafts followed it — a couchant beast, a striding
+  // one, a profile head, a rampant one, a flat silhouette — and every one of
+  // them was chosen because it fixed a fault this drawing has. They each
+  // introduced a worse one. The silhouette that replaced it was legible and
+  // read as a bear. Keep this unless you have something that beats it side by
+  // side at 14 to 34 pixels, which is the only size that counts, and do not
+  // re-derive the sequence: it is in the history behind this line.
   JDH:
-    `<path d="M22.6 9.5c0 .9-.5 1.6-1.4 2l-1.5.6.4 2.3.7 5.7h-2.3l-1-4.9-1 .2H16l-.4 4.7h-2.3l.3-4.7H9.9l-.5 4.7H7.1l.4-4.9-1.3-1.2-.5 6.1H3.4l.4-7.3c-.6-1.3-1-2.7-1.2-4.3l-1.3 1.4L.2 8.2l1.7-2.2 1.5-3 1.6 1.2-1.3 2.8L2.5 8.9c.7 1.1 1.7 1.9 3 2.3l.2-2.7c.1-1.5.8-2.3 2.1-2.5l4.5-.7c.5-1.4 1.3-2.4 2.4-3l1 1.6c.5-1 1.3-1.8 2.4-2.2l.3 2.3 1.6-1 .1 2.3 1.6-.4-.6 2 1.6.6c.9.4 1.4 1 1.4 1.9Z" ${SIL}/>`,
+    `<path d="M12 3.4c4.7 0 7.9 3.4 7.9 8.6S16.7 20.6 12 20.6 4.1 17.2 4.1 12 7.3 3.4 12 3.4Z" ${ACC}/>` +
+    `<path d="M12 2.2l1.5 2.6-2.9.1Z M20 6.6l-1 2.8-2.2-1.9Z M4 6.6l1 2.8 2.2-1.9Z M20 17.4l-1-2.8-2.2 1.9Z M4 17.4l1-2.8 2.2 1.9Z M12 21.8l1.5-2.6-2.9-.1Z" ${ACC}/>` +
+    `<path d="M12 6.2c3 0 5 2.3 5 5.8s-2 5.8-5 5.8-5-2.3-5-5.8 2-5.8 5-5.8Z" ${SIL}/>` +
+    `<path d="M8.1 7.3 6.6 4.6l3 .9Z M15.9 7.3l1.5-2.7-3 .9Z" ${SIL}/>` +
+    `<circle cx="10" cy="10.8" r="0.62" fill="${FO}" stroke="none"/>` +
+    `<circle cx="14" cy="10.8" r="0.62" fill="${FO}" stroke="none"/>` +
+    `<path d="M12 12.6l1.5 1.1c0 1.1-.7 1.7-1.5 1.7s-1.5-.6-1.5-1.7Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M8.4 12.9H6.2M8.6 14.3l-2 .7M15.6 12.9h2.2M15.4 14.3l2 .7" ${DET}/>`,
 
   // Assyria: the god Ashur in the winged disk — the standard that flew over
   // every campaign in the annals, wings spread flat to either side of the
