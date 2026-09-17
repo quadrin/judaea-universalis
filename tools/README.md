@@ -2388,3 +2388,55 @@ PASS   and land on JDH (2 → 12)
 PASS EVENTS_931_YEARS: 6 ISL cards answered in a JDH campaign leave JDH's ledger alone (2 → 2)
 PASS   and land on ISL (1 → 8)
 ```
+
+### The browser battery, and the four ways a new chapter breaks it
+
+`JU_PW_DIR=/opt/node22/lib sh tools/tests/run-ui.sh` against a server on
+8613. Note the variable: the suites resolve Playwright through
+`createRequire(JU_PW_DIR)` and the default baked into them is a scratch
+directory that no longer exists, so without it every suite dies at the import
+line and the run looks like fifty-two catastrophic failures.
+
+Seating three chapters in front of 167 BCE broke thirty of the fifty-two, in
+four distinct ways. None of them is a bug in the game; all of them are the
+suites' assumptions about where a chapter sits, and they are worth listing
+because the next chapter inserted anywhere but the end will hit the same four.
+
+1. **Pinned ordinals** — `.ss-dot` index, or the value passed to the
+   multiplayer chapter `<select>`, which is the ERAS index. Seven sites.
+   These fail loudly and are easy.
+2. **A carousel walk bounded too low** — `for (let i = 0; i < 10; i++)` around
+   `.ss-next`, which was one spare step at nine chapters. Seventeen sites.
+   These fail *silently*: the loop runs out, clicks nothing, and the suite
+   dies three lines later waiting for a selector that has nothing to do with
+   the cause. Only `uitest40` carried a `found` flag and said what was wrong.
+3. **Booting whichever card opens first** — five suites clicked
+   `.bm-card.current` straight after the carousel appeared, because that used
+   to be the Maccabean Revolt. They booted 931 BCE as Israel and went on
+   asserting against a chapter they were not in; `uitest19` gave it away by
+   printing Israel's factions where it expected Judaea's institutions.
+4. **The same walk written differently** — `i < 10 && !found`, which a sweep
+   for `i < N; i++` does not match.
+
+What picks a chapter safely: walking by NAME, or clicking
+`.ss-dot[aria-label="<bookmark name>"]`, which is what `uitest23`,
+`uitest25`, `uitest26` and `uitest27` already did and why they never broke.
+
+**Eleven suites are red and were red before any of this**, verified by running
+each one from a worktree at the commit this work branched from, against a
+server on that worktree: `uitest`, `uitest5`, `uitest16`, `uitest19`,
+`uitest23`, `uitest32`, `uitest34`, `uitest38`, `uitest42`, `uitest45` and
+`uitest50` fail identically there — same assertions, same text. They fall into
+recognisable groups: the multiplayer suites that need an external relay this
+sandbox cannot reach; two 1948 recruitment suites; a pair that click an
+element inside a closed panel tab, which is `display:none` and so measures
+0px wide; and single assertions in the map-label and mission-rest suites.
+`uitest19`'s survivor is the plainest of them — it compares the whole
+`textContent` of `.pp-build-title` against `'Estates'`, and that element
+contains a nested "Their ground" button.
+
+Two more things the runner gets wrong rather than the suites: `uitest44`
+finishes `uitest44 OK` where `run-ui.sh` greps for `ALL PASS`, so a passing
+suite is scored as a failure; and two Chromium instances on this box's
+software renderer are enough to time one another out, which is how `uitest33`
+came to fail in a battery and pass on its own.
