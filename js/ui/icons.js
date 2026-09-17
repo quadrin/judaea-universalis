@@ -1298,32 +1298,49 @@ export const FLAGS = {
   // neighbours at chip size, which is why Israel gets a calf and Judah a lion
   // rather than both getting some variety of the same royal beast.
 
-  // Israel: the calf of Bethel and Dan, drawn as the bucranium — the bull's
-  // mask on the altar frieze. Jeroboam made two and said "behold thy gods, O
-  // Israel" (1 Kings 12:28); the chapter's second fork is named for them. The
-  // horns go OUT before they go up, and they taper: drawn short and upright
-  // they were a rabbit's ears, and drawn with a face on it, it was a pet.
+  // Israel: the four-horned altar Jeroboam built at Bethel — "and he offered
+  // upon the altar which he had made in Bethel, the fifteenth day of the
+  // eighth month, in the month which he had devised of his own heart"
+  // (1 Kings 12:33). The chapter's own quarrel is named `altars_and_the_house`
+  // and this is the altar it is named for; the horned block is also the one
+  // piece of Israelite cult furniture the excavators keep finding whole, at
+  // Dan and at Megiddo.
+  //
+  // It is here because the calf would not sit still. A frontal calf's face
+  // was a cartoon cat, a profile bull was indistinguishable from the lion and
+  // the stag, and the bucranium — a pale tapering muzzle with a gold lobe
+  // curling off each side of it — turned out to be an unfortunate shape at
+  // card size, which one look at it on the start screen will confirm. Wide,
+  // squat and four-horned has no such reading available to it.
   ISL:
-    `<path d="M8.6 9.6h6.8l-.6 6.8c-.3 2.9-1.3 5-2.8 6.4-1.5-1.4-2.5-3.5-2.8-6.4Z" ${SIL}/>` +
-    `<path d="M8.9 9.9C6.2 11 3.9 10.9 2 9.6c-1-.7-1.6-1.7-1.9-3.1 1.5.8 3 1 4.4.6 1.5-.4 3-.2 4.4.6Z" ${ACC}/>` +
-    `<path d="M15.1 9.9c2.7 1.1 5 1 6.9-.3 1-.7 1.6-1.7 1.9-3.1-1.5.8-3 1-4.4.6-1.5-.4-3-.2-4.4.6Z" ${ACC}/>` +
-    `<path d="M4.5 7.1c-.8-.5-1.4-1.3-1.8-2.4M19.5 7.1c.8-.5 1.4-1.3 1.8-2.4" ${DET}/>` +
-    `<path d="M10.9 18.9h2.2" fill="none" stroke="${FO}" stroke-width="1.5" stroke-linecap="round"/>` +
-    `<path d="M9.6 13.1h4.8" ${DET}/>`,
+    `<path d="M2.4 20.6h19.2v2.4H2.4Z" ${ACC}/>` +
+    `<path d="M4 18.2h16v2.4H4Z" ${SIL}/>` +
+    `<path d="M6 9.8h12l.6 8.4H5.4Z" ${SIL}/>` +
+    `<path d="M4 7.4h16v2.4H4Z" ${SIL}/>` +
+    `<path d="M2.9 7.4c-.2-2.4.5-4 2-4.9 1 1.1 1.5 2.7 1.5 4.9Z" ${ACC}/>` +
+    `<path d="M21.1 7.4c.2-2.4-.5-4-2-4.9-1 1.1-1.5 2.7-1.5 4.9Z" ${ACC}/>` +
+    `<path d="M7.4 7.4c-.2-1.8.3-3 1.5-3.7.8.9 1.2 2.1 1.2 3.7Z" ${SIL}/>` +
+    `<path d="M16.6 7.4c.2-1.8-.3-3-1.5-3.7-.8.9-1.2 2.1-1.2 3.7Z" ${SIL}/>` +
+    `<path d="M6.6 13h10.8M6.3 15.8h11.4" ${DET}/>`,
 
-  // Judah: the lamp. "That David my servant may have a light alway before me
-  // in Jerusalem" (1 Kings 11:36) — the promise the southern kingdom rules
-  // on, and already the name of Judah's standing modifier in this chapter.
-  // The pinched Iron Age lamp with its flame, which is a shape that survives
-  // the shrink; the lion of Genesis 49 did not, in three separate drafts.
+  // Judah: the lion of the blessing — "Judah is a lion's whelp... he couched
+  // as a lion, and as an old lion; who shall rouse him up?" (Genesis 49:9).
+  // Passant, as a flat silhouette, after the lion cut on the Megiddo seal.
+  //
+  // One shape and no interior, which is the whole of the fix. This took
+  // eleven drafts and it took all eleven to see why the other ten failed: the
+  // internal detail was fighting the outline every time. A mane drawn as a
+  // ring is a sun, which is what the frontal mask became. A muzzle drawn long
+  // is a sheep, drawn open is a beak. An eye and a nose on a head this small
+  // is a cartoon. Rampant, the whole beast was a handful of spikes. Take the
+  // interior away entirely and the eye completes the animal from the outline,
+  // which is why heraldry has drawn beasts this way since it started putting
+  // them on things the size of a seal.
+  //
+  // It is a good lion at the sizes this chip is drawn at, 14 to 34, and it is
+  // a wolfish one at 96, which is a size nothing in this game asks for.
   JDH:
-    `<path d="M3.4 15.4c0-2.2 3-3.5 7.4-3.5 3.1 0 5.6.6 7.3 1.8l2.7 1.9-3.1 1.7c-1.5 1.7-3.8 2.6-6.9 2.6-4.4 0-7.4-1.8-7.4-4.5Z" ${SIL}/>` +
-    `<path d="M18.1 13.7l2.7 1.9-3.1 1.7Z" ${ACC}/>` +
-    `<path d="M8.2 19.6h7.2v1.5H8.2Z" ${SIL}/>` +
-    `<path d="M6.6 21.1h10.4v1.6H6.6Z" ${ACC}/>` +
-    `<path d="M19.8 4.4c2 2.4 3 4.6 3 6.6 0 1.9-1 3.1-3 3.7-2-.6-3-1.8-3-3.7 0-2 1-4.2 3-6.6Z" ${ACC}/>` +
-    `<path d="M19.8 8.2c.8 1.2 1.2 2.3 1.2 3.2 0 .9-.4 1.5-1.2 1.8-.8-.3-1.2-.9-1.2-1.8 0-.9.4-2 1.2-3.2Z" ${SIL}/>` +
-    `<path d="M6.6 15.2c1.8-.9 4-1.3 6.6-1.3" ${DET}/>`,
+    `<path d="M22.6 9.5c0 .9-.5 1.6-1.4 2l-1.5.6.4 2.3.7 5.7h-2.3l-1-4.9-1 .2H16l-.4 4.7h-2.3l.3-4.7H9.9l-.5 4.7H7.1l.4-4.9-1.3-1.2-.5 6.1H3.4l.4-7.3c-.6-1.3-1-2.7-1.2-4.3l-1.3 1.4L.2 8.2l1.7-2.2 1.5-3 1.6 1.2-1.3 2.8L2.5 8.9c.7 1.1 1.7 1.9 3 2.3l.2-2.7c.1-1.5.8-2.3 2.1-2.5l4.5-.7c.5-1.4 1.3-2.4 2.4-3l1 1.6c.5-1 1.3-1.8 2.4-2.2l.3 2.3 1.6-1 .1 2.3 1.6-.4-.6 2 1.6.6c.9.4 1.4 1 1.4 1.9Z" ${SIL}/>`,
 
   // Assyria: the god Ashur in the winged disk — the standard that flew over
   // every campaign in the annals, wings spread flat to either side of the
@@ -1615,6 +1632,45 @@ function escText(s) {
 // becomes a click target: a document-level handler (ui.js) opens that
 // nation's realm panel wherever such a chip is clicked.
 // Pass the live `game` to honor a realm's runtime identity: a revolution may
+// An emblem is EITHER a string of SVG body content on the 24x24 grid — which
+// is what every emblem in this table was until §270 — or an object that
+// carries its own frame: `{ viewBox, body }`. The object form exists because
+// the grid, the three inks and the flat two-tone hand were a house style that
+// had hardened into a contract, and the contract was being read as a limit on
+// what a court's banner could be. It is not one. A court may now bring its own
+// coordinate space, its own palette, gradients, filters and groups.
+//
+// What has NOT changed is the frame it lands in: a square the size of a
+// thumbnail, filled with the court's colour, drawn at 14 to 34 pixels
+// everywhere in this UI. A `viewBox` of 0 0 96 96 buys finer COORDINATES, not
+// more pixels — the same square at the same size — so detail that needs room
+// to resolve still will not resolve. Read the brief in EMBLEM_BRIEF.md before
+// using the freedom this gives you.
+function viewBoxOf(art) {
+  if (art && typeof art === 'object' && typeof art.viewBox === 'string') return art.viewBox;
+  return '0 0 24 24';
+}
+
+function bodyOf(art) {
+  if (typeof art === 'string') return art;
+  if (art && typeof art === 'object' && typeof art.body === 'string') return art.body;
+  return '';
+}
+
+// Every emblem on a page shares one document, so two of them reaching for
+// `id="a"` is two gradients fighting over the same name and one of them
+// winning for both. Ids are rewritten per emblem on the way out — authors get
+// to use whatever reads well and never have to think about the collision.
+// Matches id="x", url(#x), href="#x" and xlink:href="#x".
+function scopeIds(body, key) {
+  if (!body || body.indexOf('id=') < 0) return body;
+  const p = 'f' + String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '') + '-';
+  return body
+    .replace(/\bid="([^"]+)"/g, (m, id) => 'id="' + p + id + '"')
+    .replace(/url\(#([^)]+)\)/g, (m, id) => 'url(#' + p + id + ')')
+    .replace(/\b((?:xlink:)?href)="#([^"]+)"/g, (m, a, id) => a + '="#' + p + id + '"');
+}
+
 // rebrand a state in place (t.flag names a FLAGS variant, t.name/t.color the
 // new style) — the Free Officers' republic flies EGY_REP over the same tag.
 // `lens` is a chapter's era definition for this court (SPEC §139, §236) for the
@@ -1635,10 +1691,11 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null, len
   // must fall back to the base emblem (or the text chip), never surface a
   // prototype-chain member as the SVG body.
   const own = (k) => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(FLAGS, k) ? FLAGS[k] : null);
-  const body = (live && own(live.flag)) || own(def.flag) || own(t);
+  const key = (live && own(live.flag) && live.flag) || (own(def.flag) && def.flag) || (own(t) && t) || '';
+  const art = own(key);
   const dispName = (live && live.name) || def.name || t;
-  const inner = body
-    ? `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`
+  const inner = art
+    ? `<svg viewBox="${escText(viewBoxOf(art))}" aria-hidden="true">${scopeIds(bodyOf(art), key)}</svg>`
     : `<span class="fchip-abbr">${escText(t || '—')}</span>`;
   const linked = link && t && t !== 'REB' && t !== 'WASTE';
   const linkAttrs = linked
