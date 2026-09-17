@@ -8,37 +8,67 @@ description of one.
 
 ## 1. What you are producing
 
-For each court, **SVG body content only** — a string of `<path>`, `<circle>`
-and `<rect>` elements. No `<svg>` wrapper, no `<g>`, no `<defs>`, no gradients,
-no filters, no CSS classes, no `style` attributes, no external references.
+For each court, an entry in the `FLAGS` table in `js/ui/icons.js`. There are
+two shapes and you may use either.
 
-The app wraps whatever you produce like this, and nothing else:
+**The rich shape** — use this one. The emblem brings its own coordinate space
+and its own palette:
 
-```html
-<svg viewBox="0 0 24 24" aria-hidden="true">YOUR CONTENT HERE</svg>
+```js
+  XXX: {
+    viewBox: '0 0 96 96',
+    body: `<defs>…</defs><g>…</g><path …/>`,
+  },
 ```
 
-That `<svg>` sits inside a rounded square filled with **the court's own
-colour** (the "field"). The emblem is therefore always drawn ON a mid-tone
-colour, never on white and never on transparency. Each court's field colour is
-in the table below and you should check your design against it.
+**The plain shape** — a bare string, which is read as body content on a 24x24
+grid. Every emblem drawn before this brief existed uses it, and it still works:
+
+```js
+  XXX: `<path d="…" ${SIL}/>`,
+```
+
+Either way, `body` is SVG **content**, not a document: the app supplies the
+`<svg>` element and you supply what goes inside it. Allowed and encouraged:
+`<path>`, `<circle>`, `<rect>`, `<ellipse>`, `<polygon>`, `<g>`, `<defs>`,
+`<linearGradient>`, `<radialGradient>`, `<mask>`, `<clipPath>`, `<filter>`,
+`opacity`, and any colours you like. Not allowed: a nested `<svg>`, external
+file references, `<script>`, and anything that loads over the network.
+
+**Ids are yours to name freely.** Every emblem on a page shares one document,
+so two of them reaching for `id="a"` would be two gradients fighting over one
+name. The app rewrites every id per emblem on the way out — `id="a"` becomes
+`id="fjdh-a"`, and `url(#a)`, `href="#a"` and `xlink:href="#a"` are rewritten
+to match. Write whatever reads well; collisions are handled.
 
 ---
 
-## 2. The drawing grid, and the sizes that matter
+## 2. The frame, and the thing that has not changed
 
-`viewBox="0 0 24 24"`. Coordinates are floats — `12.4` and `7.65` are both
-fine — so the grid is not a resolution limit. Keep everything within 0–24 on
-both axes; anything outside is clipped.
+The `<svg>` you fill sits inside a rounded square filled with **the court's own
+colour** (its "field"). Each court's field colour is in the table below. Your
+emblem is drawn on top of it, and may paint over it completely if you want to
+— 38 of the existing emblems already do, which is how several modern courts
+fly real national flags in real national colours.
 
-These are SVG and resolution-independent, but they are only ever DISPLAYED at
-**14px to 34px**. That is the entire range across the whole UI. Design for
-that range. Detail that only resolves above ~40px is wasted, and the stroke
-widths are tuned such that anything finer vanishes at 16px.
+**The square is drawn at 14px to 34px.** That is the entire range across the
+whole UI, and it is the one constraint that is not negotiable by writing
+different SVG.
+
+This is worth being precise about, because it is the thing most likely to be
+misunderstood: **a larger `viewBox` does not buy more pixels.** `0 0 96 96`
+drawn at 34px has exactly the same pixel budget as `0 0 24 24` drawn at 34px.
+A viewBox is a coordinate space, not a resolution, and SVG coordinates were
+already floats. What the larger frame actually buys is convenience — round
+numbers to work in — and what the loosened contract actually buys is **colour,
+shading, grouping and masking**.
+
+So: use the freedom for richness, not for detail. A design that needs 60px to
+resolve will not resolve.
 
 ---
 
-## 3. The palette — three inks, no others
+## 3. The house palette — now a default, not a rule
 
 ```js
 const FP = '#e8dcc0';              // parchment — the main silhouette fill
@@ -46,16 +76,14 @@ const FG = '#e6c554';              // gold — the accent fill
 const FO = 'rgba(20,16,11,0.55)';  // dark ink — every outline, and solid voids
 ```
 
-Introduce no other colour. The field supplies the hue; the emblem is always
-parchment + gold + dark outline. (A handful of modern courts in the existing
-table fly real national flags in real national colours. Do not follow those
-for anything pre-modern.)
+Most of the table is parchment + gold + dark outline on the court's field, and
+that hand is why the set reads as one system. Depart from it deliberately and
+for a reason, not by accident. If a court's emblem has real historical colours
+— a national flag, a known polychrome standard — use them.
 
 ---
 
-## 4. The three idioms — use these and nothing else
-
-Every element is exactly one of three things:
+## 4. The three idioms, for anything drawn in the house hand
 
 ```js
 const S   = `stroke="${FO}" stroke-linecap="round" stroke-linejoin="round"`;
@@ -64,8 +92,18 @@ const ACC = `fill="${FG}" ${S} stroke-width="0.8"`;  // a gold shape
 const DET = `fill="none" ${S} stroke-width="0.7"`;   // an interior detail line
 ```
 
-A finished entry looks like this — note the concatenation and the `${...}`
-interpolation of those constants:
+Those stroke widths are tuned for the 24x24 grid. **On a larger viewBox, scale
+them:** on `0 0 96 96` the equivalents are 3.6, 3.2 and 2.8. A 0.9-unit stroke
+on a 96-unit grid is invisible at every size this is drawn at.
+
+Two conventions worth keeping whatever palette you use:
+
+- **Heavy dark under light** makes a line read on any field: draw the shape
+  twice, once thick in `FO`, once thin in the light colour.
+- **Solid dark shapes** (`fill="${FO}" stroke="none"`) are for voids — an open
+  mouth, an eye socket, a gap.
+
+A worked example in the plain shape:
 
 ```js
   // Seleucids: the dynastic anchor of Seleucus I, gold ring and stock.
@@ -77,14 +115,6 @@ interpolation of those constants:
     `<path d="M12 20.1c-3.1-.3-5.4-1.9-6.8-4.8l2.6-1c1 2 2.4 3.1 4.2 3.5 1.8-.4 3.2-1.5 4.2-3.5l2.6 1c-1.4 2.9-3.7 4.5-6.8 4.8Z" ${SIL}/>`,
 ```
 
-Two further conventions visible there:
-
-- **Heavy dark under light** makes a stroke read on any field: draw the shape
-  twice, once at `stroke-width: 2.6` in `FO`, once at `1.3` in `FP` or `FG`.
-  Use this for anything drawn as a line rather than a fill.
-- **Solid dark shapes** (`fill="${FO}" stroke="none"`) are for voids — an open
-  mouth, an eye socket, a gap. Use sparingly.
-
 ---
 
 ## 5. Hard requirements — a test enforces these
@@ -92,9 +122,11 @@ Two further conventions visible there:
 `tools/tests/smoke186.mjs` fails the build unless:
 
 1. Every court has an emblem. There is no skipping one.
-2. No emblem is under 100 characters (i.e. is not a stub).
-3. Content has at least one `<path|circle|rect|g>` and **no** `<svg>` tag.
+2. No emblem's body is under 100 characters (i.e. is not a stub).
+3. The body has at least one `<path|circle|rect|g>` and **no** `<svg>` tag.
 4. **No two courts anywhere in the table share identical art.**
+5. Both shapes are accepted, and the rich one's viewBox, gradients, colours
+   and id-scoping are all covered by their own checks.
 
 ---
 

@@ -19346,3 +19346,47 @@ and parchment on parchment loses the top half of the emblem at chip size.
   written an older gap into the contract as though it were intended, so the
   two were drawn and the scope widened. `WASTE` is the only exemption, and it
   is not a court.
+
+## §270 — The emblem contract was a house style, not a limit
+
+§269 drew emblems for every court and then described what it had done as
+though it were the rules: body content only, one 24x24 grid, three inks, two
+fills and a detail line. That was a *house style* — a good one, and the reason
+the set reads as one system — but it had hardened into a contract, and the
+contract was being read as a statement about what a court's banner is allowed
+to be. It is not one. `FLAGS` is consumed by exactly one function,
+`flagChip`, and nothing else in the codebase touches it.
+
+**An emblem is now a string or an object.** The string is what every emblem
+was: body content on the 24x24 grid, and all 168 of them still render
+unchanged. The object brings its own frame — `{ viewBox, body }` — and with it
+its own coordinate space, its own palette, gradients, groups, masks and
+filters. Neither shape may nest an `<svg>`; the chip supplies that.
+
+**Ids are rewritten per emblem.** Every emblem on a page shares one document,
+so two of them reaching for `id="a"` is two gradients fighting over one name
+and one of them winning for both. `scopeIds` rewrites `id=`, `url(#…)`,
+`href="#…"` and `xlink:href="#…"` with a per-emblem prefix on the way out, so
+an author uses whatever id reads well and never learns the hazard exists.
+
+**What did not move, and is the whole point.** The chip is drawn at 14 to 34
+pixels everywhere in this UI. A `viewBox` of `0 0 96 96` has exactly the same
+pixel budget at 34px as `0 0 24 24` does — a viewBox is a coordinate space,
+not a resolution, and SVG coordinates were already floats. The freedom this
+section adds is colour, shading, grouping and masking. It is not detail. A
+design that needs sixty pixels to resolve still will not resolve, and the
+brief says so in those words, because the likeliest way to misuse a larger
+frame is to believe it bought room it did not buy.
+
+Anything drawn in the house hand on a larger grid must scale its strokes with
+it: the 0.9, 0.8 and 0.7 of `SIL`, `ACC` and `DET` are 3.6, 3.2 and 2.8 on a
+96-unit grid, and a 0.9-unit stroke there is invisible at every size this is
+ever drawn at.
+
+- **Regression contract**: `smoke186` accepts both shapes and asks everything
+  it asked before of whichever one carried the art — the stub floor, the
+  no-nested-`<svg>` rule and the distinctness check all read the body. Four
+  new checks cover the object form: a carried `viewBox` is honoured, gradients
+  and non-palette colours survive the trip, ids come out scoped, and no bare
+  id is left behind for another emblem to capture. A fifth holds the old shape
+  still rendering on its own grid.

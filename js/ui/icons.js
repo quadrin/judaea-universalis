@@ -1632,6 +1632,45 @@ function escText(s) {
 // becomes a click target: a document-level handler (ui.js) opens that
 // nation's realm panel wherever such a chip is clicked.
 // Pass the live `game` to honor a realm's runtime identity: a revolution may
+// An emblem is EITHER a string of SVG body content on the 24x24 grid — which
+// is what every emblem in this table was until §270 — or an object that
+// carries its own frame: `{ viewBox, body }`. The object form exists because
+// the grid, the three inks and the flat two-tone hand were a house style that
+// had hardened into a contract, and the contract was being read as a limit on
+// what a court's banner could be. It is not one. A court may now bring its own
+// coordinate space, its own palette, gradients, filters and groups.
+//
+// What has NOT changed is the frame it lands in: a square the size of a
+// thumbnail, filled with the court's colour, drawn at 14 to 34 pixels
+// everywhere in this UI. A `viewBox` of 0 0 96 96 buys finer COORDINATES, not
+// more pixels — the same square at the same size — so detail that needs room
+// to resolve still will not resolve. Read the brief in EMBLEM_BRIEF.md before
+// using the freedom this gives you.
+function viewBoxOf(art) {
+  if (art && typeof art === 'object' && typeof art.viewBox === 'string') return art.viewBox;
+  return '0 0 24 24';
+}
+
+function bodyOf(art) {
+  if (typeof art === 'string') return art;
+  if (art && typeof art === 'object' && typeof art.body === 'string') return art.body;
+  return '';
+}
+
+// Every emblem on a page shares one document, so two of them reaching for
+// `id="a"` is two gradients fighting over the same name and one of them
+// winning for both. Ids are rewritten per emblem on the way out — authors get
+// to use whatever reads well and never have to think about the collision.
+// Matches id="x", url(#x), href="#x" and xlink:href="#x".
+function scopeIds(body, key) {
+  if (!body || body.indexOf('id=') < 0) return body;
+  const p = 'f' + String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '') + '-';
+  return body
+    .replace(/\bid="([^"]+)"/g, (m, id) => 'id="' + p + id + '"')
+    .replace(/url\(#([^)]+)\)/g, (m, id) => 'url(#' + p + id + ')')
+    .replace(/\b((?:xlink:)?href)="#([^"]+)"/g, (m, a, id) => a + '="#' + p + id + '"');
+}
+
 // rebrand a state in place (t.flag names a FLAGS variant, t.name/t.color the
 // new style) — the Free Officers' republic flies EGY_REP over the same tag.
 // `lens` is a chapter's era definition for this court (SPEC §139, §236) for the
@@ -1652,10 +1691,11 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null, len
   // must fall back to the base emblem (or the text chip), never surface a
   // prototype-chain member as the SVG body.
   const own = (k) => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(FLAGS, k) ? FLAGS[k] : null);
-  const body = (live && own(live.flag)) || own(def.flag) || own(t);
+  const key = (live && own(live.flag) && live.flag) || (own(def.flag) && def.flag) || (own(t) && t) || '';
+  const art = own(key);
   const dispName = (live && live.name) || def.name || t;
-  const inner = body
-    ? `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`
+  const inner = art
+    ? `<svg viewBox="${escText(viewBoxOf(art))}" aria-hidden="true">${scopeIds(bodyOf(art), key)}</svg>`
     : `<span class="fchip-abbr">${escText(t || '—')}</span>`;
   const linked = link && t && t !== 'REB' && t !== 'WASTE';
   const linkAttrs = linked
