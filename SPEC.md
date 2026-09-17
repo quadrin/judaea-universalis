@@ -19279,11 +19279,22 @@ which in profile loses its horn and its tail and becomes a giraffe; it is now
 Marduk's spade, the sign that stands for the god on every boundary stone in
 Babylonia. The dragon is better history and the spade is better at 22px.
 
+**And the two the sweep missed.** `HEZ` and `LUK` are in no bookmark's
+`activeTags` — the Party of God and the Host of Lukuas are raised
+mid-campaign by a card — so a check scoped to seated courts stepped over both,
+and both had been bare far longer than the Iron Age twenty-one. They are drawn
+now: for Cyrene the broken column and the diadem, which are the two halves of
+what that rising did and what it proclaimed; for the party the device on its
+own banner, drawn as the 1948 chapter draws every other belligerent in that
+war. Its rifle is dark ink rather than gold, because the field is already gold
+and parchment on parchment loses the top half of the emblem at chip size.
+
 - **Regression contract**: `smoke186` asks the general question rather than a
-  named one — every court any bookmark SEATS (`activeTags`) carries an
-  emblem, none of them is a stub, each is body content the chip can wrap, no
-  two courts anywhere in the table share art, and the chip itself draws the
-  emblem on the court's own colour rather than falling through to text. It is
-  scoped to seated courts on purpose: `HEZ` and `LUK` arrive only through
-  events, have never had emblems, and are an older gap this section does not
-  claim to have closed.
+  named one — EVERY court in the table carries an emblem, none of them is a
+  stub, each is body content the chip can wrap, no two courts anywhere share
+  art, and the chip itself draws the emblem on the court's own colour rather
+  than falling through to text. The first cut was scoped to seated courts so
+  that it would pass while `HEZ` and `LUK` were still bare; that would have
+  written an older gap into the contract as though it were intended, so the
+  two were drawn and the scope widened. `WASTE` is the only exemption, and it
+  is not a court.

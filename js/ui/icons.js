@@ -1538,6 +1538,44 @@ export const FLAGS = {
     `<path d="M9.4 12.6c1.7-.6 3.5-.6 5.2 0M9.9 16.2c1.4-.5 2.8-.5 4.2 0" ${DET}/>` +
     `<path d="M12 10.4v8.4" ${DET}/>`,
 
+  // ---- two courts that arrive by event rather than by seating (SPEC §269) ---
+  // Neither is in any bookmark's activeTags, which is why both outlived the
+  // §269 sweep by a commit: they are raised mid-campaign by a card, and a
+  // court that does not exist at the start screen is easy to forget.
+
+  // The Host of Lukuas: the Cyrenean rising of 115, which threw down the
+  // temples of Cyrene — Zeus, Apollo, Artemis, Hecate, the Caesareum — and
+  // proclaimed a king the Roman sources name twice and differently. The
+  // broken column and the diadem are the two halves of that sentence.
+  LUK:
+    `<path d="M9.4 20.4h7.4v1.4H9.4Z" ${SIL}/>` +
+    `<path d="M10.2 20.4 11 12.6l4.4.6-.9 7.2Z" ${SIL}/>` +
+    `<path d="M11 12.6l4.4.6.5-2.2-4.6-.7Z" ${SIL}/>` +
+    `<path d="M11.4 10.3l4.6.7.3-1.4-4.7-.7Z" ${ACC}/>` +
+    `<path d="M12.2 14.2 12 19.6M13.6 14.4l-.2 5.4" ${DET}/>` +
+    `<path d="M2.4 18.6l5.4-2.6.8 1.8-5.4 2.6Z" ${SIL}/>` +
+    `<path d="M2.4 18.6l-.9-2 5.4-2.6.9 2Z" ${SIL}/>` +
+    `<path d="M12.6 3.2c2.9 0 4.9 1.4 6 4.2l-1.8.7c-.8-2-2.2-3-4.2-3s-3.4 1-4.2 3l-1.8-.7c1.1-2.8 3.1-4.2 6-4.2Z" ${ACC}/>` +
+    `<path d="M6.6 8.1 5.2 9.4l1.9.5Z M18.6 8.1l1.4 1.3-1.9.5Z" ${ACC}/>`,
+
+  // Hezbollah: the device on the party's own banner — the raised arm gripping
+  // a rifle, rising out of the globe. Drawn like every other belligerent in
+  // the 1948 chapter, which flies the real flags of the real parties to the
+  // war; the party is on the map because the arc puts it there, and a court
+  // on the map is entitled to its own colours. The rifle is dark ink rather
+  // than gold: the field is already gold, and parchment on parchment would
+  // have lost the whole top half of the emblem at chip size.
+  HEZ:
+    `<circle cx="12" cy="18" r="4.4" ${SIL}/>` +
+    `<path d="M7.6 18h8.8M12 13.6v8.8M9.4 14.2c-.9 2.5-.9 5.1 0 7.6M14.6 14.2c.9 2.5.9 5.1 0 7.6" ${DET}/>` +
+    `<path d="M10.4 18.2 11.6 8.6l2.8.4-1.2 9.6Z" ${SIL}/>` +
+    `<path d="M3 7.2 21 3.6l.4 1.6-18 3.6Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M1.4 7.6l2.2-.4.6 2.6-2.2.4Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M8.4 8.3l2.2-.4 1 3.3c-.4.8-1.2 1.1-2.2.9Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M16.2 5.1l2.6-.5.3 1.2-2.6.5Z" fill="${FO}" stroke="none"/>` +
+    `<circle cx="13" cy="7.4" r="2.2" ${SIL}/>` +
+    `<path d="M11.4 6.6h3.2M11.5 8.2h3" ${DET}/>`,
+
   LBR:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" fill="#f2f4f4" stroke="none"/>` +
     `<path d="M0.6 4.5h22.8M0.6 10.9h22.8M0.6 17.3h22.8" stroke="#b5342c" stroke-width="3.2" fill="none"/>` +
