@@ -177,6 +177,14 @@ function templeCrown(ctx) {
 // having to know that the room changed.
 const SEATS = {
   '167bce:HAS': { strict: 'hasideans', worldly: 'hellenizers', soldiers: 'warparty' },
+  // The divided kingdom (SPEC §268): the establishment keeps the altars, the
+  // assembly that made the king keeps the muster, and in the north the men
+  // who command the chariots are the army and the next dynasty both.
+  '597bce:JDH': { strict: 'priesthood', worldly: 'house', soldiers: 'assembly' },
+  '732bce:ISL': { strict: 'priesthood', worldly: 'assembly', soldiers: 'captains' },
+  '732bce:JDH': { strict: 'priesthood', worldly: 'house', soldiers: 'assembly' },
+  '931bce:ISL': { strict: 'priesthood', worldly: 'assembly', soldiers: 'captains' },
+  '931bce:JDH': { strict: 'priesthood', worldly: 'house', soldiers: 'assembly' },
   '167bce:SEL': { strict: 'court', worldly: 'cities', soldiers: 'phalanx' },
   '67bce:HYR': { strict: 'pharisees', worldly: 'sadducees', soldiers: 'antipater' },
   '67bce:ARI': { strict: 'pharisees', worldly: 'sadducees', soldiers: 'captains' },

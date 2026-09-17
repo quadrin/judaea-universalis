@@ -116,6 +116,8 @@ console.log('== the gate: the quarrel arrives when the houses do ==');
   // its own — and 167 for its first twenty-seven years, until §127 hands the
   // court over. Each chapter's OWN quarrel is walked in the §201 section below.
   const EXPECT = {
+    '931bce': false, // four centuries early: this court argues about the altars (§268)
+    '732bce': false, '597bce': false,
     '167bce': false, // the Hasideans and the Hellenizers hold this court until 140
     '67bce': true, // both brothers seat both houses from the first month
     '40bce': false, '66ce': false, '132ce': false, '351ce': false, '529ce': false,
@@ -381,6 +383,9 @@ console.log('== §201: every chapter has its own quarrel, and every quarrel is r
   // of the section checks against the actual bookmarks — if a bookmark stops
   // declaring one, or names a seat it does not seat, the walk below says so.
   const EXPECT = {
+    '931bce': { tag: 'ISL', quarrel: 'altars_and_the_house' },
+    '732bce': { tag: 'JDH', quarrel: 'altars_and_the_house' },
+    '597bce': { tag: 'JDH', quarrel: 'yoke_and_word' },
     '167bce': { tag: 'HAS', quarrel: null }, // the Hasidean court until 140 BCE
     '67bce': { tag: 'HYR', quarrel: 'sages_and_houses' },
     '40bce': { tag: 'HER', quarrel: 'fence_and_gate' },

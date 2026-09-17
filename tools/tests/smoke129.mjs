@@ -120,6 +120,8 @@ for (const e of ERAS) {
 // The principals — the sides the chapter is named for — carry the full growth.
 // These counts include the §211 civil band (six nodes on every principal).
 const PRINCIPALS = [
+  ['931bce', 'ISL', 21], ['931bce', 'JDH', 20],
+  ['732bce', 'JDH', 22], ['732bce', 'ISL', 20], ['597bce', 'JDH', 22],
   ['167bce', 'HAS', 29], ['67bce', 'HYR', 29], ['67bce', 'ARI', 29],
   ['40bce', 'HER', 26], ['40bce', 'ATG', 25], ['66ce', 'JUD', 27],
   ['66ce', 'AGR', 25], ['132ce', 'JUD', 28], ['351ce', 'JUD', 26], ['529ce', 'SAM', 24],

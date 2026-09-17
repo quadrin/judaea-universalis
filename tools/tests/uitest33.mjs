@@ -83,7 +83,7 @@ await page.screenshot({ path: OUT + 'v19-local-empty.png' });
 await page.locator('#saves-panel [data-ref="close"]').click();
 
 console.log('== save, with no cloud anywhere ==');
-await startCampaign(3); // the Great Revolt, 66 CE
+await startCampaign(6); // the Great Revolt, 66 CE (§268 moved it from 3)
 const toast = await saveNow();
 ok(/Kept on this device/.test(toast) && !/cloud/.test(toast),
   'the game confirms the save without mentioning a cloud: ' + toast.replace(/\s+/g, ' ').trim().slice(0, 80));
@@ -117,7 +117,7 @@ ok(loaded.tag === 'JUD' && loaded.y === 66, 'straight into the world: ' + JSON.s
 console.log('== many campaigns, several chapters ==');
 for (let i = 0; i < 3; i++) await saveNow();
 await land();
-await startCampaign(0); // the Maccabean Revolt, 167 BCE
+await startCampaign(3); // the Maccabean Revolt, 167 BCE (§268 moved it from 0)
 await saveNow();
 await openShelf();
 const rows = await page.locator('.sv-row').count();

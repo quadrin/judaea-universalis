@@ -19095,3 +19095,149 @@ fail visibly. JSON records trajectories, first verdict, elimination, deficits,
 and bankruptcy timing. Aggregates distinguish unresolved runs from losses and
 crashes from completed observations. These measurements describe AI campaigns,
 not human win probabilities. See tools/README.md for commands and validation.
+
+
+## §268 — The Iron Age: three chapters before every other chapter
+
+This game began in 167 BCE and called itself a game about the Jewish state.
+The state it is about is nine hundred years older than that, and the three
+centuries in which it existed as a *kingdom* — divided, tributary, deported
+and returned — were entirely absent. Every institution the later chapters
+treat as furniture was built in them: the one altar, the written law, the
+prophetic office, the diaspora, the idea that a people survives losing its
+land. §268 seats the three chapters those centuries deserve, in front of
+everything.
+
+**`931bce` — The Kingdom Divided.** Solomon is three months dead. The
+assembly at Shechem asks for the yoke to be lightened, is told about
+scorpions, and walks out with ten tribes. The chapter is the only one in this
+game with TWO playable Israelite states, and they are at war on day one,
+because the sources say they were: "there was war between Rehoboam and
+Jeroboam all their days." Israel (`ISL`) has the valleys, the trade road, the
+better land and no reason for anyone to obey its grandson — nine dynasties in
+two centuries, four of them founded in an army camp. Judah (`JDH`) has a
+limestone ridge, a third of the people, and the two things the north cannot
+manufacture: a house that has ruled since David and a building nobody else
+has. Four forks: the answer at Shechem, the two calves, Shishak's price in
+925, and the Tyrian marriage. Runs to 722.
+
+**`732bce` — The Assyrian Flood.** Tiglath-Pileser has made Damascus into
+three provinces and the Galilee, the Gilead and the coast into three more.
+Israel is four districts and a walled hill paying a tribute assessed on land
+that was taken away; Judah is the kingdom that asked the Assyrian in and paid
+with the Temple silver. This is the chapter where "empire" is invented — the
+first state in history to make deportation routine administration rather than
+vengeance — and its five forks are the five decisions that decide whether a
+small kingdom on this coast survives it: the tribute schedule, the altar
+copied from Damascus, the letter to Egypt, the year an Assyrian king is
+killed in battle and every vassal decides at once, and the scroll found in
+the masonry in 622. Runs to Megiddo in 609.
+
+**`597bce` — The Yoke of Babylon.** The city has been taken and not burned;
+ten thousand households, the court, the craftsmen and the treasure are on the
+road to Babylon; and the king's uncle is on the throne with a new name and an
+oath sworn by his own god. One playable chair, at Very Hard. Its four forks
+are the oath, the two prophets in the temple court shouting two years and
+seventy, the letter telling the exiles to build houses and seek the peace of
+the city, and — fifty years later, under a Persian permit — whether the first
+stones go into the house or into a wall round the people building it. Runs to
+445.
+
+**What the Iron Age needed that the game did not have.** Twenty-one courts
+(`ISL`, `JDH`, `ASR`, `BBL`, `MIZ`, `DMS`, `TYR`, `PLS`, `MOB`, `AMO`, `EDM`,
+`HMT`, `QDR`, `URA`, `PHR`, `LYD`, `ELA`, `MDA`, `PAS`, `TAB`, `CRC`), four
+religions (`yahwism`, which is NOT Judaism and must never be painted as it —
+no canon, no synagogue and no agreed number of lawful altars; `canaanite`;
+`mesopotamian`; `anatolian_cults`) and nine cultures. The new courts are
+declared at the HEAD of `DEFINES.TAGS` rather than beside their contemporaries,
+and that placement is load-bearing: `yearlyGrowth` builds one capital → tag
+map over the whole table, last entry wins, and does not ask whether a tag is
+seated. Twenty-one courts appended at the end would have taken Jerusalem,
+Memphis, Damascus and Tyre away from the courts that hold them in the nine
+existing chapters — a silent growth change in every one of them.
+
+**The map wears its own age.** Twelve to nineteen latent cells are activated
+per chapter (Hazor, Megiddo, Bethel, Beth-Shemesh, Gath/Lachish, Beersheba,
+Arad, Heshbon, Kir of Moab, Nineveh, Arrapha, Til-Barsip), everything Herod
+and the Ptolemies built is merged away, and some two hundred provinces carry
+the names their own century used — Shechem, Tirzah, Chinnereth, Ramoth-Gilead,
+Ezion-Geber, Arpad, Carchemish, Nasibina, Opis, Bit-Yakin, Tanis, Sais, Sin.
+
+**The political maps are mostly WASTE, and that is the finding.** In 931 there
+is no state in Gaul, Iberia, Britain, Germania, the Balkans, Italy or the
+steppe: it is the Urnfield world of chiefdoms, Greece is four centuries into a
+dark age, Carthage is a hundred and seventeen years from being founded and
+Rome a hundred and seventy-eight. §160's rule governs — a political map that
+invents a kingdom to fill a gap is lying in the one place a player can check —
+so 931 paints five cells, 732 paints twenty-five (Carthage, Tartessos, the
+Kushite Nile, Saba, the horse-peoples) and 597 paints thirty-nine (the Greek
+cities, the Median east, Carthage's islands). `smoke107`'s "the west is
+filled" floor is therefore per-chapter, with the measured counts.
+
+**Two new quarrels (§201).** `altars_and_the_house` is seated at both courts
+in both Israelite chapters and is the oldest argument in this game: a crown
+that wants ONE house it appoints, audits and taxes, against four hundred
+hilltop platforms older than the monarchy. Both sides worship the same god;
+both think the other is the innovation. `yoke_and_word` is 597's, and it is
+about TIME — two years or seventy — which is immediately a budget line: the
+tribute, the walls, whether the exiles are told to buy land, and whether a
+court in Jerusalem is still a court when there is a king of Judah drawing
+rations in Babylon.
+
+**No institutions in 931, on purpose.** The earliest entry in the §166 table
+is the polis at −650 and the next is coined money at −600, which means the
+Assyrian chapter meets both inside its own span and the divided-kingdom
+chapter meets neither: there is nothing in that century for a realm to be
+behind the world on, and the surcharge is zero. Back-dating an institution to
+reach it would change the institution count in all nine existing chapters, so
+the honest answer is that the tenth century has none.
+
+**One sim change.** `js/sim/sacred.js` counts `yahwism` as a judaic court, so
+the chief priest of the house — the office this game already models, from
+Zadok to Seraiah — exists in the period it was invented in. Nothing else
+recognises it: the diaspora system, the integrated-names pen and the formable
+crowns all still ask for `judaism`, because a dispersion, a Hebrew pen over a
+conquered province and the Kingdom of Israel restored are all later ideas.
+
+**Three years packages, because §241 does not make exceptions.** The decade
+rule says every decade with five or more playable years inside a chapter's
+window carries at least two dated cards, and the three new chapters failed it
+in thirty-one decades between them — which is the rule working, not the rule
+being awkward. The gaps were exactly where the sources go quiet and the
+chapter therefore has nothing to say: 931's two hundred years of ordinary
+ninth-century statecraft between the division and Amos, 732's half-century
+in which nothing happens to Judah except that it pays, and 597's fifty years
+with no king, no army, no capital and no annals. `events_931bce_years.js`
+(twenty-one cards, 916–763), `events_732bce_years.js` (four, 699–665) and
+`events_597bce_years.js` (eight, 580–504) fill them, and the filling is the
+argument: the quiet stretch of a tributary state is when it learns what
+tribute is for, and the fifty years missing from the chronicle are the fifty
+in which a people stops being a kingdom and becomes something that can
+survive not being one. Nothing in the three draws on the seeded stream, so
+the balance harness stays comparable.
+
+**A card is answered by the court it is addressed to (§216), and two chairs
+make that load-bearing.** 931 and 732 each seat Israel AND Judah. A card
+marked `forTag: 'JDH'` fires in an Israelite campaign as well — silently, on
+its recorded course, with `game.playerTag` still reading `ISL` — so an effect
+body that reached for the player would hang Judah's fortified towns, Judah's
+treaty with Damascus and Judah's tribute schedule on Israel's ledger, in
+every northern campaign, with no warning and no throw. `h.adjust(ctx, 'JDH',
+…)` was already written against the named court; the modifiers were not. The
+four files that carry tag-addressed cards now bind the audience once, at the
+foot of the file, and their `P(ctx)` hands back the addressed court for the
+length of one answer — one loop instead of a tag argument on a hundred and
+fifty call sites, and `player`/`both` cards are left exactly as they were.
+
+- **Regression contract**: `smoke83` charts all three chapters' thirteen
+  forks and holds every marker against the card that writes it; `smoke107`
+  holds the honest-WASTE floors; `smoke106`, `smoke112`, `smoke116`,
+  `smoke119`, `smoke121`, `smoke127`, `smoke129` and `smoke138` took the
+  three chapters into their per-chapter tables; `smoke91` and the browser
+  suites learned there are twelve cards in the carousel. `smoke162`'s decade
+  loop covers the three new chapters the moment they are registered;
+  `smoke185` is §268's own contract — the three years packages' registration,
+  ordering, windows and prefixes, the modifier-id audit across every package
+  each Iron Age chapter plays, and the §216 binding proved from BOTH chairs:
+  Judah's cards answered in an Israelite campaign must move Judah's ledger
+  and must not move Israel's, and the mirror.

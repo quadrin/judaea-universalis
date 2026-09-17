@@ -71,10 +71,13 @@ function boot(tag, { bus, y, m } = {}) {
 }
 
 // ---------------------------------------------------------------------------
-console.log('== the chapter is registered and it is the seventh ==');
+console.log('== the chapter is registered and it is the tenth ==');
 {
   ok(!!era529, 'the era registry carries 529ce');
-  ok(ERAS.indexOf(era529) === 6,
+  // SPEC §268 seated three Iron Age chapters in front of everything, so the
+  // Keepers moved from seventh to tenth. The invariant is the ORDER, not the
+  // ordinal: still between the rising against Gallus and the Persian conquest.
+  ok(ERAS.indexOf(era529) === 9,
     '  in chronological order, between the rising against Gallus and the Persian conquest');
   const ids = ERAS.map((e) => e.bookmark.id);
   const years = ERAS.map((e) => e.bookmark.startDate.y);

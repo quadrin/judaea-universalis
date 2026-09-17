@@ -42,6 +42,363 @@
 export const CHAPTER_PATHS = Object.freeze([
 
   Object.freeze({
+    id: '931bce',
+    title: 'The Kingdom Divided',
+    // SPEC §268. The chapter runs to 722 — the year the northern kingdom stops
+    // existing and one of the two parties to every argument in it is deported.
+    lastYear: -722,
+    forks: [
+      Object.freeze({
+        id: 'the_yoke',
+        question: 'The assembly at Shechem asks for the yoke to be lightened. What does the son of Solomon say?',
+        roads: [
+          Object.freeze({
+            id: 'scorpions', name: 'Scorpions',
+            marker: 'scorpionsAnswer', entry: 'ev931_the_yoke',
+            terminal: 'ev931_what_the_yoke_bought',
+            historical: '1 Kings 12:14. The young men\'s advice, taken word for word, and the '
+              + 'chronicler preserves both the advice and the answer.',
+            note: 'SPEC §268. The recorded answer: no negotiation with an assembly, ever, on '
+              + 'anything. It buys four hundred years of undisputed succession in a kingdom '
+              + 'a third the size it could have been, and it ends in the eighth century with '
+              + 'a chronicle that has never once had to explain a usurpation.',
+          }),
+          Object.freeze({
+            id: 'lighter_yoke', name: 'The Lighter Yoke',
+            marker: 'yokeLightened', entry: 'ev931_the_yoke',
+            terminal: 'ev931_what_the_yoke_bought',
+            note: 'SPEC §268. The old men\'s advice, which nobody took: the corvée cut and the '
+              + 'northern districts reassessed. The division still happens — Ahijah had already '
+              + 'torn his cloak into twelve pieces — but it happens as a tax dispute rather '
+              + 'than a blood feud, and the two kingdoms spend two centuries trading.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_calves',
+        question: 'Three times a year the ten tribes are expected in the other kingdom\'s capital. Does the north build its own altars?',
+        roads: [
+          Object.freeze({
+            id: 'calves_raised', name: 'Bethel and Dan',
+            marker: 'calvesRaised', entry: 'ev931_the_two_calves',
+            terminal: 'ev931_what_the_calves_became',
+            historical: '1 Kings 12:28-30. Two shrines, a new priesthood and the autumn feast '
+              + 'moved a month; every northern king afterwards is condemned in one formula.',
+            note: 'SPEC §268. An establishment of the kingdom\'s own: the tithe stays north, the '
+              + 'calendar is the crown\'s, and the priesthood is appointed rather than inherited. '
+              + 'It ends at Bethel in the 750s with a royal chaplain telling a shepherd from '
+              + 'Tekoa that this is the king\'s sanctuary and the king\'s court.',
+          }),
+          Object.freeze({
+            id: 'pilgrimage_kept', name: 'The Road South Kept Open',
+            marker: 'pilgrimageKept', entry: 'ev931_the_two_calves',
+            terminal: 'ev931_what_the_calves_became',
+            note: 'SPEC §268. The road nobody took: the north keeps the one house both kingdoms '
+              + 'recognise, and pays for it in tithe going over a border three times a year. '
+              + 'What it buys is a standing claim on the other kingdom\'s capital that no '
+              + 'chronicler ever works out how to condemn.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'shishaks_price',
+        question: 'Pharaoh is on the coast road with twelve hundred chariots and a price. Is it paid?',
+        roads: [
+          Object.freeze({
+            id: 'tribute_paid', name: 'The Gold of the House',
+            marker: 'shishakTributePaid', entry: 'ev931_shishak_comes_north',
+            terminal: 'ev931_what_pharaoh_left',
+            historical: '1 Kings 14:25-28. Rehoboam paid with the treasures of the Temple and '
+              + 'the palace, Solomon\'s gold shields included, and replaced them with bronze.',
+            note: 'SPEC §268. Nothing burns and the treasury takes two generations to refill. '
+              + 'The fortified towns that are not sacked in 925 are the towns the next empire '
+              + 'will have to besiege, which is the whole argument for paying.',
+          }),
+          Object.freeze({
+            id: 'gates_held', name: 'The Gates Held',
+            marker: 'shishakGatesHeld', entry: 'ev931_shishak_comes_north',
+            terminal: 'ev931_what_pharaoh_left',
+            note: 'SPEC §268. The country outside the walls pays instead: burn layers under a '
+              + 'dozen floors, a stele at Megiddo, and a capital that was never entered. It is '
+              + 'a different kind of memory from a paid tribute, and the men who muster keep it.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_tyrian_marriage',
+        question: 'Tyre offers a daughter, a treaty and a fleet share, and the daughter brings her god. Is the marriage made?',
+        roads: [
+          Object.freeze({
+            id: 'marriage_made', name: 'The Sidonian Queen',
+            marker: 'tyrianMarriage', entry: 'ev931_the_tyrian_marriage',
+            terminal: 'ev931_what_the_marriage_cost',
+            historical: '1 Kings 16:31. Ahab married Ethbaal\'s daughter; the kingdom reached '
+              + 'its commercial and military peak in that generation, and its own prophetic '
+              + 'tradition never forgave it.',
+            note: 'SPEC §268. The richest fifty years this country ever has, and a permanent '
+              + 'quarrel inside it: the ivory house, the two thousand chariots at Qarqar, the '
+              + 'temple of Baal in the capital and a man from Gilead in a hair cloak, all in '
+              + 'one reign.',
+          }),
+          Object.freeze({
+            id: 'marriage_refused', name: 'No Foreign Altar',
+            marker: 'tyrianMarriageRefused', entry: 'ev931_the_tyrian_marriage',
+            terminal: 'ev931_what_the_marriage_cost',
+            note: 'SPEC §268. A kingdom a third poorer, with quiet hills, no purge, and no '
+              + 'Elijah. The road that costs the north its golden age and spares it the '
+              + 'civil war that ends it.',
+          }),
+        ],
+      }),
+    ],
+  }),
+
+  Object.freeze({
+    id: '732bce',
+    title: 'The Assyrian Flood',
+    // SPEC §268. The chapter runs to 609 — the summer a Judahite army marched
+    // out to hold a pass against an Egyptian column, for reasons nobody has
+    // ever satisfactorily explained, and the independent history of this
+    // country effectively stopped.
+    lastYear: -609,
+    forks: [
+      Object.freeze({
+        id: 'the_tribute',
+        question: 'The empire sends an itemised, audited, annual assessment. Is it signed?',
+        roads: [
+          Object.freeze({
+            id: 'tribute_paid', name: 'The Annual Assessment',
+            marker: 'tributeAssyria', entry: 'ev732_the_tribute_schedule',
+            terminal: 'ev732_what_the_tribute_bought',
+            historical: 'Tiglath-Pileser III\'s tribute lists name Ahaz of Judah, Hoshea of '
+              + 'Israel and the kings of Moab, Ammon, Edom, Ashkelon, Gaza and Tyre in one column.',
+            note: 'SPEC §268. The difference between a vassal and a province, bought annually: '
+              + 'the crown, the courts, the army and the gods stay, and a century of this '
+              + 'kingdom\'s revenue goes north. Every kingdom on this coast that kept paying '
+              + 'was still a kingdom a lifetime later.',
+          }),
+          Object.freeze({
+            id: 'tribute_refused', name: 'Not a Province',
+            marker: 'tributeRefused', entry: 'ev732_the_tribute_schedule',
+            terminal: 'ev732_what_the_tribute_bought',
+            note: 'SPEC §268. The road almost nobody took, against the only state in the world '
+              + 'with a standing army, a siege train and a population policy. It ends in a '
+              + 'smaller, harder country that knows exactly what it is.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_altar_of_damascus',
+        question: 'The king has sent home the pattern of a Syrian altar and a deadline. Does it stand in the court of the house?',
+        roads: [
+          Object.freeze({
+            id: 'altar_installed', name: 'The Great Altar',
+            marker: 'damascusAltar', entry: 'ev732_the_altar_at_damascus',
+            terminal: 'ev732_what_the_altar_meant',
+            historical: '2 Kings 16:10-16. Urijah the priest built it from the pattern before '
+              + 'the king got home, and the bronze altar was moved to the north side.',
+            note: 'SPEC §268. A court that is visibly inside the empire\'s system, in the one '
+              + 'place in the kingdom where everybody can see what the crown believes. It buys '
+              + 'eighty quiet years and gives the reforming party its founding grievance.',
+          }),
+          Object.freeze({
+            id: 'altar_refused', name: 'The Bronze Kept',
+            marker: 'damascusAltarRefused', entry: 'ev732_the_altar_at_damascus',
+            terminal: 'ev732_what_the_altar_meant',
+            note: 'SPEC §268. The new altar broken up in the court before the king is back over '
+              + 'the Jordan. It costs the crown a great deal of Assyrian goodwill and buys the '
+              + 'one thing this kingdom can rarely afford: a priesthood on its side.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_egyptian_letter',
+        question: 'The last king in Samaria has a draft letter to Egypt on the table. Does it go?',
+        roads: [
+          Object.freeze({
+            id: 'letter_sent', name: 'The Letter to So',
+            marker: 'egyptLetterSent', entry: 'ev732_the_letter_to_so',
+            terminal: 'ev732_what_the_letter_cost',
+            historical: '2 Kings 17:4: "the king of Assyria found conspiracy in Hoshea." The '
+              + 'siege of Samaria began that year and the Egyptian help never came.',
+            note: 'SPEC §268. The recorded road, and the one that ends the northern kingdom: a '
+              + 'conspiracy charge, a three-year siege and a population counted out and marched '
+              + 'to the cities of the Medes.',
+          }),
+          Object.freeze({
+            id: 'letter_burned', name: 'The Draft Burned',
+            marker: 'egyptLetterBurned', entry: 'ev732_the_letter_to_so',
+            terminal: 'ev732_what_the_letter_cost',
+            note: 'SPEC §268. The least glorious decision available and the only one that keeps '
+              + 'the kingdom: the assessment paid on time in the year the sources have it '
+              + 'stopped, and no annals worth writing about it.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'hezekiahs_rebellion',
+        question: 'An Assyrian king has been killed in battle and his body not recovered. Does the tribute stop?',
+        roads: [
+          Object.freeze({
+            id: 'defiance', name: 'The Kingdom in Arms',
+            marker: 'sennacheribDefied', entry: 'ev732_the_death_of_sargon',
+            terminal: 'ev732_what_701_left',
+            historical: 'Sargon II died in Tabal in 705; Hezekiah, Sidon, Ashkelon and Ekron all '
+              + 'revolted, and Sennacherib came west in 701 and took forty-six fortified towns.',
+            note: 'SPEC §268. The ruined lowland and the capital nobody took: Sennacherib\'s own '
+              + 'prism claims forty-six towns and then concedes, in the phrase about the bird in '
+              + 'the cage, that it never claimed the forty-seventh.',
+          }),
+          Object.freeze({
+            id: 'loyalty', name: 'The Quiet Vassal',
+            marker: 'sennacheribPaid', entry: 'ev732_the_death_of_sargon',
+            terminal: 'ev732_what_701_left',
+            note: 'SPEC §268. The instalment sent north in the year everybody else stopped '
+              + 'paying. The Shephelah is not burned, the second city is not lost, and no room '
+              + 'in Nineveh is decorated with reliefs of this kingdom.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_scroll_in_the_house',
+        question: 'The workmen repairing the house have found a scroll that says almost everything this country has done was forbidden. What is done with it?',
+        roads: [
+          Object.freeze({
+            id: 'scroll_enforced', name: 'The Covenant Enforced',
+            marker: 'scrollEnforced', entry: 'ev732_the_book_found',
+            terminal: 'ev732_what_the_book_became',
+            historical: '2 Kings 22-23: the eighteenth year of Josiah, the scroll, and the most '
+              + 'thorough religious reorganisation in the history of either kingdom.',
+            note: 'SPEC §268. One altar, one book, one law — and a scribal class that begins '
+              + 'writing the history of this country from inside the party that won the '
+              + 'argument. Everything anybody ever knows about the preceding three centuries '
+              + 'comes through them.',
+          }),
+          Object.freeze({
+            id: 'scroll_shelved', name: 'The Scroll in the Chamber',
+            marker: 'scrollShelved', entry: 'ev732_the_book_found',
+            terminal: 'ev732_what_the_book_became',
+            note: 'SPEC §268. The reform deferred to a king with a quieter frontier, which in '
+              + 'the event never arrives. The high places stay on the ridges, the villages go on '
+              + 'mustering, and the men copying the text stop expecting a king to enforce it.',
+          }),
+        ],
+      }),
+    ],
+  }),
+
+  Object.freeze({
+    id: '597bce',
+    title: 'The Yoke of Babylon',
+    // SPEC §268. The chapter runs to 445 — the year the wall goes up in
+    // fifty-two days and the shape of this country is fixed for four hundred
+    // years: a province with a temple, a wall, a high priest and a register.
+    lastYear: -445,
+    forks: [
+      Object.freeze({
+        id: 'the_oath_to_babylon',
+        question: 'The new king was made to swear by his own god. Does the oath hold?',
+        roads: [
+          Object.freeze({
+            id: 'oath_kept', name: 'The Oath Kept',
+            marker: 'oathKept', entry: 'ev597_the_oath',
+            terminal: 'ev597_what_the_oath_was_worth',
+            note: 'SPEC §268. The road not taken: a vassal kingdom that is still a kingdom, with '
+              + 'its king, its house and its courts, paying an empire that will not outlive it. '
+              + 'No siege, no burning and no book of Lamentations — and no way of knowing what '
+              + 'this people would have become without them.',
+          }),
+          Object.freeze({
+            id: 'oath_broken', name: 'Egypt Has Promised Cavalry',
+            marker: 'oathBroken', entry: 'ev597_the_oath',
+            terminal: 'ev597_what_the_oath_was_worth',
+            historical: '2 Chronicles 36:13 and Ezekiel 17: the oath sworn in the name of the '
+              + 'God of Israel is the specific charge, and the Babylonian vassal treaties used '
+              + 'exactly that device.',
+            note: 'SPEC §268. The recorded road: eighteen months, an Egyptian column that comes '
+              + 'as far as the frontier and goes home, a thirty-month siege, and the end of the '
+              + 'state — and, because of what was written down first, not the end of anything '
+              + 'else.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_prophets_quarrel',
+        question: 'Two men in the temple court, one wearing a yoke. Two years or seventy?',
+        roads: [
+          Object.freeze({
+            id: 'yoke_of_wood', name: 'Within Two Full Years',
+            marker: 'yokeOfWood', entry: 'ev597_the_two_prophets',
+            terminal: 'ev597_what_the_word_was',
+            historical: 'Jeremiah 28: Hananiah broke the yoke off Jeremiah\'s neck in the court '
+              + 'of the house and promised the vessels back within two years.',
+            note: 'SPEC §268. The answer everybody in the building wants: the coalition is worth '
+              + 'joining, the cavalry is worth believing, and the fields are worth holding for '
+              + 'men who are coming back. It is wrong by sixty-eight years.',
+          }),
+          Object.freeze({
+            id: 'yoke_of_iron', name: 'Seventy Years',
+            marker: 'yokeOfIron', entry: 'ev597_the_two_prophets',
+            terminal: 'ev597_what_the_word_was',
+            note: 'SPEC §268. A court that budgets for a generation it will not see: tribute '
+              + 'paid, archive copied, exiles told to buy land, and a text prepared for readers '
+              + 'who will have no Temple. Nobody cheers and it is the half that works.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_letter_to_the_exiles',
+        question: 'What does this court tell the ten thousand households in Babylonia?',
+        roads: [
+          Object.freeze({
+            id: 'exiles_settled', name: 'Build Houses and Plant Gardens',
+            marker: 'exilesSettled', entry: 'ev597_the_letter_to_the_exiles',
+            terminal: 'ev597_what_the_letter_made',
+            historical: 'Jeremiah 29:4-7; the Al-Yahudu tablets show the community farming, '
+              + 'leasing, litigating and paying taxes under its own names for over a century.',
+            note: 'SPEC §268. The sentence this whole game is downstream of: a deported people '
+              + 'that settles in one place, keeps its own elders and writes everything down '
+              + 'becomes a second centre instead of a statistic. Every later chapter has '
+              + 'Babylonia in it because of this card.',
+          }),
+          Object.freeze({
+            id: 'exiles_promised_return', name: 'Keep the Bags Packed',
+            marker: 'exilesPromisedReturn', entry: 'ev597_the_letter_to_the_exiles',
+            terminal: 'ev597_what_the_letter_made',
+            note: 'SPEC §268. Waiting is not a form of organisation. What comes back comes back '
+              + 'angry and unregistered, and the men who stayed have had forty years of '
+              + 'undisturbed possession of the terraces.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_house_rebuilt',
+        question: 'There is a permit, a subsidy and an inventory. What do the first stones go into?',
+        roads: [
+          Object.freeze({
+            id: 'house_first', name: 'The House on the Mount',
+            marker: 'houseRebuilt', entry: 'ev597_the_edict_of_cyrus',
+            terminal: 'ev597_what_was_rebuilt',
+            historical: 'Ezra 3 and 6: the foundation laid, the old men weeping and the young '
+              + 'men shouting, and the house finished in 516 — seventy years, to the year.',
+            note: 'SPEC §268. A cult centre with a priesthood at the top of it, which is the '
+              + 'constitution this country keeps until the Maccabees inherit it — and a '
+              + 'community building it with no wall round them and neighbours writing letters.',
+          }),
+          Object.freeze({
+            id: 'walls_first', name: 'The Wall Round the Builders',
+            marker: 'wallsFirst', entry: 'ev597_the_edict_of_cyrus',
+            terminal: 'ev597_what_was_rebuilt',
+            note: 'SPEC §268. A community that decides who belongs before it decides what to '
+              + 'worship in: the wall in fifty-two days, every man building with one hand and '
+              + 'holding a weapon in the other, and the house a generation behind it.',
+          }),
+        ],
+      }),
+    ],
+  }),
+
+  Object.freeze({
     id: '167bce',
     title: 'The Maccabean Revolt',
     // SPEC §121 pushed this out from −64. The chapter used to stop at Pompey

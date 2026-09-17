@@ -42,7 +42,7 @@ const { page: host, errors: hostErrors } = await boot(ctxH);
 await host.locator('[data-ref="mp"]').click();
 await host.waitForSelector('#mp-lobby:not(.hidden)');
 await host.locator('[data-ref="host"]').click();
-await host.selectOption('[data-ref="bm"]', '1');       // The Judaean Civil War, 67 BCE
+await host.selectOption('[data-ref="bm"]', '4');       // The Judaean Civil War, 67 BCE (§268 moved it from 1)
 await host.selectOption('[data-ref="tag"]', 'HYR');    // Hyrcanus II
 ok(await host.locator('.mp-seat').count() === 0, 'no seat picker before anybody has joined');
 await host.locator('[data-ref="invite"]').click();

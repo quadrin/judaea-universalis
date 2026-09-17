@@ -60,7 +60,7 @@ console.log('== the ask book is complete and well-formed ==');
       for (const d of list || []) if (d && d.id && !ESTATE_ASKS[d.id]) missing.add(d.id);
     }
   }
-  ok(!missing.size, 'every seated party of all nine chapters is authored'
+  ok(!missing.size, 'every seated party of all twelve chapters is authored'
     + (missing.size ? ' (missing: ' + [...missing].join(', ') + ')' : ''));
 }
 

@@ -40,7 +40,10 @@ await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 // Priesthood's candidate buttons are on the board to be measured. The carousel
 // is walked the way every other suite walks it: `data-bm` is a slide index,
 // not a chapter id.
-for (let i = 0; i < 10; i++) {
+// Twelve, not 10: SPEC §268 seated three chapters in front of 167 BCE,
+// and a walk that stops short lands on no card at all — which surfaces as a
+// timeout on the nation cards rather than as "bookmark not found".
+for (let i = 0; i < 12; i++) {
   const txt = (await page.locator('.bm-card.current').textContent()) || '';
   if (txt.includes('Great Revolt')) { await page.locator('.bm-card.current').click(); break; }
   await page.locator('.ss-next').click();

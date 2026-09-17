@@ -40,9 +40,9 @@ await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 
 const cards = await page.locator('.bm-card').count();
-ok(cards === 9, 'nine bookmark cards: ' + cards);
+ok(cards === 12, 'twelve bookmark cards: ' + cards);
 const c2 = (await page.locator('.bm-card').nth(1).textContent()) || '';
-ok(/Civil War/.test(c2) && /67 BCE/.test(c2), 'second card is the 67 BCE civil war');
+ok(/Assyrian Flood/.test(c2) && /732 BCE/.test(c2), 'second card is the 732 BCE Assyrian flood');
 // SPEC §93 replaced the export/import file buttons with the shelf — "six
 // characters to join, and a shelf instead of a downloads folder" — and this
 // suite went on asking for buttons no longer in the codebase, which is why it
@@ -62,7 +62,15 @@ ok(!(await page.locator('[data-ref="export"], [data-ref="import"]').count()),
 // SPEC §208 seats the §185 rule's southern case: Himyar, the kingdom whose
 // royal house took the God of Israel, is on the 529 map as Kaleb's client
 // and therefore on the 529 roster beside the Keepers.
+// SPEC §268 seats three Iron Age chapters in front of everything, and they
+// are the one place the rule is tested from both sides at once: 931 and 732
+// each offer TWO Israelite crowns and no third party, though the courts of
+// Egypt, Assyria and Damascus are all on the map with full rosters of their
+// own. 597 offers one, because by 586 there is only one left.
 const expectedRosters = [
+  ['ISL', 'JDH'],   // 931: the north first — the richer, easier chair
+  ['JDH', 'ISL'],   // 732: Judah first; Samaria's rump is the harder one
+  ['JDH'],
   ['HAS'],
   ['HYR', 'ARI', 'ADI'],
   ['HER', 'ATG', 'ADI'],

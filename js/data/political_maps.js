@@ -180,6 +180,172 @@ function faiths(faith, ...cellLists) {
 // every summer — Numantia stands another 34 years.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// 931 BCE — the spring the kingdom divides (SPEC §268).
+//
+// This map is mostly WASTE, and that is the honest answer rather than an
+// omission. In 931 there is no state in Gaul, Iberia, Britain, Germania, the
+// Balkans, Italy or the steppe that anybody in the Levant has heard of or that
+// an archaeologist would call a polity: it is the Urnfield and early Hallstatt
+// world of chiefdoms and hillforts, Greece is four centuries into a dark age
+// that has not yet ended, Carthage will not be founded for a hundred and
+// seventeen years, and Rome for a hundred and seventy-eight. §160's standing
+// rule — "a political map that invents a kingdom to fill a gap is lying in the
+// one place a player can check" — is what governs the whole western half of
+// this table.
+//
+// What IS here: the Napatan kingdom on the upper Nile, four cataracts from
+// Egypt and two centuries from conquering it; the Sabaean incense country,
+// which is the far end of the trade that pays for everything in this chapter
+// and whose queen the sources put at Solomon's court a generation ago; and
+// the Beja between them. Everything else on the §160/§205 ground stays unowned,
+// which takes nothing and claims nothing.
+const MAP_931 = deal({
+  // The kingdom at Napata: Egyptian in its religion, Kushite in its kings,
+  // and already the paramount power of the middle Nile.
+  KSH: ['Napata', 'Meroe', 'Dodekaschoinos'],
+  // Saba's mukarribs and the incense road: the Marib dam is standing and the
+  // caravans that cross Arabia to Gaza start here.
+  SAB: YEMEN_SABA,
+  WASTE: [
+    // The west and north: peoples, hillforts and chiefdoms, and no court.
+    ...AFRICA_PUNIC, ...AFRICA_NUMID, ...AFRICA_MASAESYLI, ...AFRICA_MOOR,
+    'Gaetulia', 'Garama',
+    ...SPAIN_ALL, ...GAUL_ALL, ...ITALY_NORTH, ...ITALY_ISLES,
+    ...DANUBE_ILLYRIA, ...DANUBE_PANNONIA, ...DANUBE_MOESIA, ...DANUBE_THRACE,
+    ...DACIA, 'Naissus', ...PONTIC_GREEK, ...PONTIC_WEST, ...STEPPE_NEAR, ...STEPPE_FAR,
+    ...FOREST_FAR, ...GERMANIA, ...NORTH_SEA, ...BRITAIN, ...CALEDONIA, ...HIBERNIA,
+    // The east: the Iranian plateau is still being settled by the people who
+    // will be called Medes and Persians, and neither name is in anybody's
+    // annals yet. The Oxus and the Aral are the same answer.
+    ...IRAN_SE, ...IRAN_MAKRAN, ...IRAN_SAKASTAN, ...IRAN_NE, ...IRAN_PARTHYENE,
+    'Chorasmia', ...OXUS_STEPPE,
+    // The south: Aksum is five centuries from its first inscription, the Horn
+    // ports answer each to its own chief, and inner Arabia and the Sahel are
+    // peoples rather than courts.
+    'Soba', ...AKSUM_CORE, ...YEMEN_HIMYAR, ...HADRAMAWT, ...OMAN_CELLS,
+    ...HORN_PORTS, ...HORN_INTERIOR, 'Blemmyae', ...ARABIA_INNER,
+    ...SAHEL, ...GUINEA_W,
+  ],
+}, [
+  // The Nile frontier: Napata's northern march faces a divided Egypt and is
+  // garrisoned against it.
+  'Dodekaschoinos',
+]);
+
+// ---------------------------------------------------------------------------
+// 732 BCE — the year Damascus became three provinces (SPEC §268).
+//
+// A century and a half on from 931 and the frame has states in it again, but
+// only where there were states. Carthage is ninety years old and holds its own
+// headland and the emporia of the Syrtis; Tartessos is trading tin out of the
+// Guadalquivir and is the one thing in Iberia a Levantine merchant has heard
+// of; the Garamantes are where they always are. The horse-peoples are over the
+// Caucasus and in the steppe corridor — the Cimmerians, who break Urartu and
+// Phrygia in this chapter's own lifetime, and the Scythians behind them. Kush
+// rules Egypt from Napata and the Sabaean caravans reach Gaza.
+//
+// Everything else stays WASTE on §160's rule. There is no state in Gaul, the
+// Rhineland, Britain, Germania or the Danube in the eighth century; Italy is
+// Villanovan villages and a new one at a ford on the Tiber; Greece is a
+// hundred city-states none of which the map draws at this cell size; and the
+// Iranian plateau east of Media is tribes.
+const MAP_732 = deal({
+  // The New City and its Syrtis emporia: Phoenician, independent, and already
+  // the biggest market west of Tyre.
+  CAR: AFRICA_PUNIC,
+  GRM: ['Garama'],
+  // Tartessos of the silver and the tin road, which Tyre has been trading with
+  // for two centuries and which the Hebrew sources call Tarshish.
+  LYD: ['Gades', 'Hispalis', 'Corduba', 'Malaca'],
+  // The horse-peoples: the Cimmerians in the corridor between the Caucasus and
+  // the highland, the Scythians in the grass behind them.
+  CIM: ['Panticapaeum', 'Phanagoria', 'Chersonesus'],
+  SCY: STEPPE_NEAR.concat(['Olbia', 'Tanais']),
+  // Kush rules Egypt from Napata; the Nile is one political system from the
+  // fourth cataract to the sea.
+  KSH: NUBIA_NILE,
+  // Saba's incense road and the Hadramawt groves at the far end of it.
+  SAB: YEMEN_SABA,
+  HDR: HADRAMAWT,
+  WASTE: [
+    ...AFRICA_NUMID, ...AFRICA_MASAESYLI, ...AFRICA_MOOR, 'Gaetulia',
+    'Carthago Nova', 'Valentia', 'Tarraco', 'Barcino', 'Caesaraugusta',
+    'Numantia', 'Toletum', 'Emerita', 'Salmantica', 'Olisipo', 'Bracara',
+    'Asturica', 'Emporiae', 'Baleares',
+    ...GAUL_ALL, ...ITALY_NORTH, ...ITALY_ISLES,
+    ...DANUBE_ILLYRIA, ...DANUBE_PANNONIA, ...DANUBE_MOESIA, ...DANUBE_THRACE,
+    ...DACIA, 'Naissus', 'Tomis', 'Tyras', 'Sarmatia', 'Roxolania',
+    'Aorsia', ...FOREST_FAR,
+    ...GERMANIA, ...NORTH_SEA, ...BRITAIN, ...CALEDONIA, ...HIBERNIA,
+    ...IRAN_SE, ...IRAN_MAKRAN, ...IRAN_SAKASTAN, ...IRAN_NE, ...IRAN_PARTHYENE,
+    'Chorasmia', ...OXUS_STEPPE,
+    ...AKSUM_CORE, ...YEMEN_HIMYAR, ...OMAN_CELLS,
+    ...HORN_PORTS, ...HORN_INTERIOR, 'Blemmyae', ...ARABIA_INNER,
+    ...SAHEL, ...GUINEA_W,
+  ],
+}, [
+  // The frontier band: the Nile march facing an Assyrian Egypt, and the steppe
+  // corridor, where the men are already in the saddle and nobody is taxed.
+  'Dodekaschoinos', ...STEPPE_NEAR, 'Olbia', 'Tanais',
+  'Panticapaeum', 'Phanagoria', 'Chersonesus',
+]);
+
+// ---------------------------------------------------------------------------
+// 597 BCE — the sixth century, and the last one before a single empire
+// (SPEC §268).
+//
+// More of the frame is a state than in 732 and less of it than in 167, which
+// is exactly right for the century. Carthage is a naval power with Sardinia,
+// the Balearics and the African coast; the Greek cities are on every shore of
+// the Mediterranean and the Black Sea, and the map seats them as one court
+// because at this cell size the alternative is inventing a polity for each
+// harbour; the Scythians hold the grass; and the Iranian plateau is already
+// Median and about to be Persian, which the chapter's own owners table handles.
+//
+// Europe north and west of the Alps is still unowned on §160's rule — the
+// Hallstatt chiefdoms are not states, and a political map that says otherwise
+// is lying where a player can check.
+const MAP_597 = deal({
+  // Carthage after the treaty generation: the African coast, the islands it
+  // took from the Etruscans' rivals, and the Syrtis emporia.
+  CAR: AFRICA_PUNIC.concat(['Caralis', 'Turris Libisonis', 'Baleares']),
+  GRM: ['Garama'],
+  // The Hellenes as one court: the mainland cities, the Ionian coast, Cyrene,
+  // the western colonies and the Black Sea foundations, which are one
+  // commercial and cultural system and no kind of state at all.
+  GRC: ['Massilia', 'Aleria', 'Tomis', 'Olbia', 'Chersonesus',
+    'Panticapaeum', 'Phanagoria', 'Tanais'],
+  // The steppe: Scythian, and the one thing the Persians never manage.
+  SCY: STEPPE_NEAR.concat(STEPPE_FAR),
+  KSH: NUBIA_NILE,
+  SAB: YEMEN_SABA,
+  HDR: HADRAMAWT,
+  // The Median inheritance beyond the theatre's edge, and the highland behind
+  // it that is about to inherit everything.
+  MDA: IRAN_PARTHYENE.concat(IRAN_NE, ['Chorasmia']),
+  PAS: IRAN_SE.concat(IRAN_SAKASTAN),
+  WASTE: [
+    ...AFRICA_NUMID, ...AFRICA_MASAESYLI, ...AFRICA_MOOR, 'Gaetulia',
+    'Gades', 'Hispalis', 'Corduba', 'Malaca', 'Carthago Nova', 'Valentia',
+    'Tarraco', 'Barcino', 'Caesaraugusta', 'Numantia', 'Toletum', 'Emerita',
+    'Salmantica', 'Olisipo', 'Bracara', 'Asturica', 'Emporiae',
+    ...GAUL_ALL.filter((n) => n !== 'Massilia'), ...ITALY_NORTH, ...ITALY_ISLES.filter((n) => n !== 'Caralis' && n !== 'Turris Libisonis' && n !== 'Aleria'),
+    ...DANUBE_ILLYRIA, ...DANUBE_PANNONIA, ...DANUBE_MOESIA, ...DANUBE_THRACE,
+    ...DACIA, 'Naissus', 'Tyras', ...FOREST_FAR,
+    ...GERMANIA, ...NORTH_SEA, ...BRITAIN, ...CALEDONIA, ...HIBERNIA,
+    ...IRAN_MAKRAN, ...OXUS_STEPPE,
+    ...AKSUM_CORE, ...YEMEN_HIMYAR, ...OMAN_CELLS,
+    ...HORN_PORTS, ...HORN_INTERIOR, 'Blemmyae', ...ARABIA_INNER,
+    ...SAHEL, ...GUINEA_W,
+  ],
+}, [
+  // The frontier band: the Nile march, the steppe, and the eastern satrapies
+  // that are a permanent campaign rather than a revenue.
+  'Dodekaschoinos', ...STEPPE_NEAR, ...STEPPE_FAR,
+  ...IRAN_SAKASTAN, ...IRAN_NE, 'Chorasmia',
+]);
+
 const MAP_167 = deal({
   // Carthage keeps its Zeugitana-Byzacena core and the Syrtis emporia the
   // treaty of 201 left it; Masinissa's Numidia has already taken the western
@@ -969,6 +1135,9 @@ MAP_614.cultures = Object.assign(
 );
 
 export const POLITICAL_MAPS = {
+  '931bce': MAP_931,
+  '732bce': MAP_732,
+  '597bce': MAP_597,
   '167bce': MAP_167,
   '67bce': MAP_67,
   '40bce': MAP_40,

@@ -2279,3 +2279,164 @@ The full headless battery passes: **184 of 184 suites**, including the six
 with local-socket permission after the sandbox initially blocked its server.
 After the final label changes, smoke128, smoke179, smoke183 and smoke184
 were checked again and pass.
+
+
+## §268 — the Iron Age chapters, measured
+
+`node tools/autorun.mjs 12 <chapter> --factions=all --seeds=5` is
+twenty-five all-AI campaigns across the five new chairs — `931bce ISL`,
+`931bce JDH`, `732bce JDH`, `732bce ISL`, `597bce JDH`. **No runner crashes,
+no debt spirals, and every player chair alive at the end of every run.**
+Twelve years is the right horizon for these three: it covers 931's first fork
+and Shishak, 732's whole northern collapse to the fall of Samaria, and 597
+through the siege to Gedaliah.
+
+What is left after the fixes below is not nothing, and saying otherwise would
+make this section worthless:
+
+| chapter | runs | crashes | survived | bankruptcies | flagged runs |
+|---|---|---|---|---|---|
+| `931bce` | 10 | 0 | 10 | 1 | 2 — a minor court conquered (`DMS`, `HMT`) |
+| `732bce` | 10 | 0 | 10 | 2 | 6 — `ISL` bleeding (3), a minor court conquered (2), `ISL` snowball (2) |
+| `597bce` | 5 | 0 | 5 | 0 | 2 — `EDM` bleeding |
+
+Three of those are the chapters working rather than failing. A minor Iron Age
+court being conquered inside twelve years is the subject matter, not a defect
+— Damascus and Hamath exist in 931 in order to be eaten. `EDM` in 597 bleeds
+because Edom is a two-province Babylonian client whose levy is away on
+Babylon's war with Egypt; the flag is "income negative at the midpoint and at
+the end", which is what a client kingdom on war duty looks like. And the
+`ISL` snowball threshold in 732 is `provs ≥ max(4, start × 1.6)`, which for a
+realm that starts at four provinces trips at six: doubling a rump is not a
+runaway.
+
+The one that is genuinely a cost rather than a finding is `732bce ISL`
+bleeding in three runs of five. Israel in 732 is four districts under an
+Assyrian tribute and the chapter rates it Very Hard; at the original
+`incomeMult` of 0.7 it also went bankrupt in four runs of five, which is not
+hard, it is unplayable. At 0.82 the bankruptcies are two.
+
+Five things the harness found, all of them real and all of them fixed in the
+content rather than in the runner:
+
+- **Four courts could not pay for themselves.** Assyria first: 931's
+  recovering Assyria opened with fourteen regiments on five provinces and
+  bled from the first year, and 732's empire opened with forty-nine regiments
+  and a target of sixty and went to −36 talents inside a decade. Both are now sized to their own revenue (the
+  reorganised empire's `incomeMult` carries the standing army, and the target
+  came down to 42). The same arithmetic caught Urartu (ten regiments on three
+  provinces, opening at −1.8 a month), Kush (twelve on six, at −1.4) and
+  Anshan (nine on six, at −1.0). Urartu's field army is gone after 743 and is
+  now sized that way, with the canals of Rusa behind it; Kush is carrying the
+  Nubian gold the Assyrian annals never stop mentioning; and Anshan in 597 is
+  a Median client with a levy rather than an empire. All three now open in the
+  black.
+- **Israel conquered Judah in eight years.** The scripted war of 931 is a war
+  of conquest if nothing stops it, and the source says something did: the
+  Shemaiah card's first answer now ends the war as well as dismissing the
+  muster, which is what "he obeyed the word of the Lord and returned" means on
+  a map. It is a border war afterwards rather than a conquest, but it is still
+  a border war Israel usually wins on points: an all-AI run from the northern
+  chair typically finishes with Israel in the low twenties and Judah around
+  six or seven provinces, and from the southern chair the two end level. That
+  is the shape of the century and the reason Judah is the harder chair.
+- **Three victory conditions were satisfiable at the opening bell.** Israel
+  begins with nineteen provinces and its win asked for eighteen. The
+  thresholds are now above the starting position in every chapter.
+- **A siege could end the campaign.** The loss conditions read
+  `countControlled`, which a besieging army flips for a month. Wins now read
+  `countHeld` (ours in law and in fact) and losses read `countOwned` (SPEC
+  §146).
+- **Kush and the incense kingdoms could not pay two regiments.** Their whole
+  realm is §173 frame ground at a 0.2 levy share, which is a band written for
+  an empire's distant march and not for a sovereign kingdom's own country.
+  The three chapters give those home cells their full share.
+
+The three chapters also boot clean on the structural contracts: every province
+their content addresses resolves in their own map profile, every seated court
+owns its capital, and no province is left owned by a court the chapter does
+not seat — which was true of 53 cells in the first draft of 931 and is the
+failure mode a bookmark written against a map drawn for 66 CE walks straight
+into.
+
+### The years packages, and the bug they turned up
+
+`smoke162`'s decade loop runs over every chapter in the registry, so the
+three new ones were held to the §241 rule the moment they were registered and
+failed it in thirty-one decades. `events_931bce_years.js` (21 cards),
+`events_732bce_years.js` (4) and `events_597bce_years.js` (8) close them;
+`smoke185` is §268's own suite and re-states the claim in the section's terms,
+so deleting a card from one of those files fails the suite that asked for it.
+
+Writing them turned up a live content bug in the two-chair chapters, which is
+the kind of thing a dated section is good for: it puts a large number of cards
+addressed to a court the player may not be sitting in through the engine at
+once. A card marked `forTag: 'JDH'` fires in an Israelite campaign too — it
+resolves silently on its recorded course with `game.playerTag` still reading
+`ISL` — so `h.adjust(ctx, 'JDH', …)` moved Judah's treasury while the
+`mod(ctx, …)` beside it hung Judah's modifier on **Israel**. Every northern
+campaign was quietly accumulating the fortified towns of Judah, the stones of
+Ramah and the Assyrian tribute schedule, with no warning and no throw.
+
+The fix is one binding loop at the foot of each of the four affected files
+rather than a tag argument on a hundred and fifty call sites. `smoke185`
+proves it from both chairs and in both directions:
+
+```
+PASS EVENTS_931_YEARS: 10 JDH cards answered in a ISL campaign leave ISL's ledger alone (1 → 1)
+PASS   and land on JDH (2 → 12)
+PASS EVENTS_931_YEARS: 6 ISL cards answered in a JDH campaign leave JDH's ledger alone (2 → 2)
+PASS   and land on ISL (1 → 8)
+```
+
+### The browser battery, and the four ways a new chapter breaks it
+
+`JU_PW_DIR=/opt/node22/lib sh tools/tests/run-ui.sh` against a server on
+8613. Note the variable: the suites resolve Playwright through
+`createRequire(JU_PW_DIR)` and the default baked into them is a scratch
+directory that no longer exists, so without it every suite dies at the import
+line and the run looks like fifty-two catastrophic failures.
+
+Seating three chapters in front of 167 BCE broke thirty of the fifty-two, in
+four distinct ways. None of them is a bug in the game; all of them are the
+suites' assumptions about where a chapter sits, and they are worth listing
+because the next chapter inserted anywhere but the end will hit the same four.
+
+1. **Pinned ordinals** — `.ss-dot` index, or the value passed to the
+   multiplayer chapter `<select>`, which is the ERAS index. Seven sites.
+   These fail loudly and are easy.
+2. **A carousel walk bounded too low** — `for (let i = 0; i < 10; i++)` around
+   `.ss-next`, which was one spare step at nine chapters. Seventeen sites.
+   These fail *silently*: the loop runs out, clicks nothing, and the suite
+   dies three lines later waiting for a selector that has nothing to do with
+   the cause. Only `uitest40` carried a `found` flag and said what was wrong.
+3. **Booting whichever card opens first** — five suites clicked
+   `.bm-card.current` straight after the carousel appeared, because that used
+   to be the Maccabean Revolt. They booted 931 BCE as Israel and went on
+   asserting against a chapter they were not in; `uitest19` gave it away by
+   printing Israel's factions where it expected Judaea's institutions.
+4. **The same walk written differently** — `i < 10 && !found`, which a sweep
+   for `i < N; i++` does not match.
+
+What picks a chapter safely: walking by NAME, or clicking
+`.ss-dot[aria-label="<bookmark name>"]`, which is what `uitest23`,
+`uitest25`, `uitest26` and `uitest27` already did and why they never broke.
+
+**Eleven suites are red and were red before any of this**, verified by running
+each one from a worktree at the commit this work branched from, against a
+server on that worktree: `uitest`, `uitest5`, `uitest16`, `uitest19`,
+`uitest23`, `uitest32`, `uitest34`, `uitest38`, `uitest42`, `uitest45` and
+`uitest50` fail identically there — same assertions, same text. They fall into
+recognisable groups: the multiplayer suites that need an external relay this
+sandbox cannot reach; two 1948 recruitment suites; a pair that click an
+element inside a closed panel tab, which is `display:none` and so measures
+0px wide; and single assertions in the map-label and mission-rest suites.
+`uitest19`'s survivor is the plainest of them — it compares the whole
+`textContent` of `.pp-build-title` against `'Estates'`, and that element
+contains a nested "Their ground" button.
+
+Two more things the runner gets wrong rather than the suites: `uitest44`
+finishes `uitest44 OK` where `run-ui.sh` greps for `ALL PASS`, so a passing
+suite is scored as a failure; and two Chromium instances on this box's
+software renderer are enough to time one another out, which is how `uitest33`
+came to fail in a battery and pass on its own.

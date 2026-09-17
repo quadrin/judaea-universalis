@@ -179,6 +179,27 @@ export const DEFINES = {
     // (SPEC §129). It attacks because standing still is the one thing it
     // cannot afford.
     LUK: { aggression: 1.8, caution: 0.3 },
+    // -- the Iron Age (SPEC §268). Missing tags default to {1, 1}. --
+    // Assyria is the most aggressive court this game has ever seated and it
+    // is not close: the annals are a year-by-year record of campaigning as
+    // the normal condition of the state. Babylon under the Chaldeans inherits
+    // the habit. Egypt is `ponderous` for the reason the sources give — it
+    // intervenes late, withdraws early, and is a broken reed to lean on.
+    ASR: { aggression: 1.6, caution: 0.7, ponderous: true },
+    BBL: { aggression: 1.4, caution: 0.85, ponderous: true },
+    MIZ: { aggression: 0.7, caution: 1.4, ponderous: true },
+    ISL: { aggression: 1.15, caution: 0.9 },
+    JDH: { aggression: 0.8, caution: 1.2 },
+    DMS: { aggression: 1.3, caution: 0.8 },
+    PLS: { aggression: 1.1, caution: 1.0 },
+    TYR: { aggression: 0.3, caution: 1.7 },
+    MOB: { aggression: 0.9, caution: 1.1 }, AMO: { aggression: 0.9, caution: 1.1 },
+    EDM: { aggression: 0.8, caution: 1.2 }, HMT: { aggression: 0.8, caution: 1.2 },
+    QDR: { aggression: 1.1, caution: 1.0 }, URA: { aggression: 1.0, caution: 1.2 },
+    ELA: { aggression: 1.1, caution: 1.0 }, MDA: { aggression: 1.25, caution: 0.85 },
+    PAS: { aggression: 1.3, caution: 0.85 },
+    PHR: { aggression: 0.7, caution: 1.3 }, LYD: { aggression: 0.8, caution: 1.2 },
+    TAB: { aggression: 0.8, caution: 1.2 }, CRC: { aggression: 0.8, caution: 1.2 },
     // -- the political west (SPEC §173). Missing tags default to {1, 1}. --
     // Carthage is bound by treaty from any war without Rome's leave; Masinissa
     // built a fifty-year reign on knowing it. The Lusitanians, Dacians and the
@@ -456,6 +477,17 @@ export const DEFINES = {
     BLM: 'tribal', SAK: 'tribal',
     ETH: 'monarchy', YEM: 'monarchy', AFG: 'monarchy',
     PAK: 'republic', LBR: 'republic',
+    // -- the Iron Age (SPEC §268) --
+    // Every court in this age is a crown. Two are worth a note: Philistia is
+    // a league of five city lords with no paramount king (the sources call
+    // them seranim and never once name a king of Philistia), and Qedar is
+    // tents, which is what `tribal` means everywhere else on this table.
+    ISL: 'monarchy', JDH: 'monarchy', ASR: 'monarchy', BBL: 'monarchy',
+    MIZ: 'monarchy', DMS: 'monarchy', TYR: 'monarchy', MOB: 'monarchy',
+    AMO: 'monarchy', EDM: 'monarchy', HMT: 'monarchy', URA: 'monarchy',
+    PHR: 'monarchy', LYD: 'monarchy', ELA: 'monarchy', MDA: 'monarchy',
+    PAS: 'monarchy', TAB: 'monarchy', CRC: 'monarchy',
+    PLS: 'republic', QDR: 'tribal',
   },
 
   // Trade goods: price in talents per unit of production
@@ -528,6 +560,31 @@ export const DEFINES = {
     kushite:        { name: 'Kushite Cults',         color: [178, 128, 60],  group: 'pagan' },
     south_arabian:  { name: 'South Arabian Cults',   color: [188, 148, 88],  group: 'pagan' },
     african_cults:  { name: 'African Rites',         color: [138, 124, 78],  group: 'pagan' },
+    // -- the Iron Age (SPEC §268) --
+    // The First Temple's own religion, which is not Judaism and must not be
+    // painted as it. Before the exile there is no canon, no synagogue and no
+    // agreed number of places where sacrifice is lawful: there is a national
+    // god with a house in the capital, other houses at Bethel, Dan, Arad and
+    // Beersheba that the archaeology has dug up, a queen mother's asherah in
+    // the Jerusalem temple itself for most of the period, and a party of
+    // prophets who say all of that but the first clause is apostasy. The
+    // `judaic` group is right — everything that becomes Judaism is in here —
+    // and the separate key is what lets a chapter ask the question the
+    // Deuteronomists asked, instead of assuming their answer.
+    yahwism:        { name: 'The Worship of YHWH',    color: [32, 72, 134],  group: 'judaic' },
+    // Baal, Hadad, Chemosh, Milcom, Dagon, Astarte: one banner for the cults
+    // of the Levant at the scale this map draws. The neighbours quarrel with
+    // Israel over land and tribute, never over theology — Mesha of Moab
+    // records his war on his own stele in the same idiom the book of Kings
+    // uses, down to the herem.
+    canaanite:      { name: 'The Cults of Canaan',    color: [154, 98, 68],  group: 'pagan' },
+    // Ashur, Marduk, Nabu, Sin and Ishtar — the state religion of the two
+    // empires this age is organized around, and the one an Assyrian governor
+    // installs beside a local cult rather than in place of it.
+    mesopotamian:   { name: 'The Gods of the Rivers', color: [120, 100, 156], group: 'pagan' },
+    // Haldi at Van, the storm-god at Tabal and Carchemish, Cybele in Phrygia:
+    // the northern rim, which is neither Canaan nor the rivers.
+    anatolian_cults: { name: 'The Cults of the Highlands', color: [128, 146, 112], group: 'pagan' },
   },
 
   // Cultures: groups israelite, syrian, hellenic, arab, egyptian, latin, iranian, armenian
@@ -577,6 +634,33 @@ export const DEFINES = {
     israeli:    { name: 'Israeli',       color: [40, 110, 200],  group: 'israeli' },
     arab_modern: { name: 'Arab',         color: [96, 140, 84],   group: 'arab_modern' },
     turkish:    { name: 'Turkish',       color: [200, 84, 72],   group: 'turkish' },
+    // -- the Iron Age (SPEC §268) --
+    // The northern tribes keep their own name in their own century: `judean`
+    // already exists and is Judah's, and a game about the division of the
+    // kingdom cannot paint both halves the same colour. They share the
+    // `israelite` GROUP, which is the claim this file makes and the whole of
+    // it — one people, two states, and unrest.js reading them as kin.
+    israelite:  { name: 'Israelite',  color: [72, 122, 188],  group: 'israelite' },
+    // The pentapolis: Aegean by descent, Canaanite in language and cult by
+    // the tenth century, and nobody's kin on this map.
+    philistine: { name: 'Philistine', color: [178, 98, 122],  group: 'philistine' },
+    // The three kingdoms east and south of the Jordan and the Arabah. One
+    // group, because a Judahite king's dealings with all three were the same
+    // dealings, and because Edom is not Idumea yet — `idumean` is the culture
+    // the same people carry eight hundred years later, after Nabataean
+    // pressure had pushed them into the Negeb.
+    edomite:    { name: 'Edomite',    color: [156, 84, 66],   group: 'transjordan' },
+    moabite:    { name: 'Moabite',    color: [146, 116, 78],  group: 'transjordan' },
+    ammonite:   { name: 'Ammonite',   color: [134, 142, 88],  group: 'transjordan' },
+    // The two rivers. Assyrian and Babylonian are one group for the same
+    // reason Judean and Galilean are: a province that changes empires does
+    // not change population.
+    assyrian:   { name: 'Assyrian',   color: [132, 96, 146],  group: 'mesopotamian' },
+    babylonian: { name: 'Babylonian', color: [108, 86, 160],  group: 'mesopotamian' },
+    elamite:    { name: 'Elamite',    color: [150, 118, 166], group: 'elamite' },
+    // The highland rim from Van to Sardis: Urartian, Phrygian, Tabalian and
+    // Lydian under one banner at this cell size.
+    anatolian:  { name: 'Anatolian',  color: [138, 150, 118], group: 'anatolian' },
   },
 
   // Jewish by religion, never part of the land (SPEC §133). These are
@@ -593,6 +677,163 @@ export const DEFINES = {
   DIASPORA: ['Leontopolis', 'Arbela', 'Nehardea', 'Khaybar'],
 
   TAGS: {
+    // NOTE ON PLACEMENT. These sit at the HEAD of the table rather than
+    // beside the courts they are contemporary with, and the reason is
+    // `yearlyGrowth` (js/sim/economy.js): it builds one capital -> tag map
+    // over the WHOLE table, last entry wins, and it does not ask whether a
+    // tag is seated in this chapter. Twenty-one new courts appended at the
+    // end would therefore have taken Jerusalem, Memphis, Damascus, Tyre and
+    // a dozen more capitals away from the courts that hold them in the nine
+    // chapters that already exist — a silent growth change in every one of
+    // them. Declared first, every later court still wins its own seat and
+    // nothing outside this section moves.
+    // ── The Iron Age (SPEC §268) ────────────────────────────────────────
+    // Twenty-one courts the game had no letters for, because it began seven
+    // hundred years after this world ended. Every one of them is attested in
+    // its own writing or in somebody's annals: the two Israelite kingdoms in
+    // the books of Kings and on the Mesha and Tel Dan stelae, Aram-Damascus
+    // and Hamath and Arpad in the Assyrian tribute lists, Moab on Mesha's own
+    // stone, Edom and Ammon and the Philistine cities in Sennacherib's prism,
+    // Qedar in Ashurbanipal, Urartu in its own inscriptions, and Assyria and
+    // Babylon in libraries.
+    ISL: {
+      name: 'Israel', adj: 'Israelite', color: [62, 132, 96], religion: 'yahwism', culture: 'israelite', capital: 'Sebaste',
+      description: 'The ten tribes: the bigger kingdom, the better land, the richer trade — '
+        + 'and nine dynasties in two hundred years, because a crown that is not David\'s has '
+        + 'to be re-won by every man who wears it.',
+      ideas: { incomeMult: 1.10, manpowerMult: 1.10, legitimacyAdd: -0.15 },
+    },
+    JDH: {
+      name: 'Judah', adj: 'Judahite', color: [40, 88, 168], religion: 'yahwism', culture: 'judean', capital: 'Jerusalem',
+      description: 'Two tribes, a ridge of limestone, and the one thing the north can never '
+        + 'manufacture: a house that has ruled since Saul died and a temple nobody else has.',
+      ideas: { hillDefBonus: 1, legitimacyAdd: 0.25, incomeMult: 0.9 },
+    },
+    ASR: {
+      name: 'Assyria', adj: 'Assyrian', color: [126, 40, 44], religion: 'mesopotamian', culture: 'assyrian', capital: 'Nineveh',
+      description: 'The first empire that made deportation an instrument of government rather '
+        + 'than an accident of victory. It does not want your land; it wants your tribute, '
+        + 'your cavalry and your silence, and it will move your entire nation to get them.',
+      ideas: { milPowerMult: 1.12, siegeMult: 1.2, manpowerMult: 1.1 },
+    },
+    BBL: {
+      name: 'Babylon', adj: 'Babylonian', color: [96, 62, 150], religion: 'mesopotamian', culture: 'babylonian', capital: 'Babylon',
+      description: 'The old city of the south, twice sacked by its Assyrian masters and twice '
+        + 'rebuilt by them, because burning Babylon was a thing even Assyrians came to regret.',
+      ideas: { incomeMult: 1.12, siegeMult: 1.15 },
+    },
+    MIZ: {
+      name: 'Egypt', adj: 'Egyptian', color: [214, 178, 72], religion: 'egyptian', culture: 'egyptian', capital: 'Memphis',
+      description: 'Three thousand years old and ruled from four cities at once: a great power '
+        + 'by reputation, a broken reed by arithmetic, and the only army that ever comes north '
+        + 'when Asia asks.',
+      ideas: { incomeMult: 1.15, moraleMult: 0.92 },
+    },
+    DMS: {
+      name: 'Aram-Damascus', adj: 'Aramean', color: [168, 120, 60], religion: 'canaanite', culture: 'aramean', capital: 'Damascus',
+      description: 'The oasis that commands the inland road: Israel\'s nearest rival, most '
+        + 'frequent enemy and occasional ally against the thing coming from the Tigris.',
+      ideas: { moraleMult: 1.06, incomeMult: 1.05 },
+    },
+    TYR: {
+      name: 'Tyre and Sidon', adj: 'Phoenician', color: [122, 44, 122], religion: 'canaanite', culture: 'phoenician', capital: 'Tyre',
+      description: 'A coast with no hinterland, which is why it owns the sea instead. It sells '
+        + 'cedar, purple and the alphabet, and it has never in its history won a land battle '
+        + 'it could buy its way out of.',
+      ideas: { tradeMult: 1.25, navalMult: 1.2, manpowerMult: 0.75 },
+    },
+    PLS: {
+      name: 'Philistia', adj: 'Philistine', color: [180, 100, 118], religion: 'canaanite', culture: 'philistine', capital: 'Gaza',
+      description: 'Five cities on the coast road, each with its own seren, sharing one army '
+        + 'when they agree and one graveyard when they do not.',
+      ideas: { milPowerMult: 1.06, incomeMult: 1.06 },
+    },
+    MOB: {
+      // Seated at Medeba rather than at Kir-Hareseth: SPEC §234 folds the
+      // Characmoba district away outside 1948, so the kingdom's seat has to be
+      // a cell every chapter actually has.
+      name: 'Moab', adj: 'Moabite', color: [150, 116, 76], religion: 'canaanite', culture: 'moabite', capital: 'Medaba',
+      description: 'The plateau above the Dead Sea: sheep by the hundred thousand, one good '
+        + 'road, and a king who carved his rebellion against Israel into basalt so that it '
+        + 'would still be legible three thousand years later.',
+      ideas: { hillDefBonus: 1, incomeMult: 0.95 },
+    },
+    AMO: {
+      name: 'Ammon', adj: 'Ammonite', color: [132, 140, 84], religion: 'canaanite', culture: 'ammonite', capital: 'Philadelphia',
+      description: 'The citadel above the Jabbok springs and the grain country behind it: small, '
+        + 'walled, and a survivor of every empire that has come through this corridor.',
+      ideas: { fortDefBonus: 1, incomeMult: 0.95 },
+    },
+    EDM: {
+      name: 'Edom', adj: 'Edomite', color: [152, 78, 64], religion: 'canaanite', culture: 'edomite', capital: 'Petra',
+      description: 'The red highland between the Arabah and the desert: copper, the caravan '
+        + 'road to the Gulf, and a grudge against Jerusalem that outlives both kingdoms.',
+      ideas: { hillDefBonus: 1, tradeMult: 1.08 },
+    },
+    HMT: {
+      name: 'Hamath', adj: 'Hamathite', color: [186, 150, 96], religion: 'canaanite', culture: 'aramean', capital: 'Emesa',
+      description: 'The Orontes kingdom: the northern end of the Aramean world, and the buffer '
+        + 'every southern coalition against Assyria is built around.',
+      ideas: { incomeMult: 1.05, fortDefBonus: 1 },
+    },
+    QDR: {
+      name: 'Qedar', adj: 'Qedarite', color: [198, 160, 96], religion: 'canaanite', culture: 'arab', capital: 'Dumatha',
+      description: 'The tents between the oases: camels, incense freight, and queens the '
+        + 'Assyrians bothered to name — Zabibe, Samsi, Te\'elhunu — because the tribute was '
+        + 'worth the trouble of writing them down.',
+      ideas: { moraleMult: 1.05, tradeMult: 1.1, manpowerMult: 0.8 },
+    },
+    URA: {
+      name: 'Urartu', adj: 'Urartian', color: [92, 132, 148], religion: 'anatolian_cults', culture: 'anatolian', capital: 'Tigranocerta',
+      description: 'The kingdom of the lake and the high valleys, whose fortresses and canals '
+        + 'outlasted it, and whose whole strategic purpose was to be the thing Assyria had to '
+        + 'fight in the mountains instead of in the plain.',
+      ideas: { hillDefBonus: 2, manpowerMult: 0.9 },
+    },
+    PHR: {
+      name: 'Phrygia', adj: 'Phrygian', color: [160, 148, 108], religion: 'anatolian_cults', culture: 'anatolian', capital: 'Ancyra',
+      description: 'Mushki to the Assyrians, Midas to the Greeks: the highland kingdom that '
+        + 'sent gifts to Nineveh and a throne to Delphi, and ended under a horse-people out '
+        + 'of the steppe.',
+      ideas: { incomeMult: 1.06 },
+    },
+    LYD: {
+      name: 'Lydia', adj: 'Lydian', color: [206, 168, 88], religion: 'anatolian_cults', culture: 'anatolian', capital: 'Smyrna',
+      description: 'The Hermus valley, the electrum of the Pactolus, and the first state in '
+        + 'the world to strike coins — which is a technology of war as much as of trade.',
+      ideas: { incomeMult: 1.15, tradeMult: 1.1 },
+    },
+    ELA: {
+      name: 'Elam', adj: 'Elamite', color: [140, 108, 164], religion: 'mesopotamian', culture: 'elamite', capital: 'Susa',
+      description: 'Babylon\'s oldest ally and Assyria\'s oldest problem: the highland kingdom '
+        + 'that finances every Chaldean revolt and is finally, in 646, erased for it.',
+      ideas: { moraleMult: 1.05, hillDefBonus: 1 },
+    },
+    MDA: {
+      name: 'Media', adj: 'Median', color: [122, 96, 176], religion: 'zoroastrianism', culture: 'persian', capital: 'Ecbatana',
+      description: 'Horse country and hill chiefs, paying tribute in colts until the day they '
+        + 'stop — and then Nineveh has eight weeks to live.',
+      ideas: { milPowerMult: 1.08, manpowerMult: 1.1 },
+    },
+    PAS: {
+      name: 'Persia', adj: 'Persian', color: [150, 88, 176], religion: 'zoroastrianism', culture: 'persian', capital: 'Persepolis',
+      description: 'Anshan and the highland clans behind it: a Median vassal for a century, '
+        + 'and then, in twenty years, everything from the Aegean to the Indus.',
+      ideas: { moraleMult: 1.08, milPowerMult: 1.05 },
+    },
+    TAB: {
+      name: 'Tabal', adj: 'Tabalian', color: [130, 146, 118], religion: 'anatolian_cults', culture: 'anatolian', capital: 'Tyana',
+      description: 'The Cappadocian highland and its two dozen lords, who speak the old '
+        + 'imperial Hittite in their inscriptions four centuries after there is no empire.',
+      ideas: { hillDefBonus: 1 },
+    },
+    CRC: {
+      name: 'Carchemish', adj: 'Carchemishite', color: [148, 126, 104], religion: 'anatolian_cults', culture: 'aramean', capital: 'Zeugma',
+      description: 'The Euphrates crossing and the last city to call itself a Hittite kingdom: '
+        + 'whoever holds it holds the road between Asia and the Levant, which is why every '
+        + 'empire in this age eventually has to take it.',
+      ideas: { fortDefBonus: 1, tradeMult: 1.1 },
+    },
     ROM: {
       // v5.4: Roma is on the map, but the capital stays the eastern command —
       // every scripted war is eastern, and the AI rallies (and the growth
