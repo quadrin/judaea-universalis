@@ -1298,18 +1298,30 @@ export const FLAGS = {
   // neighbours at chip size, which is why Israel gets a calf and Judah a lion
   // rather than both getting some variety of the same royal beast.
 
-  // Israel: the calf of Bethel and Dan, drawn as the bucranium — the bull's
-  // mask on the altar frieze. Jeroboam made two and said "behold thy gods, O
-  // Israel" (1 Kings 12:28); the chapter's second fork is named for them. The
-  // horns go OUT before they go up, and they taper: drawn short and upright
-  // they were a rabbit's ears, and drawn with a face on it, it was a pet.
+  // Israel: the four-horned altar Jeroboam built at Bethel — "and he offered
+  // upon the altar which he had made in Bethel, the fifteenth day of the
+  // eighth month, in the month which he had devised of his own heart"
+  // (1 Kings 12:33). The chapter's own quarrel is named `altars_and_the_house`
+  // and this is the altar it is named for; the horned block is also the one
+  // piece of Israelite cult furniture the excavators keep finding whole, at
+  // Dan and at Megiddo.
+  //
+  // It is here because the calf would not sit still. A frontal calf's face
+  // was a cartoon cat, a profile bull was indistinguishable from the lion and
+  // the stag, and the bucranium — a pale tapering muzzle with a gold lobe
+  // curling off each side of it — turned out to be an unfortunate shape at
+  // card size, which one look at it on the start screen will confirm. Wide,
+  // squat and four-horned has no such reading available to it.
   ISL:
-    `<path d="M8.6 9.6h6.8l-.6 6.8c-.3 2.9-1.3 5-2.8 6.4-1.5-1.4-2.5-3.5-2.8-6.4Z" ${SIL}/>` +
-    `<path d="M8.9 9.9C6.2 11 3.9 10.9 2 9.6c-1-.7-1.6-1.7-1.9-3.1 1.5.8 3 1 4.4.6 1.5-.4 3-.2 4.4.6Z" ${ACC}/>` +
-    `<path d="M15.1 9.9c2.7 1.1 5 1 6.9-.3 1-.7 1.6-1.7 1.9-3.1-1.5.8-3 1-4.4.6-1.5-.4-3-.2-4.4.6Z" ${ACC}/>` +
-    `<path d="M4.5 7.1c-.8-.5-1.4-1.3-1.8-2.4M19.5 7.1c.8-.5 1.4-1.3 1.8-2.4" ${DET}/>` +
-    `<path d="M10.9 18.9h2.2" fill="none" stroke="${FO}" stroke-width="1.5" stroke-linecap="round"/>` +
-    `<path d="M9.6 13.1h4.8" ${DET}/>`,
+    `<path d="M2.4 20.6h19.2v2.4H2.4Z" ${ACC}/>` +
+    `<path d="M4 18.2h16v2.4H4Z" ${SIL}/>` +
+    `<path d="M6 9.8h12l.6 8.4H5.4Z" ${SIL}/>` +
+    `<path d="M4 7.4h16v2.4H4Z" ${SIL}/>` +
+    `<path d="M2.9 7.4c-.2-2.4.5-4 2-4.9 1 1.1 1.5 2.7 1.5 4.9Z" ${ACC}/>` +
+    `<path d="M21.1 7.4c.2-2.4-.5-4-2-4.9-1 1.1-1.5 2.7-1.5 4.9Z" ${ACC}/>` +
+    `<path d="M7.4 7.4c-.2-1.8.3-3 1.5-3.7.8.9 1.2 2.1 1.2 3.7Z" ${SIL}/>` +
+    `<path d="M16.6 7.4c.2-1.8-.3-3-1.5-3.7-.8.9-1.2 2.1-1.2 3.7Z" ${SIL}/>` +
+    `<path d="M6.6 13h10.8M6.3 15.8h11.4" ${DET}/>`,
 
   // Judah: the lamp. "That David my servant may have a light alway before me
   // in Jerusalem" (1 Kings 11:36) — the promise the southern kingdom rules

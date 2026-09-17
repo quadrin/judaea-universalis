@@ -19291,8 +19291,21 @@ down because the next emblem added here will be subject to all three:
    Judah took the LAMP of 1 Kings 11:36, which is already the name of its own
    standing modifier in this chapter; Media took the akinakes off the
    Persepolis reliefs; Tabal took the grapes and grain of the Ivriz relief;
-   Persia took the fire altar. Israel kept its calf but as the bucranium, the
-   horned mask, with the horns swept wide — no eyes, no ears, no face.
+   Persia took the fire altar. Israel took the four-horned altar Jeroboam
+   built at Bethel, which is the altar its own quarrel `altars_and_the_house`
+   is named for.
+
+**A fourth rule, learned the hard way: look at the silhouette on its own.**
+Israel's calf went through four drafts — a frontal face that was a cartoon
+cat, a profile bull indistinguishable from the lion and the stag, and then the
+bucranium: a pale tapering muzzle with a gold lobe curling off each side of
+it. As a drawing of a bull's mask it was the best of the three. As a shape, at
+the size the start-screen card draws it, it was unmistakably something else,
+and nobody who looked at that card was going to see an altar frieze. The
+lesson is not about anatomy. It is that these are read as SHAPES first and as
+subjects second, and that the check for it is to look at the outline with the
+subject forgotten — which is a thing to do deliberately, because knowing what
+you meant to draw makes you unable to see what you drew.
 
 **Legibility beat accuracy twice more, on purpose.** These are read at 22px on a
 coloured field, and two first drafts were faithful and useless. Judah began
