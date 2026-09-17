@@ -128,7 +128,11 @@ await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 {
   // The shelf is a carousel: only the current card is clickable, so walk it.
   let found = false;
-  for (let i = 0; i < 10 && !found; i++) {
+  // Twelve, not ten: SPEC §268 seated three chapters in front of 167 BCE, and
+  // 1948 is the last card of twelve. This walk reports its own failure rather
+  // than timing out, which is why it says "the 1948 chapter is on the shelf"
+  // instead of dying on a selector — the only one of these that did.
+  for (let i = 0; i < 12 && !found; i++) {
     const cur = page.locator('.bm-card.current');
     const txt = (await cur.textContent()) || '';
     if (/1948/.test(txt)) { await cur.click(); found = true; break; }
