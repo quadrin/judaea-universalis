@@ -1290,6 +1290,254 @@ export const FLAGS = {
     `<rect x="0.6" y="0.6" width="5.7" height="22.8" fill="#f2f4f4" stroke="none"/>` +
     `<path d="M16.9 6.7a5.9 5.9 0 100 10.6 7.2 7.2 0 010-10.6Z" fill="#f2f4f4" stroke="none"/>` +
     star5(17.6, 9.4, 1.6, '#f2f4f4'),
+  // ---- the Iron Age courts (SPEC §268) --------------------------------------
+  // Twenty-one courts that had no emblem and flew their own three letters as
+  // text. Each is drawn from what that court actually put on its seals, its
+  // gate reliefs, its coins or its cult, in the same parchment-and-gold hand
+  // as the rest of the table — and each is chosen to read apart from its
+  // neighbours at chip size, which is why Israel gets a calf and Judah a lion
+  // rather than both getting some variety of the same royal beast.
+
+  // Israel: the calf of Bethel and Dan. Jeroboam made two and said "behold
+  // thy gods, O Israel" (1 Kings 12:28); the chapter's own second fork is
+  // named for them. A young bull standing, gold, horns forward.
+  ISL:
+    `<path d="M7.3 10.6c0-1.5 2.1-2.5 4.7-2.5s4.7 1 4.7 2.5c0 1.2-.5 2.1-1.4 2.6v4.2h-1.7v-3.3h-3.2v3.3H8.7v-4.2c-.9-.5-1.4-1.4-1.4-2.6Z" ${SIL}/>` +
+    `<path d="M9.4 17.4h1.7v2.4H9.4Z M12.9 17.4h1.7v2.4h-1.7Z" ${SIL}/>` +
+    `<path d="M7.3 9.8C6 9.2 5.2 8.1 5 6.5c1.7.1 2.9.8 3.5 2.1Z" ${ACC}/>` +
+    `<path d="M16.7 9.8c1.3-.6 2.1-1.7 2.3-3.3-1.7.1-2.9.8-3.5 2.1Z" ${ACC}/>` +
+    `<circle cx="10.3" cy="11" r="0.45" fill="${FO}" stroke="none"/>` +
+    `<circle cx="13.7" cy="11" r="0.45" fill="${FO}" stroke="none"/>` +
+    `<path d="M11.2 12.9h1.6" ${DET}/>` +
+    `<path d="M12 4.6c.9.9 1.4 1.9 1.4 3h-2.8c0-1.1.5-2.1 1.4-3Z" ${ACC}/>`,
+
+  // Judah: the lion of the blessing — "Judah is a lion's whelp... he couched
+  // as a lion, and as an old lion; who shall rouse him up?" (Genesis 49:9).
+  // Drawn as the mask rather than the whole beast: a couchant lion loses its
+  // legs and its outline at 22px and reads as a smudge, where the face keeps
+  // its mane, its ears and its stare all the way down.
+  JDH:
+    `<path d="M12 3.4c4.7 0 7.9 3.4 7.9 8.6S16.7 20.6 12 20.6 4.1 17.2 4.1 12 7.3 3.4 12 3.4Z" ${ACC}/>` +
+    `<path d="M12 2.2l1.5 2.6-2.9.1Z M20 6.6l-1 2.8-2.2-1.9Z M4 6.6l1 2.8 2.2-1.9Z M20 17.4l-1-2.8-2.2 1.9Z M4 17.4l1-2.8 2.2 1.9Z M12 21.8l1.5-2.6-2.9-.1Z" ${ACC}/>` +
+    `<path d="M12 6.2c3 0 5 2.3 5 5.8s-2 5.8-5 5.8-5-2.3-5-5.8 2-5.8 5-5.8Z" ${SIL}/>` +
+    `<path d="M8.1 7.3 6.6 4.6l3 .9Z M15.9 7.3l1.5-2.7-3 .9Z" ${SIL}/>` +
+    `<circle cx="10" cy="10.8" r="0.62" fill="${FO}" stroke="none"/>` +
+    `<circle cx="14" cy="10.8" r="0.62" fill="${FO}" stroke="none"/>` +
+    `<path d="M12 12.6l1.5 1.1c0 1.1-.7 1.7-1.5 1.7s-1.5-.6-1.5-1.7Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M8.4 12.9H6.2M8.6 14.3l-2 .7M15.6 12.9h2.2M15.4 14.3l2 .7" ${DET}/>`,
+
+  // Assyria: the god Ashur in the winged disk — the standard that flew over
+  // every campaign in the annals, wings spread flat to either side of the
+  // ring, the archer's bow drawn inside it.
+  ASR:
+    `<path d="M1.8 11.2c3.4-1.1 6-1.2 7.8-.3l-.3 2.2c-1.9-.5-4.4-.4-7.5.3Z" ${SIL}/>` +
+    `<path d="M22.2 11.2c-3.4-1.1-6-1.2-7.8-.3l.3 2.2c1.9-.5 4.4-.4 7.5.3Z" ${SIL}/>` +
+    `<circle cx="12" cy="11.9" r="3.6" ${ACC}/>` +
+    `<path d="M9.6 11.9a2.4 2.4 0 014.8 0" fill="none" stroke="${FO}" stroke-width="0.85" stroke-linecap="round"/>` +
+    `<path d="M9.6 11.9h4.8M12 10.1v3.6" fill="none" stroke="${FO}" stroke-width="0.75" stroke-linecap="round"/>` +
+    `<path d="M9.5 15.8c1 1.6 1.8 3 2.5 4.4.7-1.4 1.5-2.8 2.5-4.4Z" ${SIL}/>` +
+    `<path d="M4.2 13.6c1.6-.2 3-.2 4.2.1M19.8 13.6c-1.6-.2-3-.2-4.2.1" ${DET}/>`,
+
+  // Babylon: the marru, Marduk's spade — the triangular blade on its shaft
+  // that stands for the god on every boundary stone in Babylonia, usually
+  // set on the back of his snake-dragon. The dragon is the famous picture
+  // and it is the wrong one for a 22px chip: in profile it loses its horn
+  // and its tail and turns into a giraffe. The spade is unmistakable.
+  BBL:
+    `<path d="M11.1 8.6h1.8v12.4h-1.8Z" ${SIL}/>` +
+    `<path d="M12 2.6c3 1.7 4.6 3.9 4.6 6.6 0 .6-.1 1.2-.2 1.8H7.6c-.1-.6-.2-1.2-.2-1.8 0-2.7 1.6-4.9 4.6-6.6Z" ${ACC}/>` +
+    `<path d="M12 5.2c1.3 1 2 2.2 2 3.7 0 .4 0 .8-.1 1.2h-3.8c-.1-.4-.1-.8-.1-1.2 0-1.5.7-2.7 2-3.7Z" ${SIL}/>` +
+    `<path d="M6.8 11h10.4v1.9H6.8Z" ${ACC}/>` +
+    `<path d="M8.6 21h6.8v1.3H8.6Z" ${ACC}/>` +
+    `<path d="M12 14.6v4.4" ${DET}/>`,
+
+  // Egypt: the pschent, the double crown — the tall white crown of the south
+  // set inside the red crown of the north, which is what a pharaoh is.
+  MIZ:
+    `<path d="M6.6 19.4c-.6-2.6-.3-4.7 1-6.2 1.1-1.3 2.8-2 5-2v8.2Z" ${SIL}/>` +
+    `<path d="M12.6 11.2c2.2 0 3.9.7 5 2 1.3 1.5 1.6 3.6 1 6.2h-6Z" ${SIL}/>` +
+    `<path d="M12 3.2c1.6 1.7 2.4 4 2.4 6.9 0 1.3-.2 2.6-.5 3.9h-3.8c-.3-1.3-.5-2.6-.5-3.9 0-2.9.8-5.2 2.4-6.9Z" ${ACC}/>` +
+    `<path d="M12 3.2c.6.7 1.1 1.5 1.4 2.5" ${DET}/>` +
+    `<path d="M17.6 13.2c1.6-.8 2.6-2.1 3-4l1.4 1.6c-.5 2.1-1.6 3.6-3.3 4.6Z" ${ACC}/>` +
+    `<path d="M6.6 19.4h10.8v1.2H6.6Z" ${ACC}/>`,
+
+  // Damascus: the forked lightning of Hadad, the storm god the Aramean kings
+  // ruled for — the three-pronged bolt he is shown gripping in both fists on
+  // every Aramean stele from Zakkur to Bar-Hadad.
+  DMS:
+    `<path d="M11.1 2.6h1.8v6.2h-1.8Z" ${ACC}/>` +
+    `<path d="M12 8.2 15.9 3.4l1.5 1-3.4 4.6Z" ${ACC}/>` +
+    `<path d="M12 8.2 8.1 3.4l-1.5 1 3.4 4.6Z" ${ACC}/>` +
+    `<path d="M9 8.6h6v2H9Z" ${SIL}/>` +
+    `<path d="M11.1 10.6h1.8v10.8h-1.8Z" ${ACC}/>` +
+    `<path d="M12 15.2 15.9 20l1.5-1-3.4-4.6Z" ${ACC}/>` +
+    `<path d="M12 15.2 8.1 20l-1.5-1 3.4-4.6Z" ${ACC}/>` +
+    `<path d="M10.6 9.6h2.8" ${DET}/>`,
+
+  // Tyre: the murex, the sea snail the city boiled by the ten thousand to
+  // make the purple nobody else could make. The dye is the whole reason
+  // Tyre matters, and the shell is on its own coins.
+  TYR:
+    `<path d="M13.4 4.6c3.1 0 5.2 2.3 5.2 5.7 0 4.1-2.5 7-6.7 8.6l-.9-2.2c3.2-1.3 5-3.4 5-6.4 0-1.9-1-3-2.6-3-1.4 0-2.3.9-2.6 2.6l-2.2-.4c.4-3.1 2.2-4.9 4.8-4.9Z" ${SIL}/>` +
+    `<path d="M13.2 8.8c1 0 1.7.8 1.7 2 0 1.6-.9 2.8-2.7 3.6l-.8-2.1c.9-.4 1.3-.9 1.3-1.5Z" ${ACC}/>` +
+    `<path d="M11 18.9 4.4 20.4l1.1-2.3 5.4-1.3Z" ${ACC}/>` +
+    `<path d="M8.6 6.2c-1.3.8-2.2 1.9-2.7 3.3" ${DET}/>`,
+
+  // Philistia: the feathered headdress of the Sea Peoples, drawn rank on
+  // rank at Medinet Habu — the one thing an Egyptian scribe, a Judahite
+  // and an Assyrian all recognised a Philistine by.
+  PLS:
+    `<path d="M12 7.4c2.4 0 4 1.3 4 3.4 0 1.4-.5 2.6-1.4 3.6l.6 5.6h-6.4l.6-5.6c-.9-1-1.4-2.2-1.4-3.6 0-2.1 1.6-3.4 4-3.4Z" ${SIL}/>` +
+    `<path d="M8.6 9.4 5.9 5.1l1.5-.7 2.5 4.1Z" ${ACC}/>` +
+    `<path d="M10.2 8.4 9.2 3.5l1.6-.3.9 4.9Z" ${ACC}/>` +
+    `<path d="M13.8 8.4l1-4.9-1.6-.3-.9 4.9Z" ${ACC}/>` +
+    `<path d="M15.4 9.4l2.7-4.3-1.5-.7-2.5 4.1Z" ${ACC}/>` +
+    `<path d="M12 7.9V3.1" fill="none" stroke="${FG}" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<path d="M9.2 14.4h5.6" ${DET}/>`,
+
+  // Moab: the stele of Mesha — the black basalt slab on which a Moabite king
+  // wrote down, in his own language, that he had thrown Israel off. Rounded
+  // head, thirty-four lines, the gold of a stone worth reading.
+  MOB:
+    `<path d="M12 2.9c3.2 0 5.3 2 5.3 5.2v12.1H6.7V8.1c0-3.2 2.1-5.2 5.3-5.2Z" ${SIL}/>` +
+    `<path d="M8.9 8.2h6.2M8.9 10.3h6.2M8.9 12.4h6.2M8.9 14.5h6.2M8.9 16.6h4.3" ${DET}/>` +
+    `<path d="M6.7 20.2h10.6v1.3H6.7Z" ${ACC}/>` +
+    `<path d="M12 4.6c1.9 0 3.1 1.1 3.3 3.1H8.7c.2-2 1.4-3.1 3.3-3.1Z" ${ACC}/>`,
+
+  // Ammon: the citadel of Rabbah on its hill — the round tower the kingdom
+  // is named for in every campaign list that ever went up the King's
+  // Highway, and the one thing about Ammon that never moved.
+  AMO:
+    `<path d="M3.6 20.4c1.4-3.6 3.6-6 6.6-7.2l4-.1c2.9 1.2 5 3.6 6.2 7.3Z" ${SIL}/>` +
+    `<path d="M8.6 13.4V6.2h6.8v7.2Z" ${SIL}/>` +
+    `<path d="M8.2 6.2V3.9h1.8v1.1h1.6V3.9h1.8v1.1h1.6V3.9h1.8v2.3Z" ${ACC}/>` +
+    `<path d="M11.1 9.1h1.8v4.3h-1.8Z" ${ACC}/>` +
+    `<path d="M6.2 17.2h11.6" ${DET}/>`,
+
+  // Edom: Sela, the rock. "Thou that dwellest in the clefts of the rock,
+  // whose habitation is high; that saith in his heart, Who shall bring me
+  // down to the ground?" — Obadiah 3, written at Edom, about this.
+  EDM:
+    `<path d="M2.6 20.4 8.2 6.1l3.1 7.4 1.4-2.9 1.3 3.1 2.6-6.4 4.8 13.1Z" ${SIL}/>` +
+    `<path d="M11 20.4 12.6 12l1.7 8.4Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M8.2 6.1 6.4 10.6h3.6Z" ${ACC}/>` +
+    `<path d="M16.6 7.3 15 11.1h3.2Z" ${ACC}/>` +
+    `<path d="M4.6 16.4h4.2M16.6 16.4h3.4" ${DET}/>`,
+
+  // Hamath: the double-headed eagle of the Neo-Hittite cities, cut in
+  // relief at Alaca Hoyuk and carried west on their seals long before any
+  // European crown thought of it.
+  HMT:
+    `<path d="M12 9.6c1.6 0 2.6 1 2.6 2.6 0 1.5-.5 2.8-1.4 3.9l.5 4.3h-3.4l.5-4.3c-.9-1.1-1.4-2.4-1.4-3.9 0-1.6 1-2.6 2.6-2.6Z" ${SIL}/>` +
+    `<path d="M9.7 10.4c-2.3-.5-4.2-.2-5.8 1 .9 2.1 2.6 3.4 5.1 3.9Z" ${SIL}/>` +
+    `<path d="M14.3 10.4c2.3-.5 4.2-.2 5.8 1-.9 2.1-2.6 3.4-5.1 3.9Z" ${SIL}/>` +
+    `<path d="M9.1 4.2c1.4 0 2.3.9 2.3 2.3 0 1-.4 1.8-1.2 2.4l-1.1.7-1.1-.7c-.8-.6-1.2-1.4-1.2-2.4 0-1.4.9-2.3 2.3-2.3Z" ${ACC}/>` +
+    `<path d="M14.9 4.2c1.4 0 2.3.9 2.3 2.3 0 1-.4 1.8-1.2 2.4l-1.1.7-1.1-.7c-.8-.6-1.2-1.4-1.2-2.4 0-1.4.9-2.3 2.3-2.3Z" ${ACC}/>` +
+    `<path d="M7.3 6.1 5.6 5.4l1.9-.9Z M16.7 6.1l1.7-.7-1.9-.9Z" ${ACC}/>` +
+    `<circle cx="9.1" cy="6.2" r="0.4" fill="${FO}" stroke="none"/>` +
+    `<circle cx="14.9" cy="6.2" r="0.4" fill="${FO}" stroke="none"/>`,
+
+  // Qedar: the dromedary of the incense road. The Assyrian annals count
+  // Qedarite wealth in camels because that is what Qedar is — the freight
+  // of Arabia walking north to the coast in thousands.
+  QDR:
+    `<path d="M4.8 18.9c-.5-2.3-.2-4.1 1-5.5.9-1 2.2-1.6 4-1.9 1.1-1.5 2.4-2.2 3.9-2.2 1.4 0 2.6.6 3.6 1.8l2.4.3c1.3.2 2.1.9 2.4 2.1l-1.2 5.4h-1.8l.6-3.6c-1 .7-2.2 1.1-3.6 1.3l-.5 2.3h-1.8l.4-2.2h-3.3l-.5 2.2Z" ${SIL}/>` +
+    `<path d="M15.9 9.4c.6-1.2 1.5-2 2.9-2.4l.6 1.5c-1 .3-1.6.9-1.9 1.8Z" ${SIL}/>` +
+    `<path d="M18.8 7c1 .1 1.7.6 2.1 1.4l-1.5.9c-.2-.4-.5-.6-1-.7Z" ${ACC}/>` +
+    `<circle cx="18.5" cy="8.5" r="0.4" fill="${FO}" stroke="none"/>` +
+    `<path d="M4.8 18.9h1.7v2h-1.7Z M11.5 18.9h1.7v2h-1.7Z M17.7 18.9h1.7v2h-1.7Z" ${SIL}/>` +
+    `<path d="M9.4 13.2c1.4-.4 2.8-.4 4.2 0" ${DET}/>`,
+
+  // Urartu: the sacred tree of Haldi, the palmette that stands on every
+  // Urartian belt, helmet and bronze plaque, winged genii to either side.
+  // A kingdom of citadels and canals that put a tree on its armour.
+  URA:
+    `<path d="M11.1 20.6V9.4h1.8v11.2Z" ${SIL}/>` +
+    `<path d="M12 2.9c1.8 1.4 2.7 3.1 2.7 5.1 0 .9-.2 1.7-.6 2.5h-4.2c-.4-.8-.6-1.6-.6-2.5 0-2 .9-3.7 2.7-5.1Z" ${ACC}/>` +
+    `<path d="M11.4 10.6c-2.1-.3-3.6-1.3-4.4-3 2.2-.3 3.8.6 4.8 2.6Z" ${SIL}/>` +
+    `<path d="M12.6 10.6c2.1-.3 3.6-1.3 4.4-3-2.2-.3-3.8.6-4.8 2.6Z" ${SIL}/>` +
+    `<path d="M11.4 14.4c-2.4-.3-4.1-1.4-5-3.4 2.5-.3 4.3.7 5.4 3Z" ${SIL}/>` +
+    `<path d="M12.6 14.4c2.4-.3 4.1-1.4 5-3.4-2.5-.3-4.3.7-5.4 3Z" ${SIL}/>` +
+    `<path d="M7.6 20.6h8.8v1.2H7.6Z" ${ACC}/>` +
+    `<path d="M12 4.9v4.1" ${DET}/>`,
+
+  // Phrygia: the cap. Every later people who wanted to say "freedman" or
+  // "easterner" or "not Greek" reached for this shape, and it started as
+  // what the Phrygians actually wore. The whole silhouette is the forward
+  // flop of the peak, so that is drawn large and the crown kept plain.
+  PHR:
+    `<path d="M7.2 17.2c-.9-4 -.6-7 1-9.1C9.7 6 12 5 14.9 5c2.6 0 4.1 1.2 4.1 3.2 0 1.7-1.1 2.9-3.2 3.5-1.9.5-2.9 1.4-2.9 2.7 0 .8.3 1.7.9 2.8Z" ${SIL}/>` +
+    `<path d="M14.9 5c1.9 0 3 .7 3.4 2.1-1.4.7-2.9 1-4.5 1Z" ${ACC}/>` +
+    `<path d="M6.4 17.2h9.6v2.4H6.4Z" ${ACC}/>` +
+    `<path d="M8 10.6c1.8-1.5 3.8-2.4 6-2.6" ${DET}/>` +
+    `<path d="M7.6 13.8c1.7-.8 3.4-1.2 5-1.2" ${DET}/>` +
+    `<path d="M6.4 19.6h9.6v1.1H6.4Z" ${SIL}/>`,
+
+  // Lydia: the double axe. Herodotus has the Heraclid kings of Sardis
+  // holding it as the sign of their right to rule, handed down from Ninus;
+  // the coinage came later and the axe was always the crown.
+  LYD:
+    `<path d="M11.2 3.4h1.6v17.2h-1.6Z" ${SIL}/>` +
+    `<path d="M11.2 6.4C8.4 6.4 5.7 7.6 3 10c2.7 2.4 5.4 3.6 8.2 3.6Z" ${ACC}/>` +
+    `<path d="M12.8 6.4c2.8 0 5.5 1.2 8.2 3.6-2.7 2.4-5.4 3.6-8.2 3.6Z" ${ACC}/>` +
+    `<path d="M6.2 10c1.5-1.1 3-1.7 4.4-1.9M17.8 10c-1.5-1.1-3-1.7-4.4-1.9" ${DET}/>` +
+    `<path d="M9.8 20.6h4.4v1.1H9.8Z" ${ACC}/>`,
+
+  // Elam: the coiled serpent of Inshushinak, who guards Susa. Elamite kings
+  // sat on serpent thrones and put the coil on their seals for three
+  // thousand years, which is longer than most of this table existed.
+  ELA:
+    `<path d="M12 4.4c4.3 0 7.2 2.6 7.2 6.8 0 3.9-2.6 6.6-6.4 6.6-3.4 0-5.7-2.2-5.7-5.4 0-2.9 2-4.9 4.8-4.9 2.4 0 4 1.5 4 3.7 0 1.8-1.2 3-2.9 3-1.4 0-2.3-.9-2.3-2.1 0-1 .7-1.7 1.6-1.7v1.8c-.1 0-.1 0-.1.1 0 .1.1.1.2.1.4 0 .7-.4.7-1 0-.9-.7-1.5-1.7-1.5-1.3 0-2.2 1-2.2 2.4 0 1.8 1.3 3.1 3.2 3.1 2.3 0 3.9-1.7 3.9-4.2 0-2.9-2.2-4.9-5.3-4.9Z" ${SIL}/>` +
+    `<path d="M12 4.4c-3 0-5.4 1.1-7.2 3.2l1.5 1.5c1.4-1.6 3.3-2.5 5.7-2.5Z" ${ACC}/>` +
+    `<path d="M4.8 7.6 2.6 6.4l.4 2.5Z" ${ACC}/>` +
+    `<circle cx="5.4" cy="7.3" r="0.4" fill="${FO}" stroke="none"/>`,
+
+  // Media: the Nisean horse. The Medes are the horse plain — the tribute
+  // that made them worth conquering, the cavalry that made them worth
+  // fearing, and the reason every later empire wanted Ecbatana.
+  MDA:
+    `<path d="M15.6 4.2c2.2.9 3.3 2.7 3.3 5.4 0 1-.2 2.2-.5 3.5l-1.4 7.3h-2l1.1-6.2c-1.2.8-2.6 1.3-4.2 1.4l-1 4.8h-2l.9-4.5c-1.4-.6-2.1-1.7-2.1-3.3 0-1.1.3-2.3 1-3.6l1.8.9c-.5 1-.8 1.9-.8 2.6 0 1 .6 1.5 1.8 1.5 1.9 0 3.4-.6 4.6-1.9.9-.9 1.3-2 1.3-3.3 0-1.6-.6-2.6-1.8-3.2Z" ${SIL}/>` +
+    `<path d="M15.6 4.2 13 5.8c-1.1.7-1.9 1.6-2.4 2.7l-2-.8c.7-1.7 1.9-3 3.4-4Z" ${SIL}/>` +
+    `<path d="M15.6 4.2 15 1.9l2.2 1.4Z M13.4 4.9l-1.2-2 2.3.6Z" ${ACC}/>` +
+    `<circle cx="14.4" cy="6.1" r="0.42" fill="${FO}" stroke="none"/>` +
+    `<path d="M16.4 6.6c.9.6 1.4 1.5 1.5 2.7" ${DET}/>`,
+
+  // Persia: the four-winged genius of Pasargadae, cut beside Cyrus' own
+  // gate — two wings raised, two falling, the Elamite robe and the Egyptian
+  // crown on a figure nobody has ever been able to name.
+  PAS:
+    `<path d="M11.1 8.6h1.8v11.8h-1.8Z" ${SIL}/>` +
+    `<path d="M12 4.6c1.3 0 2.1.8 2.1 2.1 0 1.2-.8 2-2.1 2s-2.1-.8-2.1-2c0-1.3.8-2.1 2.1-2.1Z" ${SIL}/>` +
+    `<path d="M11.1 9.2C8.6 8.4 6.1 7.1 3.6 5.2c.5 2.7 2 4.6 4.5 5.8Z" ${ACC}/>` +
+    `<path d="M12.9 9.2c2.5-.8 5-2.1 7.5-4-.5 2.7-2 4.6-4.5 5.8Z" ${ACC}/>` +
+    `<path d="M11.1 12.4c-2.3.5-4.5 1.7-6.6 3.5.3-2.4 1.6-4 3.9-4.9Z" ${SIL}/>` +
+    `<path d="M12.9 12.4c2.3.5 4.5 1.7 6.6 3.5-.3-2.4-1.6-4-3.9-4.9Z" ${SIL}/>` +
+    `<path d="M9.9 4.3c0-1 .9-1.7 2.1-1.7s2.1.7 2.1 1.7Z" ${ACC}/>` +
+    `<path d="M9.4 20.4h5.2v1.2H9.4Z" ${ACC}/>`,
+
+  // Tabal: the stag of Runtiya, the Anatolian hunting god. The stag
+  // standards of Alaca Hoyuk are two thousand years older than this kingdom
+  // and the highland cities were still cutting the antlers into their gates.
+  TAB:
+    `<path d="M12 8.9c1.9 0 3.1 1.1 3.1 2.9 0 1.1-.3 2.1-.9 3l.7 5.8h-1.9l-.5-4.2h-1l-.5 4.2H9.1l.7-5.8c-.6-.9-.9-1.9-.9-3 0-1.8 1.2-2.9 3.1-2.9Z" ${SIL}/>` +
+    `<path d="M10 8.4C7.9 7.1 6.7 5.1 6.4 2.4c1.5.6 2.6 1.7 3.3 3.2l1-2.1.9 4.4Z" ${ACC}/>` +
+    `<path d="M14 8.4c2.1-1.3 3.3-3.3 3.6-6-1.5.6-2.6 1.7-3.3 3.2l-1-2.1-.9 4.4Z" ${ACC}/>` +
+    `<path d="M8.6 5.1 6.7 4.6l1.1 1.8Z M15.4 5.1l1.9-.5-1.1 1.8Z" ${ACC}/>` +
+    `<circle cx="11" cy="11.2" r="0.4" fill="${FO}" stroke="none"/>` +
+    `<circle cx="13" cy="11.2" r="0.4" fill="${FO}" stroke="none"/>` +
+    `<path d="M11.4 13h1.2" ${DET}/>`,
+
+  // Carchemish: the pomegranate of Kubaba, the city's own goddess, who is
+  // shown holding one on the long wall of sculpture. She outlasted the city
+  // by a thousand years and went west as Kybele.
+  CRC:
+    `<path d="M12 7.4c3.4 0 5.6 2.4 5.6 6.1 0 4-2.1 6.6-5.6 6.6s-5.6-2.6-5.6-6.6c0-3.7 2.2-6.1 5.6-6.1Z" ${ACC}/>` +
+    `<path d="M10.6 4.1h2.8v3.6h-2.8Z" ${SIL}/>` +
+    `<path d="M12 2.4 14.4 4l-2.4.9L9.6 4Z" ${SIL}/>` +
+    `<path d="M10.2 5.1 8.2 4.3l1.3 2.2Z M13.8 5.1l2-.8-1.3 2.2Z" ${SIL}/>` +
+    `<path d="M9.4 12.6c1.7-.6 3.5-.6 5.2 0M9.9 16.2c1.4-.5 2.8-.5 4.2 0" ${DET}/>` +
+    `<path d="M12 10.4v8.4" ${DET}/>`,
+
   LBR:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" fill="#f2f4f4" stroke="none"/>` +
     `<path d="M0.6 4.5h22.8M0.6 10.9h22.8M0.6 17.3h22.8" stroke="#b5342c" stroke-width="3.2" fill="none"/>` +
