@@ -51,7 +51,7 @@ async function boot(ctxB) {
 console.log('== play a campaign, mark it, save it ==');
 const ctxH = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const { page: host, errors: hostErrors } = await boot(ctxH);
-await host.locator('.ss-dot').nth(3).click();          // the Great Revolt, 66 CE
+await host.locator('.ss-dot').nth(6).click();          // the Great Revolt, 66 CE (§268 moved it from 3)
 await host.waitForTimeout(450);
 await host.locator('.bm-card.current').click();
 await host.waitForSelector('.nation-card', { timeout: 60000 });

@@ -39,20 +39,21 @@ console.log('== carousel ==');
 const ctxH = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const { page: host, errors: hostErrors } = await boot(ctxH);
 // Nine since SPEC §235 seated the rising against Gallus (v5.1 retired the
-// Kitos card; the stale eights were fixed in v5.4).
+// Kitos card; the stale eights were fixed in v5.4), twelve since SPEC §268
+// put the three Iron Age chapters in front of all of them.
 ok(await host.locator('.bm-card').count() === 12, 'all twelve chapters in the track');
 ok(await host.locator('.ss-arrow').count() === 2, 'prev/next arrows present');
 ok(await host.locator('.ss-dot').count() === 12, 'twelve dots');
 const first = await host.locator('.bm-card.current').textContent();
-ok(first.includes('Maccabean'), 'starts on 167 BCE: ' + first.slice(0, 40).trim());
+ok(first.includes('Kingdom Divided'), 'starts on 931 BCE: ' + first.slice(0, 40).trim());
 await host.locator('.ss-next').click();
 await host.waitForTimeout(450);
 const second = await host.locator('.bm-card.current').textContent();
-ok(second.includes('Civil War'), 'arrow slides to 67 BCE');
+ok(second.includes('Assyrian Flood'), 'arrow slides to 732 BCE');
 await host.keyboard.press('ArrowLeft');
 await host.waitForTimeout(450);
-ok(((await host.locator('.bm-card.current').textContent()) || '').includes('Maccabean'), 'keyboard arrow slides back');
-await host.locator('.ss-dot').nth(3).click();
+ok(((await host.locator('.bm-card.current').textContent()) || '').includes('Kingdom Divided'), 'keyboard arrow slides back');
+await host.locator('.ss-dot').nth(6).click();
 await host.waitForTimeout(450);
 ok(((await host.locator('.bm-card.current').textContent()) || '').includes('Great Revolt'), 'dot jumps to 66 CE');
 
@@ -60,8 +61,11 @@ console.log('== multiplayer lobby: host mints an invite ==');
 await host.locator('[data-ref="mp"]').click();
 await host.waitForSelector('#mp-lobby:not(.hidden)');
 await host.locator('[data-ref="host"]').click();
-// chapter: Great Revolt (index 2), nation JUD (first option)
-await host.selectOption('[data-ref="bm"]', '3');
+// chapter: Great Revolt, nation JUD (first option). The value is the ERAS
+// index, and §268 moved 66 CE from 3 to 6 by seating three chapters in front
+// of it — the rest of this suite reads JUD and ROM off the booted game, so a
+// stale index here boots the Maccabean chapter and throws on a missing tag.
+await host.selectOption('[data-ref="bm"]', '6');
 await host.locator('[data-ref="invite"]').click();
 await host.waitForFunction(() => {
   const ta = document.querySelector('[data-ref="invcode"]');

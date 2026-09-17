@@ -70,7 +70,7 @@ await host.waitForSelector('#mp-lobby:not(.hidden)');
 ok(/six-letter invite code/.test(await host.locator('[data-ref="host"]').textContent()),
   'the menu promises a short code, not a blob');
 await host.locator('[data-ref="host"]').click();
-await host.selectOption('[data-ref="bm"]', '3'); // the Great Revolt, 66 CE
+await host.selectOption('[data-ref="bm"]', '6'); // the Great Revolt, 66 CE (§268 moved it from 3)
 await host.locator('[data-ref="invite"]').click();
 await host.waitForSelector('.mp-roomcode', { timeout: 60000 });
 const shown = (await host.locator('.mp-roomcode').textContent()).trim();
@@ -159,7 +159,7 @@ await solo.locator('#saves-panel [data-ref="close"]').click();
 
 console.log('== a campaign is written to the cloud once it is ==');
 ok(await acceptCloud(solo), 'the player accepts the endpoint for saves');
-await solo.locator('.ss-dot').nth(3).click();   // the Great Revolt
+await solo.locator('.ss-dot').nth(6).click();   // the Great Revolt (§268 moved it from 3)
 await solo.waitForTimeout(500);
 await solo.locator('.bm-card.current').click();
 await solo.waitForSelector('.nation-card', { timeout: 60000 });
