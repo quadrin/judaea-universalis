@@ -19295,16 +19295,22 @@ down because the next emblem added here will be subject to all three:
    built at Bethel, which is the altar its own quarrel `altars_and_the_house`
    is named for.
 
-**Judah's lion came back, and cost eleven drafts.** It is the one emblem in
-this table asked for by name, and every attempt to draw it with an interior
-failed in a different way: frontal it was a sun, in profile the muzzle came
-out as a beak and then as a sheep's, striding with the others it was the same
-blob as the calf and the stag, and rampant it was a handful of spikes. The
-version that works is a flat SILHOUETTE with no interior at all — no eye, no
-nose, no drawn mane, one shape. The eye completes the animal from the outline,
-which is the reason heraldry has drawn beasts this way since it started
-putting them on seals, and the reason every ring-and-face lion is a sun. Good
-at 14 to 34, wolfish at 96, and 96 is a size nothing in this game asks for.
+**Judah's lion went round twelve drafts and came back to the first one.** It
+is the one emblem in this table asked for by name, and every redraw fixed a
+real fault and introduced a worse one: the mask's ringed mane reads as a sun,
+so it was drawn in profile and the muzzle became a beak, then a sheep's; drawn
+striding it was the same blob as the calf and the stag; rampant it was a
+handful of spikes; and the flat silhouette that fixed all of that — no eye, no
+nose, one shape, the way heraldry draws beasts on seals — was perfectly
+legible as a bear.
+
+The original mask is what flies, restored verbatim from the commit that drew
+it. That is the finding, and it is not about lions. **Eleven successive
+redraws each corrected a stated fault and none of them was an improvement**,
+because a fault you can name is not the same as a design that is worse
+overall, and iterating against named faults walks away from the best version
+without ever noticing. The entry's comment says: keep this unless something
+beats it side by side at 14 to 34 pixels, and do not re-derive the sequence.
 
 **A fourth rule, learned the hard way: look at the silhouette on its own.**
 Israel's calf went through four drafts — a frontal face that was a cartoon
