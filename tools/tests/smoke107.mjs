@@ -69,7 +69,19 @@ for (const era of ERAS) {
   // §232: 1948 consolidates the established world, so most western cells are
   // FOLDED into their countries' survivors rather than live provinces — the
   // ground is still painted, but the provinces carrying it are few.
-  const floor = id === '1948ce' ? 40 : 100;
+  // §268: the Iron Age chapters paint almost none of it, and that is the
+  // section's finding rather than a hole in it. In 931 there is no state in
+  // Gaul, Iberia, Britain, Germania, the Balkans, Italy or the steppe — it is
+  // the Urnfield world of chiefdoms, Greece is in a dark age, Carthage is not
+  // founded and Rome is not founded. By 732 Carthage, Tartessos, the Kushite
+  // kingdom, Saba and the steppe horse-peoples exist and are painted; by 597
+  // so are the Greek cities, the Medes, the Persians and Carthage's islands.
+  // §160's standing rule governs the rest: a political map that invents a
+  // kingdom to fill a gap is lying in the one place a player can check. The
+  // floors below are the measured counts, not aspirations.
+  const IRON_AGE_FLOOR = { '931bce': 5, '732bce': 18, '597bce': 26 };
+  const floor = Object.prototype.hasOwnProperty.call(IRON_AGE_FLOOR, id)
+    ? IRON_AGE_FLOOR[id] : (id === '1948ce' ? 40 : 100);
   ok(painted >= floor, id + ': the west is filled (' + painted + ' cells painted, '
     + wasted + ' deliberate waste)');
 }

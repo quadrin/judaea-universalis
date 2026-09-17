@@ -79,6 +79,15 @@ console.log('== the Temple gate: where the office existed, and only there ==');
 {
   // REGRESSION: 1948 Israel was offered a High Priest from the Coalition.
   const EXPECT = {
+    // SPEC §268: the office exists in the Iron Age chapters, which is the
+    // period it was invented in. The first playable chair in 931 is the
+    // NORTHERN kingdom, whose house is not Solomon's — it is Bethel and Dan,
+    // with a priesthood "from among all the people" that the crown appoints
+    // and dismisses, which is exactly the institution this file models and
+    // exactly what that chapter's second fork is an argument about.
+    '931bce': true,
+    '732bce': true, // the first playable chair here is Judah, and the House is its own
+    '597bce': true, // taken and not burned: the house is standing when the chapter opens
     '167bce': true, '67bce': true, '40bce': true, '66ce': true,
     '132ce': false, // the House is down; only `altarRaised` puts it back
     '351ce': false, // …and still down in 351: Julian's offer is a fork, not a start

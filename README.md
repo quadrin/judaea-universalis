@@ -2,8 +2,13 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
-An EU4-style grand-strategy game set in the ancient Near East. Nine bookmarks,
+An EU4-style grand-strategy game set in the ancient Near East. Twelve bookmarks,
 every one played from an Israelite side:
+**The Kingdom Divided, 931 BCE** (Israel or Judah, at war with each other from
+the first spring),
+**The Assyrian Flood, 732 BCE** (Judah under the schedule, or the last ten
+years of the northern kingdom),
+**The Yoke of Babylon, 597 BCE** (Zedekiah, an oath and eleven years),
 **The Maccabean Revolt, 167 BCE** (Hasmonean Judaea),
 **The Judaean Civil War, 67 BCE** (Hyrcanus, Aristobulus, or Adiabene),
 **Herod's Rise, 40 BCE** (Herod, Antigonus, or Adiabene),
@@ -73,6 +78,24 @@ static site, the zero dependencies, or the missing build step changes.
 
 ## What's in the slice
 
+- **Three chapters before every other chapter (SPEC §268).** The game used to
+  begin in 167 BCE and call itself a game about the Jewish state; the state it
+  is about is nine hundred years older than that. **931 BCE** is the only
+  chapter with two playable Israelite kingdoms, at war on day one because the
+  sources say they were — Israel with the valleys, the trade road and nine
+  dynasties in two centuries, Judah with a limestone ridge and a house that has
+  ruled since David. **732 BCE** is the century the word *empire* is invented
+  in: Damascus made into three provinces, the Galilee into three more, and a
+  tribute schedule that is itemised, dated and audited. **597 BCE** is the
+  chapter about what survives a state — an oath sworn by the wrong god, two
+  prophets shouting *two years* and *seventy* in the temple court, and a letter
+  north telling ten thousand deported households to build houses and plant
+  gardens, which is the sentence the other nine chapters are downstream of.
+  Twenty-one new courts, four Iron Age religions, two new quarrels, thirteen
+  charted forks, and some two hundred provinces under the names their own
+  century used — Shechem, Tirzah, Chinnereth, Ramoth-Gilead, Ezion-Geber,
+  Arpad, Carchemish, Nasibina, Opis, Bit-Yakin, Tanis, Sais.
+
 - Province map of the whole classical world — the Atlantic to the edge of
   India's approaches, Britain to the Horn of Africa: all of Iran to the
   Makran and Merv, all of Ethiopia to the lakes, Nubia, Arabia entire, the
@@ -84,7 +107,7 @@ static site, the zero dependencies, or the missing build step changes.
   the 1948 chapter every established country plays as one province under its
   own name, while the theatre keeps the districts the war is fought in.
 - A political west — and, beyond the Euphrates and the cataracts, a political
-  east and south — in every chapter: nine per-era maps seat some 77 courts
+  east and south — in every chapter: twelve per-era maps seat some 80 courts
   on the ground beyond the original theater. Carthage, Masinissa's Numidia
   and the Arverni hegemony in 167 BCE; Kush under its warrior queens, the
   Periplus' own cast of 66 CE (Zoscales' Aksum, Charibael's Himyar-and-Saba,
@@ -365,9 +388,11 @@ static site, the zero dependencies, or the missing build step changes.
   the tail is where a campaign spends most of its life: the Maccabean chapter puts
   fifty-one of its seventy dated cards in its first twenty years, the crown's chapter
   puts forty-nine of fifty-five before Herod dies, and 132 runs three centuries on one
-  card every five years. Each of the nine now carries its own thin-decade package —
-  a hundred and twelve dated cards seated where the chain runs out, and about the
-  years' own business rather than the war or the empire's calendar. The high
+  card every five years. Each of the twelve now carries its own thin-decade package —
+  a hundred and twelve dated cards across the nine chapters that already had chains
+  and thirty-three more across the three Iron Age ones, all seated where the chain
+  runs out, and about the years' own business rather than the war or the empire's
+  calendar. The high
   priesthood standing empty for seven years; the second altar in Egypt; Gabinius
   replacing one national council with five; the oath six thousand men would not swear;
   a capital founded on a graveyard; the morning the doorkeeper was taken off the study
@@ -395,7 +420,11 @@ static site, the zero dependencies, or the missing build step changes.
   whose mark was sixty metres wide on the ground. Placement is arithmetic rather
   than taste: every decade with real room in a chapter's window now carries at
   least two dated cards, and a regression suite refuses the claim if it stops
-  being true.
+  being true — which is how the three Iron Age chapters came to need thin-decade
+  packages of their own the moment they were registered, for the two centuries of
+  ninth-century statecraft between the division and Amos, the half-century in which
+  nothing happens to Judah except that it pays, and the fifty years of exile with
+  no king, no army, no capital and no annals.
 - **A crown can be taken from the court that wore it.** Forming a nation used to require a
   banner nobody had *ever* flown, which quietly reserved every crown on the map for the
   court that started with it — beat that court out of existence and its name sat in the

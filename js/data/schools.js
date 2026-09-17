@@ -90,6 +90,566 @@ export const QUARRELS = {
   // ══════════════════════════════════════════════════════════════════════
   // 167 BCE (from 140) and 67 BCE — the quarrel §190 was built for.
   // ══════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════
+  // 931 BCE — the oldest quarrel in this game, and the one all the others
+  // are downstream of (SPEC §268). Not "which reading of the Law" — there is
+  // no Law yet in the sense the later chapters mean, no canon, no synagogue
+  // and no agreed number of places where sacrifice is lawful. The argument is
+  // between a crown that wants ONE house, which it appoints, audits and taxes,
+  // and four hundred hilltop platforms that are older than the monarchy and
+  // belong to the families who have always used them. Both sides are
+  // worshipping the same god. Both sides think the other is the innovation.
+  //
+  // It is seated at both Israelite courts and it is the same argument in each,
+  // which is exactly the point: the north builds Bethel and Dan for the same
+  // administrative reason the south defends Jerusalem, and the chronicle that
+  // condemns one and praises the other was written by the side that won.
+  // ══════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════
+  // 597 BCE — the quarrel that decides whether there is anybody left to
+  // have the later ones (SPEC §268). Not "one altar or many": that was
+  // settled, on paper, by the scroll in the masonry, and this court is
+  // living in the aftermath. The argument here is about TIME. One party
+  // says the yoke is temporary, that the vessels come back within a
+  // generation, and that a government which behaves otherwise is
+  // collaborating. The other says seventy years, build houses, seek the
+  // peace of the city you are in, and govern for a generation you will not
+  // live to see.
+  //
+  // Both are theological claims and both are, immediately, budget lines:
+  // whether the tribute is paid, whether the walls are repaired, whether
+  // the exiles are told to buy land, and whether a court in this city is
+  // still a court when there is a king of Judah drawing rations in Babylon.
+  // ══════════════════════════════════════════════════════════════════════
+  yoke_and_word: {
+    id: 'yoke_and_word',
+    title: 'The Yoke and the Word',
+    hi: {
+      seat: 'priesthood',
+      name: 'The Rule of the Long Reckoning',
+      effects: { adminMult: 0.90, incomeMult: 1.10, unrestAll: -0.8, moraleMult: 0.94 },
+      text: '−10% cost of governing, +10% income, −0.8 unrest, −6% morale',
+      blurb: 'Seventy years, and a government that behaves as if it believed it: the tribute '
+        + 'paid, the archive copied, the exiles told to buy land, and a text prepared for '
+        + 'people who will read it without a Temple. It is the least inspiring policy '
+        + 'available and the only one that produces anything that lasts.',
+    },
+    lo: {
+      seat: 'assembly',
+      name: 'The Rule of the Short Reckoning',
+      effects: { moraleMult: 1.12, manpowerMult: 1.10, incomeMult: 0.92, unrestAll: 0.6 },
+      text: '+12% morale, +10% manpower, −8% income, +0.6 unrest',
+      blurb: 'Two years, and everything follows: the coalition worth joining, the Egyptian '
+        + 'cavalry worth believing, the fields worth holding for the men who will come back '
+        + 'to claim them. It is what everybody in the city wants to hear and it is wrong by '
+        + 'sixty-eight years.',
+    },
+    mid: 'Nobody at court will say out loud how long this is going to last, which means every '
+      + 'department is budgeting for a different answer.',
+    states: {
+      concord: {
+        name: 'One Reckoning, Two Cities',
+        blurb: 'The court here and the elders by the canal are working to the same calendar and '
+          + 'the same expectations, and the post between them takes four months and is '
+          + 'answered.',
+      },
+      breachHi: {
+        name: 'The Archive Is Not Copied',
+        blurb: 'The scribal houses have been ruled against once too often and the copying has '
+          + 'slowed to whatever individual families choose to do at their own expense.',
+      },
+      breachLo: {
+        name: 'The Country Will Not Muster',
+        blurb: 'The men working the fields have been told for the third time that nothing is '
+          + 'going to change in their lifetime, and the levy comes in light.',
+      },
+      schism: {
+        name: 'Two Peoples, One Name',
+        blurb: 'The community here and the community in Babylonia have stopped agreeing about '
+          + 'the calendar, the land, the king and the future, and each has begun describing '
+          + 'the other as the part that was rejected.',
+      },
+    },
+    crises: {
+      hi: {
+        id: 'theFieldAtAnathoth',
+        title: 'A Field Bought During a Siege',
+        text: 'The city is invested, the Babylonian ramps are going up, and a man in the guard '
+          + 'court has just bought a field. His cousin came to him with the right of '
+          + 'redemption, and he paid seventeen shekels of silver, weighed out, with witnesses, '
+          + 'and had the deed sealed and the open copy put in an earthen vessel so that it '
+          + 'would keep for many days — and then said, in front of everybody, that houses and '
+          + 'fields and vineyards would be possessed again in this land.\n\n'
+          + 'It is either the most expensive piece of political theatre in the city or a '
+          + 'statement of policy, and the court is being asked which.',
+        options: [
+          {
+            label: 'Make it policy: register deeds for the duration',
+            tooltip: 'Costs 50 governance. The scribal houses +22, the country party −20, +10 '
+              + 'legitimacy, and the reading swings to the long reckoning. Every family that '
+              + 'registers a deed is a family that expects to come back.',
+            cost: { gov: 50 }, legitimacy: 10, hi: 22, lo: -20, push: 3,
+            flag: 'deedsRegistered',
+            chronicle: 'The chancery began registering land deeds during the siege, sealed and open copies both, against a return nobody could date.',
+          },
+          {
+            label: 'It is one man and a field',
+            tooltip: 'Costs 25 influence. The country party +18, the scribal houses −18, and the '
+              + 'reading swings to the short reckoning. The deed is filed and nothing follows '
+              + 'from it.',
+            cost: { infl: 25 }, hi: -18, lo: 18, push: -3,
+            flag: 'deedIgnored',
+            chronicle: 'The purchase at Anathoth was filed as a private transaction and no policy was made of it.',
+          },
+          {
+            label: 'Say nothing and let both parties quote it',
+            tooltip: 'The clerk\'s answer. −4 legitimacy, both sides shift a little, and both go '
+              + 'on citing the same deed for opposite conclusions.',
+            legitimacy: -4, hi: -6, lo: -6,
+            chronicle: 'The court issued no ruling about the field, and both parties quoted it at each other for a generation.',
+          },
+        ],
+      },
+      lo: {
+        id: 'theVesselsDemanded',
+        title: 'The Vessels Are Demanded Back',
+        text: 'A delegation of the leading families has come to the palace to demand that the '
+          + 'crown formally require the return of the temple vessels — the bowls, the snuffers, '
+          + 'the basins, the gold and silver of the service, inventoried by a Babylonian clerk '
+          + 'and stored in the house of a foreign god nine hundred miles away.\n\n'
+          + 'A formal demand means a formal refusal, and a formal refusal means everybody in '
+          + 'the city knows the answer. The alternative is to keep the service going with '
+          + 'bronze replacements and say nothing, which the families regard as accepting the '
+          + 'theft.',
+        options: [
+          {
+            label: 'Demand them, in writing, through the governor',
+            tooltip: 'Costs 40 influence. The country party +20, the scribal houses −22, +8 '
+              + 'legitimacy, and the reading swings to the short reckoning. Babylon\'s answer '
+              + 'is on file within the year and everybody reads it.',
+            cost: { infl: 40 }, legitimacy: 8, lo: 20, hi: -22, push: -3,
+            flag: 'vesselsDemanded',
+            chronicle: 'A formal demand for the return of the vessels went to Babylon and was formally refused.',
+          },
+          {
+            label: 'The service continues with what it has',
+            tooltip: 'Costs 35 governance. The scribal houses +20, the country party −18, and the '
+              + 'reading swings to the long reckoning. The bronze is polished and nothing is '
+              + 'put on file that can be refused.',
+            cost: { gov: 35 }, hi: 20, lo: -18, push: 3,
+            flag: 'vesselsNotDemanded',
+            chronicle: 'No demand was made for the vessels; the service was kept with replacements and an inventory of what was missing.',
+          },
+        ],
+      },
+    },
+    rulings: [
+      {
+        id: 'howLong',
+        name: 'How Long the Yoke',
+        question: 'Does the court budget for two years or for seventy?',
+        source: 'Jeremiah 28 against Jeremiah 29: the two prophecies are preserved side by side '
+          + 'with their dates, which is why the disagreement is recoverable at all.',
+        cost: { gov: 45, infl: 25 },
+        hi: {
+          label: 'Seventy, and govern like it',
+          name: 'The Long Reckoning',
+          text: 'A government for a generation it will not see: −10% cost of governing, +8% income',
+          effects: { adminMult: 0.90, incomeMult: 1.08 },
+          push: 3,
+          blurb: 'Tribute paid, archive copied, exiles told to buy land, and a text prepared for '
+            + 'readers who will have no Temple. Nobody cheers and it works.',
+        },
+        lo: {
+          label: 'Two, and be ready',
+          name: 'The Short Reckoning',
+          text: 'Everything held ready: +10% morale, +8% manpower',
+          effects: { moraleMult: 1.10, manpowerMult: 1.08 },
+          push: -3,
+          blurb: 'The coalition is worth joining, the cavalry is worth believing, and the fields '
+            + 'are worth holding for the men who are coming back. It is the answer the city '
+            + 'wants and the answer the calendar refutes.',
+        },
+      },
+      {
+        id: 'theOathSworn',
+        name: 'The Oath to a Foreign King',
+        question: 'Does an oath sworn to Babylon by the God of this country bind the man who swore it?',
+        source: 'Ezekiel 17:15-19 makes the broken oath the specific charge; the Babylonian '
+          + 'vassal treaties deliberately used the vassal\'s own god as guarantor.',
+        cost: { gov: 40 },
+        hi: {
+          label: 'It binds: the name was used',
+          name: 'The Word Is the Word',
+          text: 'A court whose undertakings are worth something: −0.6 unrest, +8% income',
+          effects: { unrestAll: -0.6, incomeMult: 1.08 },
+          push: 2,
+          blurb: 'The argument that a sworn word binds regardless of whom it was sworn to is the '
+            + 'beginning of a legal tradition, and it starts here, in a case the court would '
+            + 'much rather have decided the other way.',
+        },
+        lo: {
+          label: 'An oath extracted by an occupier is not an oath',
+          name: 'Sworn Under the Sword',
+          text: 'A free hand: +10% morale, +6% manpower',
+          effects: { moraleMult: 1.10, manpowerMult: 1.06 },
+          push: -2,
+          blurb: 'Nobody swears freely with a Babylonian officer in the room, and a court that '
+            + 'pretends otherwise has agreed to be governed by whoever writes the treaty.',
+        },
+      },
+      {
+        id: 'whichKing',
+        name: 'Which King Is King',
+        question: 'Do our documents date by the king in this city or by the king in Babylon?',
+        source: 'Ezekiel dates by the captivity of Jehoiachin throughout; the Babylonian ration '
+          + 'tablets call him king of the land of Yahudu while he is a prisoner.',
+        cost: { infl: 40 },
+        hi: {
+          label: 'By the king in Babylon',
+          name: 'The Regnal Year of the Exile',
+          text: 'One people, two cities, one calendar: −8% cost of governing, +0.15 legitimacy a month',
+          effects: { adminMult: 0.92, legitimacyAdd: 0.15 },
+          push: 2,
+          blurb: 'Dating by a prisoner is a claim, not a submission: it says the dynasty was '
+            + 'interrupted rather than replaced, and it keeps the two halves of this people on '
+            + 'one calendar.',
+        },
+        lo: {
+          label: 'By the king in this city',
+          name: 'The Regnal Year Here',
+          text: 'A court that governs: +8% income, +0.15 legitimacy a month',
+          effects: { incomeMult: 1.08, legitimacyAdd: 0.15 },
+          push: -2,
+          blurb: 'There is a king on the throne, in the city, with the house behind him, and a '
+            + 'chancery that dates by somebody in a foreign prison has conceded the argument '
+            + 'before it starts.',
+        },
+      },
+      {
+        id: 'theFieldsOfTheDeported',
+        name: 'The Fields of the Deported',
+        question: 'Ten thousand households are in Babylonia and their terraces are being worked. Whose are they?',
+        source: 'Ezekiel 11:15 and 33:24 record the men left behind claiming the land — "unto '
+          + 'us is this land given in possession" — and Ezra 2 records the returning register '
+          + 'that reopened every one of those claims.',
+        cost: { gov: 45, treasury: 60 },
+        hi: {
+          label: 'The deeds stand and the register is kept',
+          name: 'The Register Kept',
+          text: 'A people that can prove who it is: +10% income, +0.2 legitimacy a month',
+          effects: { incomeMult: 1.10, legitimacyAdd: 0.2 },
+          push: 3,
+          blurb: 'A genealogical and land register maintained for two generations is the reason '
+            + 'a return is possible at all. It is also the reason the return is met at the '
+            + 'border by people with an excellent argument.',
+        },
+        lo: {
+          label: 'The men working the land own the land',
+          name: 'Given in Possession',
+          text: 'A country that is farmed: +10% manpower, −0.5 unrest',
+          effects: { manpowerMult: 1.10, unrestAll: -0.5 },
+          push: -3,
+          blurb: 'The terraces are being kept by the people who stayed, through a siege and a '
+            + 'famine, and a claim from nine hundred miles away is a claim from nine hundred '
+            + 'miles away.',
+        },
+      },
+      {
+        id: 'theRoomWithoutAnAltar',
+        name: 'The Room Without an Altar',
+        question: 'Is a gathering to read and expound the text, on the seventh day, without sacrifice, the service of God?',
+        source: 'The synagogue has no pre-exilic evidence and abundant post-exilic evidence; '
+          + 'the exilic literature makes sabbath and circumcision the markers of identity in '
+          + 'the absence of a sanctuary.',
+        cost: { gov: 35, infl: 30 },
+        needsTemple: false,
+        hi: {
+          label: 'It is: the practice can be carried',
+          name: 'A Faith That Travels',
+          text: 'A people that survives its own geography: +0.25 legitimacy a month, +8% income',
+          effects: { legitimacyAdd: 0.25, incomeMult: 1.08 },
+          push: 3,
+          blurb: 'A religion that needs one building in one city dies with the building. This '
+            + 'one is about to be carried to Babylonia, Egypt and eventually everywhere, in a '
+            + 'box, by people who can reconstitute it in a room.',
+        },
+        lo: {
+          label: 'It is an aid to memory; the altar is the service',
+          name: 'The House Is the Service',
+          text: 'The centre stays where the fire is: +12% from the pilgrims, +0.2 legitimacy a month',
+          effects: { pilgrimMult: 1.12, legitimacyAdd: 0.2 },
+          push: -3,
+          blurb: 'Sacrifice at the appointed place is what this god commanded and everything '
+            + 'else is a devout substitute. A court that says otherwise has begun legislating '
+            + 'its own irrelevance.',
+        },
+      },
+    ],
+  },
+
+  altars_and_the_house: {
+    id: 'altars_and_the_house',
+    title: 'The Altars and the House',
+    hi: {
+      seat: 'priesthood',
+      name: 'The Rule of the One House',
+      effects: { adminMult: 0.90, incomeMult: 1.10, legitimacyAdd: 0.2, unrestAll: 0.6 },
+      text: '−10% cost of governing, +10% income, +0.2 legitimacy a month, +0.6 unrest',
+      blurb: 'One altar, one priesthood, one tithe and one set of accounts. It is the single '
+        + 'most profitable administrative decision an Iron Age kingdom can make, and every '
+        + 'village that loses its shrine knows exactly who took it.',
+    },
+    lo: {
+      seat: 'assembly',
+      name: 'The Rule of the Old Places',
+      effects: { unrestAll: -0.8, manpowerMult: 1.10, incomeMult: 0.92, adminMult: 1.06 },
+      text: '−0.8 unrest, +10% manpower, −8% income, +6% cost of governing',
+      blurb: 'The platform on the ridge, the standing stone, the pole and the family that has '
+        + 'tended them since before there was a king. A crown that leaves them alone can '
+        + 'muster their sons; a crown that does not, cannot.',
+    },
+    mid: 'The high places have not been taken away, and nobody at court has said in writing '
+      + 'whether that is a policy or a failure.',
+    states: {
+      concord: {
+        name: 'The House and the Ridges Agree',
+        blurb: 'The royal house keeps the festivals and the villages keep their platforms, and '
+          + 'the priests of both are on one payroll. It has no theology and it works.',
+      },
+      breachHi: {
+        name: 'The Courses Are Not Provisioned',
+        blurb: 'The priesthood of the royal house has been ruled against once too often; the '
+          + 'daily service is kept by whoever turns up and the tithe arrives when it feels like it.',
+      },
+      breachLo: {
+        name: 'The Ridges Will Not Muster',
+        blurb: 'The elders have watched their shrines pulled down and their sons conscripted in '
+          + 'the same season, and the levy from the hill districts comes in light.',
+      },
+      schism: {
+        name: 'Two Religions in One Kingdom',
+        blurb: 'The capital sacrifices one way and the country another, and each has begun '
+          + 'describing the other as foreign. Nothing in this kingdom\'s law can settle it.',
+      },
+    },
+    crises: {
+      hi: {
+        id: 'theProphetAtTheAltar',
+        title: 'A Man Cries Against the Altar',
+        text: 'The king is standing at the royal altar with the censer in his hand at the '
+          + 'festival, in front of everybody, and a man has walked out of the crowd and begun '
+          + 'shouting at the masonry — not at the king, at the ALTAR — that a child will be '
+          + 'born to the house who will burn men\'s bones on it. The guard is waiting for an '
+          + 'order. So is the congregation.\n\n'
+          + 'Whatever happens next will be told for three hundred years, and the telling will '
+          + 'not be done by the king\'s scribes.',
+        options: [
+          {
+            label: 'Take him',
+            tooltip: 'Costs 40 governance. The priesthood +20, the elders −22, +6 legitimacy, and '
+              + 'the reading swings to the house. The story survives anyway, with the king in it.',
+            cost: { gov: 40 }, legitimacy: 6, hi: 20, lo: -22, push: 3,
+            flag: 'altarProphetTaken',
+            chronicle: 'The man who cried against the altar was taken from the festival by the guard.',
+          },
+          {
+            label: 'Let him finish, and give him an escort out',
+            tooltip: 'Costs 30 influence. The elders +18, the priesthood −18, and the reading swings '
+              + 'to the old places. A king who can be shouted at in public is a king who need not '
+              + 'answer everything.',
+            cost: { infl: 30 }, hi: -18, lo: 18, push: -3,
+            flag: 'altarProphetHeard',
+            chronicle: 'The man was heard out at the altar and escorted to the gate, unharmed.',
+          },
+          {
+            label: 'Finish the sacrifice and say nothing',
+            tooltip: 'The clerk\'s answer. −4 legitimacy, both sides shift a little, and the '
+              + 'question comes back at the next festival.',
+            legitimacy: -4, hi: -6, lo: -6,
+            chronicle: 'The sacrifice was completed in silence while the man shouted, which satisfied nobody.',
+          },
+        ],
+      },
+      lo: {
+        id: 'theGroveOnTheRidge',
+        title: 'The Pole on the Ridge Above the Capital',
+        text: 'There is a shrine on the ridge in sight of the palace windows — platform, '
+          + 'standing stone, a pole for the goddess — and it is not a village relic. The queen '
+          + 'mother endowed it, the court attends it, and half the officers of the household '
+          + 'were married under it.\n\n'
+          + 'The royal priesthood has asked, in writing and for the third time, whether the '
+          + 'crown intends to do anything about the one that is visible from the throne room.',
+        options: [
+          {
+            label: 'Cut it down and burn it at the brook',
+            tooltip: 'Costs 50 governance and 80 talents. The priesthood +22, the elders −24, '
+              + '+8 legitimacy, and the reading swings hard to the house. The queen mother is '
+              + 'removed from her office, which is a thing that has to be done in public.',
+            cost: { gov: 50, treasury: 80 }, legitimacy: 8, hi: 22, lo: -24, push: 3,
+            flag: 'groveCutDown',
+            chronicle: 'The pole on the ridge was cut down and burned at the brook, and the queen mother was removed from her office.',
+          },
+          {
+            label: 'It has stood there longer than the palace',
+            tooltip: 'Costs 35 influence. The elders +20, the priesthood −20, and the reading swings '
+              + 'to the old places. Every village with a platform hears about it within the month.',
+            cost: { infl: 35 }, hi: -20, lo: 20, push: -3,
+            flag: 'groveKept',
+            chronicle: 'The shrine on the ridge was left standing, and the court went on attending it.',
+          },
+        ],
+      },
+    },
+    rulings: [
+      {
+        id: 'oneAltar',
+        name: 'Whether There Is One Altar',
+        question: 'Is sacrifice lawful only at the royal house — or at any place where the name is remembered?',
+        source: 'The centralisation formula ("the place which the Lord shall choose") is the '
+          + 'organising demand of Deuteronomy; the excavated sanctuaries at Arad, Dan, Beersheba '
+          + 'and Bethel show what it was arguing against, and how late it won.',
+        cost: { gov: 50, treasury: 60 },
+        hi: {
+          label: 'One house, and the crown\'s',
+          name: 'The Place Which He Shall Choose',
+          text: 'One tithe and one set of books: −10% cost of governing, +10% income',
+          effects: { adminMult: 0.90, incomeMult: 1.10 },
+          push: 3,
+          blurb: 'Every sacrifice, every tithe and every firstborn goes to one building with a '
+            + 'roster and a treasury. It is the most profitable sentence this kingdom will ever '
+            + 'write down, and it takes three hundred years and two reforming kings to enforce.',
+        },
+        lo: {
+          label: 'Wherever the name is remembered',
+          name: 'The Altars of the Fathers',
+          text: 'The country keeps its own: −0.6 unrest, +8% manpower',
+          effects: { unrestAll: -0.6, manpowerMult: 1.08 },
+          push: -3,
+          blurb: 'The god of this country has been worshipped at Bethel and Beersheba and Hebron '
+            + 'and Shiloh since long before there was a crown to license it, and the men who '
+            + 'muster are the men whose grandfathers built those platforms.',
+        },
+      },
+      {
+        id: 'theAsherah',
+        name: 'The Pole in the House',
+        question: 'Does the goddess stand beside him in the royal house, as she stands beside him at every waystation?',
+        source: 'The Kuntillet Ajrud and Khirbet el-Qom inscriptions bless "by YHWH and by his '
+          + 'asherah"; 2 Kings reports an asherah standing in the Jerusalem temple for most of '
+          + 'the monarchy, removed and restored repeatedly.',
+        cost: { gov: 35, infl: 25 },
+        hi: {
+          label: 'He has no consort',
+          name: 'The Sole Name',
+          text: 'A doctrine nobody else on this map has: +0.25 legitimacy a month, −4% income',
+          effects: { legitimacyAdd: 0.25, incomeMult: 0.96 },
+          push: 2,
+          blurb: 'An extraordinary thing for an Iron Age state to say out loud, and the beginning '
+            + 'of everything that makes this religion unlike its neighbours. It also empties a '
+            + 'great many shrines the crown was collecting from.',
+        },
+        lo: {
+          label: 'She has always stood there',
+          name: 'The House as It Was Built',
+          text: 'The old arrangement kept: −0.5 unrest, +6% income',
+          effects: { unrestAll: -0.5, incomeMult: 1.06 },
+          push: -2,
+          blurb: 'Nobody who carved those blessings into a waystation wall thought they were doing '
+            + 'anything remarkable, and neither does the court. The question will be asked again '
+            + 'in three hundred years, by men who have decided the answer first.',
+        },
+      },
+      {
+        id: 'theCountryPriests',
+        name: 'The Priests of the High Places',
+        question: 'May the men who serve on the ridges serve at the royal house — or are they disqualified by where they stand?',
+        source: 'Jeroboam "made priests from among all the people, who were not of the sons of '
+          + 'Levi"; Josiah later brought the country priests to Jerusalem and would not let them '
+          + 'go up to the altar, though they ate of the bread.',
+        cost: { gov: 40 },
+        hi: {
+          label: 'Only the house\'s own courses serve',
+          name: 'The Roster Closed',
+          text: 'A priesthood the crown appoints: −8% cost of governing, +0.15 legitimacy a month',
+          effects: { adminMult: 0.92, legitimacyAdd: 0.15 },
+          push: 2,
+          blurb: 'A closed roster is a payroll, and a payroll is a government. What it produces is '
+            + 'a hereditary establishment with a claim older than the crown\'s, which is next '
+            + 'century\'s problem.',
+        },
+        lo: {
+          label: 'Any man of the country who is called',
+          name: 'Priests From Among All the People',
+          text: 'An establishment the crown can staff: +8% income, −0.4 unrest',
+          effects: { incomeMult: 1.08, unrestAll: -0.4 },
+          push: -2,
+          blurb: 'Appointing priests from anyone willing is what a new kingdom does when the old '
+            + 'priestly families are in the other capital. It is also what the other capital will '
+            + 'never stop citing.',
+        },
+      },
+      {
+        id: 'theFeastMonth',
+        name: 'The Month of the Feast',
+        question: 'Does the autumn feast keep the month the fathers kept, or the month this court proclaims?',
+        source: '1 Kings 12:32-33: Jeroboam "ordained a feast in the eighth month, on the '
+          + 'fifteenth day of the month, like unto the feast that is in Judah" — a calendar moved '
+          + 'by one month so that the two kingdoms cannot keep it together.',
+        cost: { infl: 40 },
+        hi: {
+          label: 'The court proclaims the month',
+          name: 'The Crown\'s Calendar',
+          text: 'The year belongs to the throne: +0.2 legitimacy a month, +6% income',
+          effects: { legitimacyAdd: 0.2, incomeMult: 1.06 },
+          push: 2,
+          blurb: 'Whoever fixes the festival fixes where the country goes and who feeds it when '
+            + 'it gets there. It is the cheapest sovereignty a kingdom can buy and the one its '
+            + 'rival will never forgive.',
+        },
+        lo: {
+          label: 'The month the fathers kept',
+          name: 'The Old Reckoning',
+          text: 'One calendar for one people: −0.6 unrest, +6% manpower',
+          effects: { unrestAll: -0.6, manpowerMult: 1.06 },
+          push: -2,
+          blurb: 'Two Israelite kingdoms keeping the same feast on the same night is worth more '
+            + 'in the hill villages than any amount of court ceremonial, and it costs the crown '
+            + 'the one lever it had over the country\'s year.',
+        },
+      },
+      {
+        id: 'theOldBronze',
+        name: 'The Old Bronze in the House',
+        question: 'The serpent of bronze has stood in the house since the wilderness and people burn incense to it. Does it stay?',
+        source: '2 Kings 18:4: Hezekiah "brake in pieces the brasen serpent that Moses had made, '
+          + 'for unto those days the children of Israel did burn incense to it" — a cult object '
+          + 'with impeccable credentials and an unacceptable practice attached.',
+        cost: { gov: 30, infl: 20 },
+        hi: {
+          label: 'Break it and call it a piece of brass',
+          name: 'Nehushtan',
+          text: 'The house purged of what it inherited: +0.2 legitimacy a month, −0.4 unrest',
+          effects: { legitimacyAdd: 0.2, unrestAll: -0.4 },
+          push: 2,
+          blurb: 'The argument that a thing made by Moses can still be an idol is the sharpest '
+            + 'instrument this religion has yet produced, and the men who use it know exactly '
+            + 'what else it can be turned on.',
+        },
+        lo: {
+          label: 'It has stood since the wilderness',
+          name: 'What the Fathers Left',
+          text: 'Continuity is its own legitimacy: +0.15 legitimacy a month, +6% from the pilgrims',
+          effects: { legitimacyAdd: 0.15, pilgrimMult: 1.06 },
+          push: -2,
+          blurb: 'Everything in the house came from somewhere and most of it is older than the '
+            + 'monarchy. A kingdom that starts breaking its own relics for being old will find '
+            + 'it has a very short history left.',
+        },
+      },
+    ],
+  },
+
   sages_and_houses: {
     id: 'sages_and_houses',
     title: 'The Law and Its Readers',

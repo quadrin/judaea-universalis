@@ -3,6 +3,123 @@
 // it, but it owns no state and mutates nothing.
 
 export const CAMPAIGN_GUIDANCE = {
+  '597bce': {
+    JDH: {
+      system: 'A king an empire appointed, and eleven years',
+      opening: [
+        'The oath is the whole opening. Keeping it is unglamorous, keeps the house standing, '
+          + 'and makes the nobles your enemies; breaking it is what the sources record and '
+          + 'costs the city.',
+        'Whatever else you do, answer the letter to the exiles. A deported community that is '
+          + 'told to build houses becomes a second centre; one that is told to wait becomes a '
+          + 'camp, and camps do not produce archives.',
+        'Copy everything, twice, and send one copy somewhere that is not this city. It is the '
+          + 'cheapest thing on the list and the only one that is certain to matter.',
+        'Egypt will promise cavalry. Egypt has promised cavalry to every kingdom on this coast '
+          + 'for two hundred years.',
+      ],
+      clocks: [
+        { y: -594, m: 5, label: 'Two prophets in the temple court, and a coalition waiting' },
+        { y: -593, m: 7, label: 'A letter is drafted to the exiles in Babylonia' },
+        { y: -588, m: 3, label: 'Azekah stops signalling' },
+        { y: -585, m: 7, label: 'A governor is seated at Mizpah' },
+        { y: -552, m: 6, label: 'The king of Babylon leaves Babylon' },
+        { y: -539, m: 10, label: 'The gates of Babylon are opened from inside' },
+        { y: -538, m: 4, label: 'An edict, a subsidy and an inventory of the vessels' },
+        { y: -445, m: 4, label: 'A commission from the king\'s cupbearer' },
+      ],
+    },
+  },
+  '732bce': {
+    JDH: {
+      system: 'Paying, walling, and never believing Egypt',
+      opening: [
+        'Sign the schedule and mean it. The kingdoms on this coast that kept paying were '
+          + 'still kingdoms a lifetime later; the one that stopped is a deportation list.',
+        'Spend the years you have bought on the Shephelah and the water. Lachish, Azekah and '
+          + 'Beth-Shemesh walled, and the spring brought inside the capital\'s wall.',
+        'Take in what walks south after 722. The capital doubles in a generation and the '
+          + 'refugees are the manpower this kingdom does not otherwise have.',
+        'When an Assyrian king dies in battle, everybody revolts at once. Decide in advance '
+          + 'whether you are going to be one of them.',
+      ],
+      clocks: [
+        { y: -725, m: 6, label: 'The siege of Samaria begins' },
+        { y: -712, m: 4, label: 'Envoys from Babylon, with a proposal' },
+        { y: -705, m: 8, label: 'Sargon is killed and his body is not recovered' },
+        { y: -701, m: 5, label: 'The siege ramp at Lachish' },
+        { y: -671, m: 7, label: 'Assyria takes Egypt' },
+        { y: -622, m: 8, label: 'A scroll is found in the masonry' },
+        { y: -612, m: 8, label: 'Nineveh burns' },
+        { y: -609, m: 6, label: 'An Egyptian column asks to use the pass at Megiddo' },
+      ],
+    },
+    ISL: {
+      system: 'Four districts, one hill, ten years',
+      opening: [
+        'You cannot win a field battle and you should not try. What you have is a walled hill '
+          + 'and whatever the empire has better things to do with its army than besiege.',
+        'The assessment is calculated on land that was taken away from you. Get it re-cut, or '
+          + 'get the land back — the second is harder and worth more.',
+        'Egypt is four governments and an oracle. The sources record this court writing to it. '
+          + 'The sources also record what happened next.',
+        'Bethel is four miles from the border now. Hold it or the establishment goes south '
+          + 'with the pilgrims and takes the argument with it.',
+      ],
+      clocks: [
+        { y: -725, m: 2, label: 'A draft letter to Egypt is on the table' },
+        { y: -725, m: 6, label: 'The Assyrian army comes round the hill' },
+        { y: -722, m: 1, label: 'A new king in Assyria, with a siege to finish' },
+        { y: -715, m: 5, label: 'The Kushite pharaohs take Egypt' },
+        { y: -705, m: 8, label: 'Sargon is killed in the mountains' },
+      ],
+    },
+  },
+  '931bce': {
+    ISL: {
+      system: 'The bigger half, and no reason to obey you',
+      opening: [
+        'Settle where the ten tribes sacrifice in the first years — an establishment of your '
+          + 'own, or the road south kept open. Everything else in this chapter is downstream of it.',
+        'Hold the valley: Megiddo, Beth-Shean and Hazor are the road and the chariot country, '
+          + 'and they are what makes this kingdom worth more than the ridge next door.',
+        'Buy Tyre before you buy anything else. Grain for cedar is the only trade on this map '
+          + 'that pays both ways, and a marriage makes it a treaty.',
+        'Watch your own captains. Four of this kingdom\'s nine dynasties begin in an army camp '
+          + 'with a prophet\'s oil and a trumpet.',
+      ],
+      clocks: [
+        { y: -925, m: 5, label: 'Shoshenq comes up the coast road' },
+        { y: -885, m: 3, label: 'A hill west of Shechem comes up for sale' },
+        { y: -874, m: 4, label: 'Tyre offers a daughter and a treaty' },
+        { y: -853, m: 5, label: 'Twelve kings are asked for chariots on the Orontes' },
+        { y: -841, m: 9, label: 'The Assyrian sends for tribute, with a sculptor' },
+        { y: -745, m: 4, label: 'Tiglath-Pileser reorganises the Assyrian state' },
+        { y: -725, m: 4, label: 'The siege of Samaria begins' },
+      ],
+    },
+    JDH: {
+      system: 'Two tribes, a ridge, and the only building that matters',
+      opening: [
+        'Do not fight the north for the north\'s ground. Take the Shephelah, wall it, and make '
+          + 'the only road to Jerusalem expensive.',
+        'The Negeb is not a desert, it is a customs house: Arad, Beersheba and the wells are '
+          + 'the incense road and most of this kingdom\'s cash.',
+        'Edom and the gulf are worth more than Benjamin. Ezion-Geber is the one port the house '
+          + 'of David can ever have.',
+        'You will be poorer than the north for two centuries. You will also still be here when '
+          + 'it is not — play for that.',
+      ],
+      clocks: [
+        { y: -925, m: 5, label: 'Shishak is at the gate with a price' },
+        { y: -913, m: 4, label: 'The border ridge and the shrine on it' },
+        { y: -853, m: 5, label: 'The coalition on the Orontes wants men' },
+        { y: -841, m: 9, label: 'Assyria presents a tribute schedule' },
+        { y: -732, m: 6, label: 'Damascus falls: nothing is left in between' },
+        { y: -722, m: 1, label: 'The northern kingdom ends' },
+      ],
+    },
+  },
   '167bce': {
     HAS: {
       system: 'Insurgency in the hills',

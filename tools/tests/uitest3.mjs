@@ -40,7 +40,7 @@ await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 
 const cards = await page.locator('.bm-card').count();
-ok(cards === 9, 'nine bookmark cards: ' + cards);
+ok(cards === 12, 'twelve bookmark cards: ' + cards);
 const c2 = (await page.locator('.bm-card').nth(1).textContent()) || '';
 ok(/Civil War/.test(c2) && /67 BCE/.test(c2), 'second card is the 67 BCE civil war');
 // SPEC §93 replaced the export/import file buttons with the shelf — "six

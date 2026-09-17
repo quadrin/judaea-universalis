@@ -33,6 +33,132 @@ export function eraIdeaCost(tier) {
 // Four per bookmark. Effects use only keys resolveTagMult/resolveTagAdd
 // already consume (same contract as the reform trees and the tech ladders).
 export const ERA_IDEA_GROUPS = {
+  // ---- 597 BCE, The Yoke of Babylon ---------------------------------------
+  the_written_covenant: {
+    name: 'The Written Covenant', icon: 'scroll', point: 'gov',
+    unlock: { ladder: 'gov', level: 4 },
+    desc: 'A polity whose constitution is a text, read out in public and explained — which nobody else on this map has, and which is why this one is recoverable after the state is gone.',
+    tiers: [
+      { name: 'The Copies Made', desc: 'Two copies of everything, and one of them somewhere else: −8% cost of governing.', effects: { adminMult: 0.92 } },
+      { name: 'The Register of Families', desc: 'Who belongs, by household, town and descent: −0.5 unrest everywhere.', effects: { unrestAll: -0.5 } },
+      { name: 'The Law Read Aloud', desc: 'Read in the open place from morning until midday, and the sense given: +0.25 legitimacy a month.', effects: { legitimacyAdd: 0.25 } },
+    ],
+  },
+  the_portable_faith: {
+    name: 'The Faith That Travels', icon: 'diaspora', point: 'infl',
+    unlock: { ladder: 'infl', level: 5 },
+    desc: 'The seventh day, the covenant of the flesh and a room where the text is read: a religion that can be carried, invented by people who had to carry it.',
+    tiers: [
+      { name: 'The Seventh Day Kept', desc: 'A marker of who we are that works anywhere: −0.5 unrest everywhere.', effects: { unrestAll: -0.5 } },
+      { name: 'The Room and the Reading', desc: 'A congregation without an altar, which no previous century has needed: +10% income.', effects: { incomeMult: 1.10 } },
+      { name: 'The Letters of the Dispersion', desc: 'Communities in three empires writing to one another about the calendar and expecting answers: +1 diplomatic seat, +8% trade.', effects: { diploSeats: 1, tradeMult: 1.08 } },
+    ],
+  },
+  // ---- 732 BCE, The Assyrian Flood ----------------------------------------
+  the_water_and_the_wall: {
+    name: 'The Water and the Wall', icon: 'bricks', point: 'mar',
+    unlock: { ladder: 'mar', level: 4 },
+    desc: 'The answer of a small kingdom to a siege train: put the spring inside the wall and make every town cost a season.',
+    tiers: [
+      { name: 'The Shaft and the Channel', desc: 'A tunnel from the spring to a pool inside the defences: +12% siege endurance.', effects: { siegeMult: 1.12 } },
+      { name: 'The Broad Wall', desc: 'Seven metres thick, straight through the houses that were in the way: +1 fort defence.', effects: { fortDefBonus: 1 } },
+      { name: 'The Provisioned Towns', desc: 'Stamped jars in four royal storehouses, filled before the campaigning season: +8% siege endurance, +5% manpower.', effects: { siegeMult: 1.08, manpowerMult: 1.05 } },
+    ],
+  },
+  the_vassal_arts: {
+    name: 'The Arts of the Vassal', icon: 'scales', point: 'infl',
+    unlock: { ladder: 'infl', level: 3 },
+    desc: 'Everything a kingdom learns when the alternative to diplomacy is a population transfer.',
+    tiers: [
+      { name: 'The Assessment Met', desc: 'On time, in full, and audited before the auditor arrives: −8% cost of governing.', effects: { adminMult: 0.92 } },
+      { name: 'The Loyal Report', desc: 'Our own account of the province reaches the capital before anybody else\'s: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Letters Both Ways', desc: 'A court that corresponds with the empire and with everyone the empire is fighting: +1 diplomatic seat.', effects: { diploSeats: 1 } },
+    ],
+  },
+  // ---- 931 BCE, The Kingdom Divided ---------------------------------------
+  // The arts of an Iron Age kingdom: a storehouse that keeps receipts, a
+  // treaty with the people who own the sea, a chariot corps, and an
+  // establishment of one's own. Unlocks sit inside base 1 .. ceiling 6.
+  the_kings_storehouses: {
+    name: 'The King\'s Storehouses', icon: 'granary', point: 'gov',
+    unlock: { ladder: 'gov', level: 2 },
+    desc: 'A district, a clerk who can write, a jar that is expected and a man at court who answers for it.',
+    tiers: [
+      { name: 'The Districts Assessed', desc: 'Somebody knows what every village owes: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Sherd and the Jar', desc: 'Receipts in ink on broken pottery, dated by regnal year: −8% cost of governing.', effects: { adminMult: 0.92 } },
+      { name: 'The Royal Estates', desc: 'Crown vineyards and olive presses in four valleys: +6% growth.', effects: { growthMult: 1.06 } },
+    ],
+  },
+  the_purple_and_the_grain: {
+    name: 'The Purple and the Grain', icon: 'ship', point: 'infl',
+    unlock: { ladder: 'infl', level: 2 },
+    desc: 'A coast with no fields beside a country with no harbour: the oldest working partnership in the Levant.',
+    tiers: [
+      { name: 'Cedar for Wheat', desc: 'The standing exchange, in writing: +10% trade.', effects: { tradeMult: 1.10 } },
+      { name: 'The Factors at Akko', desc: 'Our own men in their warehouses: +7% income.', effects: { incomeMult: 1.07 } },
+      { name: 'A Share of the Voyage', desc: 'A berth on the ships that go west past Cyprus: +8% trade, +4% growth.', effects: { tradeMult: 1.08, growthMult: 1.04 } },
+    ],
+  },
+  the_chariot_line: {
+    name: 'The Chariot Line', icon: 'horseshoe', point: 'mar',
+    unlock: { ladder: 'mar', level: 3 },
+    desc: 'The most expensive arm in the world, and the only one that decides a battle in the plain.',
+    tiers: [
+      { name: 'Horses Out of Egypt', desc: 'Bought at the going rate and worth it: +5% army strength.', effects: { milPowerMult: 1.05 } },
+      { name: 'The Chariot Cities', desc: 'Stalls, yards and crews at Megiddo, Hazor and Gezer: +8% force limit.', effects: { forceLimitMult: 1.08 } },
+      { name: 'Two Thousand at Qarqar', desc: 'The largest contingent in the coalition, and the annals say so: +8% morale.', effects: { moraleMult: 1.08 } },
+    ],
+  },
+  the_establishment_of_the_crown: {
+    name: 'An Establishment of Our Own', icon: 'altar', point: 'gov',
+    unlock: { ladder: 'gov', level: 4 },
+    desc: 'A priesthood the crown appoints, a calendar the crown proclaims, and a tithe that stops at the border.',
+    tiers: [
+      { name: 'The Appointed Courses', desc: 'Priests from among all the people, paid by the treasury: +0.15 legitimacy a month.', effects: { legitimacyAdd: 0.15 } },
+      { name: 'The Feast Proclaimed', desc: 'The year belongs to the throne that fixes it: −0.4 unrest everywhere.', effects: { unrestAll: -0.4 } },
+      { name: 'The Tithe That Stays', desc: 'Nothing crosses a border three times a year any more: +8% income.', effects: { incomeMult: 1.08 } },
+    ],
+  },
+  the_ridge_forts: {
+    name: 'The Forts of the Ridge', icon: 'walls', point: 'mar',
+    unlock: { ladder: 'mar', level: 2 },
+    desc: 'A kingdom that cannot win in the valley learns to make the valley not worth entering.',
+    tiers: [
+      { name: 'The Casemate Wall', desc: 'Two walls with rooms between them, on every approach: +1 fort defence.', effects: { fortDefBonus: 1 } },
+      { name: 'The Shephelah Line', desc: 'Lachish, Azekah and Beth-Shemesh garrisoned together: +1 hill defence.', effects: { hillDefBonus: 1 } },
+      { name: 'The Water Shaft', desc: 'A tunnel to the spring inside the wall: +10% siege endurance and +5% manpower.', effects: { siegeMult: 1.10, manpowerMult: 1.05 } },
+    ],
+  },
+  the_house_of_david_idea: {
+    name: 'The House of David', icon: 'lamp', point: 'gov',
+    unlock: { ladder: 'gov', level: 2 },
+    desc: 'One family, father to son, for four hundred years — which no other state on this map manages for forty.',
+    tiers: [
+      { name: 'The Lamp in Jerusalem', desc: 'A succession nobody has to fight over: +0.2 legitimacy a month.', effects: { legitimacyAdd: 0.2 } },
+      { name: 'The Queen Mother\'s Office', desc: 'A named regency with a seat and a title: +1 stability recovery and −0.3 unrest.', effects: { unrestAll: -0.3, legitimacyAdd: 0.1 } },
+      { name: 'A Prince in Every Fortress', desc: 'Patronage as garrison policy: +6% manpower, −4% income.', effects: { manpowerMult: 1.06, incomeMult: 0.96 } },
+    ],
+  },
+  the_scribes_of_judah: {
+    name: 'The Scribes of Judah', icon: 'quill', point: 'gov',
+    unlock: { ladder: 'gov', level: 4 },
+    desc: 'The recorder, the scribe and the man over the household: three offices, and the only government this kingdom has.',
+    tiers: [
+      { name: 'The Royal Seals', desc: 'A stamped jar handle is a tax receipt: −8% cost of governing.', effects: { adminMult: 0.92 } },
+      { name: 'The Four Towns', desc: 'Storage jars stamped "belonging to the king" from four royal centres: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Book of the Chronicles', desc: 'A kingdom that writes down what it did last year can plan the next one: +5% growth, +0.1 legitimacy a month.', effects: { growthMult: 1.05, legitimacyAdd: 0.1 } },
+    ],
+  },
+  the_southern_caravans: {
+    name: 'The Southern Caravans', icon: 'amphora', point: 'infl',
+    unlock: { ladder: 'infl', level: 3 },
+    desc: 'Incense out of Arabia, copper out of the Arabah, and a fort at every well between them.',
+    tiers: [
+      { name: 'The Wells Garrisoned', desc: 'Arad, Beersheba and the Negeb forts on one road: +8% trade.', effects: { tradeMult: 1.08 } },
+      { name: 'The Copper of the Arabah', desc: 'Smelting camps under the crown\'s protection: +7% income.', effects: { incomeMult: 1.07 } },
+      { name: 'The Ships of Tarshish', desc: 'A fleet at the head of the gulf and a share of what it brings back: +8% trade, +4% growth.', effects: { tradeMult: 1.08, growthMult: 1.04 } },
+    ],
+  },
   // ---- 167 BCE, The Maccabean Revolt --------------------------------------
   zeal_of_phinehas: {
     name: 'The Zeal of Phinehas', icon: 'flame', point: 'mar',
@@ -794,6 +920,17 @@ export const ERA_IDEA_GROUPS = {
 // the king's arts, the shared Levantine chapters to the common set, and the
 // eras whose sides share nothing default to none at all.
 export const ERA_IDEAS_BY_BOOKMARK = {
+  '597bce': {
+    JDH: ['the_written_covenant', 'the_portable_faith', 'the_vassal_arts', 'the_water_and_the_wall'],
+  },
+  '732bce': {
+    JDH: ['the_ridge_forts', 'the_scribes_of_judah', 'the_water_and_the_wall', 'the_vassal_arts'],
+    ISL: ['the_kings_storehouses', 'the_chariot_line', 'the_establishment_of_the_crown', 'the_vassal_arts'],
+  },
+  '931bce': {
+    ISL: ['the_kings_storehouses', 'the_purple_and_the_grain', 'the_chariot_line', 'the_establishment_of_the_crown'],
+    JDH: ['the_ridge_forts', 'the_house_of_david_idea', 'the_scribes_of_judah', 'the_southern_caravans'],
+  },
   '167bce': {
     HAS: ['zeal_of_phinehas', 'law_restored', 'cleansed_house', 'greek_art_of_war'],
     SEL: ['royal_cities', 'kings_friends', 'seleucid_phalanx'],

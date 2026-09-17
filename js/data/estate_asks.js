@@ -274,6 +274,15 @@ export const ESTATE_ASKS = {
     { kind: 'zeal', name: 'The Legion Parades', text: 'The best-drilled force in the region shows the rest of the army what right looks like.' },
     { kind: 'men', name: 'The Legion Recruits', text: 'The regiments open their rolls to the tribes that feed them.' },
   ],
+  // 931 BCE — the divided kingdom (SPEC §268).
+  assembly: [
+    { kind: 'men', name: 'The Clans Muster', text: 'Every district that has a fighting man sends him, because the elders said the crown asked properly.' },
+    { kind: 'calm', name: 'The Elders Sit in the Gate', text: 'The disputes are settled where they have always been settled, and the hill country stops talking about the corvee.' },
+  ],
+  house: [
+    { kind: 'coin', name: 'The Princes Open Their Treasuries', text: 'Every cousin with a fortress and an allowance is reminded whose allowance it is.' },
+    { kind: 'counsel', name: 'The Queen Mother Advises', text: 'The oldest office in this kingdom that is not the throne puts its weight behind the throne.' },
+  ],
   tribes: [
     { kind: 'men', name: 'The Tribes Send Riders', text: 'The sheikhs answer the summons in person, which means every tent behind them answers too.' },
     { kind: 'calm', name: 'The Desert Is Quiet', text: 'The wells and the crossings keep the crown\'s peace, because the sheikhs said so.' },

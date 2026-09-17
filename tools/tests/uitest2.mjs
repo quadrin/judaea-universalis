@@ -43,7 +43,7 @@ await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 // suite's stale nth(7) went with it, fixed in v5.4 — and SPEC §235 added the
 // rising against Gallus between Bar Kokhba and the Keepers).
 const cards = await page.locator('.bm-card').count();
-ok(cards === 9, 'nine bookmark cards on the start screen: ' + cards);
+ok(cards === 12, 'twelve bookmark cards on the start screen: ' + cards);
 const lastCard = (await page.locator('.bm-card').nth(cards - 1).textContent()) || '';
 ok(/Independence/.test(lastCard), 'last card is the War of Independence: ' + lastCard.slice(0, 60));
 

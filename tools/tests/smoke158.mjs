@@ -91,10 +91,12 @@ const verdict = (g) => {
 };
 
 // ---------------------------------------------------------------------------
-console.log('== the chapter is registered, and it is the sixth ==');
+console.log('== the chapter is registered, and it is the ninth ==');
 {
   ok(!!era351, 'the era registry carries 351ce');
-  ok(ERAS.indexOf(era351) === 5,
+  // Sixth until SPEC §268 seated three Iron Age chapters in front of
+  // everything. The invariant is the ORDER, not the ordinal.
+  ok(ERAS.indexOf(era351) === 8,
     '  in chronological order, between the Bar Kokhba revolt and the Keepers');
   const years = ERAS.map((e) => e.bookmark.startDate.y);
   ok(years.every((y, i) => i === 0 || y > years[i - 1]),

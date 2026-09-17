@@ -72,9 +72,19 @@ export const SACRED = {
   pilgrimWarMult: 0.25,
 };
 
+// SPEC §268 adds a third judaic religion: `yahwism`, the First Temple's own,
+// which is not Judaism and must not be painted as it — there is no canon, no
+// synagogue and no agreed number of lawful altars in 931 BCE. What it DOES
+// have, from Zadok to Seraiah, is the office this file is about: a chief
+// priest of the house in Jerusalem, with courses under him, appointed and
+// dismissed by the crown. So the sacred package counts it, and nothing else
+// does: the diaspora system, the integrated-names pen and the formable crowns
+// all keep asking for `judaism`, because a dispersion, a Hebrew pen over a
+// conquered province and the Kingdom of Israel restored are all later ideas.
 function jewish(ctx, tag) {
   const t = ctx.game.tags[tag];
-  return !!(t && (t.religion === 'judaism' || t.religion === 'samaritanism'));
+  return !!(t && (t.religion === 'judaism' || t.religion === 'yahwism'
+    || t.religion === 'samaritanism'));
 }
 
 // Is there a Temple to argue about? This gate is the difference between a
@@ -94,7 +104,7 @@ export function templeStands(ctx) {
   const t = g.tags[tag];
   if (!t) return false;
   if (t.religion === 'samaritanism') return true;
-  if (t.religion !== 'judaism') return false;
+  if (t.religion !== 'judaism' && t.religion !== 'yahwism') return false;
   const f = g.flags || {};
   if (f.altarRaised || f.altarRestored || f.templeRededicated) return true;
   if (f.templeBurned) return false;

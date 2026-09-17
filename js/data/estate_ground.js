@@ -114,6 +114,16 @@ export const ESTATE_GROUND = {
   palace: { base: 30, capital: 30, dev: 14, fort: 12, desert: 8 },
   tribes: { base: 24, desert: 34, rural: 24, dev: -18, city: -22 },
 
+  // ---- the Iron Age (SPEC §268) -------------------------------------------
+  // The assembly is the free landholders of the hill country — the men who
+  // walked out at Shechem and the 'am ha-aretz who made every disputed
+  // succession in Judah. Village ground, not desert ground, which is why it
+  // cannot borrow the bedouin `tribes` row above it. The house is the
+  // dynasty itself: the capital, the fortress towns its princes garrison,
+  // and the developed land its marriages are made out of.
+  assembly: { base: 28, rural: 30, hills: 20, dev: -12, city: -16 },
+  house: { base: 30, capital: 26, fort: 18, dev: 12, desert: -8 },
+
   // ---- the generated foreign courts (js/sim/courts.js archetypes) ----------
   crown: { base: 30, capital: 30, dev: 16, city: 12, rural: -10 },
   magnates: { base: 28, rural: 28, dev: 14, fort: 12, city: -12 },

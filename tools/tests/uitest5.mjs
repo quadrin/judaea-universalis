@@ -40,9 +40,9 @@ const ctxH = await browser.newContext({ viewport: { width: 1440, height: 900 } }
 const { page: host, errors: hostErrors } = await boot(ctxH);
 // Nine since SPEC §235 seated the rising against Gallus (v5.1 retired the
 // Kitos card; the stale eights were fixed in v5.4).
-ok(await host.locator('.bm-card').count() === 9, 'all nine chapters in the track');
+ok(await host.locator('.bm-card').count() === 12, 'all twelve chapters in the track');
 ok(await host.locator('.ss-arrow').count() === 2, 'prev/next arrows present');
-ok(await host.locator('.ss-dot').count() === 9, 'nine dots');
+ok(await host.locator('.ss-dot').count() === 12, 'twelve dots');
 const first = await host.locator('.bm-card.current').textContent();
 ok(first.includes('Maccabean'), 'starts on 167 BCE: ' + first.slice(0, 40).trim());
 await host.locator('.ss-next').click();
