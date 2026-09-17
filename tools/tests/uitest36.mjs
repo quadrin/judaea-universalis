@@ -65,7 +65,10 @@ console.log('== the title screen fits the phone ==');
     'and the map\'s own controls stay out of the title screen');
 }
 
-for (let i = 0; i < 10; i++) {
+// Twelve, not 10: SPEC §268 seated three chapters in front of 167 BCE,
+// and a walk that stops short lands on no card at all — which surfaces as a
+// timeout on the nation cards rather than as "bookmark not found".
+for (let i = 0; i < 12; i++) {
   const txt = (await page.locator('.bm-card.current').textContent()) || '';
   if (txt.includes('War of Independence')) { await page.locator('.bm-card.current').click(); break; }
   await page.locator('.ss-next').click();

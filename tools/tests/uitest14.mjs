@@ -47,7 +47,10 @@ st = await page.evaluate(() => window._sound.music.state());
 ok(st.notes > 3, 'notes are being scheduled: ' + st.notes + ' so far');
 
 console.log('== the mood machine hears the war ==');
-for (let i = 0; i < 10; i++) {
+// Twelve, not 10: SPEC §268 seated three chapters in front of 167 BCE,
+// and a walk that stops short lands on no card at all — which surfaces as a
+// timeout on the nation cards rather than as "bookmark not found".
+for (let i = 0; i < 12; i++) {
   const txt = (await page.locator('.bm-card.current').textContent()) || '';
   if (txt.includes('Great Revolt')) { await page.locator('.bm-card.current').click(); break; }
   await page.locator('.ss-next').click();

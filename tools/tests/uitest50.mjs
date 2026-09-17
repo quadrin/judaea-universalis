@@ -13,7 +13,10 @@ const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 480000);
 
 async function pickBookmark(page, nameFrag) {
   await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
-  for (let i = 0; i < 9; i++) {
+  // Twelve, not 9: SPEC §268 seated three chapters in front of 167 BCE,
+  // and a walk that stops short lands on no card at all — which surfaces as a
+  // timeout on the nation cards rather than as "bookmark not found".
+  for (let i = 0; i < 12; i++) {
     const cur = page.locator('.bm-card.current');
     const txt = (await cur.textContent()) || '';
     if (txt.includes(nameFrag)) { await cur.click(); return; }
