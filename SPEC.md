@@ -19270,7 +19270,31 @@ cap, the Lydian double axe, the Elamite serpent, the Nisean horse, the
 four-winged genius of Pasargadae, the Anatolian stag, and Kubaba's
 pomegranate.
 
-**Legibility beat accuracy twice, on purpose.** These are read at 22px on a
+**They were redrawn once more, because the first set was cute.** Twenty-one
+emblems shipped and eight of them were animals drawn as frontal faces with two
+round dot eyes, which at the size the start screen draws a chip is the visual
+grammar of a sticker. Israel's calf and Judah's lion in particular arrived on
+the one card in this game that seats two crowns looking like a cartoon cat and
+a smiling sun. Three things came out of fixing it, and they are worth writing
+down because the next emblem added here will be subject to all three:
+
+1. **No frontal faces.** A front-facing animal with two eyes reads as cute at
+   every size, whatever it is a drawing of. The existing table never does it:
+   Rome's aquila and Ptolemy's eagle are both in profile with a single eye.
+2. **No full quadrupeds.** Redrawn in profile, the bull, the lion, the stag
+   and the camel all became the same blob with four stubby legs — Israel,
+   Judah and Tabal were not tellable apart. There is not enough room at 24x24
+   for four different animals to keep four different silhouettes.
+3. **Objects beat creatures.** Every emblem in this table that works is a
+   thing rather than a beast — an anchor, a menorah, a bow, a stele, an altar.
+   So the animals that would not resolve became objects with the same meaning:
+   Judah took the LAMP of 1 Kings 11:36, which is already the name of its own
+   standing modifier in this chapter; Media took the akinakes off the
+   Persepolis reliefs; Tabal took the grapes and grain of the Ivriz relief;
+   Persia took the fire altar. Israel kept its calf but as the bucranium, the
+   horned mask, with the horns swept wide — no eyes, no ears, no face.
+
+**Legibility beat accuracy twice more, on purpose.** These are read at 22px on a
 coloured field, and two first drafts were faithful and useless. Judah began
 as a couchant lion and lost its legs and its outline to the shrink; it is now
 the lion MASK, which keeps its mane, its ears and its stare all the way down.
