@@ -540,6 +540,7 @@ function makeStub(MAP_DATA) {
       if (!mapping || mapping.length < N + 1) return;
       provinceMap.set(mapping.subarray(0, N + 1));
     },
+    setMapRegions() { return false; },
     setProvinceTerrains: noop,
     setProvinceColors: noop,
     setMapmodeParams: noop,
@@ -1037,7 +1038,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   // country-region seam heal (SPEC §232 — a heal that cannot tell sea from
   // land floods the open Mediterranean with paint and beads far countries
   // onto foreign coasts).
-  const landBytes = redChannel(buildLandCanvas(MAP_DATA));
+  let landBytes = redChannel(buildLandCanvas(MAP_DATA));
   const landTex = byteTexture(landBytes, W, H, true);
   const decorTex = canvasTexture(buildDecorCanvas(MAP_DATA), true);
   const idTex = targetTexture(gl.NEAREST, gl.RG8, gl.RG); // NEAREST, no mips — texelFetch in the main pass
@@ -1084,38 +1085,52 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   // Province-ID pass: warped weighted-nearest-seed diagram, land-masked.
   // A texture carries seed data so the shader's uniform budget does not cap
   // expansion. The fixed loop bound remains deliberately finite for mobile GPUs.
+  //
+  // SPEC §271: the pass is a function, because a chapter may draw its own
+  // province borders (`bookmark.mapRegions` — the Iron Age chapters draw the
+  // Levant along its landscape) and the raster is then rebuilt for that
+  // chapter, and rebuilt again with the atlas's own rings when a chapter
+  // without them starts. `extraRegions` are painted AFTER the atlas's
+  // countryRegions, in the same painter's order; `land` is the land-mask
+  // bytes, which the despeckle and the seam heal both need. Writes idArray in
+  // place — every reader captured the array, not a copy — and returns whether
+  // the pass ran.
   const seedCount = Math.min(N, MAX_PROVINCE_SEEDS);
   if (N > MAX_PROVINCE_SEEDS) {
     warnOnce('seed-cap', `province count ${N} exceeds the ${MAX_PROVINCE_SEEDS}-seed renderer cap; extras get no territory`);
   }
-  // The drawn borders (SPEC §232): each seed carries its country's paint
-  // index in the w channel, and a full-frame R8 texture carries the painted
-  // ground. Both live only as long as this pass — the texture is deleted the
-  // moment the raster is read back, so the 46 MB never sits in video memory
-  // while the game runs.
-  const regionOfCell = new Map();
-  (MAP_DATA.countryRegions || []).forEach((reg, idx) => {
-    for (const nm of (reg && reg.cells) || []) regionOfCell.set(nm, idx + 1);
-  });
-  const seedArr = new Float32Array(Math.max(1, seedCount) * 4);
-  for (let i = 0; i < seedCount; i++) {
-    const p = provinces[i];
-    const xy = (p && typeof p.lon === 'number') ? MAP_DATA.project(p.lon, p.lat) : [0, 0];
-    seedArr[i * 4] = xy[0];
-    seedArr[i * 4 + 1] = xy[1];
-    seedArr[i * 4 + 2] = (p && p.weight) || 1.0;
-    seedArr[i * 4 + 3] = (p && regionOfCell.get(p.name)) || 0;
-  }
-  const seedTex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, seedTex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.max(1, seedCount), 1,
-    0, gl.RGBA, gl.FLOAT, seedArr);
-  setTexParams(gl.NEAREST, false);
-  const regionArray = (regionOfCell.size && typeof MAP_DATA.rasterizeCountryRegions === 'function')
-    ? MAP_DATA.rasterizeCountryRegions(MAP_DATA, (x, y) => landBytes[y * W + x] >= 128) : null;
-  let regionTex = null;
-  {
-    regionTex = gl.createTexture();
+  function buildProvinceRaster(extraRegions, land) {
+    const regions = (MAP_DATA.countryRegions || []).concat(extraRegions || []);
+    if (regions.length > 255) {
+      warnOnce('region-cap', 'more than 255 drawn regions; the R8 paint index cannot hold them — extras ignored');
+    }
+    // The drawn borders (SPEC §232): each seed carries its country's paint
+    // index in the w channel, and a full-frame R8 texture carries the painted
+    // ground. Both live only as long as this pass — the texture is deleted the
+    // moment the raster is read back, so the 46 MB never sits in video memory
+    // while the game runs.
+    const regionOfCell = new Map();
+    regions.slice(0, 255).forEach((reg, idx) => {
+      for (const nm of (reg && reg.cells) || []) regionOfCell.set(nm, idx + 1);
+    });
+    const seedArr = new Float32Array(Math.max(1, seedCount) * 4);
+    for (let i = 0; i < seedCount; i++) {
+      const p = provinces[i];
+      const xy = (p && typeof p.lon === 'number') ? MAP_DATA.project(p.lon, p.lat) : [0, 0];
+      seedArr[i * 4] = xy[0];
+      seedArr[i * 4 + 1] = xy[1];
+      seedArr[i * 4 + 2] = (p && p.weight) || 1.0;
+      seedArr[i * 4 + 3] = (p && regionOfCell.get(p.name)) || 0;
+    }
+    const seedTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, seedTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.max(1, seedCount), 1,
+      0, gl.RGBA, gl.FLOAT, seedArr);
+    setTexParams(gl.NEAREST, false);
+    const regionArray = (regionOfCell.size && typeof MAP_DATA.rasterizeCountryRegions === 'function')
+      ? MAP_DATA.rasterizeCountryRegions(MAP_DATA, (x, y) => land[y * W + x] >= 128, regions.slice(0, 255))
+      : null;
+    let regionTex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, regionTex);
     if (regionArray) {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, W, H, 0, gl.RED, gl.UNSIGNED_BYTE, regionArray);
@@ -1123,60 +1138,65 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, 1, 1, 0, gl.RED, gl.UNSIGNED_BYTE, new Uint8Array(1));
     }
     setTexParams(gl.NEAREST, false);
-  }
-  const idOk = runPass(idProg, idTex, 'id-pass', (prog) => {
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, landTex);
-    gl.uniform1i(gl.getUniformLocation(prog, 'uLand'), 0);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, seedTex);
-    gl.uniform1i(gl.getUniformLocation(prog, 'uSeedTex'), 1);
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, regionTex);
-    gl.uniform1i(gl.getUniformLocation(prog, 'uRegion'), 2);
-    gl.uniform1i(gl.getUniformLocation(prog, 'uUseRegion'), regionArray ? 1 : 0);
-    gl.uniform2f(gl.getUniformLocation(prog, 'uMapSize'), W, H);
-    gl.uniform1i(gl.getUniformLocation(prog, 'uSeedCount'), seedCount);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uWarpAmp'), CFG.WARP_AMP);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uWarpFreq'), CFG.WARP_FREQ);
-    const anchor = (MAP_DATA.warpAnchor || [0, 0]);
-    gl.uniform2f(gl.getUniformLocation(prog, 'uWarpAnchor'), anchor[0], anchor[1]);
-  });
-  if (idOk) {
-    // Buffer row 0 comes back as framebuffer row 0 == texel row v=0 == mapY 0 == NORTH
-    // (see the orientation contract at the top) — so this is a straight copy, no flip.
-    // Two bytes a texel, matching the RG8 target (SPEC §158). Reading an RG8
-    // framebuffer as RGBA is GL_INVALID_OPERATION — measured, 1282 on
-    // SwiftShader — and it also halves this staging buffer from 35 MB to 18.
-    // Two bytes a texel, matching the RG8 target (SPEC §158). This also halves
-    // the staging buffer, from 35 MB to 18 at today's frame.
-    const buf = new Uint8Array(W * H * 2);
-    gl.readPixels(0, 0, W, H, gl.RG, gl.UNSIGNED_BYTE, buf);
-    for (let i = 0, n = W * H; i < n; i++) {
-      const v = buf[i * 2] + buf[i * 2 + 1] * 256;
-      idArray[i] = v > N ? 0 : v;
-    }
-    const despeckled = despeckleProvinceRaster(idArray, MAP_DATA, landBytes);
-    const repaired = repairDisconnectedProvinceRaster(idArray, MAP_DATA) + despeckled;
-    if (repaired) {
+    const ok = runPass(idProg, idTex, 'id-pass', (prog) => {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, landTex);
+      gl.uniform1i(gl.getUniformLocation(prog, 'uLand'), 0);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, seedTex);
+      gl.uniform1i(gl.getUniformLocation(prog, 'uSeedTex'), 1);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, regionTex);
+      gl.uniform1i(gl.getUniformLocation(prog, 'uRegion'), 2);
+      gl.uniform1i(gl.getUniformLocation(prog, 'uUseRegion'), regionArray ? 1 : 0);
+      gl.uniform2f(gl.getUniformLocation(prog, 'uMapSize'), W, H);
+      gl.uniform1i(gl.getUniformLocation(prog, 'uSeedCount'), seedCount);
+      gl.uniform1f(gl.getUniformLocation(prog, 'uWarpAmp'), CFG.WARP_AMP);
+      gl.uniform1f(gl.getUniformLocation(prog, 'uWarpFreq'), CFG.WARP_FREQ);
+      const anchor = (MAP_DATA.warpAnchor || [0, 0]);
+      gl.uniform2f(gl.getUniformLocation(prog, 'uWarpAnchor'), anchor[0], anchor[1]);
+    });
+    if (ok) {
+      // Buffer row 0 comes back as framebuffer row 0 == texel row v=0 == mapY 0 == NORTH
+      // (see the orientation contract at the top) — so this is a straight copy, no flip.
+      // Two bytes a texel, matching the RG8 target (SPEC §158). Reading an RG8
+      // framebuffer as RGBA is GL_INVALID_OPERATION — measured, 1282 on
+      // SwiftShader — and it also halves this staging buffer from 35 MB to 18.
+      const buf = new Uint8Array(W * H * 2);
+      gl.readPixels(0, 0, W, H, gl.RG, gl.UNSIGNED_BYTE, buf);
       for (let i = 0, n = W * H; i < n; i++) {
-        const v = idArray[i];
-        buf[i * 2] = v & 255;
-        buf[i * 2 + 1] = (v >> 8) & 255;
+        const v = buf[i * 2] + buf[i * 2 + 1] * 256;
+        idArray[i] = v > N ? 0 : v;
       }
-      gl.bindTexture(gl.TEXTURE_2D, idTex);
-      // …and the write-back must match the target too. Uploading RGBA into an
-      // RG8 texture is GL_INVALID_OPERATION, and it is the whole of the 1282
-      // §158 recorded as unresolved: the readback was narrowed and this was
-      // not, so the error came from the repair path rather than from RG8
-      // itself. A standalone RG8 framebuffer is complete and reads back
-      // cleanly in all three formats — measured.
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RG, gl.UNSIGNED_BYTE, buf);
+      const despeckled = despeckleProvinceRaster(idArray, MAP_DATA, land);
+      const repaired = repairDisconnectedProvinceRaster(idArray, MAP_DATA) + despeckled;
+      if (repaired) {
+        for (let i = 0, n = W * H; i < n; i++) {
+          const v = idArray[i];
+          buf[i * 2] = v & 255;
+          buf[i * 2 + 1] = (v >> 8) & 255;
+        }
+        gl.bindTexture(gl.TEXTURE_2D, idTex);
+        // …and the write-back must match the target too. Uploading RGBA into an
+        // RG8 texture is GL_INVALID_OPERATION, and it is the whole of the 1282
+        // §158 recorded as unresolved: the readback was narrowed and this was
+        // not, so the error came from the repair path rather than from RG8
+        // itself. A standalone RG8 framebuffer is complete and reads back
+        // cleanly in all three formats — measured.
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RG, gl.UNSIGNED_BYTE, buf);
+      }
     }
+    // The painted countries have done their work — they exist in the ID raster
+    // now, and nothing samples them again (SPEC §232).
+    gl.deleteTexture(regionTex); regionTex = null;
+    gl.deleteTexture(seedTex);
+    return ok;
   }
-  // The painted countries have done their work — they exist in the ID raster
-  // now, and nothing samples them again (SPEC §232).
-  if (regionTex) { gl.deleteTexture(regionTex); regionTex = null; }
+  let idOk = buildProvinceRaster(null, landBytes);
+  // The land bytes are 46 MB at this frame and nothing needs them between
+  // rasters: released here, and rebuilt from the land canvas when a chapter
+  // with drawn borders asks for a new raster (setMapRegions below).
+  landBytes = null;
 
   // Heightmap pass: coast falloff + primitives + fbm detail.
   const prims = (MAP_DATA.heightPrimitives || []).slice(0, MAX_HEIGHT_PRIMS);
@@ -1298,6 +1318,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   // The border field follows the province mapping (SPEC §262): merged cells
   // share a province and the border between them must not draw.
   let distKey = '';
+  let mapRegionsKey = '';
   function uploadDistanceField() {
     const key = Array.prototype.join.call(provinceMap, ',');
     if (key === distKey) return;
@@ -1431,6 +1452,31 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
         if (idOk) uploadDistanceField();
       } catch (e) {
         warnOnce('province-map-throw', 'setProvinceMapping failed', e);
+      }
+    },
+
+    // A chapter's drawn province borders (SPEC §271): `regions` is the
+    // chapter's `mapRegions` ring list, or null for the atlas raster. The ID
+    // raster is rebuilt only when the list actually changes — keyed on the
+    // rings' names, cells and lengths, which is what the data is — and the
+    // rebuild is one ID pass plus the readback repairs, the same work boot
+    // does. Returns true when idArray was rebuilt; the caller then owes a
+    // setProvinceMapping (main.js always follows with one), which re-derives
+    // the border distance field over the new raster.
+    setMapRegions(regions) {
+      const list = Array.isArray(regions) ? regions : [];
+      const key = list.map((r) => (r && r.name) + ':' + ((r && r.cells) || []).join(',')
+        + ':' + ((r && r.ring) || []).length).join('|');
+      if (key === mapRegionsKey) return false;
+      try {
+        const land = redChannel(buildLandCanvas(MAP_DATA));
+        idOk = buildProvinceRaster(list, land);
+        mapRegionsKey = key;
+        distKey = '';
+        return true;
+      } catch (e) {
+        warnOnce('map-regions-throw', 'setMapRegions failed', e);
+        return false;
       }
     },
 

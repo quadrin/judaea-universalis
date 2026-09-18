@@ -11,6 +11,22 @@
 //     built and after it burned). The pixels, clicks and adjacency join the
 //     parent; the era has no such province.
 
+// The key a profile cache must use: BOTH §47 levers, and the drawn borders
+// (SPEC §271 — `bookmark.mapRegions`, a ring list painted into the ID raster
+// for the chapters that carry one). Two eras with the same activations and
+// merges can still draw different borders, and an era that draws none must
+// not share a raster with one that does. Rings are keyed on their names,
+// cells and lengths, which is what the data is.
+export function mapProfileKey(bookmark) {
+  const active = (bookmark && bookmark.activeProvinces) || [];
+  const merges = (bookmark && bookmark.mergeProvinces) || {};
+  const regions = (bookmark && Array.isArray(bookmark.mapRegions)) ? bookmark.mapRegions : [];
+  return active.slice().sort().join('|') + '||'
+    + Object.keys(merges).sort().map((k) => k + '>' + merges[k]).join('|') + '||'
+    + regions.map((r) => (r && r.name) + ':' + ((r && r.cells) || []).join(',')
+      + ':' + ((r && r.ring) || []).length).join('|');
+}
+
 const warned = new Set();
 function warnOnce(key, ...msg) {
   if (warned.has(key)) return;

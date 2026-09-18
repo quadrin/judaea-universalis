@@ -97,6 +97,7 @@ import { EVENTS_ANNEX } from './events_annexation.js';
 import { EVENTS_DAVID } from './events_house_of_david.js';
 import { EVENTS_STATECRAFT } from './events_statecraft.js';
 import { POLITICAL_MAPS } from './political_maps.js';
+import { MAP_REGIONS } from './iron_age_map.js';
 
 // What EVERY chapter plays, 1948 included: the omens, and the margins
 // (SPEC §223). Marginalia rides BESIDE the generic pool rather than inside it
@@ -132,8 +133,14 @@ const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, EVENTS_STATECRAFT, SHARED);
 // pairing does: the bookmarks stay zero-import content packages, and the one
 // place the chapter ↔ political-map pairing is written down is here. initGame
 // reads `bookmark.political` beneath the chapter's own tables.
+// The drawn province borders ride the same way (SPEC §271): the Iron Age
+// chapters draw the Levant along its landscape, the ring list lives in
+// js/data/iron_age_map.js, and the chapter ↔ rings pairing is written down
+// here. main.js reads `bookmark.mapRegions` when it applies a profile; a
+// chapter without an entry renders the atlas raster, byte for byte.
 function withPolitical(bookmark) {
   bookmark.political = POLITICAL_MAPS[bookmark.id] || null;
+  bookmark.mapRegions = MAP_REGIONS[bookmark.id] || null;
   return bookmark;
 }
 

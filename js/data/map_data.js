@@ -2583,11 +2583,14 @@ const COUNTRY_REGIONS = [
 // border calculus badly enough to stall Rome's whole second century.
 // The browser passes its land-mask bytes; Node consumers pass
 // `landTesterPx()` below.
-export function rasterizeCountryRegions(mapData, isLand) {
+// `regionList` overrides the atlas's own rings: the renderer passes the atlas
+// rings plus a chapter's `mapRegions` (SPEC §271) when a chapter draws its
+// own province borders. Omitted, the atlas rings alone are painted.
+export function rasterizeCountryRegions(mapData, isLand, regionList) {
   const md = mapData || MAP_DATA;
   const W = md.MAP_W | 0;
   const H = md.MAP_H | 0;
-  const regions = md.countryRegions || [];
+  const regions = Array.isArray(regionList) ? regionList : (md.countryRegions || []);
   if (!regions.length) return null;
   const out = new Uint8Array(W * H);
   const xs = [];
@@ -2637,17 +2640,33 @@ export function rasterizeCountryRegions(mapData, isLand) {
   // the frame. LAND ONLY — see the contract above; without a land test
   // there is no heal, and the pure ring paint (whose seaward overshoots
   // are deliberate and safe) is the whole answer.
+  //
+  // ORIGINAL PAINT ONLY (SPEC §271). A healed pixel must not count as paint
+  // for the next wedge test: where two rings meet unringed ground at a
+  // shared vertex, the corner pixel outside both sees ring A on one side and
+  // ring B on another and is healed with the later of the two — and if that
+  // is not the ring it continues along, the next pixel out sees "A below,
+  // healed-B beside" and is healed too, and so on down the whole outer edge:
+  // a one-pixel thread of B's paint around A, which A's neighbours' seeds then
+  // claim. Europe's rings overshoot each other at every junction and never
+  // showed it; the Iron Age rings share their vertices and did. A kiss seam
+  // between two rings is one pixel wide by definition and every pixel of it
+  // has ORIGINAL paint on both sides, so reading only the original paint
+  // heals exactly what this pass was written to heal and nothing more. One
+  // bit per pixel remembers what was healed.
   if (typeof isLand === 'function') {
+    const healed = new Uint8Array((W * H + 7) >> 3);
+    const paint = (i) => ((healed[i >> 3] & (1 << (i & 7))) ? 0 : out[i]);
     const wedgeFill = (at) => {
       if (out[at]) return 0;
       if (!isLand(at % W, (at / W) | 0)) return 0;
-      const l = out[at - 1], r = out[at + 1], u = out[at - W], d = out[at + W];
+      const l = paint(at - 1), r = paint(at + 1), u = paint(at - W), d = paint(at + W);
       const axis = (l && r) || (u && d)
         || (l && u && l !== u) || (l && d && l !== d)
         || (r && u && r !== u) || (r && d && r !== d);
       if (axis) return Math.max(l, r, u, d);
       const n8 = [l, r, u, d,
-        out[at - W - 1], out[at - W + 1], out[at + W - 1], out[at + W + 1]];
+        paint(at - W - 1), paint(at - W + 1), paint(at + W - 1), paint(at + W + 1)];
       let a = 0, two = false;
       for (const v of n8) { if (v && !a) a = v; else if (v && v !== a) two = true; }
       return two ? Math.max(...n8) : 0;
@@ -2680,6 +2699,7 @@ export function rasterizeCountryRegions(mapData, isLand) {
       const fill = wedgeFill(at);
       if (!fill) continue;
       out[at] = fill;
+      healed[at >> 3] |= 1 << (at & 7);
       const x = at % W, y = (at / W) | 0;
       if (x > 1 && x < W - 2 && y > 1 && y < H - 2) {
         for (const next of [at - 1, at + 1, at - W, at + W,
