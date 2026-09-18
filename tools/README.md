@@ -298,6 +298,22 @@ its own heading and exits clean; a SECOND name there is the regression.
 The diagram does not depend on the bookmark — only the fold does — so
 `rasterise` once and `fold` per chapter rather than rasterising nine times.
 
+Except for a chapter that DRAWS its borders (SPEC §271): the three Iron Age
+chapters carry `bookmark.mapRegions`, a ring list in the §232 form that the
+renderer paints after the atlas's own country rings, and their diagram is
+their own. `chapterRegions(bookmark)` returns the rings a chapter's frame
+must paint, `buildFrame(bbox, scale, regions)` paints them, and `chapter()`
+rasterises a drawn chapter afresh whatever `base` or `frame` the caller
+brought — so `node tools/provshape.mjs 931bce --png` is a picture of the
+drawn Levant, and `smoke175`'s circle check runs over it unchanged. Two
+fixes rode along, both found by rings that share their vertices: the fill
+used to skip the top pixel row of every ring (`ceil(yMin)` for the first
+scanline — the browser starts at `floor(y0)`), and the seam heal used to
+creep along a ring's outer edge from any vertex two rings share against
+unringed ground. The heal here now matches the browser's: original paint
+only, wedged pixels only, later ring wins. `smoke187` is the drawn map's
+contract.
+
 ## coastcheck.mjs — the coastline's invariants, and a picture of it
 
     node tools/coastcheck.mjs            check, and write $JU_OUT/coast.png

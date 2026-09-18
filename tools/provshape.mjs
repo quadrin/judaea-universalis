@@ -62,7 +62,17 @@ export const THEATRE = [32.0, 27.5, 42.5, 38.0];
 // ---------------------------------------------------------------------------
 // The frame: land mask and country paint, rasterised once per bbox/scale.
 // ---------------------------------------------------------------------------
-export function buildFrame(bbox = THEATRE, scale = 1) {
+// `regions` is the ring list to paint: the atlas's own countryRegions by
+// default, or those plus a chapter's `mapRegions` (SPEC §271 — the Iron Age
+// chapters draw the Levant's provinces along its landscape). Pass
+// `chapterRegions(bookmark)` for a chapter's frame.
+export function chapterRegions(bookmark) {
+  const base = MAP_DATA.countryRegions || [];
+  const era = (bookmark && bookmark.mapRegions) || [];
+  return era.length ? base.concat(era) : base;
+}
+
+export function buildFrame(bbox = THEATRE, scale = 1, regions = MAP_DATA.countryRegions || []) {
   const [lon0, lat0, lon1, lat1] = bbox;
   const [px0, py1] = MAP_DATA.project(lon0, lat0);
   const [px1, py0] = MAP_DATA.project(lon1, lat1);
@@ -79,8 +89,14 @@ export function buildFrame(bbox = THEATRE, scale = 1) {
     let yMin = Infinity;
     let yMax = -Infinity;
     for (const p of pts) { if (p[1] < yMin) yMin = p[1]; if (p[1] > yMax) yMax = p[1]; }
-    const y0 = Math.max(0, Math.ceil(yMin));
-    const y1 = Math.min(H - 1, Math.floor(yMax));
+    // Every row whose CENTRE the ring can reach: a ring whose top edge sits at
+    // y = 848.01 owns row 848 (centre 848.5), and `ceil(yMin)` skipped it —
+    // one unpainted row along every flat-topped ring, invisible while the
+    // country rings all overshot each other and visible the day two rings
+    // shared an edge (SPEC §271). The browser's rasterizer starts at
+    // floor(y0) and never had the fault.
+    const y0 = Math.max(0, Math.ceil(yMin - 0.5));
+    const y1 = Math.min(H - 1, Math.floor(yMax - 0.5));
     const xs = [];
     for (let y = y0; y <= y1; y++) {
       xs.length = 0;
@@ -102,10 +118,42 @@ export function buildFrame(bbox = THEATRE, scale = 1) {
   for (const poly of MAP_DATA.coast.land) fillRing(land, poly, 1);
   for (const lake of MAP_DATA.coast.lakes || []) fillRing(land, lake, 0);
   const regionOfCell = new Map();
-  const regions = MAP_DATA.countryRegions || [];
   regions.forEach((reg, i) => { for (const nm of reg.cells || []) regionOfCell.set(nm, i + 1); });
   const region = new Uint8Array(W * H);
   regions.forEach((reg, i) => { if ((reg.ring || []).length >= 3) fillRing(region, reg.ring, i + 1); });
+  // The seam heal, as the browser does it (rasterizeCountryRegions): an
+  // unpainted LAND pixel wedged between paint — paint on both sides of an
+  // axis, or two different regions around it — takes the later ring. Rings
+  // that share their vertices (SPEC §271) still leave single pixels at their
+  // triple points, and without the heal those pixels go to the nearest
+  // unringed seed, which can be a province three landscapes away.
+  // Original paint only, as the browser reads it: a healed pixel is not paint
+  // for the next wedge test, or the heal creeps along a ring's outer edge from
+  // every vertex two rings share against unringed ground.
+  const healed = new Uint8Array((W * H + 7) >> 3);
+  const paint = (i) => ((healed[i >> 3] & (1 << (i & 7))) ? 0 : region[i]);
+  for (let pass = 0, changed = 1; pass < 8 && changed; pass++) {
+    changed = 0;
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const at = y * W + x;
+        if (region[at] || !land[at]) continue;
+        const l = paint(at - 1), r = paint(at + 1), u = paint(at - W), d = paint(at + W);
+        let fill = 0;
+        if ((l && r) || (u && d) || (l && u && l !== u) || (l && d && l !== d)
+          || (r && u && r !== u) || (r && d && r !== d)) {
+          fill = Math.max(l, r, u, d);
+        } else {
+          const n8 = [l, r, u, d, paint(at - W - 1), paint(at - W + 1), paint(at + W - 1), paint(at + W + 1)];
+          let a = 0;
+          let two = false;
+          for (const v of n8) { if (v && !a) a = v; else if (v && v !== a) two = true; }
+          if (two) fill = Math.max(...n8);
+        }
+        if (fill) { region[at] = fill; healed[at >> 3] |= 1 << (at & 7); changed++; }
+      }
+    }
+  }
   // A seed far outside the frame cannot win a pixel inside it; twelve degrees
   // is past the reach of the heaviest cell on the map (the Rub al-Khali at
   // 2.5) and keeps the inner loop to the neighbourhood.
@@ -339,13 +387,19 @@ export function fold(ids, mapping) {
 
 // The chapter's raster, folded: one call for every consumer of this file.
 // Pass `base` (an identity raster over the same frame) to skip the pass.
+// A chapter that draws its own borders (`bookmark.mapRegions`, SPEC §271)
+// is never the base diagram folded: its frame is painted with its rings and
+// rasterised afresh, whatever `base` or `frame` the caller brought.
 export async function chapter(id = '1948ce', opts = {}) {
   const { ERAS } = await import(R + '/js/data/compendium.js');
   const era = ERAS.find((e) => e.bookmark && e.bookmark.id === id);
   if (!era) throw new Error('no such bookmark: ' + id);
-  const frame = opts.frame || buildFrame(opts.bbox || THEATRE, opts.scale || 1);
+  const drawn = ((era.bookmark && era.bookmark.mapRegions) || []).length > 0;
+  const frame = (opts.frame && !drawn) ? opts.frame
+    : buildFrame((opts.frame && opts.frame.bbox) || opts.bbox || THEATRE,
+      (opts.frame && opts.frame.scale) || opts.scale || 1, chapterRegions(era.bookmark));
   const mapping = buildProvinceMapping(MAP_DATA, era.bookmark);
-  const ids = opts.base ? fold(opts.base, mapping) : rasterise(frame, mapping);
+  const ids = (opts.base && !drawn) ? fold(opts.base, mapping) : rasterise(frame, mapping);
   return { frame, mapping, ids, bookmark: era.bookmark, report: shapes(frame, ids) };
 }
 

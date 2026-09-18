@@ -2,7 +2,7 @@
 // every cross-module API (see SPEC.md §10). Modules must load unmodified under it.
 import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
-import { buildProvinceMapping } from './js/data/map_profile.js';
+import { buildProvinceMapping, mapProfileKey } from './js/data/map_profile.js';
 import { ERAS } from './js/data/compendium.js';
 import { entryFork } from './js/data/chapter_paths.js';
 import { bus } from './js/core/bus.js';
@@ -47,7 +47,7 @@ async function boot() {
   // geom starts EMPTY and is filled by the first applyMapProfile, which every
   // path into a campaign runs before anything reads it (startGame calls it on
   // its first line). It used to be computed here as well, and that pass was
-  // dead on arrival: mapProfileKey starts '' while any bookmark keys to at
+  // dead on arrival: profileKey starts '' while any bookmark keys to at
   // least '||', so the early-return below cannot hit on the first call and the
   // result was always recomputed and thrown away. Two full W×H passes plus an
   // open-sea flood fill — 25.0M texels at the §160 frame — on every boot, for
@@ -59,19 +59,24 @@ async function boot() {
   // labels.js `if (ctx && ctx.game && camera)`), and applyMapProfile fills
   // this same object with Object.assign rather than replacing it.
   const geom = {};
-  let mapProfileKey = '';
+  let profileKey = '';
   function applyMapProfile(bookmark) {
-    const active = (bookmark && bookmark.activeProvinces) || [];
-    const merges = (bookmark && bookmark.mergeProvinces) || {};
-    // The key must cover BOTH profile levers: two eras with the same active
-    // list can still merge different base cells (SPEC §47).
-    const nextKey = active.slice().sort().join('|') + '||'
-      + Object.keys(merges).sort().map((k) => k + '>' + merges[k]).join('|');
-    if (nextKey === mapProfileKey) return provinceMap;
+    // The key covers all three profile levers: two eras with the same active
+    // list can still merge different base cells (SPEC §47), and an era that
+    // draws its own province borders (SPEC §271) cannot share a raster with
+    // one that does not.
+    const nextKey = mapProfileKey(bookmark);
+    if (nextKey === profileKey) return provinceMap;
     provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
+    // The raster first, then the mapping over it: the drawn borders change
+    // idArray in place (or restore the atlas raster for a chapter without
+    // them), and setProvinceMapping re-derives the border field over whatever
+    // raster stands. A chapter whose rings match the last raster's costs
+    // nothing here.
+    renderer.setMapRegions((bookmark && bookmark.mapRegions) || null);
     renderer.setProvinceMapping(provinceMap);
     Object.assign(geom, computeGeometry(renderer.idArray, MAP_DATA, provinceMap));
-    mapProfileKey = nextKey;
+    profileKey = nextKey;
     return provinceMap;
   }
   const camera = createCamera(container, MAP_DATA);

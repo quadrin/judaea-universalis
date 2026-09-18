@@ -35,7 +35,15 @@ readable at campaign zoom. Province labels avoid army banners and landmark
 icons; political colors are softer, desert texture is quieter, and the Jezreel
 valley separates the Galilee relief from the central hills. Campaign clocks
 use larger text, and mapmode buttons expose their names and selection state
-to assistive technology. Province borders, development and manpower are unchanged.
+to assistive technology. Development and manpower are unchanged.
+
+The three Iron Age chapters (931, 732 and 597 BCE) draw the Levant's
+provinces along its landscape — the Jordan, the Yarmuk, the Jabbok and the
+Zered, the Carmel and the Lebanon crest, the edges of the Jezreel and the
+Shephelah — instead of the Roman-era Voronoi cells every other chapter uses
+(`js/data/iron_age_map.js`, SPEC §271). The other nine chapters keep every
+border they had; `node tools/provshape.mjs 931bce --png` previews the drawn
+map without a browser.
 
 Client tribute now reaches the overlord in full, including the trade and
 pilgrimage share already deducted from the client. The [balance harness](tools/README.md)

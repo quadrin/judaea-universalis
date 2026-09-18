@@ -19396,3 +19396,135 @@ ever drawn at.
   and non-palette colours survive the trip, ids come out scoped, and no bare
   id is left behind for another emblem to capture. A fifth holds the old shape
   still rendering on its own grid.
+
+## §271 — The Iron Age draws its provinces along the ground
+
+"Change the borders of provinces in early bookmarks to reflect the geography
+of them," the user said, "but keep borders the same for others." The early
+bookmarks are the three §268 seated — 931, 732 and 597 BCE — and the borders
+they wore were the atlas's: a weighted Voronoi between seeds placed for the
+toparchies of 66 CE, which is an administrative map and knows nothing about
+the ground. Under Roman names that read as intended. Under the names of Kings
+and Chronicles it read as a mistake, and it was one a player could check in
+the first minute: Gadora's cell, called Ramoth-Gilead, crossed the Jordan to
+touch Shechem and Jericho; Medaba's, called Kir-Hareseth, ran unbroken from
+the Dead Sea to the Hauran; and the Jezreel — one valley, the whole reason
+Megiddo exists — was cut three ways between the hill towns around it.
+
+The Iron Age's provinces WERE its landscapes. The Bible's own geography is a
+list of them — the hill country, the Shephelah, the Negeb, the Arabah, the
+plain, the valley of Jezreel, Gilead, Bashan, the plateau of Moab — and their
+borders were things a traveller could see: a river, a ridge, the edge of a
+valley, the foot of a range. §232 already had the tool for a border that is
+a known line: draw it, don't grow it. So the three chapters draw theirs.
+
+**The lever is `bookmark.mapRegions`**: a ring list in exactly the §232 form
+(`{ name, cells, ring }`), painted into the ID raster AFTER the atlas's own
+`countryRegions` and in the same painter's order, so that a pixel inside a
+ring is contested only by that ring's cells and a ring's cells claim nothing
+outside it. Inside a ring the members still divide the ground by weighted
+Voronoi, which is the right tool between two towns of one valley. The list
+lives in `js/data/iron_age_map.js` (twenty-eight rings, one list for all
+three chapters, because the ground is the same in every century and only the
+owners differ) and the registry attaches it as it attaches the political maps
+(§173): the bookmarks stay zero-import content packages, and
+`js/data/compendium.js` is the one place the chapter ↔ rings pairing is
+written down. A chapter with no entry carries `mapRegions: null`.
+
+**The lines are geographic, not political.** A ring is a landscape, not a
+kingdom: the Jezreel is one ring whoever holds Megiddo, the coastal plain is
+one ring whether Gaza pays Jerusalem or Nineveh, and ownership stays in each
+chapter's own tables. Where a border is a river the ring follows the river
+the map draws — the Jordan from the lake to the Dead Sea, the Yarmuk, the
+Jabbok, the Zered, the Yarkon, the Kishon, the Litani; where it is a range it
+follows the relief the map draws — the Carmel, the Lebanon and Anti-Lebanon
+crests, the rift escarpments; where it is the edge of a valley or the foot of
+a range it is traced from the ground. West of the river, north to south: the
+Hula and Hermon's foot (Dan), Hazor's sill, the Upper Galilee, the Acre plain,
+the Lower Galilee, Chinnereth's shore, the Jezreel, the Beth-Shean valley and
+the Jordan's west bank to the Damiya ford, the Sharon, Ibleam's hills,
+Manasseh, Ephraim, Benjamin, Jericho's plain, and then four bands running
+south together — the coastal plain, the Shephelah, the Judean ridge and the
+wilderness — over the Negeb and the Arabah to the Gulf. East of it: Bashan
+and the Golan, Gilead between the Yarmuk and the Jabbok, the Balqa below the
+Jabbok, Ammon inside its bend, Moab from the Heshbon line to the Zered, Edom
+to the Hisma. Damascus, the Hauran, Hamath and everything beyond stay on the
+atlas diagram: outside every ring nothing changes at all.
+
+**Neighbouring rings share their vertices.** §232's rings overshoot each
+other and let paint order decide; these are drawn edge to edge, every land
+border traced once and both rings carrying the same points, so the order
+decides nothing on land and no seam is left to heal. Every seaward and
+lakeward edge still overshoots into water and the land mask clips it — the
+coasts keep their hand-drawn accuracy and the Dead Sea's shores stay where
+the lake polygon puts them. Which cells a ring lists follows one rule,
+smoke187 holds it: every listed cell's seed is inside its ring, every cell
+the era plays whose seed is inside a ring is listed by that ring, and a
+latent cell folded into a member is listed beside its parent. Latent cells
+whose seed sits in one landscape while their parent sits in another
+(Herzliya north of the Yarkon, Qalqilya on the Sharon's edge, Ma'alot on the
+Galilee ridge, Wadi Rum in the Hisma) are deliberately NOT listed: an
+unlisted seed claims nothing inside a ring, and that is the point — the
+parent does not reach across the line for it.
+
+**The raster is rebuilt per chapter, and only when the rings change.** The
+renderer's ID pass is a function now (`buildProvinceRaster`), and
+`renderer.setMapRegions(rings)` runs it again with the atlas rings plus the
+chapter's — one ID pass and the same readback repairs boot does, written into
+the same `idArray` every reader captured — keyed on the rings' names, cells
+and lengths so that starting 732 after 931 costs nothing and starting 66 CE
+after either restores the atlas raster. `main.js` keys its profile cache on
+all three levers through `mapProfileKey` (js/data/map_profile.js): two eras
+with the same activations and merges can still draw different borders, and
+an era that draws none must never share a raster with one that does. The
+mapping is uploaded after the raster, so the §262 border field is derived
+over whatever raster stands. The land bytes the repairs need are 46 MB at
+this frame and are released after boot as before; a rebuild re-reads them
+from the land canvas and releases them again. Nine chapters ship no rings,
+and for them not one byte of the raster moves: that is the second half of
+the request, and smoke187 holds it by name.
+
+**Two bugs the shared vertices found, both fixed.** The §232 seam heal —
+browser and `tools/provshape.mjs` alike — read a healed pixel as paint for
+the next wedge test. Where two rings meet unringed ground at a shared vertex,
+the corner pixel outside both sees ring A on one side and ring B on another
+and is healed with the later; if that is not the ring it continues along,
+the next pixel out sees "A below, healed-B beside" and is healed too, and so
+on down the whole outer edge — a one-pixel thread of B's paint around A, which
+A's neighbours' seeds then claim. Europe's rings overshoot each other at every
+junction and never showed it. The heal now reads ORIGINAL paint only (one bit
+a pixel remembers what it healed): a kiss seam is one pixel wide by definition
+and every pixel of it has original paint on both sides, so exactly what the
+pass was written to heal still heals, and nothing creeps. And the provshape
+fill started at `ceil(yMin)`, skipping the top pixel row of every ring whose
+centre lay inside — one unpainted row along every flat-topped ring, invisible
+while every ring overshot its neighbour and visible the day two shared an
+edge; the browser's rasterizer starts at `floor(y0)` and never had it.
+
+**What the Node tool sees.** `provshape.mjs` paints a chapter's rings when
+it builds that chapter's frame (`chapterRegions`), and `chapter()` rasterises
+a drawn chapter afresh rather than folding the base diagram whatever `base` a
+caller brought — so smoke175's shape check and `node tools/provshape.mjs
+931bce --png` both see the era map, and the nine undrawn chapters are still
+one identity pass folded. The headless harness (`tools/autorun.mjs`, the
+smoke battery) reads adjacency from `geom-snapshot.json`, which is the
+atlas's identity raster; for the three Iron Age chapters that adjacency is
+the atlas's, not the drawn one, and the difference is a handful of river
+contacts (Gadora no longer meets Shechem). The balance numbers stay
+comparable with every earlier run, which is why the snapshot was not forked.
+
+- **Regression contract**: `smoke187` — exactly the three Iron Age chapters
+  carry rings and nine carry none; the atlas names none of them; the three
+  key alike on rings and unlike an undrawn chapter; every ring is a simple
+  polygon of existing cells, no cell in two rings, every seed inside its own
+  ring, every folded latent beside its parent; every active seed inside a
+  ring is listed by it; no two rings overlap on land, the flat edge above
+  Hazor has no unpainted row, and no land pocket is enclosed between rings;
+  and the era raster says what this section says — the Balqa does not cross
+  the Jordan to Shechem, Tirzah or Bethel, Moab lies between Ammon and Edom
+  and no longer runs to Bashan, the Jezreel meets the Lower Galilee, Ibleam
+  and Beth-Shean, the Jordan valley faces Jabesh-Gilead across the river, the
+  plain, the Shephelah and the ridge are three bands in order, only the
+  river-bank provinces face each other across the Jordan, 732 and 597 render
+  the same Levant as 931, and 66 CE is the identity raster folded with its
+  old contacts intact. `smoke175` runs unchanged over the drawn chapters.
