@@ -19501,6 +19501,20 @@ centre lay inside — one unpainted row along every flat-topped ring, invisible
 while every ring overshot its neighbour and visible the day two shared an
 edge; the browser's rasterizer starts at `floor(y0)` and never had it.
 
+The creep was not hypothetical in Europe either, and this is the one place
+outside the Iron Age chapters where a pixel moves. Measured over the whole
+atlas paint, old heal against new: 3,007 pixels differ, and every one of
+them is a thread the old heal had crept along an outer edge — 1,454 pixels
+of Romania's paint and 1,331 of Hungary's running up the Curzon line from
+the Carpathians at 48°N to the Baltic at 54.65°N, a one-pixel Romania along
+Poland's eastern border, plus 67 of Poland's own, 153 of Bulgaria's below
+the Evros and 2 of Greece's. None of it was a border anybody drew; §232's
+own text says the Curzon line and the Evros face unregioned ground and
+"never move". Those pixels are unringed now and fall to the nearest unringed
+seeds, which is what §232 always meant for them. No province border in the
+nine later chapters is otherwise touched: their rings are the atlas's, their
+mapping is the atlas's, and their raster is the atlas's.
+
 **What the Node tool sees.** `provshape.mjs` paints a chapter's rings when
 it builds that chapter's frame (`chapterRegions`), and `chapter()` rasterises
 a drawn chapter afresh rather than folding the base diagram whatever `base` a
