@@ -110,14 +110,27 @@ function fieldArmies(ctx) {
     });
   } catch (e) { return []; }
 }
+// Take a share off every host in the list, and dispose of anything the wind
+// finished — the same convention `monthlyAttrition` uses, because an army
+// left standing at zero men is a ghost that garrisons provinces, joins
+// battles and never dies. A card may not import `removeArmy`, so it goes
+// through the helper.
 function bleed(ctx, armies, share) {
   let lost = 0;
   for (const a of armies) {
     if (!a || !(a.men > 0)) continue;
     const n = Math.floor(a.men * share);
     if (n <= 0) continue;
-    a.men -= n;
+    a.men = Math.max(0, a.men - n);
     lost += n;
+    if (a.men <= 0) {
+      ctx.helpers.notify(ctx, {
+        title: 'A host is gone',
+        text: (a.name || 'A column') + ' did not come out of it.',
+        type: 'bad',
+      });
+      ctx.helpers.removeArmy(ctx, a.id);
+    }
   }
   return lost;
 }
