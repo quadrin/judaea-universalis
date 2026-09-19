@@ -1067,7 +1067,35 @@ export function initUI(staticCtx) {
     coalition: 'alert', fall: 'shieldCrack', verdict: 'scales',
     divergence: 'quill', chapter: 'scroll',
   };
-  let chronTab = 'record'; // 'record' | 'road'
+  // The dateline's own icons (SPEC §272). A murmur's kind is what sort of
+  // word it is, not how grave it is — there is no "bad" murmur, because a
+  // murmur the player must act on is a card.
+  const MURMUR_ICONS = {
+    trade: 'amphora', econ: 'coins', diplo: 'scroll', faith: 'altar',
+    war: 'swords', note: 'lamp',
+  };
+  let chronTab = 'record'; // 'record' | 'road' | 'dateline'
+
+  // What the world was saying while nothing was being decided. Newest first
+  // under year headings, exactly as the record reads, so the two books look
+  // like two books in the same hand.
+  function murmurRows(actions, months) {
+    let entries = [];
+    try { entries = (actions.getMurmurs ? actions.getMurmurs() : []) || []; } catch (e) { warnOnce('getMurmurs', e); }
+    const yr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
+    let rows = '';
+    let lastY = null;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const en = entries[i];
+      if (!en) continue;
+      if (en.y !== lastY) { lastY = en.y; rows += `<div class="chron-year">${esc(yr(en.y))}</div>`; }
+      rows += `<div class="chron-row">`
+        + `<span class="chron-ico">${icon(MURMUR_ICONS[en.kind] || 'lamp')}</span>`
+        + `<span class="chron-m">${esc(String(months[((en.m | 0) - 1 + 12) % 12] || ''))}</span>`
+        + `<span class="chron-text">${esc(en.text)}</span></div>`;
+    }
+    return rows || '<div class="chron-empty">The world has not said anything yet.</div>';
+  }
   // The record as it stands, newest first under year headings.
   function chronicleRows(actions, months) {
     let entries = [];
@@ -1160,7 +1188,9 @@ export function initUI(staticCtx) {
       document.getElementById('ui-root').appendChild(chronEl);
     }
     const months = (state.ctx && state.ctx.DEFINES && state.ctx.DEFINES.MONTH_NAMES) || [];
-    const body = chronTab === 'road' ? roadRows(actions, months) : chronicleRows(actions, months);
+    const body = chronTab === 'road' ? roadRows(actions, months)
+      : chronTab === 'dateline' ? murmurRows(actions, months)
+        : chronicleRows(actions, months);
     chronEl.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card ledger-card chron-card">
@@ -1168,6 +1198,7 @@ export function initUI(staticCtx) {
         <div class="chron-tabs">
           <button class="chron-tab${chronTab === 'record' ? ' on' : ''}" data-tab="record">The Record</button>
           <button class="chron-tab${chronTab === 'road' ? ' on' : ''}" data-tab="road">The Road Not Taken</button>
+          <button class="chron-tab${chronTab === 'dateline' ? ' on' : ''}" data-tab="dateline">The Dateline</button>
         </div>
         <div class="chron-wrap">${body}</div>
         <button class="btn peace-cancel">Close</button>

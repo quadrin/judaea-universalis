@@ -37,6 +37,26 @@ valley separates the Galilee relief from the central hills. Campaign clocks
 use larger text, and mapmode buttons expose their names and selection state
 to assistive technology. Development and manpower are unchanged.
 
+Every chapter now has a **year with a shape** (SPEC §272). The Levantine
+calendar is four seasons and each one does something: the rains turn the
+Sharon to mud, bleed a host caught in the open, stall a siege camp and shut
+the sea outright (*mare clausum* — Vegetius closes it on 11 November and
+opens it on 10 March); the campaign season costs nothing, which is what makes
+it the campaign season; the heat kills whoever is crossing the desert and
+speeds a siege, because in Av the cisterns decide it; the harvest lets a
+column feed itself off the country it stands in. Engines and metalled roads
+blunt all of it by 1948 and abolish none of it. The realm panel names the
+season and lists every number it is imposing.
+
+Riding on it: **twenty weather cards** about this rift and this sky — the
+earth moving along the Jordan, the Damiya landslide damming the river, the
+locust out of the south, the khamsin, snow on the passes, the cisterns going
+down, the winter sea — and **the Dateline**, a third tab in the chronicle
+where the world murmurs. Fifty-nine murmurs with no modal and no button: a
+toll-keeper's new schedule, a caravan forty days out of the incense country,
+a telegram that arrived in clear rather than in cipher. The dateline costs
+the seeded stream nothing, so the balance harness stays comparable.
+
 The three Iron Age chapters (931, 732 and 597 BCE) draw the Levant's
 provinces along its landscape — the Jordan, the Yarmuk, the Jabbok and the
 Zered, the Carmel and the Lebanon crest, the edges of the Jezreel and the

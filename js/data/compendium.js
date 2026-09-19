@@ -98,6 +98,7 @@ import { EVENTS_DAVID } from './events_house_of_david.js';
 import { EVENTS_STATECRAFT } from './events_statecraft.js';
 import { POLITICAL_MAPS } from './political_maps.js';
 import { MAP_REGIONS } from './iron_age_map.js';
+import { WEATHER_EVENTS } from './events_weather.js';
 
 // What EVERY chapter plays, 1948 included: the omens, and the margins
 // (SPEC §223). Marginalia rides BESIDE the generic pool rather than inside it
@@ -106,7 +107,21 @@ import { MAP_REGIONS } from './iron_age_map.js';
 // belongs to neither band. It is appended LAST so every other card is offered
 // its month in exactly the order it was offered before — and the card itself
 // takes nothing out of the seeded stream, so the order is all there is to keep.
-const SHARED = GENERIC_EVENTS.concat(EVENTS_MARGINALIA);
+// The sky rides with them (SPEC §272). Every chapter is played under the same
+// weather, because the Levant has had the same weather throughout: the rift
+// moves, the locust comes up out of the south, the khamsin blows for three
+// days at the turn of the season, and the winter sea takes whatever sails in
+// it. The pool carries both voices in the §52 bands — `maxYear: 1799` for the
+// years when a bad harvest was met by opening the royal granaries, `minYear:
+// 1900` for the years when it was met by a hydrological service — so a
+// chapter hears only its own.
+//
+// It rides BEFORE marginalia, not after, and that ordering is §223's rule
+// rather than an accident: the margins are appended last in every chapter so
+// that every other card is offered its month in the order it always was, and
+// `smoke148` holds it by index. The weather belongs with the generic pool it
+// is a cousin of, and marginalia stays where it was put.
+const SHARED = GENERIC_EVENTS.concat(WEATHER_EVENTS, EVENTS_MARGINALIA);
 
 // The shared pool every ANTIQUE chapter plays on top of it (SPEC §126). The omens and the
 // annexation question travel together: both are keyed on the player rather

@@ -2,10 +2,16 @@
 import { esc, warnOnce } from './format.js';
 import { icon } from './icons.js';
 
-const TYPES = { info: 1, war: 1, good: 1, bad: 1 };
-const TYPE_ICONS = { info: 'scroll', war: 'swords', good: 'laurel', bad: 'shieldCrack' };
+// `murmur` is the dateline's own type (SPEC §272): the world saying something
+// the player does not have to act on. It is styled down and it goes away
+// sooner, because a murmur that reads like a notice is just a card with the
+// buttons filed off — and six seconds of the player's eye is the wrong price
+// for the grain figure at Ptolemais.
+const TYPES = { info: 1, war: 1, good: 1, bad: 1, murmur: 1 };
+const TYPE_ICONS = { info: 'scroll', war: 'swords', good: 'laurel', bad: 'shieldCrack', murmur: 'lamp' };
 const MAX_TOASTS = 6;
 const LIFE_MS = 6000;
+const MURMUR_LIFE_MS = 4200;
 const FADE_MS = 550;
 
 export function createToasts(container, { onProvClick } = {}) {
@@ -27,7 +33,7 @@ export function createToasts(container, { onProvClick } = {}) {
       div.classList.add('toast-out');
       setTimeout(() => div.remove(), FADE_MS);
     };
-    const timer = setTimeout(remove, LIFE_MS);
+    const timer = setTimeout(remove, kind === 'murmur' ? MURMUR_LIFE_MS : LIFE_MS);
 
     div.addEventListener('click', () => {
       if (provName && onProvClick) {

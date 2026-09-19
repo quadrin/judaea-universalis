@@ -82,6 +82,8 @@ import { estateReport } from './estates.js';
 import { sacredReport, seatHighPriest as seatHighPriestCore, pilgrimageIncome } from './sacred.js';
 import { schoolsReport, issueRulingCore } from './schools.js';
 import { climateReport, attentionReport, harvestOdds } from './weather.js';
+import { seasonReport, seasonKeyOf, seaShut } from './seasons.js';
+import { murmurLog } from './ambient.js';
 import {
   communityInfo, diasporaReport, askCommunity as askCommunityCore,
   hostDiasporaInfo, askHostCommunities as askHostCommunitiesCore,
@@ -260,6 +262,10 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     pendingEvents: [], firedEvents: {}, flags: {},
     tagAliases: {}, // three letters a greater crown retired → who wears them now (SPEC §135)
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
+    // The dateline (SPEC §272) — its own ring, kept apart from the chronicle
+    // so a murmur about the price of barley can never flush a fallen city out
+    // of the record to make room for itself.
+    murmurs: [],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
     ceasefire: null, // a truce ordered from outside the war, in force to an end month (SPEC §261)
     armsDeals: {}, // who feeds whose arsenal: { client: supplier } (SPEC §181)
@@ -842,6 +848,17 @@ export const simHelpers = {
   // 'bad'; the return multiplies that event's monthly chance.
   climate(ctx, kind) {
     try { return harvestOdds(ctx, kind === 'bad' ? 'bad' : 'good'); } catch (e) { return 1; }
+  },
+  // The month of the year (SPEC §272), for content that belongs to one: a
+  // card about the latter rain has no business firing in Av, and a card about
+  // the cisterns has none firing in Shevat. Returns the season key —
+  // 'rains' | 'spring' | 'heat' | 'harvest' — so a package keeps its zero
+  // imports. `seaShut` answers the one question a card about shipping asks.
+  season(ctx) {
+    try { return seasonKeyOf(ctx.game.date); } catch (e) { return 'spring'; }
+  },
+  seaShut(ctx) {
+    try { return seaShut(ctx); } catch (e) { return false; }
   },
   // The world's own verdict (SPEC §252). A pivot the chapters used to PIN —
   // who won the civil war, whether the relief column arrived, which claimant
@@ -3249,6 +3266,12 @@ export function gameActions(ctx) {
     getChronicle() {
       try { return Array.isArray(g.chronicle) ? g.chronicle.slice() : []; } catch (e) { warnOnce('chronicle', 'getChronicle failed', e); return []; }
     },
+    // The dateline (SPEC §272): what the world was saying while nothing was
+    // being decided. Its own ring, kept apart from the chronicle so that the
+    // price of barley never flushes the fall of the Temple out of the record.
+    getMurmurs() {
+      try { return murmurLog(ctx); } catch (e) { warnOnce('murmurs', 'getMurmurs failed', e); return []; }
+    },
 
     // ---- merge all -------------------------------------------------------------
     mergeAllInto(armyId) {
@@ -3738,6 +3761,10 @@ export function gameActions(ctx) {
     // ---- the years, and the eye (nation panel, SPEC §170) -------------------
     getClimate() {
       try { return climateReport(ctx); } catch (e) { warnOnce('getClimate', 'getClimate failed', e); return null; }
+    },
+    // ---- and the month of the year (nation panel, SPEC §272) ---------------
+    getSeason() {
+      try { return seasonReport(ctx); } catch (e) { warnOnce('getSeason', 'getSeason failed', e); return null; }
     },
     getAttention() {
       try { return attentionReport(ctx); } catch (e) { warnOnce('getAttention', 'getAttention failed', e); return null; }
@@ -4321,6 +4348,7 @@ export function reviveGame(saved) {
   }
   if (!saved.rivals) saved.rivals = {}; // pre-rivalry saves (SPEC §86): nobody named yet
   if (!Array.isArray(saved.divergences)) saved.divergences = []; // pre-ledger saves (SPEC §89)
+  if (!Array.isArray(saved.murmurs)) saved.murmurs = []; // pre-dateline saves (SPEC §272)
   if (!Array.isArray(saved.retiredChapters)) saved.retiredChapters = [];
   if (!saved.doctrine) saved.doctrine = {}; // pre-doctrine saves (SPEC §85): flags carry the rest
   // Pre-§135 saves carry no forwarding table — but every formed tag already

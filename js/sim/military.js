@@ -16,6 +16,10 @@ import {
   MOUNTED_TERRAIN,
 } from '../data/units.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
+// The month of the year (SPEC §272). seasons.js imports nothing from the sim
+// precisely so that this file, navy.js and weather.js may all consult it
+// without a cycle: it is date arithmetic and a table, nothing else.
+import { seasonAttrition, seasonMoveFactor, seasonSiegeFactor } from './seasons.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
 import { axisOf } from './doctrine.js';
@@ -614,7 +618,13 @@ export function hopDays(ctx, fromId, destId, army) {
     if (against >= AIRC(ctx, 'interdictHardAt', 4)) interdict = 1.5;
     else if (against >= AIRC(ctx, 'interdictAt', 2)) interdict = 1.25;
   }
-  return clamp(Math.round((4 + dist / 24) * mc * interdict / spd), 2, 40);
+  // The mud (SPEC §272): in the rains the Sharon, the Huleh and the coast
+  // road cost a column half again its time, and the limestone ridges rather
+  // less. Every other season returns 1, so this is the winter and nothing
+  // else. The clamp's ceiling of 40 days is what keeps a February march
+  // through the marsh from becoming a march that never ends.
+  const season = seasonMoveFactor(ctx, p);
+  return clamp(Math.round((4 + dist / 24) * mc * interdict * season / spd), 2, 40);
 }
 // ------------------------------------------------------------- the cease-fire
 // SPEC §261. A truce ordered by somebody with no army of their own — Bernadotte
@@ -1714,7 +1724,11 @@ function siegeDay(ctx, p) {
       const airNetHere = airNetAgainst(ctx, p.id, s.by);
       const siegeAt = AIRC(ctx, 'siegeAt', 3);
       const airSiege = airNetHere >= siegeAt ? 2 : (airNetHere <= -siegeAt ? 0.25 : 1);
-      s.progress += airSiege * resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1) * firepower
+      // And the season (SPEC §272). A camp in the rains digs nothing; a camp
+      // in Av is watching the cisterns go down inside the wall, which is how
+      // the sieges of this country were actually decided.
+      const season = seasonSiegeFactor(ctx);
+      s.progress += season * airSiege * resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1) * firepower
         * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;
     }
@@ -2033,6 +2047,17 @@ export function monthlyAttrition(ctx) {
       const airAgainst = -airNetAgainst(ctx, a.prov, a.tag);
       const attrAt = AIRC(ctx, 'attritionAt', 2);
       if (airAgainst >= attrAt) attr += Math.min(3, 1 + (airAgainst - attrAt));
+    }
+    // The year itself (SPEC §272). A host in the open on ground its own side
+    // does not hold pays the season — the rains in Kislev, the desert in Av —
+    // and the scope is deliberately the air-interdiction scope above, for the
+    // same reason: a garrison sitting at home in its own supplied country is
+    // not a column in the mud, and taxing it would be a standing tax on
+    // peacetime rather than a cost of campaigning. The arid term is NOT so
+    // scoped, because the Arabah in August does not ask whose flag is over it.
+    {
+      const exposed = isHostile(ctx, a.tag, p.controller) || !sameSide(ctx, a.tag, p.controller);
+      attr += seasonAttrition(ctx, p, exposed);
     }
     attr = clamp(attr, 0, 12);
     // Supply lines: an organized siege camp caps attrition (Rome fed Masada's

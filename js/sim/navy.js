@@ -7,6 +7,9 @@
 import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding, opinionOf, devTotal, ceasefireHolds } from './military.js';
 import { unlockedGen, cappedGen, genMult, navalGenName, MODERNIZE_COST_PER_SHIP_PER_GEN } from '../data/tech.js';
 import { queueUnitRecruitment } from './recruitment.js';
+// Mare clausum (SPEC §272): from the early rain to the latter rain the
+// ancient Mediterranean was shut, and the grain fleets waited for March.
+import { seasonSeaFactor } from './seasons.js';
 
 const SHIP_COST = 30;        // talents to lay down a hull
 const SHIP_UPKEEP = 0.5;     // talents per ship per month
@@ -38,7 +41,26 @@ function anchor(ctx, provId) {
 export function seaHopDays(ctx, fromId, toId) {
   const a = anchor(ctx, fromId), b = anchor(ctx, toId);
   const dist = Math.hypot(b.x - a.x, b.y - a.y);
-  return clamp(Math.round(2 + dist / SEA_PX_PER_DAY), 2, 30);
+  // The winter sea (SPEC §272). Vegetius puts the close at 11 November and
+  // the open at 10 March, and what it meant in practice was not that nobody
+  // sailed but that sailing cost you: hugging the coast, waiting out weeks in
+  // harbour, and arriving when you arrived. A crossing that takes a fortnight
+  // in Nisan takes well over a month in Tevet — which is the whole reason a
+  // winter invasion from over the sea is a different proposition from a
+  // spring one. Steam ends it: by 1900 the factor is 1.
+  //
+  // The SUMMER voyage is clamped first, at the 30 days it was always clamped
+  // at, and only then does the winter stretch it. Applying the season before
+  // the old ceiling would have quietly lengthened the longest fair-weather
+  // crossings on the map as well, which is not what a winter is.
+  const open = clamp(Math.round(2 + dist / SEA_PX_PER_DAY), 2, 30);
+  return clamp(Math.round(open * seaSeasonFactor(ctx)), 2, 90);
+}
+// One call site's worth of guard: a fleet must still be able to move at all
+// if a future atlas ships a date the season table cannot read.
+function seaSeasonFactor(ctx) {
+  const f = seasonSeaFactor(ctx);
+  return Number.isFinite(f) && f >= 1 ? f : 1;
 }
 
 export function fleetsOf(ctx, tag) {

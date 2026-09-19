@@ -160,6 +160,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('scales', 'icon-k')}Stability</span><span class="pp-v" data-ref="stability"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('laurel', 'icon-k')}<span data-ref="legitimacyLabel">Legitimacy</span></span><span class="pp-v" data-ref="legitimacy"></span></div>
         <div class="pp-row hidden" data-ref="yearsRow"><span class="pp-k">${icon('grain', 'icon-k')}The years</span><span class="pp-v" data-ref="years"></span></div>
+        <div class="pp-row hidden" data-ref="seasonRow"><span class="pp-k">${icon('grain', 'icon-k')}The season</span><span class="pp-v" data-ref="season"></span></div>
         <div class="pp-row hidden" data-ref="absorbRow"><span class="pp-k">${icon('alert', 'icon-k')}Direct rule</span><span class="pp-v neg" data-ref="absorb"></span></div>
       </div>
       <!-- The character of the realm (SPEC §203). The needles are not a fact
@@ -900,6 +901,23 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refs.yearsRow.dataset.tt = cl.text
           + '\nThe rains run in cycles of about a generation, and they bend the odds on harvests and droughts in both directions.'
           + '\nSame campaign, same years — this is a fact about the world, not about your luck.';
+      }
+      // The month of the year (SPEC §272). The row names the season, says how
+      // long it has left, and lists in the tooltip exactly what it is costing
+      // right now — a difficulty the player cannot read is not difficulty.
+      let se = null;
+      if (self && actions && typeof actions.getSeason === 'function') {
+        try { se = actions.getSeason(); } catch (e) { warnOnce('np-getSeason', e); }
+      }
+      refs.seasonRow.classList.toggle('hidden', !se);
+      if (se) {
+        const cls = se.key === 'spring' ? 'pos' : se.key === 'rains' ? 'neg' : '';
+        setHtml(refs.season, `<span class="${cls}">${esc(se.name)}</span>`
+          + ` · ${se.months} month${se.months === 1 ? '' : 's'}`);
+        refs.seasonRow.dataset.tt = se.blurb
+          + (se.effects.length ? '\n\n' + se.effects.join('\n') : '\n\nIt is costing us nothing.')
+          + '\n' + se.nextName + ' follows.'
+          + (se.modern ? '\nEngines and metalled roads blunt all of this, but they do not abolish it.' : '');
       }
       refs.eyeRow.classList.toggle('hidden', !at);
       if (at) {
