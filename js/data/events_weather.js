@@ -321,6 +321,26 @@ export const WEATHER_EVENTS = [
           });
         }),
       },
+      {
+        // There is time to re-sow if the seed comes from somewhere, and in a
+        // district that has just lost its year the seed does not exist. This
+        // is the decision the storehouse was FOR.
+        label: 'Open the seed store and let them sow again',
+        tooltip: '−55 talents. The district is down a third for six months instead of a half for twelve.',
+        effects: guard('hail_resow', (ctx) => {
+          const p = pickAny(ctx, grainProvinces(ctx));
+          ctx.helpers.adjust(ctx, ctx.game.playerTag, { treasury: -55 });
+          if (!p) return;
+          ctx.helpers.addProvinceModifier(ctx, p.name, {
+            id: 'hail', name: 'Sown Twice', months: 6, effects: { taxMult: 0.67, prodMult: 0.67 },
+          });
+          ctx.helpers.notify(ctx, {
+            title: 'Sown twice at ' + p.name,
+            text: 'The seed goes out from the store within the week and the second sowing is in the ground.',
+            type: 'info', provName: p.name,
+          });
+        }),
+      },
     ],
   },
   {
@@ -337,13 +357,26 @@ export const WEATHER_EVENTS = [
     aiOption: 0,
     options: [
       {
-        label: 'A good year is coming',
+        label: 'Let the country keep it',
         tooltip: '"The Rains Came Right": +10% income and −1 unrest across the realm for a year.',
         effects: guard('early_rain', (ctx) => {
           ctx.helpers.addTagModifier(ctx, ctx.game.playerTag, {
             id: 'rains_right', name: 'The Rains Came Right', months: 12,
             effects: { incomeMult: 1.1, unrestAll: -1 },
           });
+        }),
+      },
+      {
+        // The oldest fiscal temptation there is: reassess in the one year
+        // everybody can pay. It works, and it is remembered.
+        label: 'Reassess. They can pay this year',
+        tooltip: '+130 talents now, and +1 unrest across the realm for eighteen months.',
+        effects: guard('early_rain_tax', (ctx) => {
+          ctx.helpers.adjust(ctx, ctx.game.playerTag, { treasury: 130 });
+          ctx.helpers.addTagModifier(ctx, ctx.game.playerTag, {
+            id: 'reassessed', name: 'Reassessed in a Good Year', months: 18, effects: { unrestAll: 1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The assessment was raised in the year the rains came right.');
         }),
       },
     ],
@@ -380,6 +413,20 @@ export const WEATHER_EVENTS = [
           ctx.helpers.notify(ctx, {
             title: 'Water at ' + p.name, text: 'The channels are cut to the new line. ' + p.name + ' waters land it never watered.',
             type: 'econ', provName: p.name,
+          });
+        }),
+      },
+      {
+        // Costs nothing and buys something the treasury cannot: the men whose
+        // terraces they are dig their own channels and remember who let them.
+        label: 'Let the men whose land it is dig it',
+        tooltip: 'No cost. +1 stability, and a smaller gain: +10% production there for twenty years.',
+        effects: guard('springs_local', (ctx) => {
+          const p = pickWeighty(ctx, ownedProvinces(ctx, (q) => q.terrain !== 'desert'));
+          ctx.helpers.adjust(ctx, ctx.game.playerTag, { stability: 1 });
+          if (!p) return;
+          ctx.helpers.addProvinceModifier(ctx, p.name, {
+            id: 'new_springs', name: 'The Springs Rose', months: 240, effects: { prodMult: 1.1 },
           });
         }),
       },
@@ -452,6 +499,20 @@ export const WEATHER_EVENTS = [
           }
         }),
       },
+      {
+        // Going back down the bed after it is the kind of order that gets
+        // the wagons and costs the men who fetch them. Both of those are
+        // real, which is why it is a decision and not a free recovery.
+        label: 'Go back down the bed for the wagons',
+        tooltip: 'The baggage is recovered, but the column loses a further 2% and three days.',
+        effects: guard('wadi_recover', (ctx) => {
+          const armies = fieldArmies(ctx);
+          const one = armies.length ? [ctx.rng.pick(armies)] : [];
+          bleed(ctx, one, 0.05);
+          for (const a of one) { if (a) { a.path = []; a.moveDaysLeft = 0; } }
+          ctx.helpers.chronicle(ctx, 'war', 'The wagons were brought back up out of the wadi, at a price.');
+        }),
+      },
     ],
   },
   {
@@ -477,6 +538,20 @@ export const WEATHER_EVENTS = [
           }
           for (const a of fieldArmies(ctx)) { if (a) { a.path = []; a.moveDaysLeft = 0; } }
           ctx.helpers.chronicle(ctx, 'era', 'Snow shut the highland roads.');
+        }),
+      },
+      {
+        // The corvée: every village on the line turns out with what it has
+        // and the road is open in four days. It works. It is also the thing
+        // villages remember about a crown.
+        label: 'Call out the villages to open the road',
+        tooltip: '−30 talents, +1.5 unrest across the realm for six months. Nothing halts.',
+        effects: guard('snow_corvee', (ctx) => {
+          ctx.helpers.adjust(ctx, ctx.game.playerTag, { treasury: -30 });
+          ctx.helpers.addTagModifier(ctx, ctx.game.playerTag, {
+            id: 'winter_corvee', name: 'The Winter Levy', months: 6, effects: { unrestAll: 1.5 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The villages were called out to dig the highland road open.');
         }),
       },
     ],
@@ -694,6 +769,17 @@ export const WEATHER_EVENTS = [
           });
         }),
       },
+      {
+        // Costs nothing material and turns the fear into the one thing a
+        // crown can use: a country that came out and did something together
+        // about a sky it could not do anything about.
+        label: 'Call a day of prayer and be seen at the front of it',
+        tooltip: 'No unrest at all, and +3 legitimacy.',
+        effects: guard('red_dust_pray', (ctx) => {
+          ctx.helpers.adjust(ctx, ctx.game.playerTag, { legitimacy: 3 });
+          ctx.helpers.chronicle(ctx, 'era', 'Red dust fell for two days and a day of prayer was called.');
+        }),
+      },
     ],
   },
 
@@ -829,6 +915,22 @@ export const WEATHER_EVENTS = [
             id: 'field_closed', name: 'Field Closed', months: 1, effects: { navalMult: 0.8 },
           });
           ctx.helpers.chronicle(ctx, 'war', 'Weather closed the field for a week.');
+        }),
+      },
+      {
+        // Somebody takes off into it because what was arriving today matters
+        // more than the ceiling. Sometimes it does. The price is a crew and
+        // an airframe, and the price is paid whether or not it mattered.
+        label: 'The flight goes. Whatever is on it is needed tonight',
+        tooltip: '−60 talents and a crew. The field stays open.',
+        effects: guard('mstorm_fly', (ctx) => {
+          ctx.helpers.adjust(ctx, ctx.game.playerTag, { treasury: -60, manpower: -200 });
+          ctx.helpers.notify(ctx, {
+            title: 'They went anyway',
+            text: 'The aircraft got in. One of them did not get out again.',
+            type: 'war',
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'A flight went out into closed weather and one crew did not come back.');
         }),
       },
     ],

@@ -19636,6 +19636,17 @@ treasury now, or let the country carry it and pay in unrest later — and that
 is not a failure of imagination. It is what a pre-modern state's disaster
 relief *was*, and the reason a king kept a reserve at all.
 
+Every one of the twenty offers **two** answers, because §39's rule is right
+and because a disaster with a single button is a worse card besides. Seven of
+them shipped with one in the first cut and `smoke39` caught all seven; the
+second answers are the better half of those cards now. Hail asks whether to
+open the seed store so the district can sow twice. The rains coming right on
+the seventeenth of Marheshvan asks the oldest fiscal question there is —
+reassess in the one year everybody can pay, and be remembered for it. Snow on
+the passes asks whether to call the villages out to dig. And the closed
+airfield of 1948 asks whether tonight's flight goes anyway, which sometimes
+it did, and which cost a crew whether or not it mattered.
+
 ### The dateline
 
 The complaint that a chapter is boring is rarely a complaint that too little

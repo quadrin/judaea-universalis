@@ -139,10 +139,14 @@ console.log('== 5. the weather cards ==');
     'every one is era-banded — nothing here is timeless');
   ok(WEATHER_EVENTS.every((e) => e.once === false && Number.isFinite(e.cooldownMonths) && Number.isFinite(e.chance)),
     'every one is repeatable with a cooldown and a monthly chance');
+  // Two answers, not one: §39's rule for anything the player is asked. A card
+  // with a single button is a notice, and a disaster with a single button is
+  // a worse card besides — the decision these events actually forced is the
+  // whole content of them.
   ok(WEATHER_EVENTS.every((e) => typeof e.trigger === 'function'
-    && Array.isArray(e.options) && e.options.length >= 1
-    && e.options.every((o) => typeof o.effects === 'function' && o.label)),
-    'every one has a trigger and at least one labelled, working option');
+    && Array.isArray(e.options) && e.options.length >= 2
+    && e.options.every((o) => typeof o.effects === 'function' && o.label && o.tooltip)),
+    'every one has a trigger and at least two labelled options, each with a tooltip');
   ok(WEATHER_EVENTS.every((e) => Number.isFinite(e.aiOption) && e.aiOption < e.options.length),
     'every one names a recorded course the harness can answer with');
   const antique = WEATHER_EVENTS.filter((e) => e.maxYear === 1799).length;
