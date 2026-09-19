@@ -328,5 +328,46 @@ console.log('== 10. the season reaches the board ==');
     '…in both directions');
 }
 
+console.log('== 11. every weather option runs, in every season, in both eras ==');
+{
+  // A content package that throws inside the tick takes the campaign with it,
+  // which is why every option body in the pool is wrapped in `guard`. The
+  // guard means a broken card fails SILENTLY, so the only way to know the
+  // pool works is to fire all of it: every card, every option, four seasons,
+  // an antique board and a modern one. A warning out of the package counts as
+  // a failure here even though the campaign survived it.
+  const realWarn = console.warn;
+  let caught = [];
+  let threw = 0;
+  let guarded = 0;
+  let ran = 0;
+  console.warn = (...a) => { caught.push(a.join(' ')); };
+  try {
+    for (const chapter of ['66ce', '1948ce']) {
+      for (const ev of WEATHER_EVENTS) {
+        for (let i = 0; i < ev.options.length; i++) {
+          const { ctx, game } = boot(chapter);
+          const me = game.playerTag;
+          // A host in the field, so the cards that reach for one find one.
+          const foreign = game.provinces.find((p) => p && !p.impassable && p.controller && p.controller !== me);
+          if (foreign) ctx.helpers.spawnArmy(ctx, me, foreign.name, { men: 5000, name: 'Test Host' });
+          for (const m of [1, 4, 8, 10]) {
+            game.date.m = m;
+            caught = [];
+            ran++;
+            try { ev.options[i].effects(ctx); }
+            catch (e) { threw++; realWarn('    THREW', chapter, ev.id, 'opt' + i, 'month' + m, e && e.message); }
+            const fromPool = caught.filter((w) => /data\/weather/.test(w));
+            if (fromPool.length) { guarded++; realWarn('    GUARD CAUGHT', chapter, ev.id, 'opt' + i, 'month' + m, fromPool[0].slice(0, 160)); }
+          }
+        }
+      }
+    }
+  } finally { console.warn = realWarn; }
+  ok(ran > 200, ran + ' option firings exercised');
+  ok(threw === 0, 'no weather option threw (' + threw + ')');
+  ok(guarded === 0, 'no weather option was silently swallowed by its guard (' + guarded + ')');
+}
+
 console.log(failures ? `smoke188: ${failures} FAIL` : 'smoke188: ALL PASS');
 process.exit(failures ? 1 : 0);

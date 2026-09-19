@@ -19721,7 +19721,7 @@ one gets dearer outright. That is the right shape, and it is the shape the
 sources have: the reason these wars took the years they took is that eight
 months of every twelve, somebody was waiting for the weather.
 
-- **Regression contract**: `smoke188`, ninety-one checks in ten parts — the
+- **Regression contract**: `smoke188`, ninety-four checks in eleven parts — the
   four seasons and their month map; every figure each season imposes, with
   the sign and the scope of each (the rains bleed the open field and not the
   garrison, the marsh worse than the field, the desert a mercy in winter and
@@ -19735,6 +19735,11 @@ months of every twelve, somebody was waiting for the weather.
   played ten years each and actually hearing the world; and the wiring proved
   on the live board — the same march through grain country taking longer in
   Tevet than in Nisan through the sim's own `hopDays`, and the same crossing
-  taking longer through `seaHopDays`. `smoke148` holds §223's ordering rule
+  taking longer through `seaHopDays`. And the whole weather pool fired
+  exhaustively — every card, every option, four seasons, an antique board and
+  a modern one, 320 firings — because every option body is wrapped in a guard
+  and a guard means a broken card fails SILENTLY: a warning out of the
+  package counts as a failure there even though the campaign survived it.
+  `smoke148` holds §223's ordering rule
   across the new pool: the margins are still appended last, and the weather
   rides before them with the generic pool it is a cousin of.
