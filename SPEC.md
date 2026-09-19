@@ -19542,3 +19542,215 @@ comparable with every earlier run, which is why the snapshot was not forked.
   river-bank provinces face each other across the Jordan, 732 and 597 render
   the same Levant as 931, and 66 CE is the identity raster folded with its
   old contacts intact. `smoke175` runs unchanged over the drawn chapters.
+
+## §272 — The year has weather, and the world has a voice
+
+"These bookmarks are all way too easy and boring," the user said. "Needs more
+weather! Background events! Cards! The works!"
+
+Three complaints, and they are not the same complaint. *Easy* is about what
+the world costs. *Boring* is about what the world does while you are not
+being charged for anything. And *weather* was, at that moment, a word in a
+panel: §170 gave the campaign a climate index that wandered between wet
+decades and dry ones and bent the odds on exactly two harvest cards. It was
+a fact about the decade with nothing to do in the month.
+
+So §272 is three systems that arrive together, because each of them is the
+wrong fix on its own.
+
+### The season
+
+"And it came to pass, at the turn of the year, at the time when kings go out
+to battle" (2 Sam 11:1) is not a figure of speech, it is a logistics
+statement, and until this section the game did not know it. A campaign could
+be prosecuted in Shevat exactly as in Iyyar. Twelve months of the year were
+interchangeable, which made war a pure function of army size.
+
+`js/sim/seasons.js` gives the Levantine year its actual shape — four seasons,
+read from the month alone, each with a mechanical fingerprint nothing else
+has:
+
+- **The rains** (Nov–Feb). The yoreh falls in Marheshvan and the malkosh in
+  Adar, and between them the country is mud. A host in the open on ground its
+  own side does not hold bleeds an extra 2% a month; a march through farmland,
+  marsh or the coast road takes up to 63% longer, and through the limestone
+  ridges far less, which is why the ridge road is the winter road; a siege
+  camp digs 30% slower; and **the sea is shut** — Vegetius puts the close at
+  11 November and the open at 10 March, and a crossing that takes a fortnight
+  in Nisan takes well over a month in Tevet. The desert is the one ground the
+  rains improve, which is why the incense road ran in the months the sea did
+  not.
+- **The campaign season** (Mar–May). Costs nothing, anywhere. That is what
+  makes it the campaign season.
+- **The heat** (Jun–Sep). The desert takes an extra 2.5% a month from whoever
+  is crossing it, flag or no flag — and a siege camp presses 20% *faster*,
+  because the sieges of this country were decided by water and in Av the
+  besieger has it and the besieged does not. Masada, Jerusalem in 70,
+  Jotapata: the cisterns, not the walls.
+- **The harvest** (Oct). A column feeds itself off the country it is standing
+  in, so grain country costs 1% less; the dry ground costs 1% more; and the
+  first clouds are already over the sea.
+
+The scope of the field term is deliberately the §154 air-interdiction scope,
+for the same reason: a garrison at home in its own supplied country is not a
+column in the rain, and taxing it would be a standing tax on peacetime rather
+than a cost of campaigning. The arid term is *not* so scoped, because the
+Arabah in August does not ask whose flag is over it.
+
+**Modernity blunts it and never abolishes it.** Every figure scales by the
+century, from full bite before 1800 to a measured floor of 35% from 1900 —
+the Jerusalem convoys of the winter of 1948 bogged in exactly the mud
+Vespasian's did, and `wx_modern_mud` is about that. The one exception is the
+closed sea, which opens outright, because a motor ship is a different thing
+and not a hardier galley.
+
+**And it is legible.** The realm panel names the season, says how many months
+it has to run and what follows, and lists in its tooltip every number it is
+imposing right now. A difficulty the player cannot read is not difficulty, it
+is noise. `seasons.js` imports nothing from the sim precisely so that
+`military.js`, `navy.js` and `weather.js` may all consult it without a cycle:
+it is date arithmetic and a table.
+
+### The weather cards
+
+`js/data/events_weather.js` — twenty decision cards about *this* sky and
+*this* rift, not about generic bad luck. The Levant is a rift valley on a
+plate boundary with a desert on one side and a sea on the other, and its
+disasters are specific: the earth moves along the Jordan and always has (31
+BCE, 363, 749, 1033, 1202, 1927 — the same fault every time); the Damiya
+landslides have dammed the river and stopped it dead within living memory;
+the locust comes up out of the south in the spring of a wet year; the khamsin
+blows for three days and men die of it; snow shuts the highland passes about
+twice in a reign; the cisterns go down in Av; and the winter sea takes
+whatever sails in it.
+
+Every card that belongs to a season says so in its trigger, through the new
+`ctx.helpers.season` — the latter rain cannot fail in Av, and hail does not
+fall on standing grain in a month when there is no standing grain. A pool
+that fires its whole hand in any month is a slot machine. A pool that waits
+for its month is a calendar, and a calendar is a thing a player can plan
+against.
+
+Almost every card offers the same shape of decision — pay for it out of the
+treasury now, or let the country carry it and pay in unrest later — and that
+is not a failure of imagination. It is what a pre-modern state's disaster
+relief *was*, and the reason a king kept a reserve at all.
+
+Every one of the twenty offers **two** answers, because §39's rule is right
+and because a disaster with a single button is a worse card besides. Seven of
+them shipped with one in the first cut and `smoke39` caught all seven; the
+second answers are the better half of those cards now. Hail asks whether to
+open the seed store so the district can sow twice. The rains coming right on
+the seventeenth of Marheshvan asks the oldest fiscal question there is —
+reassess in the one year everybody can pay, and be remembered for it. Snow on
+the passes asks whether to call the villages out to dig. And the closed
+airfield of 1948 asks whether tonight's flight goes anyway, which sometimes
+it did, and which cost a crew whether or not it mattered.
+
+### The dateline
+
+The complaint that a chapter is boring is rarely a complaint that too little
+is *decided*. It is a complaint that too little is *happening* — that between
+the Seleucid ultimatum and Beth-Zur there are four years in which the country
+appears to contain nobody but the player's own armies. The fix for that is
+not more modals. Every modal is a claim on attention, and a game that makes
+twenty claims a year about nothing teaches the player to dismiss the
+twenty-first without reading it.
+
+So: the **murmur**. No options, no modal, no button. One line — the grain
+price, a toll-keeper's new schedule, a caravan in from the incense country
+forty days out, a prophet who has been moved on once and has come back, a
+telegram that arrived in clear rather than in cipher. Fifty-nine of them in
+`js/data/ambient.js`, dealt at most one a month by `js/sim/ambient.js`, shown
+as a quieter toast in its own style and kept in **The Dateline**, a third tab
+beside the Record and the Road Not Taken.
+
+Three rules make it work:
+
+- **It is about somebody who is not the player.** "Trouble on the frontier"
+  is a headline with nothing under it. "The toll-keeper at Lydda has begun
+  charging by the animal rather than by the load, and the caravan masters
+  have started going round" names a person's decision, has a consequence
+  somebody is already working around, and can be done nothing about. The
+  world is not an interface.
+- **It reads the campaign.** Whether there is a war on, how the treasury
+  stands, what the season is, which courts actually border us. The first cut
+  took any living court and promptly had the money-changers of Jerusalem
+  weighing Celtiberian coin and a gift arriving from the Arverni — not
+  colour, a mistake about the world, and the kind that makes a player stop
+  believing the rest of the line. `neighbourTags` asks the map instead.
+- **It is its own book.** The chronicle caps at 400 entries and holds the
+  things that happened; a murmur every other month for three centuries would
+  flush the fall of the Temple out of it to make room for the price of
+  barley. Two books, kept apart, saved separately.
+
+**And it costs the seeded stream nothing.** This is the load-bearing property
+and the reason `ambient.js` has a hash function in it. §223 found the rule the
+hard way: a card that rolls `ev.chance` every month moves the shared stream's
+position for everything drawn after it, so a pool that mostly does not fire
+still changes every battle and every harvest in every campaign of every
+chapter, and the balance harness comes back with a different world merely
+because the pool exists. What the scheduler reads instead is where the stream
+currently *stands*, mixed with the month through murmur3's finalizer — a
+number that already varies with everything that has happened, whose reading
+advances nothing. `smoke188` runs two hundred years of ambient passes and
+holds `rngState` unmoved through all of them. An all-AI table hears nothing
+at all, which is both correct (a murmur is addressed to somebody reading it)
+and what keeps `tools/autorun.mjs` comparable.
+
+So the only balance change §272 makes is the season, which is the one it
+means to make.
+
+### What it cost the board
+
+Measured twice, against a worktree of the commit before this section.
+
+All-AI, twelve chapters × three seeds × twenty years: **thirty-three of
+thirty-six runs land somewhere different**, and total player-side holdings
+come out eleven provinces lower. The board moved, and it moved everywhere.
+
+Then the honest test, a chair actually being played: five chapters, fifteen
+years, same seed, every card answered on its recorded course, with and
+without the season.
+
+    chapter   treasury before   treasury after   delta
+    167 BCE              +180             +132      −48
+    66 CE                −662           −1,334     −672
+    132 CE                +49             −405     −454
+    40 BCE             −1,042           −1,607     −565
+    614 CE                +92              +18      −74
+
+Five chapters out of five end poorer, and the mechanism is not a hidden
+multiplier: it is the winter attrition on hosts that stayed in the field, the
+sieges that did not close before Marheshvan and had to be paid for through
+another season, the voyages that took twice as long, and the bill for the
+disasters. Province counts move in both directions, which is correct — the
+field-attrition term is scoped to a host on ground its own side does not
+hold, so the season taxes the ATTACKER. A defensive chapter gets a little
+easier to survive and a great deal more expensive to survive; an offensive
+one gets dearer outright. That is the right shape, and it is the shape the
+sources have: the reason these wars took the years they took is that eight
+months of every twelve, somebody was waiting for the weather.
+
+- **Regression contract**: `smoke188`, ninety-four checks in eleven parts — the
+  four seasons and their month map; every figure each season imposes, with
+  the sign and the scope of each (the rains bleed the open field and not the
+  garrison, the marsh worse than the field, the desert a mercy in winter and
+  a weapon in Av, the harvest a mercy on grain country); modernity's floor
+  measured at 35% with the sea opening outright; the panel's legibility in
+  all twelve months; the weather pool's era bands, cooldowns, triggers,
+  recorded courses and id space, registered whole into all twelve chapters
+  and gated so 1948 hears only its own voice; the dateline's bands and
+  shape; two centuries of ambient passes with the seeded stream unmoved and
+  the chronicle unflooded; an all-AI table hearing nothing; three chapters
+  played ten years each and actually hearing the world; and the wiring proved
+  on the live board — the same march through grain country taking longer in
+  Tevet than in Nisan through the sim's own `hopDays`, and the same crossing
+  taking longer through `seaHopDays`. And the whole weather pool fired
+  exhaustively — every card, every option, four seasons, an antique board and
+  a modern one, 320 firings — because every option body is wrapped in a guard
+  and a guard means a broken card fails SILENTLY: a warning out of the
+  package counts as a failure there even though the campaign survived it.
+  `smoke148` holds §223's ordering rule
+  across the new pool: the margins are still appended last, and the weather
+  rides before them with the generic pool it is a cousin of.

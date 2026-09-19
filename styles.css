@@ -680,6 +680,23 @@ button {
 .toast-war  { border-left-color: var(--red-deep); }
 .toast-good { border-left-color: var(--green); }
 .toast-bad  { border-left-color: #6b2a2a; }
+/* The dateline (SPEC §272): the world saying something the player does not
+   have to act on. Quieter than every other toast on purpose — dimmer border,
+   softer ink, no small-caps shout in the title — because the moment a murmur
+   reads like a notice it has become a card with the buttons filed off. */
+.toast-murmur {
+  border-left-color: var(--gold-dim);
+  opacity: 0.86;
+  font-size: 12.5px;
+}
+.toast-murmur .toast-title {
+  font-variant: normal;
+  font-weight: normal;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
 .toast-title {
   font-variant: small-caps;
   letter-spacing: 0.05em;
