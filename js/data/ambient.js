@@ -258,7 +258,7 @@ export const AMBIENT_MURMURS = [
     text: (ctx) => {
       const p = bigProv(ctx, 4);
       return 'They have begun laying out a new quarter above the spring at ' + ((p && p.name) || capitalName(ctx))
-        + ', on ground that was olive terraces last year. The price of a plot there has trebled since Nisan.';
+        + ', on ground that was olive terraces last year. The price of a plot there has trebled in a year.';
     },
   },
 
@@ -362,7 +362,7 @@ export const AMBIENT_MURMURS = [
   {
     id: 'amb_first_rain_smell', kind: 'note', maxYear: 1799, season: 'rains',
     title: 'The first rain',
-    text: (ctx) => 'It rained in the night for the first time since Nisan, and the whole country '
+    text: (ctx) => 'It rained in the night for the first time since the spring, and the whole country '
       + 'woke up to the smell of it.',
   },
   {

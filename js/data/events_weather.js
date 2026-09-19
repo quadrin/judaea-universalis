@@ -266,7 +266,7 @@ export const WEATHER_EVENTS = [
     weather: 'bad',
     maxYear: 1799,
     title: 'The Latter Rain Does Not Come',
-    desc: 'Adar went out clear. The barley is in the ear and there is no water behind '
+    desc: 'The last month of the rains went out clear. The barley is in the ear and there is no water behind '
       + 'it, and every farmer in the hill country can already tell you the number of the '
       + 'harvest to within a tenth. The early rain was enough to plant on. The late one '
       + 'was the one that mattered.',
@@ -348,10 +348,10 @@ export const WEATHER_EVENTS = [
     weather: 'good',
     maxYear: 1799,
     title: 'The Early Rain, on the Day',
-    desc: 'It began in the afternoon of the seventeenth of Marheshvan, which is the day '
-      + 'the sages say it ought to begin, and it did not stop until the cisterns were '
-      + 'talking. Ploughing started the same week. The whole country is in a good mood, '
-      + 'and a country in a good mood is a fact a treasury can spend.',
+    desc: 'It began in the afternoon of the very day the reckoners hold it ought to begin, '
+      + 'and it did not stop until the cisterns were talking. Ploughing started the same '
+      + 'week. The whole country is in a good mood, and a country in a good mood is a fact '
+      + 'a treasury can spend.',
     forTag: 'player', once: false, cooldownMonths: 48, chance: 0.03,
     trigger: (ctx) => season(ctx) === 'rains' && grainProvinces(ctx).length >= 1,
     aiOption: 0,
@@ -387,7 +387,7 @@ export const WEATHER_EVENTS = [
     maxYear: 1799,
     title: 'The Springs Rise',
     desc: 'The spring at the foot of the town has come up a hand\'s breadth and held '
-      + 'there since Tishri, and the old men who measure such things against a particular '
+      + 'there since the first rains, and the old men who measure such things against a particular '
       + 'stone say they have not seen it this high in forty years. The watered land below '
       + 'it has quietly doubled.',
     forTag: 'player', once: false, cooldownMonths: 96, chance: 0.01,
@@ -563,7 +563,7 @@ export const WEATHER_EVENTS = [
     weather: 'bad',
     maxYear: 1799,
     title: 'The Cisterns Are Going Down',
-    desc: 'The engineer has been sounding them every week since Sivan and he has stopped '
+    desc: 'The engineer has been sounding them every week since the barley was cut and he has stopped '
       + 'reporting the depth and started reporting the days. The rock cisterns of the '
       + 'highland hold one winter, and this winter did not fill them. Nobody will say the '
       + 'word siege out loud, but that is the number he is counting.',
@@ -589,7 +589,7 @@ export const WEATHER_EVENTS = [
         }),
       },
       {
-        label: 'Ration it and pray for Marheshvan',
+        label: 'Ration it and pray for the early rain',
         tooltip: 'A town: +3 unrest and −30% production until the rains.',
         effects: guard('cistern_ration', (ctx) => {
           const p = pickWeighty(ctx, ownedProvinces(ctx, (q) => (q.fort | 0) > 0 || devTotal(q) >= 8));
@@ -645,8 +645,9 @@ export const WEATHER_EVENTS = [
     id: 'wx_winter_sea',
     maxYear: 1799,
     title: 'The Sea Takes Them',
-    desc: 'They sailed in Kislev because the price was good in Kislev, which is the '
-      + 'same reason anyone ever sails in Kislev. The first anyone at the harbour knew '
+    desc: 'They sailed in the dead of the winter because the price was good in the dead '
+      + 'of the winter, which is the same reason anyone ever sails then. The first anyone '
+      + 'at the harbour knew '
       + 'was cargo coming ashore down the whole length of the beach for a week, and then '
       + 'a spar with a name on it.',
     forTag: 'player', once: false, cooldownMonths: 48, chance: 0.03,
@@ -685,11 +686,11 @@ export const WEATHER_EVENTS = [
     id: 'wx_eclipse',
     maxYear: 1799,
     title: 'The Sun Is Eaten',
-    desc: 'In the month of Simanu the sun went out at midday and the stars came out '
-      + 'with it. The birds went to roost. It lasted the length of a slow walk across a '
-      + 'courtyard and then it came back, and not one person who saw it will ever describe '
-      + 'it the same way twice. The scribes have written it into the year\'s heading, '
-      + 'which is how a date gets fixed for a thousand years.',
+    desc: 'The sun went out at midday and the stars came out with it. The birds went '
+      + 'to roost. It lasted the length of a slow walk across a courtyard and then it came '
+      + 'back, and not one person who saw it will ever describe it the same way twice. '
+      + 'Every scribe in the country has written it into the heading of the year, which is '
+      + 'how a date gets fixed for a thousand years.',
     forTag: 'player', once: false, cooldownMonths: 240, chance: 0.004,
     trigger: (ctx) => !!T(ctx),
     aiOption: 0,

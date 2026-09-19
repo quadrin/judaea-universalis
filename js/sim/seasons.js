@@ -104,8 +104,8 @@ export const SEASONS = {
   heat: {
     key: 'heat',
     name: 'The heat',
-    blurb: 'Nothing has fallen since Adar. The desert kills whoever is crossing it — '
-      + 'and inside a besieged town the cisterns are going down.',
+    blurb: 'Nothing has fallen since the latter rain. The desert kills whoever is crossing '
+      + 'it — and inside a besieged town the cisterns are going down.',
     fieldAttrition: 0,
     aridAttrition: 2.5,
     mudMove: 0,
