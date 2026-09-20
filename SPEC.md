@@ -19935,4 +19935,9 @@ rule.
   deal signed there; the petition priced, cooled down, stacked to its ceiling,
   refused at the ceiling without charge, and decaying back to room; and the
   bars the lord reads at nought and at four. `smoke51` and `smoke59` were
-  updated: both asserted the old behaviour, which was the bug.
+  updated: both asserted the old behaviour, which was the bug. `smoke95` was
+  updated too, for a different reason: it pinned the literal spelling of the
+  AI-vs-AI settlement comparison rather than its claim. The claim — that the
+  horizon defaults to 36 months and 50 points — still holds and is now
+  asserted as such, together with the petitions being the only thing that
+  moves it.

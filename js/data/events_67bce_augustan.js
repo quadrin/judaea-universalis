@@ -295,7 +295,7 @@ export const EVENTS_67_AUGUSTAN = [
         h.setFlag(ctx, 'heirsKilled', true);
         h.chronicle(ctx, 'era', 'The sentence is carried out at Sebaste, in the city where their father married their mother, and three hundred officers go with them.'); } },
     { label: 'Commute it — exile, and the Hasmonean blood stays in the house',
-      tooltip: '−50 talents and a permanent risk. +25 legitimacy, −1.5 unrest in the heartland permanently, and "The Blood Stayed in the House" (+0.06 legitimacy a month). The court that wanted the executions is still there and is now frightened: −2 stability and +8% chance of the succession being fought over rather than inherited.',
+      tooltip: '−50 talents. +25 legitimacy, −1.5 unrest in the heartland permanently, and "The Blood Stayed in the House" (+0.06 legitimacy a month). The court that wanted the executions is still there and is now frightened of the men it failed to kill: −2 stability.',
       fx: (ctx) => { const h = ctx.helpers;
         pay(ctx, { treasury: -50, legitimacy: 25, stability: -2 });
         stir(ctx, HEART, { id: 'a67_blood_stayed', name: 'The Blood Stayed in the House', months: -1, effects: { unrest: -1.5 } });
