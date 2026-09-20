@@ -7,10 +7,12 @@ import { BOOKMARK_931 } from './bookmark_931bce.js';
 import { EVENTS_931 } from './events_931bce.js';
 import { EVENTS_931_WORLD } from './events_931bce_world.js';
 import { EVENTS_931_YEARS } from './events_931bce_years.js';
+import { EVENTS_931_HOUSES } from './events_931bce_houses.js';
 import { BOOKMARK_732 } from './bookmark_732bce.js';
 import { EVENTS_732 } from './events_732bce.js';
 import { EVENTS_732_WORLD } from './events_732bce_world.js';
 import { EVENTS_732_YEARS } from './events_732bce_years.js';
+import { EVENTS_732_HEZEKIAH } from './events_732bce_hezekiah.js';
 import { BOOKMARK_597 } from './bookmark_597bce.js';
 import { EVENTS_597 } from './events_597bce.js';
 import { EVENTS_597_WORLD } from './events_597bce_world.js';
@@ -204,7 +206,10 @@ export const ERAS = [
   // ninth century they run into; the world package beside it is the age's own
   // calendar, from the Delta coming apart to the morning Samaria's people are
   // counted out and marched to the cities of the Medes.
-  { bookmark: withPolitical(BOOKMARK_931), events: EVENTS_931.concat(EVENTS_931_WORLD, EVENTS_931_YEARS, ANTIQUE) },
+    // §273: the houses package — the house of Ahab and the house of David,
+  // which the chapter named and never staged: Jezebel, the Elisha cycle,
+  // Jehu's revolution, Athaliah, Hosea, and the fall of Samaria.
+{ bookmark: withPolitical(BOOKMARK_931), events: EVENTS_931.concat(EVENTS_931_WORLD, EVENTS_931_YEARS, EVENTS_931_HOUSES, ANTIQUE) },
   // The century the word 'empire' is invented in (SPEC §268): Damascus made
   // into provinces, the Galilee and the Gilead made into provinces, and two
   // Israelite kingdoms finding out what a tribute schedule is. Its chain is
@@ -213,7 +218,11 @@ export const ERAS = [
   // killed in battle, and the scroll found in the masonry — and the world
   // package is the empire's own arc, from Sargon's usurpation to the field at
   // Carchemish.
-  { bookmark: withPolitical(BOOKMARK_732), events: EVENTS_732.concat(EVENTS_732_WORLD, EVENTS_732_YEARS, ANTIQUE) },
+    // §273: the Hezekiah package — the deportation and the foreigners settled
+  // in Samaria, which is where the Samaritans come from; the bronze serpent;
+  // the tunnel and its inscription; the Rabshakeh at the conduit; the camp
+  // in the morning; Manasseh; and Josiah's passover.
+{ bookmark: withPolitical(BOOKMARK_732), events: EVENTS_732.concat(EVENTS_732_WORLD, EVENTS_732_YEARS, EVENTS_732_HEZEKIAH, ANTIQUE) },
   // The chapter about what survives a state (SPEC §268): the city taken and
   // not burned, an oath sworn by the wrong god, two prophets shouting numbers
   // in the temple court, and a letter north telling ten thousand deported
