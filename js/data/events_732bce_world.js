@@ -67,6 +67,8 @@ function alive(ctx, tag) {
 // a thousand miles away does not get to reassign it.
 function cedeNamed(ctx, names, fromTag, toTag) {
   if (!alive(ctx, toTag) || fromTag === toTag) return 0;
+  // Never the player's own court — see the note on endCourt below.
+  if (ctx.game.playerTag === fromTag) return 0;
   let n = 0;
   for (const name of names) {
     const p = ctx.prov && ctx.prov(name);

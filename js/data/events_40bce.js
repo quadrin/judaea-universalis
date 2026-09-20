@@ -1271,7 +1271,19 @@ export const EVENTS_40 = [
             id: 'egypt_annexed', name: 'The Wealth of Egypt', months: 60,
             effects: { incomeMult: 1.1 },
           });
-          ctx.helpers.chronicle(ctx, 'fall', 'Alexandria falls to Octavian; the Ptolemaic court reaches its end on the live map.');
+          // …and the court actually ends (SPEC §277). `endWar` settles under
+          // uti possidetis, which gives Rome what its legions STAND IN — so
+          // until this line a Ptolemaic kingdom Rome had beaten but not
+          // occupied kept sixteen provinces while the chronicle below
+          // announced it had reached its end on the live map. The modifier
+          // is named 'The Wealth of Egypt' and Rome was not getting Egypt.
+          const ptolemaic = countOwned(ctx, 'PTO');
+          if (ctx.game.playerTag !== 'PTO') {
+            try { ctx.helpers.dissolveTag(ctx, 'PTO', 'ROM'); }
+            catch (e) { warnOnce('alexandria:dissolve', e); }
+          }
+          ctx.helpers.chronicle(ctx, 'fall', 'Alexandria falls to Octavian; the Ptolemaic court reaches its end on the live map'
+            + (ptolemaic ? ' — ' + ptolemaic + ' provinces enter the Roman census' : '') + '.');
         } else {
           ctx.helpers.addTagModifier(ctx, 'PTO', {
             id: 'egypt_defies_octavian', name: 'Egypt Defies Octavian', months: -1,

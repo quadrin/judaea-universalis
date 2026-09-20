@@ -1431,6 +1431,18 @@ static site, the zero dependencies, or the missing build step changes.
   with a mission tree of its own for the things neither half could ask: one
   altar, a coast, and a succession nobody contested.
 
+- **When an empire falls, the map says so.** "Babylon falls" did not make
+  Babylon fall: the card applied a −65% modifier to the dead empire and a +25%
+  one to the live one, and Babylon kept all fifty-one of its provinces and went
+  on governing them. Damascus was plainer — its own chronicle line says the
+  city "becomes three Assyrian provinces" and the three of them stayed
+  Aramaean for ever. Aram, Lydia, Assyria (in two stages, because 612 did not
+  end it and 605 did), Babylon, the Ptolemies and the Goths now actually end,
+  and their ground actually changes hands. Egypt is made a satrapy instead of
+  deleted, because it revolts again sixty years later. What a card can never do
+  is take a province off anybody but the named loser — so the ground you
+  conquered stays yours — or confiscate the court the player is sitting in.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

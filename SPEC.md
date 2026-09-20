@@ -20022,3 +20022,73 @@ empire that deports everybody else.
   hook is also fired directly against a board it should change and one it
   should not, because it is guarded at both call sites and a guarded hook that
   does nothing looks exactly like one that worked.
+
+## §277 — When an empire falls, the map says so
+
+Reported from play: *"the Babylon falls event doesn't actually have Babylon
+fall."*
+
+It did not. `ev597w_babylon_falls` applied a −65% modifier to the dead empire
+and a +25% one to the live one, and Babylon kept all fifty-one of its
+provinces and went on governing them for the rest of the chapter — a stat line
+where an event should be. Damascus was plainer still: its own chronicle line
+says the city *"becomes three Assyrian provinces"*, and the three of them
+stayed Aramaean for ever. The same held for Nineveh, Carchemish, Sardis, and
+the Ptolemaic court that "reaches its end on the live map" while holding
+sixteen provinces.
+
+**The mechanism was never missing.** §111 and `events_167bce_provinces.js` have
+had the convention for a long time — *a world card rearranges what history
+rearranged, and never confiscates what the player took* — and Tigranes at
+Antioch has always moved real ground. The Iron Age world spines simply never
+adopted it, and two later cards settled a war instead of ending a court.
+
+**Two helpers, the §111 rule, three refusals.** `cede`/`cedeNamed` moves only
+ground the NAMED loser still owns, so a card a thousand miles away cannot hand
+Persia a province the player bled for. `endCourt` dissolves a court into its
+heir — ground, armies, wars and the §135 forwarding address, all of which
+`dissolveTagCore` already knew how to carry. Both refuse the player's own
+court: `dissolveTagCore` would MOVE a human out of a court it deletes, which is
+right for the engine and wrong for a piece of world news to do unasked. The
+first draft of `cede` walked around that refusal through its own fallback path
+and the suite caught it — a chapter seating a human in Babylon would have had
+the empire confiscated by a card describing somebody else's Babylon.
+
+| card | before | after |
+|---|---|---|
+| 931 · Damascus falls | DMS 3, ASR 7 | DMS 0, ASR 10, Aram ends |
+| 732 · Nineveh, 612 | ASR 33, MDA 2, BBL 5 | ASR 26, MDA 6, BBL 8 |
+| 732 · Carchemish, 605 | ASR 26, BBL 8 | ASR 0, BBL 34, Assyria ends |
+| 597 · Sardis, 547 | LYD 7 | LYD 0, Lydia ends |
+| 597 · Babylon falls, 539 | BBL 51, PAS 13 | BBL 0, PAS 64, Babylon ends |
+| 40 BCE · Alexandria | PTO 16 | PTO 0, Rome's census |
+| 529 · Taginae | OST *n* | OST 0, Italy to the empire |
+
+**Two deliberate non-deletions.** 612 divides Mesopotamia and leaves the west
+with the Harran rump, because that is what happened — Egypt marched north in
+609 precisely because the Levant was loose — and 605 is where the rump stops
+existing. And Cambyses makes Egypt a SATRAPY rather than deleting it: Egypt
+keeps its name, its land and its temples under Persian rule and revolts
+repeatedly, including under Inaros in 463 in this chapter's own Persian
+package (§274), so what changes is who it answers to.
+
+**What this section does NOT do.** Ninety-nine world cards match a
+conquest-shaped phrase; most of them are news and should move nothing — a
+battle won, an edict published, a chancellor kneeling, a colony founded, a
+suicide at Utica. Courts like Commagene, Parthia and the Sasanians hold no
+ground in the chapters whose cards name them, so their endings are narrative on
+this map by construction. This section wires the cards where a named court on
+the map demonstrably ends or named territory demonstrably changes hands, and
+leaves the rest alone rather than manufacturing map changes to pad a count.
+
+- **Regression contract**: `smoke192.mjs` — each card fired on a real board
+  with the ground counted before and after; Aram, Lydia, Babylon, the Harran
+  rump and the Ptolemies ending, and Assyria explicitly NOT ending in 612;
+  the forwarding addresses kept, so cards written against Assyria and Babylon
+  still find a court; Egypt surviving as a satrapy with the Inaros card still
+  in its chapter; a player conquest staged in front of every Iron Age card and
+  still the player's afterwards; the §111 property stated whole — after
+  Babylon falls, not one of the 254 provinces belonging to other courts
+  changed hands; and a human seated in Babylon keeping all fifty-two of its
+  provinces, because the card stands down rather than confiscating the chair
+  it is describing.

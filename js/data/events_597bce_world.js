@@ -72,6 +72,11 @@ function alive(ctx, tag) {
 function cede(ctx, fromTag, toTag) {
   const g = ctx.game;
   if (!alive(ctx, fromTag) || !alive(ctx, toTag) || fromTag === toTag) return 0;
+  // Never the player's own court. `endCourt` refuses it and this is the path
+  // that walked around the refusal: a chapter that seats a human in Babylon
+  // would have had the empire confiscated out from under them by a card
+  // describing what happened to somebody else's Babylon.
+  if (g.playerTag === fromTag) return 0;
   let n = 0;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
@@ -180,12 +185,16 @@ export const EVENTS_597_WORLD = [
       const me = P(ctx);
       h.adjust(ctx, me, { mar: 40 });
       mod(ctx, 'the_fourteen_days', 'The Fourteen Days', { moraleMult: 1.08, fortDefBonus: 1 }, 240);
-      tagMod(ctx, 'LYD', 'sardis_taken', 'Sardis Taken', {
-        milPowerMult: 0.4, incomeMult: 0.4, manpowerMult: 0.5,
-      }, -1);
+      // Lydia is finished (SPEC §277), and the tooltip has said so all along:
+      // the Persian has the whole of Anatolia AND ITS MONEY. Until this line
+      // Croesus kept governing seven provinces at −60% strength for ever.
+      const lydia = ctx.game.provinces.filter((q) => q && !q.impassable && q.owner === 'LYD').length;
+      endCourt(ctx, 'LYD', 'PAS');
       tagMod(ctx, 'PAS', 'the_lydian_treasury', 'The Lydian Treasury', {
         incomeMult: 1.3, milPowerMult: 1.12,
       }, -1);
+      if (lydia) h.chronicle(ctx, 'era', 'The kingdom of Lydia ends: ' + lydia
+        + ' provinces of Anatolia answer to Persia.');
       h.chronicle(ctx, 'era', 'The Persian takes Sardis in fourteen days and with it the richest '
         + 'treasury in the world. The oracle is held to have been technically correct.');
     },
@@ -263,6 +272,17 @@ export const EVENTS_597_WORLD = [
       tagMod(ctx, 'MIZ', 'the_satrapy_of_egypt', 'The Satrapy of Egypt', {
         milPowerMult: 0.5, incomeMult: 0.6, manpowerMult: 0.5,
       }, -1);
+      // A SATRAPY, not a deletion (SPEC §277). Egypt keeps its name, its land
+      // and its temples under Persian rule and revolts repeatedly — Inaros
+      // raises it again in 463 in this chapter's own Persian package — so the
+      // thing that changes is who it answers to, which is what the chronicle
+      // line below has always claimed and what the map never showed.
+      try {
+        const egy = ctx.game.tags.MIZ;
+        if (egy && egy.alive !== false && ctx.game.tags.PAS && ctx.game.playerTag !== 'MIZ') {
+          egy.overlord = 'PAS';
+        }
+      } catch (e) { warnOnce('cambyses:satrapy', e); }
       h.chronicle(ctx, 'era', 'Egypt becomes a satrapy. There is no independent kingdom left '
         + 'between the Aegean and the Indus.');
     },
