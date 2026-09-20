@@ -253,6 +253,7 @@ export const BOOKMARK_167 = {
     // Tabae marching to hold his own far satrapies. Seated by
     // js/data/political_maps.js, same contract as the west.
     'KSH', 'SAB', 'HDR', 'GBA', 'CHO',
+    'ACH', 'ATH', 'CRE', 'RHO', 'MAC', 'BIT', 'PRG', 'GAL',
   ],
   // Standing rivalries (SPEC §73): the era's weather. The Sixth Syrian War
   // just ended with Antiochus humiliated at Eleusis (SEL–PTO, SEL–ROM), and
@@ -385,8 +386,8 @@ export const BOOKMARK_167 = {
     // Media and Babylonia remain Seleucid in 167 and fall by event.
     // -- v5.0: the wider world -------------------------------------------------
     // Hellas: the leagues and free cities (GRC — Rome's shadow lies off-map)
-    'Corinth': 'GRC', 'Athens': 'GRC', 'Sparta': 'GRC', 'Gortyn': 'GRC',
-    'Rhodes': 'GRC', 'Halicarnassus': 'GRC',
+    'Corinth': 'ACH', 'Athens': 'ATH', 'Sparta': 'ACH', 'Gortyn': 'CRE',
+    'Rhodes': 'RHO', 'Halicarnassus': 'RHO',
     // Ptolemaic Africa: the Pentapolis and the Nile to the cataract
     'Cyrene': 'PTO', 'Marmarica': 'PTO', 'Paraetonium': 'PTO', 'Syene': 'PTO',
     // Arabia and the Seleucid east (Persis is still nominally the king's)
@@ -397,8 +398,8 @@ export const BOOKMARK_167 = {
     // and the Illyrian shore are the Republic's (base map_data holdings), and
     // its shadow now lies ON the map. The Aegean north stays Greek; Pontus
     // holds its Black Sea kingdom under Pharnaces' heirs.
-    'Thessalonica': 'GRC', 'Hadrianopolis': 'GRC', 'Byzantion': 'GRC',
-    'Nicaea': 'GRC', 'Smyrna': 'GRC', 'Ancyra': 'GRC',
+    'Thessalonica': 'MAC', 'Hadrianopolis': 'THR', 'Byzantion': 'THR',
+    'Nicaea': 'BIT', 'Smyrna': 'PRG', 'Ancyra': 'GAL',
     'Sinope': 'PNT', 'Trapezus': 'PNT', 'Phasis': 'PNT',
     'Caucasian Albania': 'ARM', 'Hyrcania': 'SEL',
   },

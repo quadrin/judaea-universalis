@@ -206,9 +206,9 @@ const OTHER_732 = {
   // The Greek world is a hundred city-states and this map has one banner for
   // it; at this cell size that banner is the honest answer and a separate
   // court for each harbour is not.
-  'Corinth': 'GRC', 'Athens': 'GRC', 'Sparta': 'GRC', 'Gortyn': 'GRC',
-  'Rhodes': 'GRC', 'Byzantion': 'GRC', 'Syracusae': 'GRC', 'Tarentum': 'GRC',
-  'Rhegium': 'GRC',
+  'Corinth': 'COR', 'Athens': 'ATH', 'Sparta': 'SPT', 'Gortyn': 'CRE',
+  'Rhodes': 'RHO', 'Byzantion': 'THR', 'Syracusae': 'SYC', 'Tarentum': 'TAR',
+  'Rhegium': 'TAR',
   // The Tyrian emporia of the Syrtis, which by now look to the New City.
   'Oea': 'CAR', 'Leptis Magna': 'CAR', 'Macomades': 'CAR', 'Panormus': 'CAR',
   // …and what is nobody's in 732. Rome is villages sharing a market, Cyrene
@@ -494,6 +494,7 @@ export const BOOKMARK_732 = {
     // ninety years old, Tartessos is trading tin, the horse-peoples are over
     // the Caucasus, and the Garamantes are where they always are.
     'CAR', 'GRC', 'GRM', 'SCY', 'CIM', 'HDR',
+    'COR', 'ATH', 'SPT', 'CRE', 'RHO', 'SYC', 'TAR', 'THR',
   ],
   rivalries: [['ASR', 'BBL'], ['ASR', 'URA'], ['ASR', 'ELA'], ['JDH', 'ISL'], ['JDH', 'EDM']],
   affinities: [

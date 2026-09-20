@@ -1443,6 +1443,17 @@ static site, the zero dependencies, or the missing build step changes.
   is take a province off anybody but the named loser — so the ground you
   conquered stays yours — or confiscate the court the player is sitting in.
 
+- **The Greek world was never one country.** A tag called "Greece" held
+  Corinth, Athens, Sparta, Gortyn and Rhodes as a single state in 732 BCE — and
+  Syracuse, Tarentum and Rhegium with them. In 167 it also held Thessalonica,
+  which is Macedon, along with Nicaea, Ancyra and Smyrna. Fourteen courts now
+  stand where the blob did: Macedon, Athens, Sparta, Corinth, the Achaean
+  League, Rhodes, Crete, Syracuse, Tarentum, Cyrene, the Milesian colonies,
+  Pergamon, Bithynia and Galatia, each wearing what it actually struck — the
+  owl, the lambda, the Vergina sun, the rose, the labyrinth, the silphium, the
+  torc. The Iron Age and Maccabean boards went from 27, 20 and 54 courts to 35,
+  31 and 57, and "Greece" is now what it should be: modern Greece, in 1948.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

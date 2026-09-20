@@ -147,6 +147,22 @@ export const DEFINES = {
     UK: { aggression: 0.1, caution: 2.0 },
     ITA: { aggression: 0.1, caution: 2.0 },
     // formable crowns (SPEC §24)
+    // The Greek world's own tempers (SPEC §278): the leagues talk, the
+    // military states do not, and the trading cities avoid everybody.
+    MAC: { aggression: 1.25, caution: 0.85 },
+    ATH: { aggression: 1.05, caution: 1.0 },
+    SPT: { aggression: 1.15, caution: 1.1 },
+    COR: { aggression: 0.7, caution: 1.3 },
+    ACH: { aggression: 0.85, caution: 1.2 },
+    RHO: { aggression: 0.5, caution: 1.5 },
+    CRE: { aggression: 0.9, caution: 1.1 },
+    SYC: { aggression: 1.2, caution: 0.9 },
+    TAR: { aggression: 0.8, caution: 1.2 },
+    CYR: { aggression: 0.7, caution: 1.25 },
+    MIL: { aggression: 0.8, caution: 1.2 },
+    PRG: { aggression: 0.9, caution: 1.25 },
+    BIT: { aggression: 0.85, caution: 1.3 },
+    GAL: { aggression: 1.3, caution: 0.8 },
     MLI: { aggression: 1.0, caution: 1.0 },
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
     // The crowns of government (SPEC §250). All five are player-only, so these
@@ -424,6 +440,10 @@ export const DEFINES = {
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
+    MAC: 'monarchy', ATH: 'republic', SPT: 'monarchy', COR: 'republic',
+    ACH: 'republic', RHO: 'republic', CRE: 'republic', SYC: 'monarchy',
+    TAR: 'republic', CYR: 'monarchy', MIL: 'republic', PRG: 'monarchy',
+    BIT: 'monarchy', GAL: 'tribal',
     MLI: 'monarchy', AIS: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
     // The five crowns of government and the two empires (SPEC §250) are
     // ABSENT from this table, and that absence is the section's whole
@@ -1054,6 +1074,100 @@ export const DEFINES = {
       ideas: { incomeMult: 1.05 },
     },
     // ---- formable crowns (SPEC §24): never in a bookmark's activeTags ----
+    // ---- the Greek world, which was never one country (SPEC §278) ----------
+    // `GRC` held Athens, Sparta, Corinth, Rhodes and Gortyn as a single state
+    // in 732 BCE — and Syracuse, Tarentum and Rhegium with them, four
+    // centuries before anything called Greece existed. These are the courts
+    // the chapters' own world packages already talk about: Marathon and
+    // Salamis and the league at Delos name Athens; Pydna and the sack of
+    // Corinth name Macedon and the Achaeans; the Attalid will names Pergamon.
+    MAC: {
+      name: 'Macedon', adj: 'Macedonian', color: [168, 142, 46], religion: 'hellenism', culture: 'greek', capital: 'Thessalonica',
+      description: 'The kingdom the Greeks called barbarous until it conquered them, and then '
+        + 'conquered Persia. What is left after Pydna is four republics forbidden to trade '
+        + 'with each other.',
+      ideas: { manpowerMult: 1.15, disciplineMult: 1.08, diploSeats: -4 },
+    },
+    ATH: {
+      name: 'Athens', adj: 'Athenian', color: [64, 110, 178], religion: 'hellenism', culture: 'greek', capital: 'Athens',
+      description: 'Twenty thousand men who vote, a fleet paid for by a silver mine, and a '
+        + 'habit of deciding the largest questions in an afternoon by a show of hands.',
+      ideas: { navalMult: 1.2, tradeMult: 1.12, legitimacyAdd: -0.1 },
+    },
+    SPT: {
+      name: 'Sparta', adj: 'Spartan', color: [150, 56, 52], religion: 'hellenism', culture: 'greek', capital: 'Sparta',
+      description: 'A permanent army standing on a permanent occupation: every free man a '
+        + 'soldier because every unfree one outnumbers him seven to one.',
+      ideas: { disciplineMult: 1.18, moraleMult: 1.1, incomeMult: 0.85 },
+    },
+    COR: {
+      name: 'Corinth', adj: 'Corinthian', color: [88, 132, 108], religion: 'hellenism', culture: 'greek', capital: 'Corinth',
+      description: 'Two harbours on two seas four miles apart, and a slipway between them. '
+        + 'Everything that crosses this isthmus pays, and everything crosses it.',
+      ideas: { tradeMult: 1.22, navalMult: 1.08, manpowerMult: 0.9 },
+    },
+    ACH: {
+      name: 'the Achaean League', adj: 'Achaean', color: [110, 148, 92], religion: 'hellenism', culture: 'greek', capital: 'Corinth',
+      description: 'Twelve cities that vote as one and keep their own walls — the last '
+        + 'Greek answer to the question of what to do about Macedon, and then about Rome.',
+      ideas: { diploSeats: 6, manpowerMult: 1.08, legitimacyAdd: -0.12 },
+    },
+    RHO: {
+      name: 'Rhodes', adj: 'Rhodian', color: [198, 158, 62], religion: 'hellenism', culture: 'greek', capital: 'Rhodes',
+      description: 'A navy that polices the sea for everybody and a maritime law the whole '
+        + 'Mediterranean copies. It survives by being useful to whoever is winning.',
+      ideas: { navalMult: 1.25, tradeMult: 1.15, forceLimitMult: 0.9 },
+    },
+    CRE: {
+      name: 'Crete', adj: 'Cretan', color: [126, 106, 150], religion: 'hellenism', culture: 'greek', capital: 'Gortyn',
+      description: 'A hundred cities that agree about nothing except the export trade, which '
+        + 'is archers, and the other one, which everybody else calls piracy.',
+      ideas: { manpowerMult: 1.12, navalMult: 1.1, diploSeats: -5 },
+    },
+    SYC: {
+      name: 'Syracuse', adj: 'Syracusan', color: [76, 146, 158], religion: 'hellenism', culture: 'greek', capital: 'Syracusae',
+      description: 'The richest Greek city in the world, on the wrong side of it — permanently '
+        + 'at war with Carthage, permanently governed by whichever general won the last one.',
+      ideas: { navalMult: 1.15, incomeMult: 1.12, legitimacyAdd: -0.15 },
+    },
+    TAR: {
+      name: 'Tarentum', adj: 'Tarentine', color: [96, 118, 172], religion: 'hellenism', culture: 'greek', capital: 'Tarentum',
+      description: 'The best harbour in Italy and the largest Greek city in it, with a habit '
+        + 'of hiring somebody else\'s king whenever the neighbours become a problem.',
+      ideas: { tradeMult: 1.15, navalMult: 1.08, disciplineMult: 0.92 },
+    },
+    CYR: {
+      name: 'Cyrene', adj: 'Cyrenaean', color: [172, 150, 88], religion: 'hellenism', culture: 'greek', capital: 'Cyrene',
+      description: 'A Greek city on a Libyan plateau that grew rich on a plant nobody has '
+        + 'been able to cultivate and nobody has seen since it was eaten to extinction.',
+      ideas: { incomeMult: 1.15, tradeMult: 1.1, manpowerMult: 0.88 },
+    },
+    // Miletus itself is not a cell on this map, so the court that stands here
+    // is the network rather than the mother city, seated at its chief colony.
+    MIL: {
+      name: 'the Milesian Colonies', adj: 'Milesian', color: [120, 160, 166], religion: 'hellenism', culture: 'greek', capital: 'Sinope',
+      description: 'Ninety foundations from the Nile to the Sea of Azov, planted by one city '
+        + 'whose own harbour silts up a little every year. The grain road north is theirs.',
+      ideas: { tradeMult: 1.18, growthMult: 1.1, disciplineMult: 0.9 },
+    },
+    PRG: {
+      name: 'Pergamon', adj: 'Pergamene', color: [158, 120, 64], religion: 'hellenism', culture: 'greek', capital: 'Smyrna',
+      description: 'A treasury on a hill, a library second only to Alexandria, and a dynasty '
+        + 'that survived by backing Rome earlier and harder than anybody else in Asia.',
+      ideas: { incomeMult: 1.18, diploSeats: 5, manpowerMult: 0.9 },
+    },
+    BIT: {
+      name: 'Bithynia', adj: 'Bithynian', color: [84, 124, 140], religion: 'hellenism', culture: 'anatolian', capital: 'Nicaea',
+      description: 'A kingdom on the straits that has never won a war and has never quite '
+        + 'been conquered, because everyone who wants it has somebody worse behind them.',
+      ideas: { tradeMult: 1.1, diploSeats: 4, milPowerMult: 0.92 },
+    },
+    GAL: {
+      name: 'Galatia', adj: 'Galatian', color: [136, 88, 100], religion: 'thracian_cult', culture: 'anatolian', capital: 'Ancyra',
+      description: 'Three Celtic tribes who crossed into Asia to plunder it, were paid to '
+        + 'stop, and stayed — the best infantry in Anatolia, for hire, to anybody.',
+      ideas: { manpowerMult: 1.18, moraleMult: 1.08, incomeMult: 0.85 },
+    },
     MLI: {
       name: 'Kingdom of Israel', adj: 'Israelite', color: [46, 70, 172], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'The crown of David restored: won by the sword, kept by the Law.',
