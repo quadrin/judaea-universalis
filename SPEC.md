@@ -19754,3 +19754,190 @@ months of every twelve, somebody was waiting for the weather.
   `smoke148` holds §223's ordering rule
   across the new pool: the margins are still appended last, and the weather
   rides before them with the generic pool it is a cousin of.
+
+## §273 — (reserved; see the registry comments in `compendium.js`)
+
+The houses, Hezekiah and destruction packages the Iron Age chapters carry are
+described in the era registry beside the line that concatenates them. They were
+shipped before this section was numbered and the registry comments are their
+record.
+
+## §274 — The decade rule holds over the whole span a player can play
+
+§241 established the rule — every decade with five or more playable years in it
+carries at least two dated cards — and checked it, honestly and completely, to
+each chapter's `generationHorizon`. That is the year a chapter's own UNDATED
+trigger cards stop belonging to anybody (§121). It is not the year the chapter
+stops.
+
+`js/ui/wiki.js` has said so in prose since it started printing chapter spans:
+*"generationHorizon is the year its own undated cards stop belonging to anybody
+and is NOT the end of the chapter — 167 BCE's horizon is −60 while its
+continuation runs to 6 CE — so the later of the horizon and the last dated card
+is the span a player can actually play."* Eight of the twelve chapters run past
+their horizon, some of them by a long way: 40 BCE's horizon is 10 CE and its
+last card is 66 CE, which is fifty-six years §241's check never looked at.
+
+**Measured over that span, ten decades in five chapters broke the rule**, and
+the arithmetic was not marginal:
+
+| chapter | thin decades | what was there |
+|---|---|---|
+| 40 BCE | 30s CE, **50s CE** | one card in the thirties, NONE in the fifties |
+| 597 BCE | 500s, 490s, **480s**, **470s** | one, one, none, none |
+| 67 BCE | 20s BCE, 10s BCE | one each |
+| 931 BCE | 720s BCE | one |
+| 732 BCE | 640s BCE | one |
+
+The 40 BCE hole is the one that mattered most. Between the Passover crush of 48
+CE and the spring of 66 the chapter had nothing at all — eighteen years of
+silence across the best-documented stretch in the whole period, ending at the
+morning the sacrifices stopped. A player who takes that chapter past Actium and
+past Herod arrives at Felix, the sicarii and the Egyptian prophet and is handed
+a blank.
+
+**Three packages and two additions.**
+
+- `events_40bce_road.js` — twenty-one cards, 30–63 CE, on both of the bridge's
+  roads. §119's markers decide which: `judaeaProvincia` opens the province
+  cards, `notAProvince`/`notReduced` with a crown standing opens the kingdom
+  ones, and the years that happened to everybody — Sejanus strangled, the
+  quarter burning in Alexandria, Antipas denounced by his own nephew — are open
+  to both. The two roads are not one story told twice: the Samaritan at Gerizim
+  is a public-order problem for a prefect and a question about a neighbouring
+  people's holy mountain for a king; the pilgrim murdered at Ginae is a case
+  that goes to Rome under a procurator and a war a king can simply fight.
+- `events_597bce_persia.js` — twelve cards, 499–461 BCE. The four dead decades
+  after the second house was finished: the fires in Ionia, the house of Bel
+  pulled down, the great army going up the coast road (Yehud is assessed for
+  its grain, not its men), Salamis, the league at Delos, a governor's seal with
+  a woman's name on it, the assessment of Beyond the River, a king murdered in
+  his bedchamber, the Athenian fleet in the Nile — and the two letters Ezra 4
+  preserves, the accusation written in the first year of Xerxes and the letter
+  of Rehum and Shimshai that stopped the wall by force of arms. Nobody in the
+  chapter had ever been asked about either.
+- `events_67bce_augustan.js` — eight cards, 22–4 BCE. The decades in which this
+  country is rebuilt, and in which the terms of a client kingdom are
+  established by being broken: a harbour where the sea gave no bay, a third of
+  the tax remitted in a year when nothing had gone wrong, a thousand priests
+  taught masonry, the admiral's hecatomb, the Jews of Ionia before him, the
+  Arabian expedition and the sentence it earned — *hitherto as a friend,
+  henceforth as a subject* — the strangling at Sebaste, and forty students on
+  the roof with ropes.
+- Two cards added to `events_931bce_houses.js` (the road down from the fallen
+  north, and what the south pays now that it is the only Israelite kingdom
+  left) and two to `events_732bce_hezekiah.js` (the longest reign anybody
+  remembers, and the news from the two rivers).
+
+**The rule is now checked where the player is.** After this section every roomy
+decade of every chapter's PLAYABLE span carries two or more dated cards — 157
+such decades across all twelve chapters, up from the 86 §241 counted inside the
+horizons. Edge decades stay exempt for §241's own reason: a decade with one
+legal year in it cannot be asked for two cards, and a rule that pretended
+otherwise would be a lie rather than an invariant.
+
+- **Regression contract**: `smoke190.mjs` — the stricter invariant over all
+  twelve chapters and all 157 roomy decades; the proof that the span is
+  genuinely wider than the horizon (eight chapters, and 40 BCE's fifty-six
+  extra years named); each new package registered, importing nothing, reaching
+  the sim only through `ctx.helpers`, every non-world card offering two
+  answers, every card dated inside its chapter with a real month, and every
+  card carrying its historical note; every province name in all five touched
+  files resolving against `MAP_DATA`; no package touching `ctx.rng` or
+  `Math.random`, so the balance harness stays comparable; and the fifties
+  specifically — eight cards where there were none, eleven between the crush
+  of 48 and the spring of 66 where there were none.
+
+  And, as §272 does for the weather pool, **every option fired exhaustively**
+  — 242 firings across all five touched packages, the 40 BCE cards on both of
+  §119's roads, because every option body is wrapped in a guard and a guard
+  means a broken card fails SILENTLY. A warning out of a package counts as a
+  failure there even though the campaign survived it. This is not ceremony:
+  the first run of it found thirteen options in the three new packages calling
+  `ctx.helpers.addOpinion`, which does not exist on the helper surface — every
+  one of them had been swallowed by its own guard, in the harness and in play,
+  and the packages now write the opinion ledger directly the way the Iron Age
+  packages always did. The section also fires a deliberately broken card and
+  asserts the detector trips, because the way this check fails silently is a
+  warning pattern that matches nothing.
+
+## §275 — A client does not sign, and a client is not left behind
+
+Two halves of one bond, both reported from play, and both of them the same
+mistake seen from opposite ends of the table.
+
+**You could make peace with a crown and go on fighting its clients.**
+`releaseFromWar` struck exactly ONE tag out of the enemy side. A separate peace
+with Egypt therefore left Egypt's clients standing in the line, at war, with
+Egypt's own armies gone from beside them — and left the occupations on the
+client's ground in place, because status quo was settled between the signer and
+our side alone. `withdrawFromWar`, the mirror of it from inside our own
+coalition, had taken clients home since §74; the enemy's side never did.
+
+**And you could make peace with a CLIENT and go on fighting its lord.** The
+chip row listed every living enemy, collared or not. §248 already says a client
+keeps no foreign policy and §265 already says its lord signs for it while it
+stays, so a client signing its own separate peace was signing something it
+cannot sign — and its lord then fought on for a court that had already left.
+
+Both are now one rule. **A separate peace is made with a PARTY**: the signer,
+and every client standing beside it on that side.
+
+- `signerFor(ctx, side, tag)` walks the collar chain up while the lord is
+  standing in this war on this side. Asked of a client, the table resolves to
+  the crown behind it; asked of an independent court, to itself.
+- `separateParty(ctx, side, tag)` is that signer plus every client below it on
+  the side — chains two and three deep included.
+- `peaceDealInfo` scopes the demandable ground to the party, `separateWarscore`
+  weighs the party's land and the signer's weariness, and `releaseFromWar`
+  reverts, lifts, splices and truces every court in it.
+- A party that would cover the whole enemy side is **not a corridor at all**.
+  That is the congress, and it belongs at the congress table: the chip row
+  drops it and `peaceDealInfo` falls back. This is why the 614 chapter's
+  Byzantine–Ghassanid side now offers no separate peace where it used to offer
+  two — the two of them were never separable.
+- The table and the chips say whose war they are ending, by name.
+
+**And a client pulled into its lord's war holds no pen at all.** §74's
+withdrawal is an ALLY's instrument: a court that keeps its own foreign policy
+and chose to come may settle its own front and fold its tents. A client kept no
+foreign policy and did not choose. Before this section a client — including one
+that was itself the war's original target, with its overlord summoned to defend
+it — was handed the junior's withdrawal table, and could walk out of the
+collar's obligation through the peace dialog while its lord fought on over the
+client's own ground. Now `peaceDealInfo` marks that chair a petitioner's, the
+dove opens the war panel instead of an empty congress, and `evaluatePeaceDeal`
+refuses a deal signed from it, so no card, script or old save can sign around
+the rule.
+
+**What it has instead is the petition** — the one instrument a client has ever
+had. Twenty-five influence puts one more voice in the lord's council; the court
+will receive another in a year, four may stand at once, and each one lowers
+both bars the lord's own council settles at: eight points of war score and six
+months off its settlement clock. Four standing petitions turn a
+decisive-score-or-three-years war into one that can be closed on eighteen
+points in a year. It does not end a war and does not pretend to; the lord still
+signs. The memory window is five years rather than three, because at a
+twelve-month cooldown and a thirty-six-month memory the pressure sticks at
+three forever and the ceiling is an artefact of the arithmetic rather than a
+rule.
+
+- **Regression contract**: `smoke189.mjs` — the collar resolving the pen one
+  and two hops deep and the party leaving in order; a collared client dropping
+  out of the chip row while its lord stays and its lord's row naming it;
+  asking for the client's table opening the lord's; a party covering the whole
+  enemy side offering no corridor and falling back to the congress; the ledger
+  weighing the client's occupied land against the lord that signs for it; a
+  separate peace with Egypt taking Lebanon out with it, truced, its occupations
+  reverted, while Jordan, Syria, Iraq and Saudi Arabia fight on; the same deal
+  aimed at the client ending it for both; the client's chair marked a
+  petitioner's and NOT handed the withdrawal table, with the sim refusing a
+  deal signed there; the petition priced, cooled down, stacked to its ceiling,
+  refused at the ceiling without charge, and decaying back to room; and the
+  bars the lord reads at nought and at four. `smoke51` and `smoke59` were
+  updated: both asserted the old behaviour, which was the bug. `smoke95` was
+  updated too, for a different reason: it pinned the literal spelling of the
+  AI-vs-AI settlement comparison rather than its claim. The claim — that the
+  horizon defaults to 36 months and 50 points — still holds and is now
+  asserted as such, together with the petitions being the only thing that
+  moves it.

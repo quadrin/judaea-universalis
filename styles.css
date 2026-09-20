@@ -3802,3 +3802,9 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 /* The recipient picker on a province being given away (SPEC §222). */
 .pp-cede-to { margin-bottom: 6px; }
 .pp-cede-to select { width: 100%; }
+
+/* The client's petition (SPEC §275): no peace table, one voice in the lord's
+   council. Sits where the Negotiate button sits, and reads as an explanation
+   before it reads as a button. */
+.wo-petition { margin: 10px 0 6px; padding: 8px 10px; border-left: 2px solid var(--line, #3a3a3a); }
+.wo-petition .wo-meta { margin-top: 4px; }

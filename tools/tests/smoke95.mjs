@@ -165,9 +165,16 @@ console.log('== the grace is a define, and it does not disturb its neighbours ==
   ok(/const beaten = row\.ws >= separatePeaceThreshold/.test(src)
     && /weary >= 15 && row\.ws >= 0 && graceMet/.test(src),
   'the separate-peace road carries the same asymmetry');
-  // The AI-vs-AI settlement horizon is a different clock and stays put.
-  ok(/months < num\(w\.settleMonths, 36\)/.test(src),
-    'and the 36-month AI-vs-AI settlement horizon is untouched');
+  // The AI-vs-AI settlement horizon is a different clock and stays put. SPEC
+  // §275 shifts it, but only by the petitions standing against it: the DEFAULT
+  // is still num(w.settleMonths, 36) and still 50 points of war score, which is
+  // what this assertion has always been about. It used to pin the literal
+  // spelling of the comparison, which is not the same claim.
+  ok(/const monthBar = num\(w\.settleMonths, 36\) - PETITION\.monthsPerPress \* press/.test(src)
+    && /const scoreBar = 50 - PETITION\.scorePerPress \* press/.test(src),
+  'the AI-vs-AI settlement horizon still defaults to 36 months and 50 points');
+  ok(/const press = warPetitionPressure\(ctx, w\)/.test(src),
+    '  and moves only by the clients\' standing petitions (SPEC §275)');
 }
 
 console.log(failures ? `smoke95: ${failures} FAIL` : 'smoke95: ALL PASS');

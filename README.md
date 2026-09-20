@@ -1391,6 +1391,32 @@ static site, the zero dependencies, or the missing build step changes.
   what it holds, a Judaea of the hills keeps what it held, and a Judaea with
   nothing left is stood down under IVDAEA CAPTA.
 
+- **The decades a player actually plays.** The rule that every roomy decade
+  carries two dated cards was only ever checked to each chapter's generation
+  horizon — which is not where a chapter ends. Eight of the twelve run past
+  it, and measured over the span a player can really reach, ten decades were
+  thin and one was empty: the 40 BCE chapter had nothing at all between the
+  Passover crush of 48 CE and the spring of 66. Three new packages fill them —
+  the road to the Revolt on both of its roads (Pilate's aqueduct, the gilded
+  shields, the man at Gerizim, the torn scroll, Felix, the dagger-men, the
+  prophet on the Mount of Olives, whose city Caesarea is, and eighteen thousand
+  masons paid off three years early), the Persian century in Yehud (the great
+  army's grain, a governor's seal with a woman's name on it, and the two
+  letters Ezra preserves), and the Augustan decades (a harbour where the sea
+  gave no bay, a thousand priests taught masonry, and the sentence a client
+  earns for crossing a border without leave). Four more cards fill the last
+  thin decades of the Iron Age chapters.
+
+- **A client does not sign, and a client is not left behind.** You could make
+  peace with a crown and keep fighting its clients, and make peace with a
+  client and keep fighting its lord. A separate peace is now made with a party
+  — the court that signs and every client standing beside it — and a party
+  that covers the whole enemy side is the congress, not a corridor. A client
+  pulled into its lord's war has no peace table at all: its lord signs. What it
+  has is the petition, in the war panel — influence spent to put one more voice
+  in the lord's council, up to four standing at once, each one lowering the war
+  score and the months that council will settle at.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

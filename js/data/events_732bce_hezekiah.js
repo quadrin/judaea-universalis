@@ -838,6 +838,71 @@ export const EVENTS_732_HEZEKIAH = [
           + 'regency between them. The levy from the hill districts comes in late for thirty '
           + 'years and nobody can say why.'); } }),
 
+  // ── the long reign, and the empire that made it possible (SPEC §274) ──────
+  // The chapter's last full decade before Josiah's reform carried one card.
+  // These two are the years that decade actually was: the end of the fifty-five
+  // and the thing that was happening to Assyria while nobody in Jerusalem was
+  // allowed to say so.
+
+  Y('ev732h_fifty_five_years', 'The Longest Reign Anybody Remembers', -644, 6, 'JDH',
+    'He has reigned for forty-eight years. Nobody at court remembers another king '
+    + 'and nobody under fifty remembers a year in which the tribute was not paid, '
+    + 'the Assyrian garrison was not in the country, or the high places were not '
+    + 'open. The chronicle written a century later will say he did evil in the '
+    + 'sight of the Lord and will give the reign eighteen verses, which is fewer '
+    + 'verses than years.\n\nWhat it will not say is that the country was not '
+    + 'invaded, the Shephelah towns that were levelled in his father\'s war were '
+    + 'rebuilt, the population recovered, and the kingdom that is going to be able '
+    + 'to afford a reform in twenty years can afford it because of these decades. '
+    + 'The council is being asked to renew the arrangement for another seven years.',
+    'Manasseh reigned fifty-five years (2 Kings 21:1), the longest in Judah\'s history. Archaeology shows recovery in the Shephelah and the Negev through his reign; Assyrian records list him among the loyal tributaries.',
+    { label: 'Renew it — the arrangement has rebuilt the country',
+      tooltip: '−90 talents a decade in tribute. "The Long Peace" permanently: +14% growth, +10% income, −1 unrest everywhere, and the Shephelah towns rebuilt (+1 development at Lachish\'s neighbours). The high places stay open, and the reform that closes them has a country to close them in.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { treasury: -90 });
+        mod(ctx, 'h732_the_long_peace', 'The Long Peace', { growthMult: 1.14, incomeMult: 1.1, unrestAll: -1 });
+        pmod(ctx, 'Hebron', 'h732_shephelah_rebuilt', 'The Shephelah Rebuilt', { prodMult: 1.12 }, -1);
+        pmod(ctx, 'Beersheba', 'h732_negev_forts', 'The Negev Forts', { prodMult: 1.1, unrest: -0.8 }, -1);
+        h.setFlag(ctx, 'longPeace', true);
+        h.chronicle(ctx, 'era', 'The arrangement is renewed for another seven years; the Shephelah towns are rebuilt on their own ruins and nobody writes any of it down.'); } },
+    { label: 'Let it lapse and see what the empire is still capable of',
+      tooltip: '+120 talents kept. +12% force limit and +15% siege defence for forty years — and "The Lapsed Tribute" (+1.5 unrest everywhere, −10% growth) permanently, because the empire is still perfectly capable and sends to find out.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { treasury: 120, legitimacy: 8 });
+        mod(ctx, 'h732_lapsed_tribute', 'The Lapsed Tribute', { forceLimitMult: 1.12, hillDefBonus: 15 }, 480);
+        mod(ctx, 'h732_lapsed_cost', 'What the Lapse Cost', { unrestAll: 1.5, growthMult: 0.9 });
+        h.setFlag(ctx, 'tributeLapsed', true);
+        h.chronicle(ctx, 'era', 'The tribute is allowed to lapse and the kingdom spends the difference on its walls; the empire is not yet too busy to notice.'); } }),
+
+  Y('ev732h_the_empire_is_eating_itself', 'The News From the Two Rivers', -640, 9, 'JDH',
+    'The reports have been consistent for three years and the merchants are more '
+    + 'reliable than the envoys. Assyria has fought a civil war between two brothers '
+    + 'and won it at a cost nobody has published; Elam has been erased so completely '
+    + 'that its name has gone off the lists; and there are Scythian horsemen in '
+    + 'districts that had garrisons in them last year.\n\nThe garrison in this '
+    + 'country has not been reinforced since the old king died. The resident is '
+    + 'still here and still writing, and the tribute is still being collected, and a '
+    + 'careful man would notice that both of those things are now happening because '
+    + 'this kingdom continues to do them rather than because anybody could compel '
+    + 'it. That is a very different arrangement wearing the same clothes.',
+    'Ashurbanipal died about 631 and Assyria collapsed within two decades; the Elamite campaigns of the 640s and the northern incursions are attested in the annals and in Herodotus I.103-106.',
+    { label: 'Keep paying, keep counting, and say nothing to anybody',
+      tooltip: '−40 talents and total silence. "We Counted the Garrisons" permanently: +12% administrative efficiency, +10 deterrent, +8% martial power. When the reform comes it comes from a court that already knows exactly how much room it has.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { treasury: -40, gov: 20 });
+        mod(ctx, 'h732_counted_the_garrisons', 'We Counted the Garrisons', { adminMult: 1.12, deterrent: 10, milPowerMult: 1.08 });
+        h.setFlag(ctx, 'garrisonsCounted', true);
+        h.chronicle(ctx, 'era', 'The tribute keeps going up the road on time and a quiet list is kept of every Assyrian post in the country and how many men are in it.'); } },
+    { label: 'Begin taking the northern districts back, quietly, a village at a time',
+      tooltip: 'No cost now. Bethel and the southern hill of the old north come under this crown\'s writ twenty years early: +1.5 development there and +10% integration permanently. It is also visible: −1 stability and +1.2 unrest everywhere for thirty years, and the empire has one more reason to come south while it still can.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { stability: -1, legitimacy: 12 });
+        pmod(ctx, 'Neapolis', 'h732_quiet_reach', 'The Quiet Reach North', { prodMult: 1.15, unrest: -0.5 }, -1);
+        mod(ctx, 'h732_quiet_reach_m', 'The Quiet Reach North', { integrateMult: 1.1 });
+        mod(ctx, 'h732_visible_reach', 'A Visible Reach', { unrestAll: 1.2 }, 360);
+        h.setFlag(ctx, 'earlyReachNorth', true);
+        h.chronicle(ctx, 'era', 'Judaean headmen begin appearing in villages north of the old border, one at a time, twenty years before anybody marches an army up there.'); } }),
+
   // ── the reform, and the pass ──────────────────────────────────────────────
   Y('ev732h_the_altar_at_bethel', 'The Altar at Bethel', -622, 10, 'JDH',
     'The purge has crossed the old border. Bethel has been an Assyrian district for a '

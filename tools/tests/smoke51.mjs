@@ -145,11 +145,18 @@ console.log('== the pen belongs to the leader ==');
   ok(asJunior.exit === true && asJunior.separate === false,
     'a junior asking for a separate peace gets the withdrawal table instead');
   const asLeader = mil.peaceDealInfo(ctx, war, 'SAS');
-  ok(asLeader.exit === false && asLeader.separateTargets.length === 2,
-    'the side leader keeps the full congress and the separate-peace chips');
+  ok(asLeader.exit === false, 'the side leader keeps the full congress');
+  // SPEC §275. This enemy side is Byzantium and its Ghassanid client, and a
+  // client leaves a war with the lord that signs for it — so the two of them
+  // are ONE party and there is no corridor here at all. Before §275 this
+  // asserted two chips and a separate peace with Ghassan alone, which was
+  // the reported bug: Byzantium would have fought on for a client that had
+  // already signed.
+  ok(asLeader.separateTargets.length === 0,
+    'a lord and its client are one party, so no separate corridor is offered');
   const asLeaderSep = mil.peaceDealInfo(ctx, war, 'SAS', 'GHA');
-  ok(asLeaderSep.separate === true,
-    'the leader\'s separate peace with one enemy member still works');
+  ok(asLeaderSep.separate === false && asLeaderSep.enemyLeader === 'BYZ',
+    'asking for a word with the client falls back to the congress, led by its lord');
 }
 
 console.log('== a junior losing badly cannot simply walk ==');

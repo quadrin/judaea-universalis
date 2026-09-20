@@ -124,8 +124,14 @@ console.log('== the overlord holds the pen when its client is attacked ==');
     'the overlord gets the full congress table, not the junior\'s withdrawal');
   ok(lordTable.enemyLeader === 'SAS', 'the congress faces the actual attacker');
   const clientTable = peaceDealInfo(ctx, war, 'RSH');
-  ok(clientTable.exit && clientTable.leaderName === (g.tags.JUD.name || 'JUD'),
-    'the attacked client itself is the junior at its overlord\'s war');
+  // SPEC §275. Being the war's original target does not hand a client a
+  // foreign policy. Before §275 this was the junior's withdrawal table,
+  // which let the client settle its own front and go home while its lord
+  // fought on over the client's own ground. The lord signs; the client asks.
+  ok(clientTable.petitioner && !clientTable.exit,
+    'the attacked client holds no pen of its own at its overlord\'s war');
+  ok(clientTable.petition && clientTable.petition.lord === 'JUD',
+    'and what it has instead is a petition to the lord that signs for it');
   ok((clientTable.cessionRecipients || []).length === 0,
     'a junior directs no spoils');
   const attackerTable = peaceDealInfo(ctx, war, 'SAS');

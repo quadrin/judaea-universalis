@@ -9,6 +9,7 @@ import {
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, monthsBetween,
   coalitionAgainst, forceLimitOf, vassalsOf, sideLeaderOf,
+  PETITION, warPetitionPressure,
   declareWar, truceActive, opinionOf, casusBelli, successionClaim, addOpinion, areRivals, recognized,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
@@ -1202,7 +1203,13 @@ function sendSeparatePeaceOffer(ctx, war, player) {
       id: 'dyn_separate_peace_' + g.flags._dynEvN,
       title: (t.name || row.tag) + ' seeks a separate peace',
       desc: 'Its allies may fight on, but this court has had enough. Its envoy offers '
-        + summary.text + ' and a five-year truce in exchange for leaving ' + war.name + '.',
+        + summary.text + ' and a five-year truce in exchange for leaving ' + war.name + '.'
+        // A crown signs for the clients standing beside it (SPEC §265), so the
+        // offer says whose war it ends — the collar chain goes home with it.
+        + ((row.withNames && row.withNames.length)
+          ? ' ' + row.withNames.join(', ') + ' leave under the same signature: a client'
+            + ' follows its lord out of a war as it followed him in.'
+          : ''),
       forTag: player,
       major: true,
       aiOption: 1,
@@ -1393,7 +1400,15 @@ function monthlyWarDiplomacy(ctx) {
       // the default three-year clock while history still expects Yarmouk,
       // Qadisiyyah and the fall of Ctesiphon. A decisive score still settles
       // any war early.
-      if (Math.abs(wsAtt) < 50 && months < num(w.settleMonths, 36)) continue;
+      // SPEC §275: the clients are asking. A petition does not end a war —
+      // it moves the bar the lord's own council settles at, so each standing
+      // petition buys the war a shorter clock and a smaller margin, and four
+      // of them turn a decisive-score-or-three-years war into one that can
+      // be closed on eighteen points in a year.
+      const press = warPetitionPressure(ctx, w);
+      const scoreBar = 50 - PETITION.scorePerPress * press;
+      const monthBar = num(w.settleMonths, 36) - PETITION.monthsPerPress * press;
+      if (Math.abs(wsAtt) < scoreBar && months < monthBar) continue;
       const winner = wsAtt >= 0 ? attLead : defLead;
       const deal = buildAiPeaceDeal(ctx, w, winner);
       const clientChair = (w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0)

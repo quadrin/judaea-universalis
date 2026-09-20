@@ -5513,35 +5513,189 @@ export function cedeProvinceCore(ctx, tag, provId, toTag) {
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }
+// Who signs for a court at a separate table (SPEC §265): the highest lord in
+// its chain that stands in this war on the same side. A client does not hold
+// its own pen while the collar is on — its lord signs for it while it stays —
+// so a separate word asked of a client is had with the crown behind it.
+// Independent courts, and clients whose lord is not in this war beside them,
+// sign for themselves.
+export function signerFor(ctx, side, tag) {
+  const g = ctx.game;
+  let lead = tag;
+  for (let hops = 0; lead && hops < 4; hops++) {
+    const lordTag = g.tags[lead] && g.tags[lead].overlord;
+    if (!lordTag || (side || []).indexOf(lordTag) < 0) break;
+    const lord = g.tags[lordTag];
+    if (!lord || !lord.alive) break;
+    lead = lordTag;
+  }
+  return lead;
+}
+
+// The courts that leave together when `tag` takes a separate peace (SPEC
+// §265): the signer and every client below it that stands on the same side.
+// A client followed its lord into the war and it follows him out — the war
+// cannot go on against the clients of a crown that has signed, and it cannot
+// go on against a crown whose client has signed, because the client never
+// signed anything.
+export function separateParty(ctx, side, tag) {
+  const g = ctx.game;
+  const out = [signerFor(ctx, side, tag)];
+  for (let hops = 0; hops < 4; hops++) {
+    let grew = false;
+    for (const k of (side || [])) {
+      if (out.indexOf(k) >= 0) continue;
+      const t = g.tags[k];
+      if (!t || !t.alive || !t.overlord) continue;
+      if (out.indexOf(t.overlord) < 0) continue;
+      out.push(k);
+      grew = true;
+    }
+    if (!grew) break;
+  }
+  return out;
+}
+
+// The petition (SPEC §275). A client pulled into its lord's war holds no
+// pen at all — §74's withdrawal table belongs to an ALLY that was called in,
+// a court with its own foreign policy that chose to come. A client has no
+// foreign policy (§248) and did not choose, and its lord signs for it
+// (§265). What it has instead is the one thing a client has always had:
+// it can ask, at a price, and keep asking.
+export const PETITION = {
+  influence: 25,      // what one petition costs the client
+  cooldownMonths: 12, // how often the lord will receive another
+  // How long a petition is still remembered. It has to be comfortably longer
+  // than cooldownMonths * maxPressure, not merely equal to it: at a
+  // twelve-month cooldown and a thirty-six-month memory the pressure sticks
+  // at three forever, and at forty-eight the fourth stands for exactly the
+  // month it is made in and then decays. Five years of memory against a
+  // yearly petition makes maxPressure a real ceiling rather than an artefact
+  // of the arithmetic — a client that keeps asking stays heard.
+  windowMonths: 60,
+  maxPressure: 4,     // the ceiling: four standing petitions
+  scorePerPress: 8,   // war score the lord will settle short of, per petition
+  monthsPerPress: 6,  // months off the lord's own settlement clock, per petition
+};
+
+// The lord that signs for `tag` in this war, or null when the court holds
+// its own pen. A lord that is not standing in this war beside its client
+// signs nothing here: the client came on its own and is an ally like any.
+export function lordAtWarFor(ctx, war, tag) {
+  const g = ctx.game;
+  const side = war.attackers.indexOf(tag) >= 0 ? war.attackers
+    : war.defenders.indexOf(tag) >= 0 ? war.defenders : null;
+  if (!side) return null;
+  const signer = signerFor(ctx, side, tag);
+  return signer && signer !== tag ? signer : null;
+}
+
+// How hard a lord is being asked, by its own clients, to end this war:
+// the petitions inside the memory window, capped.
+export function petitionPressure(ctx, war, lordTag) {
+  const rows = war && war._petitions && war._petitions[lordTag];
+  if (!Array.isArray(rows) || !rows.length) return 0;
+  const now = ctx.game.date;
+  let n = 0;
+  for (const d of rows) {
+    if (!d || !Number.isFinite(d.y)) continue;
+    if (((now.y - d.y) * 12 + (now.m - d.m)) < PETITION.windowMonths) n++;
+  }
+  return Math.min(PETITION.maxPressure, n);
+}
+
+// The whole pressure on a war, from either side's clients. Both leaders'
+// tables move: a war is ended by two courts, and a client of the loser
+// begging to be let out shortens it as surely as a client of the winner.
+export function warPetitionPressure(ctx, war) {
+  const rows = war && war._petitions;
+  if (!rows) return 0;
+  let n = 0;
+  for (const lord of Object.keys(rows)) n += petitionPressure(ctx, war, lord);
+  return Math.min(PETITION.maxPressure, n);
+}
+
+// What the war panel shows a client, and whether the button is live.
+export function petitionInfo(ctx, war, tag) {
+  const g = ctx.game;
+  const lord = war ? lordAtWarFor(ctx, war, tag) : null;
+  if (!lord) return null;
+  const me = g.tags[tag];
+  const lt = g.tags[lord];
+  const have = num(me && me.points && me.points.infl);
+  const rows = (war._petitions && war._petitions[lord]) || [];
+  const last = rows.length ? rows[rows.length - 1] : null;
+  const since = last ? ((g.date.y - last.y) * 12 + (g.date.m - last.m)) : Infinity;
+  const monthsLeft = Math.max(0, PETITION.cooldownMonths - since);
+  const pressure = petitionPressure(ctx, war, lord);
+  let why = '';
+  if (war.noNegotiation) why = 'This war admits no envoys at all — not even ours to our own lord.';
+  else if (monthsLeft > 0) why = 'Our last petition was heard ' + since + ' month'
+    + (since === 1 ? '' : 's') + ' ago; the court will receive another in ' + monthsLeft + '.';
+  else if (pressure >= PETITION.maxPressure) why = 'We have asked as often as a client may ask.';
+  else if (have < PETITION.influence) why = 'Not enough influence (' + PETITION.influence + ' required).';
+  return {
+    lord, lordName: (lt && lt.name) || lord,
+    cost: PETITION.influence, have,
+    pressure, maxPressure: PETITION.maxPressure,
+    monthsLeft, can: !why, why,
+  };
+}
+
+// Ask. Spends the influence and puts one more voice in the lord's council.
+export function petitionForPeace(ctx, war, tag) {
+  const info = petitionInfo(ctx, war, tag);
+  if (!info || !info.can) return false;
+  const g = ctx.game;
+  const me = g.tags[tag];
+  if (!me) return false;
+  me.points = me.points || {};
+  me.points.infl = clamp(num(me.points.infl) - PETITION.influence, 0, 999);
+  if (!war._petitions) war._petitions = {};
+  if (!war._petitions[info.lord]) war._petitions[info.lord] = [];
+  war._petitions[info.lord].push({ y: g.date.y, m: g.date.m });
+  // A court that begs its lord to stop fighting is heard by its lord, and
+  // also by everybody else in the room.
+  addOpinion(ctx, info.lord, tag, -3);
+  chronicle(ctx, 'diplo', (me.name || tag) + ' petitions ' + info.lordName
+    + ' to end ' + (war.name || 'the war') + '.');
+  ctx.bus.emit('war', { id: war.id, name: war.name, petition: tag });
+  return true;
+}
+
 // The bilateral ledger behind a separate peace (SPEC §67): how the war
-// stands between us and ONE member of the enemy coalition. Occupation of
-// their own land and their war exhaustion push them toward the door; land
-// they hold of ours holds them in. Side-pooled battle glory counts at half
-// weight — a coalition member shares its side's victories, but feels its
-// own burned fields entirely.
+// stands between us and ONE PARTY of the enemy coalition — a court and the
+// clients that stand with it (SPEC §265), because they leave together and
+// are therefore weighed together. Occupation of their own land and their war
+// exhaustion push them toward the door; land they hold of ours holds them in.
+// Side-pooled battle glory counts at half weight — a coalition member shares
+// its side's victories, but feels its own burned fields entirely.
 export function separateWarscore(ctx, war, byTag, enemyTag) {
   const g = ctx.game;
   const att = war.attackers.indexOf(byTag) >= 0;
   const mySide = att ? war.attackers : war.defenders;
+  const theirSide = att ? war.defenders : war.attackers;
   const myKey = att ? 'att' : 'def';
   const theirKey = att ? 'def' : 'att';
+  const party = separateParty(ctx, theirSide, enemyTag);
   let theirDev = 0, occByUs = 0, ourDev = 0, occByThem = 0;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
     const d = devTotal(p);
-    if (p.owner === enemyTag) {
+    if (party.indexOf(p.owner) >= 0) {
       theirDev += d;
       if (mySide.indexOf(p.controller) >= 0) occByUs += d;
     } else if (mySide.indexOf(p.owner) >= 0) {
       ourDev += d;
-      if (p.controller === enemyTag) occByThem += d;
+      if (party.indexOf(p.controller) >= 0) occByThem += d;
     }
   }
   const occ = theirDev > 0 ? (occByUs / theirDev) * 60 : 0;
   const counterOcc = ourDev > 0 ? (occByThem / ourDev) * 60 : 0;
   const battles = war._bs ? clamp((num(war._bs[myKey]) - num(war._bs[theirKey])) * 0.5, -20, 20) : 0;
-  const et = g.tags[enemyTag];
+  // The party's weariness is the signer's own: the crown that has to decide.
+  const et = g.tags[party[0]];
   const weary = Math.min(20, num(et && et.warExhaustion) * 1.5);
   return Math.round(clamp(occ - counterOcc + battles + weary, -100, 100));
 }
@@ -6264,9 +6418,34 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   // declared on a client is the protecting crown's to settle, on either side
   // of the table.
   const sideLeader = sideLeaderOf(ctx, war, mySide) || byTag;
-  const exit = byTag !== sideLeader;
-  const separate = !exit && !!enemyTag && aliveEnemies.indexOf(enemyTag) >= 0 && aliveEnemies.length >= 2;
-  const enemyLeader = separate ? enemyTag : (sideLeaderOf(ctx, war, theirSide) || aliveEnemies[0] || null);
+  // SPEC §275: a client pulled into its lord's war has no table of its own.
+  // §74's withdrawal is an ALLY's instrument — a court that keeps its own
+  // foreign policy and chose to come may fold its tents and go. A client
+  // kept no foreign policy (§248) and did not choose; its lord signs for it
+  // (§265) and what it holds instead is the petition. Without this a client
+  // could walk out of the collar's obligation through the peace dialog,
+  // which is the same hole from the other side as fighting on against a
+  // court whose lord had already signed.
+  const petitionLord = lordAtWarFor(ctx, war, byTag);
+  const petitioner = !!petitionLord;
+  const exit = !petitioner && byTag !== sideLeader;
+  // A separate peace is signed with a court AND ITS CLIENTS (SPEC §265). A
+  // word asked of a client is had with the crown that signs for it, and the
+  // party that leaves is that crown plus every client standing beside it —
+  // otherwise a treaty with Rome left the war running against Rome's clients,
+  // and a treaty with a client left its lord fighting for a court that had
+  // already signed. It is only SEPARATE if somebody is left to fight: a party
+  // that covers the whole enemy coalition is the congress, and belongs at it.
+  const enemySigner = enemyTag && aliveEnemies.indexOf(enemyTag) >= 0
+    ? signerFor(ctx, theirSide, enemyTag) : null;
+  const separateParties = enemySigner ? separateParty(ctx, theirSide, enemySigner) : [];
+  const separate = !exit && !!enemySigner
+    && aliveEnemies.indexOf(enemySigner) >= 0
+    && aliveEnemies.some((t) => separateParties.indexOf(t) < 0);
+  const enemyLeader = separate ? enemySigner : (sideLeaderOf(ctx, war, theirSide) || aliveEnemies[0] || null);
+  // The courts this table settles with: the departing party, or the whole
+  // enemy side at a congress.
+  const enemyParty = separate ? separateParties : theirSide;
   const et = enemyLeader ? g.tags[enemyLeader] : null;
   const me = g.tags[byTag];
   const myRel = me ? me.religion : null;
@@ -6278,7 +6457,7 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
     if (p.owner === enemyLeader) enemyLeaderDev += devTotal(p);
-    if (separate ? p.owner !== enemyLeader : theirSide.indexOf(p.owner) < 0) continue;
+    if (enemyParty.indexOf(p.owner) < 0) continue;
     theirSideDev += devTotal(p);
     // A withdrawing junior may only demand what its OWN men hold — the
     // ally's occupations are not its to spend.
@@ -6451,6 +6630,14 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     .map((v) => ({ tag: v, name: (g.tags[v] && g.tags[v].name) || v }));
   return {
     warId: war.id, warName: war.name,
+    // SPEC §275. A client's chair: no table, and the reason why, plus what
+    // it may do instead.
+    petitioner,
+    petition: petitioner ? petitionInfo(ctx, war, byTag) : null,
+    whyNoTable: petitioner
+      ? 'A client keeps no foreign policy: ' + ((g.tags[petitionLord] && g.tags[petitionLord].name) || petitionLord)
+        + ' signs for us in this war. We may petition the court to end it.'
+      : '',
     myWs: separate
       ? separateWarscore(ctx, war, byTag, enemyLeader)
       : Math.round(num(war.warscore && war.warscore[byTag])),
@@ -6462,11 +6649,29 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     // Every court a separate word could be had with (shown when the enemy
     // is a coalition; empty when there is only one court to talk to — and
     // never offered to a junior, whose pen signs only its own withdrawal).
-    separateTargets: !exit && aliveEnemies.length >= 2
-      ? aliveEnemies.map((t) => ({
-        tag: t, name: (g.tags[t] && g.tags[t].name) || t,
-        ws: separateWarscore(ctx, war, byTag, t),
-      }))
+    // A client is not a row: its lord signs for it (SPEC §265), and its lord
+    // is already in the list. Nor is a party that would take the whole enemy
+    // side out with it — that is the congress, not a corridor.
+    separateTargets: exit ? [] : aliveEnemies
+      .filter((t) => signerFor(ctx, theirSide, t) === t)
+      .filter((t) => {
+        const party = separateParty(ctx, theirSide, t);
+        return aliveEnemies.some((o) => party.indexOf(o) < 0);
+      })
+      .map((t) => {
+        const party = separateParty(ctx, theirSide, t);
+        return {
+          tag: t, name: (g.tags[t] && g.tags[t].name) || t,
+          ws: separateWarscore(ctx, war, byTag, t),
+          // The clients that go out of the war under this crown's signature
+          // (SPEC §265), so the table can say whose war it is ending.
+          withNames: party.slice(1)
+            .map((v) => (g.tags[v] && g.tags[v].name) || v),
+        };
+      }),
+    // The clients leaving beside the signer at THIS table, by name.
+    separateWithNames: separate
+      ? enemyParty.slice(1).map((v) => (g.tags[v] && g.tags[v].name) || v)
       : [],
     enemyLeader, enemyName: et ? (et.name || enemyLeader) : '',
     enemyWarExhaustion: et ? num(et.warExhaustion) : 0,
@@ -6555,6 +6760,24 @@ export function buildAiPeaceProvinces(ctx, info, budget) {
 export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   const d = deal || {};
   const info = peaceDealInfo(ctx, war, byTag, d.enemy); // d.enemy: separate peace (SPEC §67)
+  // SPEC §275: a client's envoys are not received at this war's table at all
+  // — its lord holds the pen. The refusal is here as well as in the panel so
+  // a card, a script or a save from before this rule cannot sign around it.
+  if (info.petitioner) {
+    // Shaped like any other refused evaluation, not a stub: `executePeaceDeal`
+    // and the AI's deal describers walk `provinces`, `concessionRows`,
+    // `releaseRows` and `transferRows` before they ever look at `acceptable`,
+    // and a bare {cost, acceptable} threw straight out of monthlyWarDiplomacy.
+    return {
+      cost: 0, net: 0, offered: 0, acceptable: false, reason: info.whyNoTable,
+      gold: 0, humiliate: false, subjugate: false, reparations: 0, unifyCrown: false,
+      provinces: [], provinceTo: {},
+      concessions: [], concessionRows: [],
+      release: [], releaseRows: [],
+      transferVassals: [], transferRows: [],
+      petition: true,
+    };
+  }
   const unifyCrown = !!d.unifyCrown && info.canUnifyCrown;
   const subjugate = !unifyCrown && !!d.subjugate && info.canSubjugate;
   // Either clause disposes of the whole political house, so neither leaves a
@@ -6817,34 +7040,42 @@ export function dissolveWar(ctx, war) {
   marchStrandedHome(ctx, participants);
   ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
 }
-// A separate peace (SPEC §67): one member of the enemy coalition leaves the
-// war while the rest fight on. Status quo is settled between the departing
-// court and OUR side only — the caller applies cessions first; every other
-// front keeps its occupations. Five-year truces bind the leaver to everyone
-// on our side. If the leaver was the last court standing, the caller should
-// have ended the war instead (peaceDealInfo refuses that table).
+// A separate peace (SPEC §67): one PARTY of the enemy coalition leaves the
+// war while the rest fight on. The party is the signing court and every
+// client standing beside it (SPEC §265) — a client followed its lord into
+// this war and leaves it with him, and a lord whose client signed never
+// signed anything, so the caller routes the table to the signer and this
+// takes the whole collar chain out together. Status quo is settled between
+// the departing party and OUR side only — the caller applies cessions first;
+// every other front keeps its occupations. Five-year truces bind each
+// leaver to everyone on our side. If the party was the last standing, the
+// caller should have ended the war instead (peaceDealInfo refuses that table).
 export function releaseFromWar(ctx, war, leaverTag, byTag) {
   const g = ctx.game;
   const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
   const theirSide = enemySideOf(war, byTag);
-  // Status quo between the leaver and our side, both directions.
+  const leavers = separateParty(ctx, theirSide, leaverTag);
+  // Status quo between the leaving party and our side, both directions.
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
-    if (p.owner === leaverTag && mySide.indexOf(p.controller) >= 0 && g.tags[p.owner] && g.tags[p.owner].alive) {
+    if (leavers.indexOf(p.owner) >= 0 && mySide.indexOf(p.controller) >= 0
+        && g.tags[p.owner] && g.tags[p.owner].alive) {
       changeControllerCore(ctx, p, p.owner);
-    } else if (mySide.indexOf(p.owner) >= 0 && p.controller === leaverTag
+    } else if (mySide.indexOf(p.owner) >= 0 && leavers.indexOf(p.controller) >= 0
         && g.tags[p.owner] && g.tags[p.owner].alive) {
       changeControllerCore(ctx, p, p.owner);
     }
   }
-  liftSiegesBetween(ctx, [leaverTag], mySide);
-  const at = theirSide.indexOf(leaverTag);
-  if (at >= 0) theirSide.splice(at, 1);
-  if (war.warscore) delete war.warscore[leaverTag];
+  liftSiegesBetween(ctx, leavers, mySide);
+  for (const leaver of leavers) {
+    const at = theirSide.indexOf(leaver);
+    if (at >= 0) theirSide.splice(at, 1);
+    if (war.warscore) delete war.warscore[leaver];
+    for (const t of mySide) setTruce(ctx, leaver, t, war.name);
+  }
   rebuildAtWarWith(ctx);
-  for (const t of mySide) setTruce(ctx, leaverTag, t, war.name);
-  marchStrandedHome(ctx, [leaverTag].concat(mySide));
+  marchStrandedHome(ctx, leavers.concat(mySide));
   ctx.bus.emit('war', { id: war.id, name: war.name, left: leaverTag });
 }
 

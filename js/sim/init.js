@@ -6,6 +6,7 @@ import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
   declareWar, joinWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
+  petitionInfo, petitionForPeace as petitionForPeaceCore,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag, tagDef,
   isOffmapTag, armsSupplierOf, armsDealState, armsGate, isArsenal, armsMarketOn, missionCtx,
@@ -2741,8 +2742,32 @@ export function gameActions(ctx) {
           goal, weHold, theyHold,
           noNegotiation: !!war.noNegotiation,
           envoyMonthsLeft: diploCdMonthsLeft(ctx, peaceCd(war, null)),
+          // SPEC §275: in a client's chair there is no peace table here —
+          // our lord signs. The panel offers the petition instead.
+          petition: petitionInfo(ctx, war, me),
         };
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
+    },
+
+    // Ask our lord to end the war we were pulled into (SPEC §275). Costs
+    // influence, may be asked once a year, and moves the bar the lord's own
+    // council settles at — it does not end the war and does not pretend to.
+    petitionForPeace(warId) {
+      try {
+        const war = g.wars.find((w) => w && w.id === warId);
+        if (!war) return false;
+        const ok = petitionForPeaceCore(ctx, war, g.playerTag);
+        if (ok) {
+          const info = petitionInfo(ctx, war, g.playerTag);
+          ctx.bus.emit('notify', {
+            title: 'Our petition is carried up',
+            text: 'The court of ' + ((info && info.lordName) || 'our lord') + ' has received our plea to end '
+              + (war.name || 'the war') + '. It is one voice in a council of them.',
+            type: 'info',
+          });
+        }
+        return ok;
+      } catch (e) { warnOnce('petition', 'petitionForPeace failed', e); return false; }
     },
 
     // ---- the fleet ------------------------------------------------------------------
