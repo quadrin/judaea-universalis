@@ -52,6 +52,48 @@ function opinion(ctx, from, of, delta) {
   } catch (e) { warnOnce('opinion', e); }
 }
 
+// ---- when an empire falls, the map says so (SPEC §277) ---------------------
+// This package used to narrate the sixth century and change nothing on it.
+// Babylon "fell" in 539 and kept all fifty-two of its provinces; the card
+// applied a −65% modifier to the dead empire and a +25% one to the live one,
+// which is a stat line where an event should be. These two helpers are the
+// §111 rule the 167 packages already keep: a world card rearranges what
+// history rearranged, and never confiscates what the player took.
+
+function alive(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  return !!(t && t.alive !== false);
+}
+
+// Hand one court's remaining ground to another. Only ground the NAMED loser
+// still owns moves: a province the player (or anybody else) has taken off it
+// belongs to whoever took it, and a card three hundred miles away does not
+// get to hand it to Persia. Returns how many provinces changed hands.
+function cede(ctx, fromTag, toTag) {
+  const g = ctx.game;
+  if (!alive(ctx, fromTag) || !alive(ctx, toTag) || fromTag === toTag) return 0;
+  let n = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== fromTag) continue;
+    try { ctx.helpers.changeOwner(ctx, p.canon || p.name, toTag); n++; }
+    catch (e) { warnOnce('cede:' + fromTag + '>' + toTag, e); }
+  }
+  return n;
+}
+
+// The court stops existing and everything still standing under it — ground,
+// armies, wars, the forwarding address — passes to the heir. Never the
+// player's own chair: `dissolveTagCore` would move the player rather than
+// delete them, which is correct engine behaviour and the wrong thing for a
+// piece of world news to do without being asked.
+function endCourt(ctx, dyingTag, heirTag) {
+  if (!alive(ctx, dyingTag) || !alive(ctx, heirTag)) return false;
+  if (ctx.game.playerTag === dyingTag) return false;
+  try { return !!ctx.helpers.dissolveTag(ctx, dyingTag, heirTag); }
+  catch (e) { warnOnce('endCourt:' + dyingTag, e); return false; }
+}
+
 function chronicleOnly(id, title, date, desc, historical, label, tooltip, effect, worldLabel) {
   return {
     id, title, worldLabel, desc, historical,
@@ -171,21 +213,30 @@ export const EVENTS_597_WORLD = [
       mod(ctx, 'a_new_master_of_the_world', 'A New Master of the World', {
         unrestAll: -1.5, incomeMult: 1.1,
       }, 360);
-      tagMod(ctx, 'BBL', 'the_gates_opened', 'The Gates Opened', {
-        milPowerMult: 0.35, incomeMult: 0.35, manpowerMult: 0.35, legitimacyAdd: -0.5,
-      }, -1);
-      tagMod(ctx, 'PAS', 'the_empire_of_cyrus', 'The Empire of Cyrus', {
-        milPowerMult: 1.25, incomeMult: 1.3, manpowerMult: 1.25,
-      }, -1);
+      // The empire actually changes hands (SPEC §277). The largest empire that
+      // has ever existed changed hands in October 539 with no damage to the
+      // buildings — and until this line it changed hands on the map not at
+      // all: Babylon kept every one of its fifty-two provinces and wore a
+      // −65% modifier to explain why it no longer mattered. The overlord line
+      // below still runs, because a client of Babylon is Persia's client the
+      // moment the gates open, and `dissolveTag` moves the ground, the armies,
+      // the wars and the forwarding address with it.
+      const before = ctx.game.provinces.filter((p) => p && !p.impassable && p.owner === 'BBL').length;
       try {
         const t = ctx.game.tags[me];
         if (t && t.overlord === 'BBL') t.overlord = 'PAS';
       } catch (e) { warnOnce('babylon:vassal', e); }
+      const fell = endCourt(ctx, 'BBL', 'PAS');
+      if (!fell) cede(ctx, 'BBL', 'PAS'); // the player's own chair, or no Persia
+      tagMod(ctx, 'PAS', 'the_empire_of_cyrus', 'The Empire of Cyrus', {
+        milPowerMult: 1.25, incomeMult: 1.3, manpowerMult: 1.25,
+      }, -1);
       opinion(ctx, 'PAS', me, 40);
       h.setFlag(ctx, 'babylonFallen', true);
       h.chronicle(ctx, 'era', 'Babylon is taken without a fight and the gods the empire collected '
         + 'are sent back to their own cities. A general policy is issued about deported peoples '
-        + 'and their sanctuaries.');
+        + 'and their sanctuaries.'
+        + (before ? ' ' + before + ' provinces answer to Persia by the end of the month.' : ''));
     },
     'Cyrus takes Babylon and issues the restoration policy'),
 
