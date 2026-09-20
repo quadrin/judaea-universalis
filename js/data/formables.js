@@ -2393,6 +2393,159 @@ function israelFrom(from, bookmarks) {
   };
 }
 
+
+// ---- the crown that ends the split (SPEC §276) ------------------------------
+// The Iron Age chapters gave Judah two hundred years of being the smaller half
+// and no way to stop being it. A player who takes the north — and in 931 that
+// means beating a kingdom with three quarters of the people and all the good
+// ground, which is the hard road the chapter's own blurb describes — had
+// nothing to show for it but a bigger Judah.
+//
+// This is what there is to show for it. Not MLI: that crown is the Second
+// Temple endgame, Judaism and the Law for a charter, and it belongs four
+// centuries downstream. This one answers the assembly at Shechem in the age
+// the assembly happened in.
+//
+// The cells are the ones the Iron Age chapters actually seat: Sebaste is
+// Samaria and Neapolis is Shechem (the bookmark renames them for the era), and
+// Caesarea Philippi is Panion at the foot of Hermon — the Dan end of the only
+// phrase the sources use for the whole land.
+const ALL_ISRAEL_CELLS = [
+  'Jerusalem', 'Hebron',              // Judah's own seat and its second city
+  'Sebaste', 'Neapolis',              // Samaria, and the town the kingdom broke at
+  'Scythopolis', 'Sepphoris',         // the valley and the Galilee
+  'Caesarea Philippi',                // the far north: from Dan
+];
+
+// Is the northern crown finished? `broken` is the file's own test — gone,
+// collared, or down to a rump — and it is the right one here: a kingdom that
+// still governs ten tribes has not been reunited with anybody.
+function northEnded(ctx) {
+  const g = ctx.game;
+  const isl = g.tags.ISL;
+  if (!isl || isl.alive === false) return true;
+  return broken(ctx, 'ISL');
+}
+
+function menOfAis(ctx) { return menOf(ctx, 'AIS'); }
+
+const AIS_MISSIONS = [
+  {
+    id: 'ais_the_elders_come', name: 'The Elders Come to Shechem',
+    icon: 'star8', col: 1, row: 0,
+    desc: 'Settle the kingdom under one crown: stability 2, and no pretender in the field.',
+    rewardText: '"One Crown": +10% income and −0.6 unrest everywhere, permanent.',
+    check: (ctx) => stabilityOf(ctx, 'AIS') >= 2
+      && !(ctx.game.pretenders && ctx.game.pretenders.AIS),
+    reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AIS', {
+      id: 'ais_one_crown', name: 'One Crown', months: -1,
+      effects: { incomeMult: 1.1, unrestAll: -0.6 },
+    }),
+  },
+  {
+    id: 'ais_the_muster', name: 'The Muster of the Twelve',
+    icon: 'spears', col: 0, row: 1, requires: ['ais_the_elders_come'],
+    desc: 'Put 24,000 men under the one banner — the levies of both halves, called out '
+      + 'together for the first time since Solomon.',
+    rewardText: '+70 martial points and "The Levy of the Twelve": +10% manpower, permanent.',
+    check: (ctx) => menOfAis(ctx) >= 24000,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'AIS', { mar: 70 });
+      ctx.helpers.addTagModifier(ctx, 'AIS', {
+        id: 'ais_levy_of_twelve', name: 'The Levy of the Twelve', months: -1,
+        effects: { manpowerMult: 1.1 },
+      });
+    },
+  },
+  {
+    id: 'ais_one_altar', name: 'One Altar, and the Calves Thrown Down',
+    icon: 'flame', col: 2, row: 1, requires: ['ais_the_elders_come'],
+    desc: 'Going up to Jerusalem no longer means going up to somebody else\'s king. Bring '
+      + 'twenty provinces of the kingdom to the faith of the Name.',
+    rewardText: '+80 government points and "One Altar": +0.3 legitimacy a month and '
+      + '−0.8 unrest everywhere, permanent.',
+    check: (ctx) => ownedCount(ctx, 'AIS', 'yahwism') >= 20,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'AIS', { gov: 80 });
+      ctx.helpers.addTagModifier(ctx, 'AIS', {
+        id: 'ais_one_altar', name: 'One Altar', months: -1,
+        effects: { legitimacyAdd: 0.3, unrestAll: -0.8 },
+      });
+    },
+  },
+  {
+    id: 'ais_the_land', name: 'From Dan to the Negev',
+    icon: 'grain', col: 1, row: 2, requires: ['ais_the_muster', 'ais_one_altar'],
+    desc: 'Twenty-eight provinces under the crown: the hill country, the valley, the '
+      + 'Galilee and the south, held rather than merely marched through.',
+    rewardText: '+250 talents and "The Land Whole": +12% growth, permanent.',
+    check: (ctx) => ownedCount(ctx, 'AIS') >= 28,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'AIS', { treasury: 250 });
+      ctx.helpers.addTagModifier(ctx, 'AIS', {
+        id: 'ais_land_whole', name: 'The Land Whole', months: -1,
+        effects: { growthMult: 1.12 },
+      });
+    },
+  },
+  {
+    id: 'ais_the_sea', name: 'A Coast of Our Own',
+    icon: 'ship', col: 0, row: 3, requires: ['ais_the_land'],
+    desc: 'Neither kingdom ever held a port. Hold Dora and Antipatris, and the trade that '
+      + 'has always gone to Tyre comes here instead.',
+    rewardText: '"The Coast Road": +14% trade and +10% income, permanent.',
+    check: (ctx) => ownsAndControls(ctx, 'AIS', ['Dora', 'Antipatris']),
+    reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AIS', {
+      id: 'ais_coast_road', name: 'The Coast Road', months: -1,
+      effects: { tradeMult: 1.14, incomeMult: 1.1 },
+    }),
+  },
+  {
+    id: 'ais_the_house', name: 'The House Enlarged',
+    icon: 'bricks', col: 2, row: 3, requires: ['ais_the_land'],
+    desc: 'Build the kingdom rather than merely holding it: 150 points of development '
+      + 'under the crown.',
+    rewardText: '"The Builders": +9% income and +0.2 legitimacy a month, permanent.',
+    check: (ctx) => devOf(ctx, 'AIS') >= 150,
+    reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AIS', {
+      id: 'ais_the_builders', name: 'The Builders', months: -1,
+      effects: { incomeMult: 1.09, legitimacyAdd: 0.2 },
+    }),
+  },
+  {
+    id: 'ais_the_succession', name: 'The Succession Nobody Contested',
+    icon: 'laurel', col: 1, row: 4, requires: ['ais_the_sea', 'ais_the_house'],
+    desc: 'The north went through nine dynasties in two hundred years. Reach legitimacy 90 '
+      + 'with an heir named, and the question is closed.',
+    rewardText: '"The House Secure": +0.35 legitimacy a month, +8% discipline and '
+      + '−0.5 unrest everywhere, permanent.',
+    check: (ctx) => legitimacyOf(ctx, 'AIS') >= 90
+      && !!(ctx.game.tags.AIS && ctx.game.tags.AIS.heir),
+    reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AIS', {
+      id: 'ais_house_secure', name: 'The House Secure', months: -1,
+      effects: { legitimacyAdd: 0.35, disciplineMult: 1.08, unrestAll: -0.5 },
+    }),
+  },
+  {
+    id: 'ais_outlast_them', name: 'Outlast the Empire',
+    icon: 'shield', col: 1, row: 5, requires: ['ais_the_succession'],
+    desc: 'Every kingdom on this map becomes somebody\'s province. Stand as one at the end '
+      + 'of the chapter — independent, at peace, and still holding Jerusalem, Samaria and '
+      + 'the Galilee.',
+    rewardText: '+400 talents and "The Kingdom That Was Not Deported": +12% manpower, '
+      + '+10% siege defence and +0.4 legitimacy a month, permanent.',
+    check: (ctx) => independent(ctx, 'AIS') && atPeace(ctx, 'AIS')
+      && ownsAndControls(ctx, 'AIS', ['Jerusalem', 'Sebaste', 'Sepphoris']),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'AIS', { treasury: 400 });
+      ctx.helpers.addTagModifier(ctx, 'AIS', {
+        id: 'ais_not_deported', name: 'The Kingdom That Was Not Deported', months: -1,
+        effects: { manpowerMult: 1.12, hillDefBonus: 10, legitimacyAdd: 0.4 },
+      });
+    },
+  },
+];
+
 export const FORMABLES = [
   {
     id: 'form_has_hyr',
@@ -2724,6 +2877,70 @@ export const FORMABLES = [
         effects: { disciplineMult: 1.05, unrestAll: 0.25 },
       },
     },
+  },
+  // ---- the Iron Age: Judah ends the split (SPEC §276) ---------------------
+  {
+    id: 'form_ais_jdh',
+    from: 'JDH', to: 'AIS',
+    name: 'Proclaim the Kingdom of All Israel',
+    desc: 'The elders came to Shechem to ask one question and were answered with whips '
+      + 'and scorpions, and the kingdom has been two kingdoms ever since. The north is '
+      + 'finished, its capital and its sanctuaries are under this crown, and the man in '
+      + 'Jerusalem is of the house the ten tribes walked out on. Take the name they '
+      + 'walked out with: not Judah enlarged — all Israel, as it was under David, and '
+      + 'the ten tribes written into the rolls of the two.',
+    // The Iron Age only. MLI is the same idea four centuries downstream and
+    // wears a different faith; a chapter that can reach one must not offer both.
+    bookmarks: ['931bce', '732bce', '597bce'],
+    requires: [
+      { label: 'The northern kingdom is finished', check: (ctx) => northEnded(ctx) },
+      {
+        label: 'Own and control Jerusalem, Hebron, Sebaste, Neapolis, Scythopolis, Sepphoris and Caesarea Philippi',
+        check: (ctx, tag) => ownsAndControls(ctx, tag, ALL_ISRAEL_CELLS),
+      },
+      { label: 'Own and control twenty-two provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 22 },
+      { label: 'Fourteen provinces keep the Name', check: (ctx, tag) => ownedControlledCount(ctx, tag, 'yahwism') >= 14 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+      { label: 'Stability 2', check: (ctx, tag) => stabilityOf(ctx, tag) >= 2 },
+      { label: 'Legitimacy 80', check: (ctx, tag) => legitimacyOf(ctx, tag) >= 80 },
+      { label: 'At peace', check: (ctx, tag) => atPeace(ctx, tag) },
+    ],
+    bonus: {
+      legitimacy: 25, stability: 2,
+      grant: { treasury: 200, manpower: 6000, gov: 45, infl: 45, mar: 45 },
+      rulerTitle: 'King of All Israel',
+      modifier: {
+        id: 'ais_the_two_sticks', name: 'The Two Sticks Made One', months: -1,
+        effects: { manpowerMult: 1.1, moraleMult: 1.05, unrestAll: -0.5 },
+      },
+      modifier2: {
+        id: 'ais_the_house_of_david', name: 'The House That Did Not Break', months: -1,
+        effects: { legitimacyAdd: 0.25, incomeMult: 1.08 },
+      },
+      // The reunification itself (SPEC §276). The crown's culture is judean,
+      // so Judah's own cells stay the crown's own; what the proclamation buys
+      // is the OTHER half — every Israelite province this crown holds is
+      // written into its rolls the day it is proclaimed, which is the one
+      // thing a rename could not do and the whole reason the decision exists.
+      onForm: (ctx, tag) => {
+        let written = 0;
+        for (const p of ctx.game.provinces) {
+          if (!p || p.impassable || p.owner !== tag) continue;
+          if (p.culture !== 'israelite') continue;
+          // `num` is the sim's; this file imports nothing, so read it plainly.
+          if (Number.isFinite(p.integration) && p.integration >= 1) continue;
+          p.integration = 1;
+          p.integrating = null;
+          written++;
+        }
+        ctx.helpers.chronicle(ctx, 'era', written
+          ? 'The ten tribes are written into the rolls of the two: ' + written
+            + (written === 1 ? ' district' : ' districts')
+            + ' of the north entered as the kingdom\'s own, not as conquests held.'
+          : 'The kingdom is proclaimed over ground already entered in its own rolls.');
+      },
+    },
+    missions: AIS_MISSIONS,
   },
   // ---- 614: the Empire un-divided ---------------------------------------------
   {

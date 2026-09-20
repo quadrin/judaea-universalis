@@ -4111,6 +4111,17 @@ export function gameActions(ctx) {
               && String(nt.ruler.title || '').indexOf(b.rulerTitle) < 0) {
             nt.ruler.title = String(b.rulerTitle);
           }
+          // A crown whose whole proposition is something the fixed bonus shape
+          // cannot say (SPEC §276). The five fields above pay coin, men,
+          // points and two modifiers; "the ten tribes are written into the
+          // rolls of the two" is a change to the PROVINCES, and a
+          // reunification that could not make that change would be a rename.
+          // Runs last, so it sees the realm the rest of the bonus built, and
+          // guarded, because a content hook must not take the campaign with it.
+          if (typeof b.onForm === 'function') {
+            try { b.onForm(ctx, f.to); }
+            catch (e) { warnOnce('form:onForm:' + f.id, 'the crown\'s own hand failed', e); }
+          }
           if (Array.isArray(f.missions) && f.missions.length) { nt.missionIdx = 0; nt.missionsDone = []; }
           ctx.bus.emit('tagSwitched', { from: f.from, to: f.to });
           ctx.bus.emit('provinceOwner', {}); // the map wears the new color
