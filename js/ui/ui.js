@@ -261,6 +261,10 @@ export function initUI(staticCtx) {
     if (!g || !actions || typeof actions.getPeaceInfo !== 'function') return;
     const info = actions.getPeaceInfo(warId, enemyTag);
     if (!info) return; // even scripted wars hear envoys now (SPEC §31)
+    // SPEC §275: in a client's chair there is no table to open — our lord
+    // signs for us. The war panel carries the petition, so send the dove
+    // there rather than showing an empty congress.
+    if (info.petitioner) { openWarOverview(warId); return; }
     // The peace table owns the panel berth while the envoys are present.
     // Closing the ordinary panels is especially important on narrow screens,
     // where they are bottom sheets and would otherwise sit under the terms.
@@ -307,7 +311,14 @@ export function initUI(staticCtx) {
           ${info.separateTargets.map((t) =>
     `<button class="btn peace-target${info.separate && info.enemyLeader === t.tag ? ' peace-target-on' : ''}"
               data-target="${esc(t.tag)}"
-              data-tt="${esc('A separate peace with ' + t.name + ' alone — they leave the war, the rest fight on.\nWar score against them alone: ' + signed(t.ws) + '%')}">${esc(t.name)} <span class="peace-dim">${signed(t.ws)}%</span></button>`).join('')}
+              data-tt="${esc('A separate peace with ' + t.name
+    + ((t.withNames && t.withNames.length)
+      ? ' and its clients (' + t.withNames.join(', ') + ') — they leave the war together, the rest fight on.'
+        + '\nA client follows its lord out of a war as it followed him in.'
+      : ' alone — they leave the war, the rest fight on.')
+    + '\nWar score against them: ' + signed(t.ws) + '%')}">${esc(t.name)}${
+  (t.withNames && t.withNames.length) ? ` <span class="peace-dim">+${t.withNames.length}</span>` : ''
+} <span class="peace-dim">${signed(t.ws)}%</span></button>`).join('')}
         </div>`
       : '';
     const discountTxt = { claim: ' · our claim (30% off)', faith: ' · our faith (20% off)' };
@@ -355,7 +366,12 @@ export function initUI(staticCtx) {
     ? esc('We were called into this war — it is ' + (info.leaderName || 'our ally') + '\'s to finish. We settle only our own front: what our own men hold may be demanded, everything else between us and the enemy reverts, and the coalition fights on without us. '
       + (info.leaderName || 'Our ally') + '\'s occupations, fronts and standing are untouched.')
     : info.separate
-      ? esc((info.enemyName || 'They') + ' would leave the war alone — the rest of the coalition fights on, and every other front keeps its lines.')
+      ? esc((info.separateWithNames && info.separateWithNames.length)
+        ? (info.enemyName || 'They') + ' would leave the war with its clients — '
+          + info.separateWithNames.join(', ')
+          + ' go out under the same signature, because a client follows its lord out of a war as it followed him in. '
+          + 'The rest of the coalition fights on, and every other front keeps its lines.'
+        : (info.enemyName || 'They') + ' would leave the war alone — the rest of the coalition fights on, and every other front keeps its lines.')
       : 'The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.'}</div>
         <div class="peace-ws">${info.separate ? 'Separate war score' : 'War score'} against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
@@ -740,6 +756,28 @@ export function initUI(staticCtx) {
       `<div class="pp-row" data-tt="${esc(tt)}"><span class="pp-k">${esc(label)}</span><span class="pp-v ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${signed(v)}</span></div>`;
     const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
     const barPct = Math.round(((info.myWs + 100) / 200) * 100);
+    // SPEC §275. A client has no table here: its lord signs for it. What it
+    // has is the petition — influence spent to put one more voice in its
+    // lord's council, which shortens the war the lord will sit through.
+    const petitionHtml = (p) => {
+      if (!p) {
+        return `<button class="btn peace-send" data-ref="negotiate">${icon('dove', 'icon-sm')} Negotiate peace</button>`;
+      }
+      const dots = `${p.pressure} of ${p.maxPressure}`;
+      return `<div class="wo-petition">
+          <div class="peace-dim">${esc('We were pulled into this war by ' + p.lordName
+    + ', and a client keeps no foreign policy: the terms are theirs to sign, not ours. '
+    + 'What we may do is ask — and keep asking, which is how a client has always been heard.')}</div>
+          <div class="peace-dim wo-meta">${esc('Petitions standing: ' + dots
+    + (p.pressure ? ' — their council will settle sooner and for less' : ''))}</div>
+        </div>
+        <button class="btn peace-send${p.can ? '' : ' disabled'}" data-ref="petition"
+          data-tt="${esc(p.can
+    ? 'Spend ' + p.cost + ' influence (we have ' + p.have + ') to petition ' + p.lordName
+      + ' to end this war. Each standing petition lowers the war score and the months '
+      + 'their own council will settle at; it does not end the war by itself.'
+    : p.why)}">${icon('dove', 'icon-sm')} Petition ${esc(p.lordName)} for peace (${p.cost} influence)</button>`;
+    };
     const goalHtml = info.goal ? `
         <div class="peace-sec">War goal: ${esc(info.goal.label)}</div>
         <div class="wo-hold">${esc(info.goal.description)}</div>
@@ -769,12 +807,18 @@ export function initUI(staticCtx) {
         <div class="wo-hold">${holdHtml(info.theyHold, 'None of ours')}</div>
         ${contractHtml()}
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
-        <button class="btn peace-send" data-ref="negotiate">${icon('dove', 'icon-sm')} Negotiate peace</button>
+        ${petitionHtml(info.petition)}
         <button class="btn peace-cancel">Close</button>
       </div>`;
     warEl.classList.remove('hidden');
     const neg = warEl.querySelector('[data-ref="negotiate"]');
     if (neg) neg.addEventListener('click', () => { closeWarOverview(); openPeaceDialog(warId); });
+    const pet = warEl.querySelector('[data-ref="petition"]');
+    if (pet) pet.addEventListener('click', () => {
+      if (pet.classList.contains('disabled')) return;
+      if (actions && typeof actions.petitionForPeace === 'function') actions.petitionForPeace(warId);
+      openWarOverview(warId); // redraw: the counter and the cooldown moved
+    });
     warEl.querySelector('.peace-cancel').addEventListener('click', closeWarOverview);
     warEl.querySelector('.modal-scrim').addEventListener('click', closeWarOverview);
   }

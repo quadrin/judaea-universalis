@@ -18,6 +18,7 @@ import { EVENTS_597 } from './events_597bce.js';
 import { EVENTS_597_WORLD } from './events_597bce_world.js';
 import { EVENTS_597_YEARS } from './events_597bce_years.js';
 import { EVENTS_597_DESTRUCTION } from './events_597bce_destruction.js';
+import { EVENTS_597_PERSIA } from './events_597bce_persia.js';
 import { BOOKMARK_167 } from './bookmark_167bce.js';
 import { EVENTS_167 } from './events_167bce.js';
 import { EVENTS_167_KINGS } from './events_167bce_kings.js';
@@ -34,6 +35,7 @@ import { BOOKMARK_67 } from './bookmark_67bce.js';
 import { EVENTS_67 } from './events_67bce.js';
 import { EVENTS_67_WORLD } from './events_67bce_world.js';
 import { EVENTS_67_AFTER } from './events_67bce_after.js';
+import { EVENTS_67_AUGUSTAN } from './events_67bce_augustan.js';
 import { EVENTS_67_YEARS } from './events_67bce_years.js';
 import { EVENTS_67_NEIGHBOURS } from './events_67bce_neighbours.js';
 import { BOOKMARK_40 } from './bookmark_40bce.js';
@@ -41,6 +43,7 @@ import { EVENTS_40 } from './events_40bce.js';
 import { EVENTS_40_WORLD } from './events_40bce_world.js';
 import { EVENTS_40_ALTERNATES } from './events_40bce_alternates.js';
 import { EVENTS_40_BRIDGE } from './events_40bce_bridge.js';
+import { EVENTS_40_ROAD } from './events_40bce_road.js';
 import { EVENTS_40_YEARS } from './events_40bce_years.js';
 import { EVENTS_40_NEIGHBOURS } from './events_40bce_neighbours.js';
 import { BOOKMARK_66 } from './bookmark_66ce.js';
@@ -234,10 +237,10 @@ export const ERAS = [
   // bones, the day Jehoiachin was let out, the vessels counted back, and the
   // law read at the water gate. It rides before the shared pools like every
   // other chapter package.
-  { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, EVENTS_597_DESTRUCTION, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, EVENTS_597_DESTRUCTION, EVENTS_597_PERSIA, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_CONQUEST, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_AUGUSTAN, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_ROAD, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, ANTIQUE) },
   // 132's chain is three packages (SPEC §104): the revolt itself, the
   // Christian thread that runs beside it, and the world spine to 425. They

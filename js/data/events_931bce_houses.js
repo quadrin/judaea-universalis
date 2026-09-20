@@ -722,6 +722,67 @@ export const EVENTS_931_HOUSES = [
         h.addTagModifier(ctx, 'JDH', { id: 'h931_refugees_from_the_north', name: 'The Refugees from the North', months: -1, effects: { growthMult: 1.1, unrestAll: 0.4 } });
         h.setFlag(ctx, 'samariaFell', true);
         h.chronicle(ctx, 'era', 'Whole villages go over the southern border in the dark and the capital of the south doubles inside a generation. The columns that go east go east without them.'); } }),
+
+  // ── after the north (SPEC §274) ─────────────────────────────────────────
+  // The chapter had one card in its last full decade and then two hundred
+  // years of arithmetic. These are the two questions the south actually had
+  // to answer in the years after Samaria fell, and they are the questions
+  // the 732 chapter opens holding the answers to.
+
+  H('ev931h_the_road_from_the_north', 'They Are Coming Down the Ridge Road', -720, 8, 'JDH',
+    'They have been arriving since the spring: families off the northern ridge '
+    + 'with what they could carry, priests out of the sanctuaries the Assyrians '
+    + 'closed, and whole villages from the Ephraimite hills who left before the '
+    + 'columns reached them. The city has doubled. There is a new quarter on the '
+    + 'western hill that was sheep pasture two years ago and there is not enough '
+    + 'water for it.\n\nThey are also not the same as the people here. They keep '
+    + 'northern feasts on northern dates, they have their own priests with their '
+    + 'own genealogies, and a great many of them have opinions about the house of '
+    + 'David that are two hundred years old and were the reason for the original '
+    + 'quarrel.',
+    'Jerusalem expanded dramatically in the late eighth century — the Broad Wall and the western hill quarter — which most archaeologists attribute to refugees from the fallen north.',
+    { label: 'Wall the new quarter in and put their priests on the rolls',
+      tooltip: '−60 talents on the wall and the water. Jerusalem +2 development permanently, +12% manpower and "One People, One House" (−1 unrest everywhere, +10% integration) for a century. The northern traditions come inside the walls and inside the books, which is where most of the Torah comes from.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { treasury: -60, manpower: 6000, legitimacy: 12 });
+        h.addProvinceModifier(ctx, 'Jerusalem', { id: 'h931_broad_wall', name: 'The Broad Wall', months: -1, effects: { prodMult: 1.2, taxMult: 1.12 } });
+        mod(ctx, 'h931_one_people', 'One People, One House', { unrestAll: -1, integrateMult: 1.1, manpowerMult: 1.12 }, 1200);
+        h.setFlag(ctx, 'northAbsorbed', true);
+        h.chronicle(ctx, 'era', 'A wall is thrown round the new quarter on the western hill and the northern priests are written into the rolls; the city that comes out of it is twice the city that went in.'); } },
+    { label: 'Settle them on the land and keep the northern priests off the rolls',
+      tooltip: '−25 talents. The countryside gains: +10% growth and +8% income for a century, and the city is not strained. The northern priesthood is a separate body with its own memory: +1.2 unrest everywhere permanently, and the quarrel that made two kingdoms is still in the country.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { treasury: -25, manpower: 3000 });
+        mod(ctx, 'h931_settled_on_land', 'Settled on the Land', { growthMult: 1.1, incomeMult: 1.08 }, 1200);
+        mod(ctx, 'h931_priests_apart', 'The Northern Priests Apart', { unrestAll: 1.2 });
+        h.chronicle(ctx, 'era', 'The northerners are settled on the land rather than in the city and their priests are kept off the rolls; the quarrel that made two kingdoms comes south with them.'); } }),
+
+  H('ev931h_the_tribute_after', 'What the South Pays Now', -716, 4, 'JDH',
+    'There is one Israelite kingdom on this map and it is this one, and the '
+    + 'schedule the Assyrians have sent reflects the change. It is not the north\'s '
+    + 'assessment added to the south\'s — the north is provinces now and pays as '
+    + 'provinces — it is a new figure for a kingdom that the empire has decided is '
+    + 'the last one left in these hills and can therefore be assessed at what it '
+    + 'will bear.\n\nThe scribe who brought it is waiting for an answer and the '
+    + 'answer he is waiting for is a number, not a position. What the council is '
+    + 'actually deciding is whether this kingdom means to survive by paying or by '
+    + 'not being worth the march.',
+    'Judah paid tribute to Assyria from Ahaz onward; the assessments are recorded in the annals of Tiglath-pileser, Sargon and Sennacherib.',
+    { label: 'Pay it, in full, early, and ask for the border posts in writing',
+      tooltip: '−110 talents a decade. "Assessed and Quiet" permanently: +10% administrative efficiency, +12 deterrent, −1 unrest everywhere. The kingdom is poor, the borders are recognised, and nothing marches through here for twenty years.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { treasury: -110, legitimacy: 10 });
+        mod(ctx, 'h931_assessed_quiet', 'Assessed and Quiet', { adminMult: 1.1, deterrent: 12, unrestAll: -1 });
+        h.setFlag(ctx, 'tributeAccepted', true);
+        h.chronicle(ctx, 'era', 'The new schedule is paid in full and early, and the border posts are asked for and given in writing.'); } },
+    { label: 'Pay the old figure and put the difference into the walls',
+      tooltip: '+70 talents kept and spent on masonry: +20% siege defence permanently and +8% force limit. The shortfall is on the record: −12 legitimacy and "A Kingdom Worth the March" (+1 unrest everywhere) — the next king of Assyria reads this ledger before he decides where to go.',
+      fx: (ctx) => { const h = ctx.helpers;
+        h.adjust(ctx, 'JDH', { treasury: 70, legitimacy: -12 });
+        mod(ctx, 'h931_into_the_walls', 'Into the Walls', { hillDefBonus: 20, forceLimitMult: 1.08 });
+        mod(ctx, 'h931_worth_the_march', 'A Kingdom Worth the March', { unrestAll: 1 });
+        h.setFlag(ctx, 'tributeShort', true);
+        h.chronicle(ctx, 'era', 'The old figure is paid and the difference goes into masonry; the shortfall is entered in a ledger that is read in Nineveh.'); } }),
 ];
 
 // --- SPEC §216: a card is answered by the court it is addressed to ---------
