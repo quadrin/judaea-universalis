@@ -2460,8 +2460,7 @@ const AIS_MISSIONS = [
   {
     id: 'ais_one_altar', name: 'One Altar, and the Calves Thrown Down',
     icon: 'flame', col: 2, row: 1, requires: ['ais_the_elders_come'],
-    desc: 'The north kept its own sanctuaries for two hundred years because going up to '
-      + 'Jerusalem meant going up to somebody else\'s king. It no longer does. Bring '
+    desc: 'Going up to Jerusalem no longer means going up to somebody else\'s king. Bring '
       + 'twenty provinces of the kingdom to the faith of the Name.',
     rewardText: '+80 government points and "One Altar": +0.3 legitimacy a month and '
       + '−0.8 unrest everywhere, permanent.',
@@ -2516,8 +2515,7 @@ const AIS_MISSIONS = [
   {
     id: 'ais_the_succession', name: 'The Succession Nobody Contested',
     icon: 'laurel', col: 1, row: 4, requires: ['ais_the_sea', 'ais_the_house'],
-    desc: 'The north went through nine dynasties in two hundred years because a crown that '
-      + 'is not David\'s has to be re-won by every man who wears it. Reach legitimacy 90 '
+    desc: 'The north went through nine dynasties in two hundred years. Reach legitimacy 90 '
       + 'with an heir named, and the question is closed.',
     rewardText: '"The House Secure": +0.35 legitimacy a month, +8% discipline and '
       + '−0.5 unrest everywhere, permanent.',
