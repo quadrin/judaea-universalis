@@ -122,18 +122,30 @@ function judaeaEndures(ctx) {
   if (!alive(ctx, 'JUD') || (t && t.overlord)) return false;
   if (findJudRomWar(ctx.game)) return false;
   if (ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')) return false;
-  // …and SOMEBODY ELSE has to be holding it. "Judaea does not control
-  // Jerusalem" was the whole test, and it is satisfied by a city in rebel
-  // hands — which is not this outcome, it is the middle of a war. The card
-  // says what the outcome is in its own first line: the legions took the city
-  // and stopped where the hills begin, and the state in the hills lives
+  // …and, TO ENTER, somebody else has to be holding it. "Judaea does not
+  // control Jerusalem" was the whole test, and it is satisfied by a city in
+  // rebel hands — which is not this outcome, it is the middle of a war. The
+  // card says what the outcome is in its own first line: the legions took the
+  // city and stopped where the hills begin, and the state in the hills lives
   // twenty-five miles from a Roman colony. A city nobody has settled is the
-  // same "mid-sentence" position the suite already refuses a running war for,
-  // and it opened this branch for exactly one month on one seed before the
+  // same "mid-sentence" position this file already refuses a running war for,
+  // and it opened the branch for exactly one month on one seed before the
   // holder changed again — long enough to set `galileeKingdom` and put the
   // campaign on two roads at once. §272's season found it by moving the war's
   // timing; the hole was always there.
-  {
+  //
+  // ENTRY ONLY, and that scope is the whole of the second half of this fix.
+  // This predicate does two jobs: it decides whether the road may be ENTERED
+  // (the 140 card, which sets the marker) and whether an entered road
+  // CONTINUES (the five cards after it, out to 425). A settled holder is a
+  // fact about the settlement, so re-testing it two and a half centuries
+  // later asks the wrong question — and it answered it wrong: measured over
+  // twelve seeds, Aelia is in rebel hands in April 390 on seed 5 and 13 and
+  // in May 425 on seed 5, and an unscoped test killed the dated tail on
+  // exactly those runs and no others. A month of disorder in somebody else's
+  // colony is not the end of the Galilean state's patriarchate. Once the
+  // marker is set the road is the road, which is §119 in the other direction.
+  if (!flag(ctx, 'galileeKingdom')) {
     const p = ctx.prov('Jerusalem');
     const held = p && p.controller;
     if (!held || held === 'REB') return false;
