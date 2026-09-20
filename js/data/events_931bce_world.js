@@ -60,6 +60,44 @@ function opinion(ctx, from, of, delta) {
 }
 
 // A world card with one answer: the age happening to everybody.
+// ---- when an empire falls, the map says so (SPEC §277) ---------------------
+// This package narrated its century and changed nothing on it. The §111 rule
+// the 167 packages already keep: a world card rearranges what history
+// rearranged, and never confiscates what the player took.
+
+function alive(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  return !!(t && t.alive !== false);
+}
+
+// Hand named ground over. Only ground the NAMED loser still owns moves: a
+// province the player has taken off it belongs to whoever took it, and a card
+// a thousand miles away does not get to reassign it.
+function cedeNamed(ctx, names, fromTag, toTag) {
+  if (!alive(ctx, toTag) || fromTag === toTag) return 0;
+  // Never the player's own court — see the note on endCourt below.
+  if (ctx.game.playerTag === fromTag) return 0;
+  let n = 0;
+  for (const name of names) {
+    const p = ctx.prov && ctx.prov(name);
+    if (!p || p.impassable || p.owner !== fromTag) continue;
+    try { ctx.helpers.changeOwner(ctx, p.canon || p.name, toTag); n++; }
+    catch (e) { warnOnce('cede:' + name, e); }
+  }
+  return n;
+}
+
+// The court stops existing; ground, armies, wars and the forwarding address
+// pass to the heir. Never the player's own chair — dissolveTagCore would move
+// the player rather than delete them, which is right for the engine and wrong
+// for a piece of world news to do unasked.
+function endCourt(ctx, dyingTag, heirTag) {
+  if (!alive(ctx, dyingTag) || !alive(ctx, heirTag)) return false;
+  if (ctx.game.playerTag === dyingTag) return false;
+  try { return !!ctx.helpers.dissolveTag(ctx, dyingTag, heirTag); }
+  catch (e) { warnOnce('endCourt:' + dyingTag, e); return false; }
+}
+
 function chronicleOnly(id, title, date, desc, historical, label, tooltip, effect, worldLabel) {
   return {
     id, title, worldLabel, desc, historical,
@@ -315,9 +353,15 @@ export const EVENTS_931_WORLD = [
         milPowerMult: 0.5, incomeMult: 0.5, manpowerMult: 0.5,
       }, -1);
       opinion(ctx, 'ASR', me, -20);
+      // …and it becomes three Assyrian provinces (SPEC §277). The chronicle
+      // line below has said so since the card was written; until now the map
+      // did not, and Aram kept governing the three of them for ever.
+      const aram = cedeNamed(ctx, ['Damascus', 'Chalcis', 'Bostra'], 'DMS', 'ASR');
+      endCourt(ctx, 'DMS', 'ASR');
       h.setFlag(ctx, 'damascusFallen', true);
-      h.chronicle(ctx, 'era', 'Damascus falls after a two-year siege and becomes three Assyrian '
-        + 'provinces. There is nothing between the hill country and the empire.');
+      h.chronicle(ctx, 'era', 'Damascus falls after a two-year siege and becomes '
+        + (aram === 3 ? 'three Assyrian provinces' : 'an Assyrian province')
+        + '. There is nothing between the hill country and the empire.');
     },
     'Assyria takes Damascus and ends the kingdom of Aram'),
 

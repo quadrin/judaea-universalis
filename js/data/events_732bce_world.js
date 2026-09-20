@@ -52,6 +52,44 @@ function opinion(ctx, from, of, delta) {
   } catch (e) { warnOnce('opinion', e); }
 }
 
+// ---- when an empire falls, the map says so (SPEC §277) ---------------------
+// This package narrated its century and changed nothing on it. The §111 rule
+// the 167 packages already keep: a world card rearranges what history
+// rearranged, and never confiscates what the player took.
+
+function alive(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  return !!(t && t.alive !== false);
+}
+
+// Hand named ground over. Only ground the NAMED loser still owns moves: a
+// province the player has taken off it belongs to whoever took it, and a card
+// a thousand miles away does not get to reassign it.
+function cedeNamed(ctx, names, fromTag, toTag) {
+  if (!alive(ctx, toTag) || fromTag === toTag) return 0;
+  // Never the player's own court — see the note on endCourt below.
+  if (ctx.game.playerTag === fromTag) return 0;
+  let n = 0;
+  for (const name of names) {
+    const p = ctx.prov && ctx.prov(name);
+    if (!p || p.impassable || p.owner !== fromTag) continue;
+    try { ctx.helpers.changeOwner(ctx, p.canon || p.name, toTag); n++; }
+    catch (e) { warnOnce('cede:' + name, e); }
+  }
+  return n;
+}
+
+// The court stops existing; ground, armies, wars and the forwarding address
+// pass to the heir. Never the player's own chair — dissolveTagCore would move
+// the player rather than delete them, which is right for the engine and wrong
+// for a piece of world news to do unasked.
+function endCourt(ctx, dyingTag, heirTag) {
+  if (!alive(ctx, dyingTag) || !alive(ctx, heirTag)) return false;
+  if (ctx.game.playerTag === dyingTag) return false;
+  try { return !!ctx.helpers.dissolveTag(ctx, dyingTag, heirTag); }
+  catch (e) { warnOnce('endCourt:' + dyingTag, e); return false; }
+}
+
 function chronicleOnly(id, title, date, desc, historical, label, tooltip, effect, worldLabel) {
   return {
     id, title, worldLabel, desc, historical,
@@ -272,6 +310,13 @@ export const EVENTS_732_WORLD = [
         milPowerMult: 1.2, incomeMult: 1.2, manpowerMult: 1.2,
       }, -1);
       tagMod(ctx, 'MDA', 'the_median_share', 'The Median Share', { milPowerMult: 1.15, incomeMult: 1.15 }, -1);
+      // The division of the heartland (SPEC §277). 612 did not end Assyria —
+      // the rump governed from Harran for three more years and Egypt marched
+      // north in 609 precisely because the Levant was loose. So the empire
+      // loses MESOPOTAMIA here and keeps the west until Carchemish: Media
+      // takes the north and the Zagros side, Babylon the rest.
+      cedeNamed(ctx, ['Arbela', 'Assur', 'Nisibis', 'Singara'], 'ASR', 'MDA');
+      cedeNamed(ctx, ['Hatra', 'Carrhae', 'Edessa'], 'ASR', 'BBL');
       try {
         const t = ctx.game.tags[me];
         if (t && t.overlord === 'ASR') t.overlord = null;
@@ -304,9 +349,17 @@ export const EVENTS_732_WORLD = [
       mod(ctx, 'the_new_great_king', 'The New Great King', { unrestAll: -0.5 }, 240);
       opinion(ctx, 'BBL', me, 30);
       tagMod(ctx, 'MIZ', 'finished_in_asia', 'Finished in Asia', { moraleMult: 0.85, manpowerMult: 0.85 }, -1);
+      // "The last Assyrian force" is the Harran rump that survived 612, and
+      // this is where it stops existing (SPEC §277). Everything it still holds
+      // — which is the Levant, unless the player has taken some of it — passes
+      // to Babylon, and the chronicle line below becomes literally true.
+      const west = ctx.game.provinces.filter((q) => q && !q.impassable && q.owner === 'ASR').length;
+      endCourt(ctx, 'ASR', 'BBL');
       h.setFlag(ctx, 'carchemishFought', true);
       h.chronicle(ctx, 'era', 'The Egyptian army is destroyed at Carchemish and pursued to Hamath. '
-        + 'Everything from the Euphrates to the Brook of Egypt answers to Babylon now.');
+        + 'Everything from the Euphrates to the Brook of Egypt answers to Babylon now'
+        + (west ? ' — ' + west + ' provinces change hands with the last Assyrian government' : '')
+        + '.');
     },
     'Nebuchadnezzar destroys Egypt at Carchemish'),
 

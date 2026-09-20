@@ -443,8 +443,17 @@ export const EVENTS_529_WORLD = [
             });
           }
           if (alive(ctx, 'BYZ')) h.adjust(ctx, 'BYZ', { mar: 10 });
+          // …and it stops being one (SPEC §277). The line below has always
+          // said the nation that took Italy stops being a nation; until now it
+          // went on governing whatever it held, at −40% manpower, for ever.
+          const gothic = ctx.game.provinces.filter((q) => q && !q.impassable && q.owner === 'OST').length;
+          if (alive(ctx, 'OST') && alive(ctx, 'BYZ') && ctx.game.playerTag !== 'OST') {
+            try { h.dissolveTag(ctx, 'OST', 'BYZ'); }
+            catch (e) { warnOnce('taginae:dissolve', e); }
+          }
           h.setFlag(ctx, 'taginae', true);
-          h.chronicle(ctx, 'era', 'Totila falls at Taginae and Teia under Vesuvius; the nation that took Italy is granted leave to depart the peninsula, and stops being a nation.');
+          h.chronicle(ctx, 'era', 'Totila falls at Taginae and Teia under Vesuvius; the nation that took Italy is granted leave to depart the peninsula, and stops being a nation'
+            + (gothic ? ' — ' + gothic + ' provinces of Italy go back to the empire' : '') + '.');
         }),
       },
     ],
