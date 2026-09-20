@@ -28,7 +28,7 @@ const ok = (cond, msg) => {
 };
 
 const NATIONS = DEFINES.NATIONS || DEFINES.TAGS || {};
-const NEW = ['MAC', 'ATH', 'SPT', 'COR', 'ACH', 'RHO', 'CRE', 'SYC', 'TAR', 'CYR', 'MIL', 'PRG', 'BIT', 'GAL'];
+const NEW = ['MAC', 'ATH', 'SPT', 'COR', 'ACH', 'RHO', 'CRT', 'SYC', 'TAR', 'CYR', 'MIL', 'PRG', 'BIT', 'GLT'];
 
 const snap = JSON.parse(fs.readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
 const bus = { emit() {}, on() { return () => {}; } };
@@ -108,9 +108,9 @@ console.log('== every new court is a court, not a name ==');
 // ---------------------------------------------------------------------------
 console.log('== the ground is actually theirs ==');
 const EXPECT = {
-  '732bce': { COR: 'Corinth', ATH: 'Athens', SPT: 'Sparta', CRE: 'Gortyn', RHO: 'Rhodes', SYC: 'Syracusae', TAR: 'Tarentum' },
-  '597bce': { COR: 'Corinth', ATH: 'Athens', SPT: 'Sparta', CRE: 'Gortyn', RHO: 'Rhodes', SYC: 'Syracusae', TAR: 'Tarentum', CYR: 'Cyrene', MIL: 'Sinope' },
-  '167bce': { MAC: 'Thessalonica', ACH: 'Corinth', ATH: 'Athens', CRE: 'Gortyn', RHO: 'Rhodes', BIT: 'Nicaea', PRG: 'Smyrna', GAL: 'Ancyra' },
+  '732bce': { COR: 'Corinth', ATH: 'Athens', SPT: 'Sparta', CRT: 'Gortyn', RHO: 'Rhodes', SYC: 'Syracusae', TAR: 'Tarentum' },
+  '597bce': { COR: 'Corinth', ATH: 'Athens', SPT: 'Sparta', CRT: 'Gortyn', RHO: 'Rhodes', SYC: 'Syracusae', TAR: 'Tarentum', CYR: 'Cyrene', MIL: 'Sinope' },
+  '167bce': { MAC: 'Thessalonica', ACH: 'Corinth', ATH: 'Athens', CRT: 'Gortyn', RHO: 'Rhodes', BIT: 'Nicaea', PRG: 'Smyrna', GLT: 'Ancyra' },
 };
 {
   for (const [chapter, want] of Object.entries(EXPECT)) {

@@ -155,14 +155,14 @@ export const DEFINES = {
     COR: { aggression: 0.7, caution: 1.3 },
     ACH: { aggression: 0.85, caution: 1.2 },
     RHO: { aggression: 0.5, caution: 1.5 },
-    CRE: { aggression: 0.9, caution: 1.1 },
+    CRT: { aggression: 0.9, caution: 1.1 },
     SYC: { aggression: 1.2, caution: 0.9 },
     TAR: { aggression: 0.8, caution: 1.2 },
     CYR: { aggression: 0.7, caution: 1.25 },
     MIL: { aggression: 0.8, caution: 1.2 },
     PRG: { aggression: 0.9, caution: 1.25 },
     BIT: { aggression: 0.85, caution: 1.3 },
-    GAL: { aggression: 1.3, caution: 0.8 },
+    GLT: { aggression: 1.3, caution: 0.8 },
     MLI: { aggression: 1.0, caution: 1.0 },
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
     // The crowns of government (SPEC §250). All five are player-only, so these
@@ -441,9 +441,9 @@ export const DEFINES = {
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
     MAC: 'monarchy', ATH: 'republic', SPT: 'monarchy', COR: 'republic',
-    ACH: 'republic', RHO: 'republic', CRE: 'republic', SYC: 'monarchy',
+    ACH: 'republic', RHO: 'republic', CRT: 'republic', SYC: 'monarchy',
     TAR: 'republic', CYR: 'monarchy', MIL: 'republic', PRG: 'monarchy',
-    BIT: 'monarchy', GAL: 'tribal',
+    BIT: 'monarchy', GLT: 'tribal',
     MLI: 'monarchy', AIS: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
     // The five crowns of government and the two empires (SPEC §250) are
     // ABSENT from this table, and that absence is the section's whole
@@ -1082,11 +1082,11 @@ export const DEFINES = {
     // Salamis and the league at Delos name Athens; Pydna and the sack of
     // Corinth name Macedon and the Achaeans; the Attalid will names Pergamon.
     MAC: {
-      name: 'Macedon', adj: 'Macedonian', color: [168, 142, 46], religion: 'hellenism', culture: 'greek', capital: 'Thessalonica',
+      name: 'Macedon', adj: 'Macedonian', color: [58, 82, 132], religion: 'hellenism', culture: 'greek', capital: 'Thessalonica',
       description: 'The kingdom the Greeks called barbarous until it conquered them, and then '
         + 'conquered Persia. What is left after Pydna is four republics forbidden to trade '
         + 'with each other.',
-      ideas: { manpowerMult: 1.15, disciplineMult: 1.08, diploSeats: -4 },
+      ideas: { disciplineMult: 1.1, moraleMult: 1.08, manpowerMult: 1.05 },
     },
     ATH: {
       name: 'Athens', adj: 'Athenian', color: [64, 110, 178], religion: 'hellenism', culture: 'greek', capital: 'Athens',
@@ -1118,11 +1118,11 @@ export const DEFINES = {
         + 'Mediterranean copies. It survives by being useful to whoever is winning.',
       ideas: { navalMult: 1.25, tradeMult: 1.15, forceLimitMult: 0.9 },
     },
-    CRE: {
-      name: 'Crete', adj: 'Cretan', color: [126, 106, 150], religion: 'hellenism', culture: 'greek', capital: 'Gortyn',
+    CRT: {
+      name: 'Crete', adj: 'Cretan', color: [150, 160, 118], religion: 'hellenism', culture: 'greek', capital: 'Gortyn',
       description: 'A hundred cities that agree about nothing except the export trade, which '
         + 'is archers, and the other one, which everybody else calls piracy.',
-      ideas: { manpowerMult: 1.12, navalMult: 1.1, diploSeats: -5 },
+      ideas: { navalMult: 1.12, moraleMult: 1.06, manpowerMult: 0.8 },
     },
     SYC: {
       name: 'Syracuse', adj: 'Syracusan', color: [76, 146, 158], religion: 'hellenism', culture: 'greek', capital: 'Syracusae',
@@ -1137,10 +1137,10 @@ export const DEFINES = {
       ideas: { tradeMult: 1.15, navalMult: 1.08, disciplineMult: 0.92 },
     },
     CYR: {
-      name: 'Cyrene', adj: 'Cyrenaean', color: [172, 150, 88], religion: 'hellenism', culture: 'greek', capital: 'Cyrene',
+      name: 'Cyrenaica', adj: 'Cyrenaean', color: [156, 176, 84], religion: 'hellenism', culture: 'greek', capital: 'Cyrene',
       description: 'A Greek city on a Libyan plateau that grew rich on a plant nobody has '
         + 'been able to cultivate and nobody has seen since it was eaten to extinction.',
-      ideas: { incomeMult: 1.15, tradeMult: 1.1, manpowerMult: 0.88 },
+      ideas: { incomeMult: 1.1, tradeMult: 1.1, manpowerMult: 0.8 },
     },
     // Miletus itself is not a cell on this map, so the court that stands here
     // is the network rather than the mother city, seated at its chief colony.
@@ -1157,16 +1157,20 @@ export const DEFINES = {
       ideas: { incomeMult: 1.18, diploSeats: 5, manpowerMult: 0.9 },
     },
     BIT: {
-      name: 'Bithynia', adj: 'Bithynian', color: [84, 124, 140], religion: 'hellenism', culture: 'anatolian', capital: 'Nicaea',
+      name: 'Bithynia', adj: 'Bithynian', color: [126, 110, 172], religion: 'hellenism', culture: 'greek', capital: 'Nicaea',
       description: 'A kingdom on the straits that has never won a war and has never quite '
         + 'been conquered, because everyone who wants it has somebody worse behind them.',
-      ideas: { tradeMult: 1.1, diploSeats: 4, milPowerMult: 0.92 },
+      ideas: { incomeMult: 1.1, navalMult: 1.08, tradeMult: 1.08 },
     },
-    GAL: {
-      name: 'Galatia', adj: 'Galatian', color: [136, 88, 100], religion: 'thracian_cult', culture: 'anatolian', capital: 'Ancyra',
+    // Galatia is GLT, not GAL: GAL is the Galilee's, in `revivals.js` and as
+    // JUD's own letters in two chapters. Identity, colour and ideas are the
+    // revivals row's, because §247 already drew this court and a catalogued
+    // one must agree with it.
+    GLT: {
+      name: 'Galatia', adj: 'Galatian', color: [104, 134, 74], religion: 'thracian_cult', culture: 'celtic', capital: 'Ancyra',
       description: 'Three Celtic tribes who crossed into Asia to plunder it, were paid to '
         + 'stop, and stayed — the best infantry in Anatolia, for hire, to anybody.',
-      ideas: { manpowerMult: 1.18, moraleMult: 1.08, incomeMult: 0.85 },
+      ideas: { moraleMult: 1.12, disciplineMult: 0.95, manpowerMult: 1.1 },
     },
     MLI: {
       name: 'Kingdom of Israel', adj: 'Israelite', color: [46, 70, 172], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',

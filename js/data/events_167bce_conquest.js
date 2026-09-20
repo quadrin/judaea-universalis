@@ -226,6 +226,15 @@ const RHINE_BANK = ['Colonia Agrippina', 'Mogontiacum', 'Batavia', 'Atuatuca', '
 // Germania between the Rhine and the Elbe: a province for sixteen years.
 const GERMANIA = ['Frisia', 'Chatti', 'Teutoburgium'];
 
+// The Greek courts this chapter's Roman cards take ground from (SPEC §278).
+// Until the blob was broken up this was one tag, `GRC`, and every card below
+// named it; now Corinth is the Achaean League's, Athens Athens', Gortyn
+// Crete's, Rhodes Rhodes', Thessalonica Macedon's. `transfer` refuses to take
+// a province off a living court that is not a named loser, so naming the old
+// blob alone would have quietly stopped the Roman conquest of Greece — which
+// is exactly what it did, and what smoke174 and smoke176 caught.
+const GREEK = ['GRC', 'ACH', 'ATH', 'SPT', 'COR', 'CRT', 'RHO', 'MAC', 'PRG', 'BIT', 'GLT', 'THR', 'ION', 'HEL'];
+
 export const EVENTS_167_CONQUEST = [
 
   // ── W1 · -146 ─────────────────────────────────────────────────────────────
@@ -253,7 +262,10 @@ export const EVENTS_167_CONQUEST = [
     date: { y: -146, m: 5 },
     world: true,
     major: true,
-    when: safeTrigger('ev_pw_achaean_defiance:when', (ctx) => alive(ctx, 'ROM') && alive(ctx, 'GRC')),
+    // The Achaean War is the Achaean League's war (SPEC §278). It was the
+    // blob's while the blob held Corinth; the league holds Corinth now, and
+    // it is the court the war is actually named after.
+    when: safeTrigger('ev_pw_achaean_defiance:when', (ctx) => alive(ctx, 'ROM') && alive(ctx, 'ACH')),
     aiOption: 0,
     historical: 'The Achaean League declared war on Sparta in 146 in defiance of a Senate ruling; Metellus broke its army at Scarpheia within months.',
     options: [
@@ -262,13 +274,13 @@ export const EVENTS_167_CONQUEST = [
         tooltip: 'Rome declares the Achaean War. Hellas raises the debt-cancellation army — "The Cancelled Debts" (+30% manpower, +10% morale, −35% income while it lasts) and a league host at Corinth — and Rome marches the army of Macedonia south from Thessalonica. Every eastern court cools 10, having watched a Senate arbitration end in a war.',
         effects: guard('ev_pw_achaean_defiance:0', (ctx) => {
           const h = ctx.helpers;
-          if (!romeGoesToWar(ctx, 'GRC', 'The Achaean War')) return;
-          h.addTagModifier(ctx, 'GRC', {
+          if (!romeGoesToWar(ctx, 'ACH', 'The Achaean War')) return;
+          h.addTagModifier(ctx, 'ACH', {
             id: 'the_cancelled_debts', name: 'The Cancelled Debts', months: -1,
             effects: { manpowerMult: 1.3, moraleMult: 1.1, incomeMult: 0.65 },
           });
-          h.adjust(ctx, 'GRC', { legitimacy: 10, manpower: 6000 });
-          h.spawnArmy(ctx, 'GRC', 'Corinth', {
+          h.adjust(ctx, 'ACH', { legitimacy: 10, manpower: 6000 });
+          h.spawnArmy(ctx, 'ACH', 'Corinth', {
             inf: 9, cav: 1, name: 'The League Levy',
             general: { name: 'Critolaus', fire: 1, shock: 2, maneuver: 2 },
           });
@@ -321,7 +333,7 @@ export const EVENTS_167_CONQUEST = [
         effects: guard('ev_pw_aristonicus:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
-          transfer(ctx, ['Halicarnassus'], 'ROM', 'GRC');
+          transfer(ctx, ['Halicarnassus'], 'ROM', GREEK);
           h.adjust(ctx, 'ROM', { treasury: 250, legitimacy: 6 });
           h.addTagModifier(ctx, 'ROM', {
             id: 'contract_for_asia', name: 'The Contract for Asia', months: -1,
@@ -331,7 +343,7 @@ export const EVENTS_167_CONQUEST = [
             id: 'the_publicani', name: 'The Publicani', months: 300,
             effects: { unrest: 1, taxMult: 1.2 },
           });
-          if (alive(ctx, 'GRC')) h.adjust(ctx, 'GRC', { legitimacy: -10 });
+          if (alive(ctx, 'RHO')) h.adjust(ctx, 'RHO', { legitimacy: -10 });
           h.setFlag(ctx, 'provinceOfAsia', true);
           h.chronicle(ctx, 'era', 'Aristonicus and his citizens of the Sun are put down after three years; Asia becomes a province and its taxes are auctioned in the Forum.');
         }),
@@ -942,7 +954,7 @@ export const EVENTS_167_CONQUEST = [
         effects: guard('ev_pw_galatia:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
-          transfer(ctx, ['Iconium'], 'ROM', ['SEL', 'GRC', 'CYZ']);
+          transfer(ctx, ['Iconium'], 'ROM', ['SEL', 'CYZ'].concat(GREEK));
           mark(ctx, ['Ancyra'], {
             id: 'province_of_galatia', name: 'The Province of Galatia', months: -1,
             effects: { taxMult: 1.15 },

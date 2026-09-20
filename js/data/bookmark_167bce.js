@@ -235,7 +235,7 @@ export const BOOKMARK_167 = {
   // (Popillius' circle in the sand is diplomacy, not conquest), and Pontus
   // keeps its Black Sea coast.
   activeTags: [
-    'SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'GRC', 'ROM', 'PNT',
+    'SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'ROM', 'PNT',
     // Dormant at the opening date; the long campaign can watch the Seleucid
     // empire break into actual states instead of abstract debuffs.
     'CMG', 'OSR', 'CHX', 'CYZ', 'ITU',
@@ -253,7 +253,7 @@ export const BOOKMARK_167 = {
     // Tabae marching to hold his own far satrapies. Seated by
     // js/data/political_maps.js, same contract as the west.
     'KSH', 'SAB', 'HDR', 'GBA', 'CHO',
-    'ACH', 'ATH', 'CRE', 'RHO', 'MAC', 'BIT', 'PRG', 'GAL',
+    'ACH', 'ATH', 'CRT', 'RHO', 'MAC', 'BIT', 'PRG', 'GLT',
   ],
   // Standing rivalries (SPEC §73): the era's weather. The Sixth Syrian War
   // just ended with Antiochus humiliated at Eleusis (SEL–PTO, SEL–ROM), and
@@ -386,7 +386,7 @@ export const BOOKMARK_167 = {
     // Media and Babylonia remain Seleucid in 167 and fall by event.
     // -- v5.0: the wider world -------------------------------------------------
     // Hellas: the leagues and free cities (GRC — Rome's shadow lies off-map)
-    'Corinth': 'ACH', 'Athens': 'ATH', 'Sparta': 'ACH', 'Gortyn': 'CRE',
+    'Corinth': 'ACH', 'Athens': 'ATH', 'Sparta': 'ACH', 'Gortyn': 'CRT',
     'Rhodes': 'RHO', 'Halicarnassus': 'RHO',
     // Ptolemaic Africa: the Pentapolis and the Nile to the cataract
     'Cyrene': 'PTO', 'Marmarica': 'PTO', 'Paraetonium': 'PTO', 'Syene': 'PTO',
@@ -398,8 +398,8 @@ export const BOOKMARK_167 = {
     // and the Illyrian shore are the Republic's (base map_data holdings), and
     // its shadow now lies ON the map. The Aegean north stays Greek; Pontus
     // holds its Black Sea kingdom under Pharnaces' heirs.
-    'Thessalonica': 'MAC', 'Hadrianopolis': 'THR', 'Byzantion': 'THR',
-    'Nicaea': 'BIT', 'Smyrna': 'PRG', 'Ancyra': 'GAL',
+    'Thessalonica': 'MAC', 'Hadrianopolis': 'MAC', 'Byzantion': 'MAC',
+    'Nicaea': 'BIT', 'Smyrna': 'PRG', 'Ancyra': 'GLT',
     'Sinope': 'PNT', 'Trapezus': 'PNT', 'Phasis': 'PNT',
     'Caucasian Albania': 'ARM', 'Hyrcania': 'SEL',
   },

@@ -384,7 +384,7 @@ export const FLAGS = {
   // Galilee of 529 unmistakably made, and it is nobody else's emblem on this
   // map: JUD keeps the menorah for the seven chapters that turn on Jerusalem,
   // and this is what those three letters look like when they mean Tiberias.
-  GAL:
+  GLT:
     `<circle cx="12" cy="12" r="9.1" ${SIL}/>` +
     `<circle cx="12" cy="12" r="9.1" fill="none" stroke="${FG}" stroke-width="1.4"/>` +
     `<path d="M12 8.5V3.6M13.8 9 16.2 4.7M15 10.2 19.3 7.8M15.5 12h4.9M15 13.8l4.3 2.4`
@@ -1416,7 +1416,7 @@ export const FLAGS = {
     `<path d="M19.8 12c0 2.1-1.6 3.4-3.8 3.4s-3.4-1.6-3.4-3.4 1.2-3.4 3.4-3.4 3.8 1.3 3.8 3.4Z" ${SIL}/>`,
 
   // Crete: the labyrinth of the Knossian coins, square as they drew it.
-  CRE:
+  CRT:
     `<path d="M3.4 3.4h17.2v17.2H3.4Z" ${SIL}/>` +
     `<path d="M6.1 6.1h11.8v11.8H6.1Z M8.6 8.6h6.8v6.8H8.6Z" ${DET}/>` +
     `<path d="M10.9 10.9h2.2v2.2h-2.2Z" ${ACC}/>` +
@@ -1471,8 +1471,8 @@ export const FLAGS = {
     `<path d="M9.2 4.2h1.7v4h-1.7Z" ${SIL}/>` +
     `<path d="M10.9 4.2h5.4l-2 2 2 2h-5.4Z" ${ACC}/>`,
 
-  // Galatia: the torc — the one object everybody in the ancient world used to
-  // draw a Gaul, and the one the Dying Gaul is wearing.
+  // Galatia (GLT, not GAL — those letters are the Galilee's): the torc, the
+  // one object everybody in the ancient world used to draw a Gaul.
   GAL:
     `<path d="M12 4.4c4.2 0 7.4 3.2 7.4 7.4 0 3.4-2 6.1-5 7v-2.6c1.7-.8 2.8-2.4 2.8-4.4 0-2.9-2.3-5.2-5.2-5.2S6.8 8.9 6.8 11.8c0 2 1.1 3.6 2.8 4.4v2.6c-3-.9-5-3.6-5-7 0-4.2 3.2-7.4 7.4-7.4Z" ${ACC}/>` +
     `<circle cx="9.6" cy="19.4" r="2.1" ${SIL}/>` +

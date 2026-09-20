@@ -149,6 +149,20 @@ function crown(ctx) {
 // Hand a named list over, but never take a province off a living court that is
 // not one of the named losers — a world card rearranges what history
 // rearranged and does not confiscate the player's conquests (SPEC §111).
+// The Greek courts this chapter's Roman cards take ground from (SPEC §278).
+// Until the blob was broken up this was one tag, `GRC`, and every card below
+// named it; now Corinth is the Achaean League's, Athens Athens', Gortyn
+// Crete's, Rhodes Rhodes', Thessalonica Macedon's. `transfer` refuses to take
+// a province off a living court that is not a named loser, so naming the old
+// blob alone would have quietly stopped the Roman conquest of Greece — which
+// is exactly what it did, and what smoke174 and smoke176 caught.
+const GREEK = ['GRC', 'ACH', 'ATH', 'SPT', 'COR', 'CRT', 'RHO', 'MAC', 'PRG', 'BIT', 'GLT', 'THR', 'ION', 'HEL'];
+// …and the ones the settlement of 27 actually takes. Thrace is on the list
+// above because Rome takes Thracian ground, and off this one because the
+// kingdom itself is a client crown until Claudius annexes it in 46 CE: it
+// must not hold the annexation gate open for a card that will not touch it.
+const GREEK_ANNEXED = GREEK.filter((t) => t !== 'THR');
+
 function transfer(ctx, names, to, from) {
   const g = ctx.game;
   const losers = new Set([].concat(from));
@@ -396,16 +410,16 @@ export const EVENTS_167_PROVINCES = [
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
           // §258 declares this war two months before this card settles it.
-          h.endWar(ctx, 'ROM', 'GRC', 'att');
-          transfer(ctx, ['Corinth'], 'ROM', 'GRC');
+          h.endWar(ctx, 'ROM', 'ACH', 'att');
+          transfer(ctx, ['Corinth'], 'ROM', GREEK);
           raze(ctx, 'Corinth', 2, 2);
           mark(ctx, ['Corinth'], {
             id: 'the_sack_of_corinth', name: 'The Sack of Corinth', months: 120,
             effects: { unrest: 3, taxMult: 0.5 },
           });
-          if (alive(ctx, 'GRC')) {
-            h.adjust(ctx, 'GRC', { legitimacy: -25, stability: -1 });
-            h.addTagModifier(ctx, 'GRC', {
+          if (alive(ctx, 'ACH')) {
+            h.adjust(ctx, 'ACH', { legitimacy: -25, stability: -1 });
+            h.addTagModifier(ctx, 'ACH', {
               id: 'leagues_dissolved', name: 'The Leagues Are Dissolved', months: -1,
               effects: { incomeMult: 0.75, manpowerMult: 0.7 },
             });
@@ -657,7 +671,7 @@ export const EVENTS_167_PROVINCES = [
         effects: guard('ev_pv_sulla_athens:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
-          transfer(ctx, ['Athens'], 'ROM', 'GRC');
+          transfer(ctx, ['Athens'], 'ROM', GREEK);
           raze(ctx, 'Athens', 2, 1);
           mark(ctx, ['Athens'], {
             id: 'the_piraeus_burned', name: 'The Piraeus Burned', months: 180,
@@ -667,7 +681,7 @@ export const EVENTS_167_PROVINCES = [
             id: 'the_gods_silver_lent', name: 'The Gods\' Silver, Lent', months: 60,
             effects: { unrest: 1 },
           });
-          if (alive(ctx, 'GRC')) h.adjust(ctx, 'GRC', { legitimacy: -20, stability: -1 });
+          if (alive(ctx, 'ATH')) h.adjust(ctx, 'ATH', { legitimacy: -20, stability: -1 });
           h.adjust(ctx, 'ROM', { treasury: 300 });
           theEastReads(ctx, -8);
           h.setFlag(ctx, 'athensStormed', true);
@@ -756,9 +770,9 @@ export const EVENTS_167_PROVINCES = [
         effects: guard('ev_pv_crete_and_cyrene:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
-          transfer(ctx, ['Gortyn'], 'ROM', 'GRC');
+          transfer(ctx, ['Gortyn'], 'ROM', GREEK);
           for (const n of CYRENAICA) h.removeModifier(ctx, n, 'province_nobody_was_sent_to');
-          if (alive(ctx, 'GRC')) h.adjust(ctx, 'GRC', { legitimacy: -10 });
+          if (alive(ctx, 'CRT')) h.adjust(ctx, 'CRT', { legitimacy: -10 });
           h.adjust(ctx, 'ROM', { treasury: 110, legitimacy: 8 });
           h.setFlag(ctx, 'creteTaken', true);
           h.chronicle(ctx, 'era', 'Metellus takes Crete while Pompey writes letters claiming it; the island is joined to Cyrene, and the province at last has a governor.');
@@ -1126,12 +1140,12 @@ export const EVENTS_167_PROVINCES = [
         effects: guard('ev_pv_rhodes:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'ROM')) return;
-          transfer(ctx, ['Rhodes'], 'ROM', 'GRC');
+          transfer(ctx, ['Rhodes'], 'ROM', GREEK);
           mark(ctx, ['Rhodes'], {
             id: 'all_but_the_chariot', name: 'Everything But the Chariot of the Sun', months: 120,
             effects: { taxMult: 0.6 },
           });
-          if (alive(ctx, 'GRC')) h.adjust(ctx, 'GRC', { legitimacy: -15 });
+          if (alive(ctx, 'RHO')) h.adjust(ctx, 'RHO', { legitimacy: -15 });
           h.adjust(ctx, 'ROM', { treasury: 260 });
           theEastReads(ctx, -12);
           h.setFlag(ctx, 'rhodesStripped', true);
@@ -1231,7 +1245,8 @@ export const EVENTS_167_PROVINCES = [
     date: { y: -27, m: 1 },
     world: true,
     major: true,
-    when: safeTrigger('ev_pv_achaea_provincia:when', (ctx) => alive(ctx, 'ROM') && alive(ctx, 'GRC')),
+    when: safeTrigger('ev_pv_achaea_provincia:when',
+      (ctx) => alive(ctx, 'ROM') && GREEK_ANNEXED.some((t) => alive(ctx, t))),
     aiOption: 0,
     historical: 'The settlement of January 27 divided the provinces between princeps and Senate; Achaea and Macedonia became senatorial provinces, and Galatia was annexed in 25.',
     options: [
@@ -1240,8 +1255,21 @@ export const EVENTS_167_PROVINCES = [
         tooltip: 'The leagues and cities of Hellas cease to be a court: everything they still hold — Sparta, Byzantion, Nicaea, Ancyra and whatever else survived the century — passes to Rome. Rome +150 talents and +10 legitimacy. Corinth is refounded: "The Colony on the Isthmus" (+20% tax permanently) replaces the ruin.',
         effects: guard('ev_pv_achaea_provincia:0', (ctx) => {
           const h = ctx.helpers;
-          if (!alive(ctx, 'ROM') || !alive(ctx, 'GRC')) return;
-          h.dissolveTag(ctx, 'GRC', 'ROM');
+          if (!alive(ctx, 'ROM')) return;
+          // The settlement of 27 takes what is left, and what is left is now
+          // several courts rather than one (SPEC §278). Sparta, Byzantion,
+          // Nicaea, Ancyra and Smyrna used to come in because they were all
+          // filed under the blob this card dissolved.
+          // Thrace is NOT on this list: it stays a client crown until Claudius
+          // annexes it in 46 CE, and this chapter's own cards say so. Nor is a
+          // court that holds nothing — annexing an empty name a second time is
+          // a mark in the ledger for something that did not happen.
+          for (const t of GREEK_ANNEXED) {
+            if (t === 'ROM' || !alive(ctx, t)) continue;
+            const ground = ctx.game.provinces.some((q) => q && !q.impassable && q.owner === t);
+            if (!ground) continue;
+            try { h.dissolveTag(ctx, t, 'ROM'); } catch (e) { warnOnce('achaea:' + t, e); }
+          }
           h.removeModifier(ctx, 'Corinth', 'the_sack_of_corinth');
           mark(ctx, ['Corinth'], {
             id: 'colony_on_the_isthmus', name: 'The Colony on the Isthmus', months: -1,
