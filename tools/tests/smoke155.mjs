@@ -71,7 +71,13 @@ console.log('== no realm gained or lost a point anywhere ==');
   // The ancient chapters weigh exactly what they weighed before §229: the
   // §230 base-dev redistribution is reverted, so these are the §228 numbers.
   const WANT = {
-    '167bce': { SEL: 843, PTO: 171, NAB: 71, ROM: 335, GRC: 151 },
+    // SPEC §278: the 151 that used to be one blob called Greece, under the
+    // courts that actually hold it. 23+14+11+23+45+14+12+9 = 151 — the same
+    // ground, redistributed, which is the point of checking it here.
+    '167bce': {
+      SEL: 843, PTO: 171, NAB: 71, ROM: 335,
+      ACH: 23, ATH: 14, CRT: 11, RHO: 23, MAC: 45, PRG: 14, BIT: 12, GLT: 9,
+    },
     '67bce': { ROM: 744, PAR: 211, HYR: 164, ARI: 152, SEL: 194, NAB: 103, PTO: 158 },
     '40bce': { ROM: 1095, PAR: 343, ATG: 230, NAB: 92, HER: 68, PTO: 158 },
     '66ce': { ROM: 1719, PAR: 217, JUD: 140, NAB: 71, AGR: 31, ADI: 31 },

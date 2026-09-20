@@ -449,7 +449,7 @@ export const REVIVALS = [
     from: -270, to: 500, minWs: 35,
     cores: ['Ancyra'],
     lands: ['Tyana'],
-    ideas: { moraleMult: 1.12, disciplineMult: 0.95, manpowerMult: 1.1 },
+    // Catalogued now (SPEC §278): the ideas live with the court.
     basis: 'Three Celtic tribes crossed into Asia, took the country round Ancyra and '
       + 'have held it for two centuries under their own tetrarchs, still speaking Gaulish '
       + 'in the middle of Anatolia.',
@@ -477,7 +477,7 @@ export const REVIVALS = [
     from: -300, to: 700, minWs: 35,
     cores: ['Nicaea'],
     lands: ['Byzantion'],
-    ideas: { incomeMult: 1.1, navalMult: 1.08, tradeMult: 1.08 },
+    // Catalogued now (SPEC §278): the ideas live with the court.
     basis: 'The Bithynian kings held the Propontis shore for two hundred years by '
       + 'sitting on the crossing between Europe and Asia and charging for it. The '
       + 'geography has not moved.',
@@ -505,7 +505,7 @@ export const REVIVALS = [
     from: -700, to: 700, minWs: 35,
     cores: ['Thessalonica'],
     lands: ['Dyrrhachium', 'Naissus'],
-    ideas: { disciplineMult: 1.1, moraleMult: 1.08, manpowerMult: 1.05 },
+    // Catalogued now (SPEC §278): the ideas live with the court.
     basis: 'The kingdom was abolished, cut into four republics, and then reassembled '
       + 'by a pretender who claimed to be Perseus\' son and beat a Roman army with it. '
       + 'The phalanx country does not stay divided for long.',
@@ -537,7 +537,7 @@ export const REVIVALS = [
     from: -800, to: 900, minWs: 25,
     cores: ['Gortyn'],
     lands: [],
-    ideas: { navalMult: 1.12, moraleMult: 1.06, manpowerMult: 0.8 },
+    // Catalogued now (SPEC §278): the ideas live with the court.
     basis: 'The Cretan cities have their own law, their own archers — hired by every '
       + 'army in the Mediterranean — and a hundred-city habit of ignoring anyone who '
       + 'claims the island without landing on it.',
@@ -568,7 +568,7 @@ export const REVIVALS = [
     from: -630, to: 700, minWs: 35,
     cores: ['Cyrene'],
     lands: ['Marmarica', 'Berenice', 'Paraetonium'],
-    ideas: { incomeMult: 1.1, tradeMult: 1.1, manpowerMult: 0.8 },
+    // Catalogued now (SPEC §278): the ideas live with the court.
     basis: 'The Pentapolis of the Libyan shore has been a separate government from '
       + 'Egypt for as long as there has been an Egypt to be separate from — Battiad kings, '
       + 'then a republic, then its own Ptolemy, and always its own grain and silphium.',

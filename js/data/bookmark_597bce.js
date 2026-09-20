@@ -180,10 +180,10 @@ const OTHER_597 = {
   // The Greek cities, on every shore of two seas: Cyrene is two generations
   // old, Byzantion seventy years, Sinope and the Pontic foundations younger
   // still, and the western colonies are the richest thing in Italy.
-  'Corinth': 'GRC', 'Athens': 'GRC', 'Sparta': 'GRC', 'Gortyn': 'GRC',
-  'Rhodes': 'GRC', 'Byzantion': 'GRC', 'Cyrene': 'GRC', 'Sinope': 'GRC',
-  'Trapezus': 'GRC', 'Syracusae': 'GRC', 'Tarentum': 'GRC', 'Rhegium': 'GRC',
-  'Attalia': 'GRC',
+  'Corinth': 'COR', 'Athens': 'ATH', 'Sparta': 'SPT', 'Gortyn': 'CRT',
+  'Rhodes': 'RHO', 'Byzantion': 'THR', 'Cyrene': 'CYR', 'Sinope': 'MIL',
+  'Trapezus': 'MIL', 'Syracusae': 'SYC', 'Tarentum': 'TAR', 'Rhegium': 'TAR',
+  'Attalia': 'LYD',
   // Carthage's sea: the African emporia and the Sicilian corner it holds
   // against the Greeks of Syracuse.
   'Oea': 'CAR', 'Leptis Magna': 'CAR', 'Macomades': 'CAR', 'Panormus': 'CAR',
@@ -465,6 +465,7 @@ export const BOOKMARK_597 = {
     // west, the Greeks are everywhere on the water, the steppe is Scythian,
     // and the Garamantes are where they always are.
     'CAR', 'GRC', 'SCY', 'GRM', 'HDR',
+    'COR', 'ATH', 'SPT', 'CRT', 'RHO', 'SYC', 'TAR', 'THR', 'CYR', 'MIL', 'MAS',
   ],
   rivalries: [['BBL', 'MIZ'], ['BBL', 'MDA'], ['JDH', 'EDM'], ['MDA', 'LYD']],
   affinities: [

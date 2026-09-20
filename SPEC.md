@@ -20092,3 +20092,70 @@ leaves the rest alone rather than manufacturing map changes to pad a count.
   changed hands; and a human seated in Babylon keeping all fifty-two of its
   provinces, because the card stands down rather than confiscating the chair
   it is describing.
+
+## §278 — The Greek world was never one country
+
+A tag called `GRC`, whose name is "Greece", held Corinth, Athens, Sparta,
+Gortyn and Rhodes as a single state in **732 BCE** — and Syracuse, Tarentum and
+Rhegium with them. One government from the Ionian Sea to the Bosporus, four
+centuries before anything called Greece existed, at a moment when that ground
+was several hundred poleis whose defining political fact was that they did not
+obey each other.
+
+`political_maps.js` said so out loud and shipped it anyway: *"The Hellenes as
+one court: the mainland cities, the Ionian coast, Cyrene, the western colonies
+and the Black Sea foundations, which are one commercial and cultural system and
+no kind of state at all."* True of the system; the tag made a government of it.
+
+In **167 BCE** the same blob also held Thessalonica — which is Macedon —
+together with Nicaea, Ancyra and Smyrna. Every one of those is a power the
+chapter's own world packages discuss by name: Pydna and the sack of Corinth,
+the Attalid will, Aristonicus, the Galatian mercenaries.
+
+**Fourteen courts now stand where the blob did**, each with a temper, a form of
+government, national ideas, a capital that exists on this map, and an emblem of
+what it actually struck — because a Greek city's coin type IS its emblem and
+this table already works that way (the revolt's chalice, the Lydian lion).
+
+| court | wears | seated |
+|---|---|---|
+| Macedon | the Vergina sun | 167 |
+| Athens | the owl | 732, 597, 167 |
+| Sparta | the lambda of Lakedaimon | 732, 597 |
+| Corinth | the helmet it named | 732, 597 |
+| the Achaean League | the ΑΧ monogram | 167 |
+| Rhodes | the rose | 732, 597, 167 |
+| Crete | the Knossian labyrinth | 732, 597, 167 |
+| Syracuse | Arethusa's four dolphins | 732, 597 |
+| Tarentum | Taras' trident | 732, 597 |
+| Cyrene | the silphium | 597 |
+| the Milesian Colonies | the rosette punch | 597 |
+| Pergamon | the cista mystica | 167 |
+| Bithynia | a ship's prow | 167 |
+| Galatia | the torc | 167 |
+
+**Two decisions worth writing down.** Byzantion, Hadrianopolis and the Thracian
+side go to `THR`, which already existed — a new tag is not an improvement over
+a real one. And `MIL` is seated at **Sinope**, not Miletus: the mother city is
+not a cell on this map, so the court that stands here is the colonial network
+rather than the city, which is also what the Black Sea grain road actually was.
+Massalia and Aleria go to `MAS`, which was in the catalog and seated nowhere.
+
+**What `GRC` is now.** Modern Greece, in 1948, and nothing else — which is what
+a tag named Greece should be.
+
+| chapter | courts before | after |
+|---|---|---|
+| 732 BCE | 27 | **35** |
+| 597 BCE | 20 | **31** |
+| 167 BCE | 54 | **57** |
+
+- **Regression contract**: `smoke193.mjs` — no "Greece" on any board but 1948,
+  where it keeps its six cells; all fourteen courts in the catalog with a
+  capital that resolves against `MAP_DATA`, a declared government, national
+  ideas, a description and art, and no two wearing the same emblem; the named
+  seats held by the named courts in each chapter, Macedon at Thessalonica
+  first among them; every new court alive and holding ground on a booted
+  board with the court count up in all three chapters; and the property that
+  keeps a reassignment honest — the new courts hold ONLY the cells this
+  section names, so a change that quietly took Tyre off Tyre would fail.

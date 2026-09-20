@@ -269,7 +269,12 @@ console.log('== 4 · a card asks before it acts ==');
   delete w2.game.tags.PTO;
   delete w2.game.tags.CAR;
   delete w2.game.tags.NUM;
-  delete w2.game.tags.GRC;
+  // SPEC §278: the settlement of 27 no longer annexes one blob called Greece,
+  // it annexes the courts that are actually there. The assertion is the same
+  // one — a card is gated on the court it dissolves — over the real list.
+  for (const t of ['GRC', 'ACH', 'ATH', 'SPT', 'COR', 'CRT', 'RHO', 'MAC', 'PRG', 'BIT', 'GLT', 'ION', 'HEL']) {
+    delete w2.game.tags[t];
+  }
   ok(!gateOpen(w2, 'ev_pv_egypt_annexed') && !gateOpen(w2, 'ev_pv_carthage_falls')
     && !gateOpen(w2, 'ev_pv_africa_nova') && !gateOpen(w2, 'ev_pv_achaea_provincia'),
     'and a court already off the board is not annexed a second time');

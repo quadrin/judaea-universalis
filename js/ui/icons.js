@@ -384,7 +384,7 @@ export const FLAGS = {
   // Galilee of 529 unmistakably made, and it is nobody else's emblem on this
   // map: JUD keeps the menorah for the seven chapters that turn on Jerusalem,
   // and this is what those three letters look like when they mean Tiberias.
-  GAL:
+  GLT:
     `<circle cx="12" cy="12" r="9.1" ${SIL}/>` +
     `<circle cx="12" cy="12" r="9.1" fill="none" stroke="${FG}" stroke-width="1.4"/>` +
     `<path d="M12 8.5V3.6M13.8 9 16.2 4.7M15 10.2 19.3 7.8M15.5 12h4.9M15 13.8l4.3 2.4`
@@ -1364,6 +1364,120 @@ export const FLAGS = {
     `<path d="M10.5 13.9h3v6.6h-3Z" ${SIL}/>` +
     `<rect x="9.1" y="20.5" width="5.8" height="1.7" rx="0.85" ${ACC}/>` +
     `<path d="M10.9 15.6h2.2M10.9 17.8h2.2" ${DET}/>`,
+
+  // ---- the Greek world, on its own coins (SPEC §278) ------------------------
+  // Fourteen courts that used to be one blob called Greece. Each wears what it
+  // actually struck, because a Greek city's coin type IS its emblem and the
+  // table already works this way — the revolt's chalice, the Lydian lion.
+
+  // Macedon: the sun of the royal tomb at Vergina, sixteen rays.
+  MAC:
+    `<circle cx="12" cy="12" r="3.1" ${ACC}/>` +
+    `<path d="M12 1.6 13.05 6.3 12 8 10.95 6.3Z M12 22.4 10.95 17.7 12 16 13.05 17.7Z
+              M1.6 12 6.3 10.95 8 12 6.3 13.05Z M22.4 12 17.7 13.05 16 12 17.7 10.95Z
+              M4.65 4.65 8.55 7.4 8.9 9.35 6.95 9Z M19.35 19.35 15.45 16.6 15.1 14.65 17.05 15Z
+              M19.35 4.65 16.6 8.55 14.65 8.9 15 6.95Z M4.65 19.35 7.4 15.45 9.35 15.1 9 17.05Z" ${ACC}/>`,
+
+  // Athens: the owl of the tetradrachm, facing out, olive sprig behind.
+  ATH:
+    `<path d="M7.6 6.4h1.9l1 2.2h3l1-2.2h1.9l-.7 2.9h1.1v7.6a5.8 5.8 0 0 1-11.6 0V9.3h1.1Z" ${SIL}/>` +
+    `<circle cx="9.6" cy="11.4" r="2" ${ACC}/>` +
+    `<circle cx="14.4" cy="11.4" r="2" ${ACC}/>` +
+    `<circle cx="9.6" cy="11.4" r="0.85" fill="${FO}" stroke="none"/>` +
+    `<circle cx="14.4" cy="11.4" r="0.85" fill="${FO}" stroke="none"/>` +
+    `<path d="M12 13.2l1.3 1.9h-2.6Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M8.2 17.2h7.6M9 19.2h6" ${DET}/>`,
+
+  // Sparta: the lambda of Lakedaimon, on the shield the whole army carried.
+  SPT:
+    `<circle cx="12" cy="12" r="8.6" ${SIL}/>` +
+    `<circle cx="12" cy="12" r="6.9" ${DET}/>` +
+    `<path d="M11 5.8h2.1l4.5 12.4h-2.4l-3.2-9.3-3.1 9.3H6.5Z" ${ACC}/>`,
+
+  // Corinth: the helmet, which is the one shape this city gave its name to.
+  COR:
+    `<path d="M12 3.6c4 0 6.5 2.6 6.5 6.6v4.2l-2.3 1.3v3.4h-2.6v-3.9l-1.6.9-1.6-.9v3.9H7.8v-3.4L5.5 14.4v-4.2c0-4 2.5-6.6 6.5-6.6Z" ${SIL}/>` +
+    `<path d="M12 6.1c2.4 0 3.9 1.6 3.9 4.1v2l-3.9 2.2-3.9-2.2v-2c0-2.5 1.5-4.1 3.9-4.1Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M11.6 2.1h.8l1.6 2.2h-4Z" ${ACC}/>` +
+    `<path d="M12 1.2v1.1" ${DET}/>`,
+
+  // The Achaean League: the ΑΧ monogram its federal silver was struck with.
+  ACH:
+    `<circle cx="12" cy="12" r="8.8" ${SIL}/>` +
+    `<path d="M8.9 17.6 11.6 6.4h1.5l1.2 4.9-1 4-.5-2.2h-2l-.6 4.5Z" ${ACC}/>` +
+    `<path d="M14.2 11.3 17.8 6.4h1.4l-3.1 4.6 1.9 6.6h-1.6l-1.3-4.8Z" ${ACC}/>`,
+
+  // Rhodes: the rose the island is named for, seen from above.
+  RHO:
+    `<circle cx="12" cy="12" r="2.4" ${ACC}/>` +
+    `<path d="M12 4.2c2.1 0 3.4 1.6 3.4 3.8S13.8 11.4 12 11.4s-3.4-1.2-3.4-3.4S9.9 4.2 12 4.2Z" ${SIL}/>` +
+    `<path d="M12 19.8c-2.1 0-3.4-1.6-3.4-3.8s1.6-3.4 3.4-3.4 3.4 1.2 3.4 3.4-1.3 3.8-3.4 3.8Z" ${SIL}/>` +
+    `<path d="M4.2 12c0-2.1 1.6-3.4 3.8-3.4s3.4 1.6 3.4 3.4-1.2 3.4-3.4 3.4S4.2 14.1 4.2 12Z" ${SIL}/>` +
+    `<path d="M19.8 12c0 2.1-1.6 3.4-3.8 3.4s-3.4-1.6-3.4-3.4 1.2-3.4 3.4-3.4 3.8 1.3 3.8 3.4Z" ${SIL}/>`,
+
+  // Crete: the labyrinth of the Knossian coins, square as they drew it.
+  CRT:
+    `<path d="M3.4 3.4h17.2v17.2H3.4Z" ${SIL}/>` +
+    `<path d="M6.1 6.1h11.8v11.8H6.1Z M8.6 8.6h6.8v6.8H8.6Z" ${DET}/>` +
+    `<path d="M10.9 10.9h2.2v2.2h-2.2Z" ${ACC}/>` +
+    `<path d="M12 3.4v2.7M12 17.9v2.7" ${DET}/>`,
+
+  // Syracuse: the four dolphins that swim round Arethusa's head.
+  SYC:
+    `<circle cx="12" cy="12" r="3" ${ACC}/>` +
+    `<path d="M12 2.2c2 .7 3.2 2 3.2 3.2 0 .9-.8 1.5-1.6 1.2.3-1.1-.5-2.2-1.6-2.6-1.1.4-1.9 1.5-1.6 2.6-.8.3-1.6-.3-1.6-1.2 0-1.2 1.2-2.5 3.2-3.2Z" ${SIL}/>` +
+    `<path d="M21.8 12c-.7 2-2 3.2-3.2 3.2-.9 0-1.5-.8-1.2-1.6 1.1.3 2.2-.5 2.6-1.6-.4-1.1-1.5-1.9-2.6-1.6-.3-.8.3-1.6 1.2-1.6 1.2 0 2.5 1.2 3.2 3.2Z" ${SIL}/>` +
+    `<path d="M12 21.8c-2-.7-3.2-2-3.2-3.2 0-.9.8-1.5 1.6-1.2-.3 1.1.5 2.2 1.6 2.6 1.1-.4 1.9-1.5 1.6-2.6.8-.3 1.6.3 1.6 1.2 0 1.2-1.2 2.5-3.2 3.2Z" ${SIL}/>` +
+    `<path d="M2.2 12c.7-2 2-3.2 3.2-3.2.9 0 1.5.8 1.2 1.6-1.1-.3-2.2.5-2.6 1.6.4 1.1 1.5 1.9 2.6 1.6.3.8-.3 1.6-1.2 1.6-1.2 0-2.5-1.2-3.2-3.2Z" ${SIL}/>`,
+
+  // Tarentum: Taras' trident, from the city its founder is named for.
+  TAR:
+    `<rect x="11.1" y="8.2" width="1.8" height="13.4" rx="0.9" ${SIL}/>` +
+    `<path d="M4.8 3.1h1.9v5.1c0 2.9 2.3 4.6 5.3 4.6s5.3-1.7 5.3-4.6V3.1h1.9v5.1c0 4-3.1 6.5-7.2 6.5S4.8 12.2 4.8 8.2Z" ${ACC}/>` +
+    `<path d="M11.1 1.6h1.8v6h-1.8Z" ${ACC}/>` +
+    `<rect x="8.6" y="14.9" width="6.8" height="1.6" rx="0.8" ${SIL}/>`,
+
+  // Cyrene: the silphium, the plant the city sold until there was none left.
+  CYR:
+    `<path d="M11.2 10.4h1.6v10.2h-1.6Z" ${SIL}/>` +
+    `<path d="M12 2.4c2.4 0 4 1.9 4 4.3S14.4 11 12 11 8 9.1 8 6.7s1.6-4.3 4-4.3Z" ${ACC}/>` +
+    `<path d="M12 4.6c1.1 0 1.8.9 1.8 2s-.7 2-1.8 2-1.8-.9-1.8-2 .7-2 1.8-2Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M11.9 11.6c-2.4.2-4 1.5-4.6 3.6 2.1.4 3.8-.6 4.6-2.4Z" ${SIL}/>` +
+    `<path d="M12.1 11.6c2.4.2 4 1.5 4.6 3.6-2.1.4-3.8-.6-4.6-2.4Z" ${SIL}/>` +
+    `<path d="M8.4 20.6h7.2" ${DET}/>`,
+
+  // Miletus: the rosette punch of the Milesian stater.
+  MIL:
+    `<circle cx="12" cy="12" r="2.3" ${ACC}/>` +
+    `<path d="M12 3.2c1.5 1.9 2.2 3.6 2.2 5.2 0 1.3-1 2.1-2.2 2.1s-2.2-.8-2.2-2.1c0-1.6.7-3.3 2.2-5.2Z" ${SIL}/>` +
+    `<path d="M12 20.8c-1.5-1.9-2.2-3.6-2.2-5.2 0-1.3 1-2.1 2.2-2.1s2.2.8 2.2 2.1c0 1.6-.7 3.3-2.2 5.2Z" ${SIL}/>` +
+    `<path d="M3.2 12c1.9-1.5 3.6-2.2 5.2-2.2 1.3 0 2.1 1 2.1 2.2s-.8 2.2-2.1 2.2c-1.6 0-3.3-.7-5.2-2.2Z" ${SIL}/>` +
+    `<path d="M20.8 12c-1.9 1.5-3.6 2.2-5.2 2.2-1.3 0-2.1-1-2.1-2.2s.8-2.2 2.1-2.2c1.6 0 3.3.7 5.2 2.2Z" ${SIL}/>` +
+    `<path d="M5.8 5.8c2.2.6 3.7 1.5 4.6 2.6M18.2 18.2c-2.2-.6-3.7-1.5-4.6-2.6M18.2 5.8c-.6 2.2-1.5 3.7-2.6 4.6M5.8 18.2c.6-2.2 1.5-3.7 2.6-4.6" ${DET}/>`,
+
+  // Pergamon: the cista mystica — the basket with the snake coming out of it.
+  PRG:
+    `<path d="M6.4 10.6h11.2l-1 10.2H7.4Z" ${SIL}/>` +
+    `<path d="M5.8 9.1h12.4v1.7H5.8Z" ${ACC}/>` +
+    `<path d="M9.4 9.1c0-2.6 1.3-4.3 3.3-4.3 1.5 0 2.5 1 2.5 2.3 0 1.1-.8 1.9-1.8 1.9-.8 0-1.4-.5-1.4-1.2 0-.6.4-1 .9-1" ${DET}/>` +
+    `<circle cx="14.6" cy="4.4" r="0.95" ${ACC}/>` +
+    `<path d="M8.2 13.6h7.6M8.6 16.6h6.8" ${DET}/>`,
+
+  // Bithynia: a ship's prow, for a kingdom that was mostly a coast.
+  BIT:
+    `<path d="M2.6 13.4h14.8l3.8-3.6-1.2-1.6-3.4 1.9H2.6Z" ${SIL}/>` +
+    `<path d="M2.6 13.4h14.2l-1.6 4.4H4.4Z" ${ACC}/>` +
+    `<path d="M5.4 10.1h8.2" ${DET}/>` +
+    `<path d="M9.2 4.2h1.7v4h-1.7Z" ${SIL}/>` +
+    `<path d="M10.9 4.2h5.4l-2 2 2 2h-5.4Z" ${ACC}/>`,
+
+  // Galatia (GLT, not GAL — those letters are the Galilee's): the torc, the
+  // one object everybody in the ancient world used to draw a Gaul.
+  GAL:
+    `<path d="M12 4.4c4.2 0 7.4 3.2 7.4 7.4 0 3.4-2 6.1-5 7v-2.6c1.7-.8 2.8-2.4 2.8-4.4 0-2.9-2.3-5.2-5.2-5.2S6.8 8.9 6.8 11.8c0 2 1.1 3.6 2.8 4.4v2.6c-3-.9-5-3.6-5-7 0-4.2 3.2-7.4 7.4-7.4Z" ${ACC}/>` +
+    `<circle cx="9.6" cy="19.4" r="2.1" ${SIL}/>` +
+    `<circle cx="14.4" cy="19.4" r="2.1" ${SIL}/>` +
+    `<path d="M12 8.4v3.2" ${DET}/>`,
 
   // Assyria: the god Ashur in the winged disk — the standard that flew over
   // every campaign in the annals, wings spread flat to either side of the

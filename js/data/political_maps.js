@@ -311,11 +311,15 @@ const MAP_597 = deal({
   // took from the Etruscans' rivals, and the Syrtis emporia.
   CAR: AFRICA_PUNIC.concat(['Caralis', 'Turris Libisonis', 'Baleares']),
   GRM: ['Garama'],
-  // The Hellenes as one court: the mainland cities, the Ionian coast, Cyrene,
-  // the western colonies and the Black Sea foundations, which are one
-  // commercial and cultural system and no kind of state at all.
-  GRC: ['Massilia', 'Aleria', 'Tomis', 'Olbia', 'Chersonesus',
-    'Panticapaeum', 'Phanagoria', 'Tanais'],
+  // The colonies, under the cities that actually planted them (SPEC §278).
+  // This block used to read "the Hellenes as one court… one commercial and
+  // cultural system and no kind of state at all", which was true of the
+  // system and not of the tag: it made a single government of it. Massalia
+  // and Aleria are Phocaean and have their own court in the catalog; every
+  // one of the Black Sea foundations is Milesian, and the grain road north
+  // is the one thing that network is really for.
+  MAS: ['Massilia', 'Aleria'],
+  MIL: ['Tomis', 'Olbia', 'Chersonesus', 'Panticapaeum', 'Phanagoria', 'Tanais'],
   // The steppe: Scythian, and the one thing the Persians never manage.
   SCY: STEPPE_NEAR.concat(STEPPE_FAR),
   KSH: NUBIA_NILE,

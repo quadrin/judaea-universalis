@@ -231,6 +231,15 @@ function raiseSulla(ctx) {
   });
 }
 
+// The Greek courts this chapter's Roman cards take ground from (SPEC §278).
+// Until the blob was broken up this was one tag, `GRC`, and every card below
+// named it; now Corinth is the Achaean League's, Athens Athens', Gortyn
+// Crete's, Rhodes Rhodes', Thessalonica Macedon's. `transfer` refuses to take
+// a province off a living court that is not a named loser, so naming the old
+// blob alone would have quietly stopped the Roman conquest of Greece — which
+// is exactly what it did, and what smoke174 and smoke176 caught.
+const GREEK = ['GRC', 'ACH', 'ATH', 'SPT', 'COR', 'CRT', 'RHO', 'MAC', 'PRG', 'BIT', 'GLT', 'THR', 'ION', 'HEL'];
+
 export const EVENTS_167_REPUBLIC = [
 
   // ── R1 · -148 ─────────────────────────────────────────────────────────────
@@ -263,7 +272,7 @@ export const EVENTS_167_REPUBLIC = [
         effects: guard('ev_rw_andriscus:0', (ctx) => {
           const h = ctx.helpers;
           if (alive(ctx, 'ROM')) {
-            transfer(ctx, ['Thessalonica'], 'ROM', 'GRC');
+            transfer(ctx, ['Thessalonica'], 'ROM', GREEK);
             h.adjust(ctx, 'ROM', { legitimacy: 10, treasury: 100 });
           }
           stir(ctx, ['Thessalonica', 'Dyrrhachium'], {
