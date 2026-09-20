@@ -122,6 +122,24 @@ function judaeaEndures(ctx) {
   if (!alive(ctx, 'JUD') || (t && t.overlord)) return false;
   if (findJudRomWar(ctx.game)) return false;
   if (ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')) return false;
+  // …and SOMEBODY ELSE has to be holding it. "Judaea does not control
+  // Jerusalem" was the whole test, and it is satisfied by a city in rebel
+  // hands — which is not this outcome, it is the middle of a war. The card
+  // says what the outcome is in its own first line: the legions took the city
+  // and stopped where the hills begin, and the state in the hills lives
+  // twenty-five miles from a Roman colony. A city nobody has settled is the
+  // same "mid-sentence" position the suite already refuses a running war for,
+  // and it opened this branch for exactly one month on one seed before the
+  // holder changed again — long enough to set `galileeKingdom` and put the
+  // campaign on two roads at once. §272's season found it by moving the war's
+  // timing; the hole was always there.
+  {
+    const p = ctx.prov('Jerusalem');
+    const held = p && p.controller;
+    if (!held || held === 'REB') return false;
+    const holder = ctx.game.tags && ctx.game.tags[held];
+    if (!holder || !holder.alive) return false;
+  }
   // SPEC §119: the first road entered is the road. The three predicates read
   // live state, and live state moves — a Judaea that took the city, opened the
   // redemption, then lost it again would otherwise pick up this arc halfway
