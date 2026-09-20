@@ -1346,6 +1346,25 @@ export const FLAGS = {
     `<path d="M12 12.6l1.5 1.1c0 1.1-.7 1.7-1.5 1.7s-1.5-.6-1.5-1.7Z" fill="${FO}" stroke="none"/>` +
     `<path d="M8.4 12.9H6.2M8.6 14.3l-2 .7M15.6 12.9h2.2M15.4 14.3l2 .7" ${DET}/>`,
 
+  // All Israel (formable, SPEC §276): the two sticks joined. "Take thee one
+  // stick, and write upon it, For Judah; then take another stick, and write
+  // upon it, For Joseph; and join them one to another into one stick, and
+  // they shall become one in thine hand" (Ezekiel 37:16-19). Judah's stave in
+  // gold and Joseph's in parchment, splayed above the binding and one stave
+  // below it — which is the whole proposition, and reads at chip size because
+  // the silhouette is a Y and nothing else on this table is.
+  //
+  // Not the hexagram: that is MLI's, and MLI is the Second Temple crown four
+  // centuries downstream. This banner and that one must not be confusable on
+  // the start screen, because a player can reach both.
+  AIS:
+    `<path d="M6.2 3.2h2.6l2.6 8.4H8.6Z" ${ACC}/>` +
+    `<path d="M17.8 3.2h-2.6l-2.6 8.4h2.8Z" ${SIL}/>` +
+    `<rect x="7.9" y="11.6" width="8.2" height="2.3" rx="1.15" ${ACC}/>` +
+    `<path d="M10.5 13.9h3v6.6h-3Z" ${SIL}/>` +
+    `<rect x="9.1" y="20.5" width="5.8" height="1.7" rx="0.85" ${ACC}/>` +
+    `<path d="M10.9 15.6h2.2M10.9 17.8h2.2" ${DET}/>`,
+
   // Assyria: the god Ashur in the winged disk — the standard that flew over
   // every campaign in the annals, wings spread flat to either side of the
   // ring, the archer's bow drawn inside it.

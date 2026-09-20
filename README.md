@@ -1417,6 +1417,20 @@ static site, the zero dependencies, or the missing build step changes.
   in the lord's council, up to four standing at once, each one lowering the war
   score and the months that council will settle at.
 
+- **Judah may end the split.** The Iron Age chapters open on the morning the
+  kingdom comes apart at Shechem and gave Judah two hundred years of being the
+  smaller half with no way to stop being it: beat Israel and you had a bigger
+  Judah and nothing else. Judah can now proclaim **All Israel** — the crown the
+  elders came to Shechem to make and did not — once the northern kingdom is
+  finished and Samaria, Shechem, the valley, the Galilee and Panion are held.
+  It is not the Kingdom of Israel the later chapters form: that crown is the
+  Second Temple endgame and wears a faith this age has not reached. This one
+  keeps the age's own, flies Ezekiel's two sticks joined instead of the
+  hexagram, and on the day it is proclaimed it writes every Israelite district
+  the crown holds into its rolls — held that morning, owned that afternoon —
+  with a mission tree of its own for the things neither half could ask: one
+  altar, a coast, and a succession nobody contested.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

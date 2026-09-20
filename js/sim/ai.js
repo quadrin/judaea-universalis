@@ -1529,6 +1529,14 @@ function aiFormNation(ctx, tag) {
         if (Number.isFinite(b.grant[k])) nt.points[k] = clamp(num(nt.points[k]) + b.grant[k], 0, 999);
       }
     }
+    // The crown's own hand (SPEC §276), honoured on this road too. No formable
+    // that carries one is AI-opted today, so this changes nothing now — it is
+    // here so that opting one in later does not silently drop half of what the
+    // crown is, which is exactly the kind of divergence these two paths invite.
+    if (typeof b.onForm === 'function') {
+      try { b.onForm(ctx, f.to); }
+      catch (e) { warnOnce('aiForm:onForm:' + f.id, 'the crown\'s own hand failed', e); }
+    }
     if (Array.isArray(f.missions) && f.missions.length) { nt.missionIdx = 0; nt.missionsDone = []; }
     ctx.bus.emit('tagSwitched', { from: tag, to: f.to });
     ctx.bus.emit('provinceOwner', {});

@@ -190,6 +190,9 @@ export const DEFINES = {
     MIZ: { aggression: 0.7, caution: 1.4, ponderous: true },
     ISL: { aggression: 1.15, caution: 0.9 },
     JDH: { aggression: 0.8, caution: 1.2 },
+    // The crown that ends the split (SPEC §276). Player-only, like the
+    // other restorations: it exists because a human took the north.
+    AIS: { aggression: 1.0, caution: 1.0 },
     DMS: { aggression: 1.3, caution: 0.8 },
     PLS: { aggression: 1.1, caution: 1.0 },
     TYR: { aggression: 0.3, caution: 1.7 },
@@ -421,7 +424,7 @@ export const DEFINES = {
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
-    MLI: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
+    MLI: 'monarchy', AIS: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
     // The five crowns of government and the two empires (SPEC §250) are
     // ABSENT from this table, and that absence is the section's whole
     // plumbing. §227's ten each declared a constitution here, so proclaiming
@@ -708,6 +711,22 @@ export const DEFINES = {
       description: 'Two tribes, a ridge of limestone, and the one thing the north can never '
         + 'manufacture: a house that has ruled since Saul died and a temple nobody else has.',
       ideas: { hillDefBonus: 1, legitimacyAdd: 0.25, incomeMult: 0.9 },
+    },
+    // The kingdom the split ended (SPEC §276). Not MLI: that crown is the
+    // Second Temple endgame — Judaism, the Law for a charter, Jerusalem after
+    // four centuries of it. This one is the Iron Age answer to the assembly at
+    // Shechem, and it keeps the age's own faith. Its culture is judean rather
+    // than israelite on purpose: a province counts as the crown's own when its
+    // culture matches the tag's, and a reunification that quietly turned
+    // Judah's twelve cells foreign on the day it was proclaimed would be a
+    // penalty wearing a reward's clothes. The north is written in instead, by
+    // the formable's own hand.
+    AIS: {
+      name: 'All Israel', adj: 'Israelite', color: [92, 76, 160], religion: 'yahwism', culture: 'judean', capital: 'Jerusalem',
+      description: 'What the elders came to Shechem to make and did not: one kingdom from Dan '
+        + 'to the Negev, under the house that has held Jerusalem since David. The ten tribes '
+        + 'are written into the rolls of the two.',
+      ideas: { manpowerMult: 1.12, incomeMult: 1.08, legitimacyAdd: 0.2 },
     },
     ASR: {
       name: 'Assyria', adj: 'Assyrian', color: [126, 40, 44], religion: 'mesopotamian', culture: 'assyrian', capital: 'Nineveh',

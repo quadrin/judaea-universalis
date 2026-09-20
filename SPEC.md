@@ -19941,3 +19941,84 @@ rule.
   horizon defaults to 36 months and 50 points — still holds and is now
   asserted as such, together with the petitions being the only thing that
   moves it.
+
+## §276 — Judah may end the split
+
+The three Iron Age chapters (§268) open on the morning the kingdom comes apart
+at Shechem and run two hundred years on the far side of it. Judah's own blurb
+says what the chapter is: *"two tribes on a limestone ridge, no ports, no
+valleys, no trade road, and an army a third the size of the one across the
+border."* It is the hard road, and it was a road to nowhere in particular. A
+player who beat Israel — which means beating a kingdom with three quarters of
+the people and all the good ground — finished with a bigger Judah and nothing
+else. The one thing the whole chapter is about, the split, could be won and
+could not be ENDED.
+
+**`AIS`, All Israel.** A new crown, reachable only from `JDH` and only in
+931, 732 and 597. Its name is the phrase the sources use for the whole people
+under one king, and the decision that takes it quotes the assembly the kingdom
+broke at.
+
+**It is not `MLI`, and the distinction is the whole design.** The Kingdom of
+Israel is this game's Second Temple endgame — Judaism, the Law for a charter,
+Jerusalem after four centuries of it — and it is reached from `JUD`, `HAS` and
+the five crowns of government in the chapters that can reach it. Dropping that
+crown into the Iron Age would have handed a yahwist kingdom a Judaism it will
+not have for four hundred years. `AIS` keeps the age's own faith, and the two
+banners are drawn so they cannot be confused: MLI wears the hexagram, and AIS
+wears Ezekiel's two sticks joined (37:16-19), which is the only image in the
+sources for exactly this proposition and which reads as a Y at chip size.
+
+**Its culture is `judean`, on purpose.** A province counts as the crown's own
+when its culture matches the tag's (`military.js`, the integration test). A
+reunification that took `israelite` would have turned Judah's own twelve cells
+foreign on the day it was proclaimed — a penalty wearing a reward's clothes,
+and a silent one. So the crown keeps Judah's culture and buys the other half a
+different way.
+
+**`bonus.onForm` — the crown's own hand.** The formable bonus shape pays
+legitimacy, stability, coin, men, points, two modifiers and a ruler's title.
+None of those can say *the ten tribes are written into the rolls of the two*,
+which is a change to the PROVINCES and is the entire reason the decision
+exists; without it the proclamation is a rename. `onForm(ctx, tag)` runs last,
+after the rest of the bonus, guarded at both call sites, and All Israel uses it
+to enter every Israelite-culture province the new crown owns into its rolls —
+eighteen districts on a won 931 board, held that morning and owned that
+afternoon. The hook is honoured on the AI road too, although no formable that
+carries one is AI-opted today, because the two paths have diverged before.
+
+**The gate.** The northern kingdom finished (gone, collared or a rump);
+Jerusalem, Hebron, Sebaste, Neapolis, Scythopolis, Sepphoris and Caesarea
+Philippi owned and controlled — Samaria and Shechem, the valley and the
+Galilee, and Panion for the Dan end of the only phrase the sources use for the
+whole land; twenty-two provinces; fourteen keeping the Name; independent, at
+peace, stability 2, legitimacy 80. Eight rows, visible and ticking from the
+first month of the chapter, because a decision a player cannot see is a
+decision that does not exist (§221).
+
+**Its own tree.** Eight missions the reunited kingdom asks for and neither half
+could: the elders at Shechem, the muster of the twelve, one altar with the
+calves thrown down, the land from Dan to the Negev, a coast of our own (neither
+kingdom ever held a port), the house enlarged, the succession nobody contested —
+the north went through nine dynasties in two hundred years because a crown that
+is not David's has to be re-won by every man who wears it — and outlasting the
+empire that deports everybody else.
+
+- **Regression contract**: `smoke191.mjs` — the crown in the catalog with the
+  age's faith, Judah's culture, Jerusalem, a monarchy, a temper and an emblem
+  that is neither MLI's hexagram nor Israel's nor Judah's; every named cell
+  resolving against `MAP_DATA` and every mission icon actually rendering (two
+  drafts of this chain named `anchor` and `crown`, which are not in the table
+  and render as nothing); unique mission ids and no dangling prerequisite; the
+  road offered in the three Iron Age chapters and nowhere else, with the MLI
+  roads untouched and none of them reaching back; the decision listed and
+  refused in the opening month of 931 with the north named as a reason; and
+  then a real 931 game staged the way a player who won would leave it, formed
+  through the same action the panel calls — Judah gone, All Israel standing
+  under its own name, the proclaimer styled King of All Israel, both modifiers
+  on, the grant paid, the mission chain fresh, the forwarding address kept so
+  the chapter's cards still find the court, all eighteen Israelite districts
+  written into the rolls, and Judah's own eleven still the crown's own. The
+  hook is also fired directly against a board it should change and one it
+  should not, because it is guarded at both call sites and a guarded hook that
+  does nothing looks exactly like one that worked.
