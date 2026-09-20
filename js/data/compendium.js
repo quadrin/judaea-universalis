@@ -15,6 +15,7 @@ import { BOOKMARK_597 } from './bookmark_597bce.js';
 import { EVENTS_597 } from './events_597bce.js';
 import { EVENTS_597_WORLD } from './events_597bce_world.js';
 import { EVENTS_597_YEARS } from './events_597bce_years.js';
+import { EVENTS_597_DESTRUCTION } from './events_597bce_destruction.js';
 import { BOOKMARK_167 } from './bookmark_167bce.js';
 import { EVENTS_167 } from './events_167bce.js';
 import { EVENTS_167_KINGS } from './events_167bce_kings.js';
@@ -219,7 +220,12 @@ export const ERAS = [
   // households to build houses and plant gardens. Its world package is the
   // twenty years in which every kingdom on this map becomes one empire's
   // province, and the two centuries of that empire afterwards.
-  { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, ANTIQUE) },
+  // §273: the destruction package carries the chapter's missing middle — the
+  // siege, the breach, Riblah, the burning, Gedaliah's murder, the valley of
+  // bones, the day Jehoiachin was let out, the vessels counted back, and the
+  // law read at the water gate. It rides before the shared pools like every
+  // other chapter package.
+  { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, EVENTS_597_DESTRUCTION, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_CONQUEST, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
