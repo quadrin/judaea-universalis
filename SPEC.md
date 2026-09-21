@@ -20248,3 +20248,62 @@ for it in these three centuries. It waits, like any other catalogued court.
   waste in 931 and 732 and a state in 597; every court alive and holding
   ground on a booted board with the count up in all three; and the same
   "nothing else moved" property as §278, over the western cells too.
+
+## §281 — The Iron Age gets the scale in between
+
+Nine of the twelve chapters ship a `_neighbours` package: the scale a courier
+can ride in a day, sitting between the empire in the world spine and the realm
+in the chain. The first three chapters did not, and the measurement said so.
+
+| chapter | dated cards per decade — before | after |
+|---|---|---|
+| 931 BCE | 3.5 | **4.9** |
+| 732 BCE | 4.5 | **6.7** |
+| 597 BCE | 4.3 | **6.4** |
+| the middle of the game (167 BCE – 614 CE) | 5.8 – 10.3 | unchanged |
+
+Ninety cards in three packages, each dated into the decade that needed it:
+
+- **`events_931bce_neighbours.js`** (30 cards, 929–715 BCE). The copper road,
+  the incense caravan, what Gaza keeps, an order for Tyrian purple, the fords
+  of the Jabbok, a wall at Ataroth, riders at the threshing floors, Hamath's
+  league, grain for timber, the bitumen on the Dead Sea, the Highway of the
+  Kings, a deputy and not a king in Edom, the gate of Gath, the Samaria ivory
+  workers, ten thousand at the rock, the wells of Uzziah, the wheat of Ammon,
+  the queens of the Arabs, nineteen districts of Hamath, and Gath emptied.
+- **`events_732bce_neighbours.js`** (29 cards, 729–608 BCE). The governor at
+  Megiddo, five years on the water at Tyre, the post road, the karum at the
+  Brook of Egypt, Ashdod's invitation, the presses of Ekron, the king of Sidon
+  taking ship, what Padi cost, Elam at Halule, the levy for the arsenal, the
+  Arab gods returned in a cart with somebody else's name on them, Gyges and the
+  first stamped metal, bronze men in the forts, the camel glut, Egypt back on
+  the coast, the Scythians, the year the empire stopped asking, the reaper's
+  cloak at Mezad Hashavyahu, and the camp at Riblah.
+- **`events_597bce_neighbours.js`** (31 cards, 596–448 BCE). Five courts in one
+  room with a prophet in a yoke, who was actually in, Edom in the crossway,
+  Moab and Ammon's turn, thirteen years and no wages at Tyre, Sidon first
+  again, the offer to merge this district into Samaria, the towns that were not
+  burned, the king at the oasis, Media changing its name, Tyre's judges, the
+  people who stayed, four neighbours with an opinion about a wall, the year of
+  nineteen battles, the only people in the empire who were not taxed, a coin
+  with three letters on it, the day the south became Idumaea, Sanballat and
+  Tobiah at the table, and half the children speaking the speech of Ashdod.
+
+**The 732 BCE hole is the one worth naming.** The fifty-five-year reign is
+dull at the scale of empires and busy at the scale of the coast, and the
+chapter had eleven dated cards between 700 and 640 BCE. It now has
+thirty-seven.
+
+- **Regression contract**: `smoke194.mjs` — every chapter carries a neighbours
+  package of eight cards or more; the three new ones import nothing, reach the
+  sim only through `ctx.helpers`, never call the `addOpinion` that does not
+  exist (§274), roll no dice, date every card inside the playable span, offer
+  exactly two answers with a tooltip each, and quote no odds they cannot
+  implement (§172); **every point and purse change an answer applies is named
+  in that answer's tooltip** — 388 of them, measured against the source,
+  because `String(effects)` returns the guard wrapper rather than the card
+  body; every court a card names is seated on that chapter's own
+  board; **298 option firings** on real boards with both crowns where a chapter
+  seats two, with a guard-warning detector that is itself proved against a
+  deliberately broken card body; the density figures above; no roomy decade in
+  the three chapters below three dated cards; and the 700–640 BCE count.

@@ -436,8 +436,12 @@ static site, the zero dependencies, or the missing build step changes.
   between. Petra appeared in the Maccabean chapter twice in a hundred and seven
   years; Chalcis, Emesa, Commagene, Osrhoene, Hatra and Palmyra had four cards
   between them across nine chapters, three of which were the empires annexing
-  them. Every chapter now carries a **neighbours** package too — ninety-seven more
-  dated cards about the courts a courier can reach in three days. The Tyrian mint
+  them. Every chapter now carries a **neighbours** package too — a hundred and
+  eighty-seven dated cards about the courts a courier can reach in three days,
+  ninety of them added to the three Iron Age chapters, which were the last to get
+  one and the thinnest in the game without it. The copper road and the queens of
+  the Arabs; the governor at Megiddo and the reaper who petitioned the crown over
+  a cloak; five courts in one room with a prophet wearing a yoke; the Tyrian mint
   that strikes the Temple's own coin; Gabinius replacing one national council with
   five; the priest-king at Chalcis who shelters anybody's fugitives for a price;
   five hundred Babylonian horse-archers looking for a frontier to hold; Hatra's
