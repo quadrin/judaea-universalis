@@ -195,7 +195,7 @@ export const EVENTS_597_NEIGHBOURS = [
         opinion(ctx, 'EDM', me, -40);
         h.chronicle(ctx, 'era', 'The old boundaries are copied out, kept, and recited. They describe a country that does not exist, and four centuries later a Hasmonean with an army uses the copy.'); } }),
 
-  N('ev597n_thirteen_years_no_wages', 'Thirteen Years and No Wages', -576, 7,
+  N('ev597n_thirteen_years_no_wages', 'Thirteen Years and No Wages', -572, 4,
     'The siege of Tyre is over. It lasted thirteen years, every head in the Babylonian army '
     + 'was rubbed bald by the carrying-straps of the baskets and every shoulder was worn raw, '
     + 'and at the end of it the city came to terms and kept its wealth, because a city on an '
@@ -214,7 +214,7 @@ export const EVENTS_597_NEIGHBOURS = [
         opinion(ctx, 'TYR', me, 30);
         h.chronicle(ctx, 'era', 'The lesson taken is the other one: what cannot be carried away cannot be lost, and what can be carried away should be on a ship before the army arrives.'); } }),
 
-  N('ev597n_sidon_is_first_again', 'Sidon Is First Again', -573, 9,
+  N('ev597n_sidon_is_first_again', 'Sidon Is First Again', -571, 9,
     'Tyre has kept its wealth and lost its standing. The Babylonian settlement leaves it with '
     + 'a king under supervision and its mainland stripped, and the business of the coast has '
     + 'moved twenty miles north to Sidon, which spent the thirteen years selling to both '
@@ -305,7 +305,7 @@ export const EVENTS_597_NEIGHBOURS = [
         mod(ctx, 'n597_bread_before_wine', 'Bread Before Wine', { growthMult: 1.1, unrestAll: -0.7, tradeMult: 0.95 });
         h.chronicle(ctx, 'era', 'The terraces go under barley. It is the wrong crop for the ground and the right one for a district that remembers what a siege is.'); } }),
 
-  N('ev597n_the_king_in_the_desert', 'The King Has Gone to the Oasis', -556, 8,
+  N('ev597n_the_king_in_the_desert', 'The King Has Gone to the Oasis', -549, 6,
     'The king of Babylon has left Babylon. Not on campaign — he has moved, with his court, to '
     + 'an oasis in the northern Arabian desert, and has been there for years, while his son '
     + 'runs the capital and the new year festival goes uncelebrated because the king who must '
@@ -344,7 +344,7 @@ export const EVENTS_597_NEIGHBOURS = [
         mod(ctx, 'n597_west_looks_west', 'The West Looks West', { incomeMult: 1.08, prodMult: 1.07, unrestAll: -0.4 }, 360);
         h.chronicle(ctx, 'era', 'The court attends to the harvest and the roads. When the news from the plateau finally becomes the news here, it arrives as a surprise, which it need not have been.'); } }),
 
-  N('ev597n_tyre_buys_a_future', 'Tyre Buys a Future', -545, 5,
+  N('ev597n_tyre_buys_a_future', 'Tyre Buys a Future', -558, 5,
     'Tyre has stopped being ruled by kings. The last of them has been replaced by judges — '
     + 'appointed magistrates on short terms, drawn from the merchant houses — and the city '
     + 'has effectively converted itself from a monarchy into a company, on the reasoning that '
@@ -400,7 +400,7 @@ export const EVENTS_597_NEIGHBOURS = [
         mod(ctx, 'n597_the_old_title', 'The Old Title', { legitimacyAdd: 0.3, manpowerMult: 1.08, unrestAll: 0.8 });
         h.chronicle(ctx, 'era', 'The old deeds are honoured and fifty years of occupation are set aside. The returning families have their fields and the district has a quarrel it will still be having in Nehemiah\'s day.'); } }),
 
-  N('ev597n_the_ring_of_neighbours', 'Everybody Has an Opinion About a Wall', -531, 4,
+  N('ev597n_the_ring_of_neighbours', 'Everybody Has an Opinion About a Wall', -447, 4,
     'The proposal to repair the city wall has produced letters from every direction at once. '
     + 'The northern province says a walled town in its jurisdiction is a fortress it did not '
     + 'authorise. The Ammonites say the same in warmer language. Ashdod on the coast says a '
@@ -408,7 +408,7 @@ export const EVENTS_597_NEIGHBOURS = [
     + 'jurisdiction anywhere, have written anyway.\n\nNone of them can stop it. All four of '
     + 'them can complain to the satrap about it at the same time, which is a different and '
     + 'more effective thing.',
-    'Nehemiah 4:7 lists Sanballat, Tobiah, the Arabians, the Ammonites and the Ashdodites as jointly opposing the repair of Jerusalem\'s wall; Ezra 4 records the same tactic of appeal to the imperial court.',
+    'Ezra 4:7-23 records an attempt on the wall stopped by force after the neighbours wrote to Artaxerxes; Nehemiah 4:7 names the same coalition — Sanballat, Tobiah, the Arabians, the Ammonites and the Ashdodites — a few years later.',
     { label: 'Build it and answer the satrap in writing', tooltip: '−170 talents, +25 legitimacy, +20 martial points and "The Wall and the File" (+2 fort defence, +0.25 legitimacy a month) permanently; the four neighbours to −25 regard each.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -170, legitimacy: 25, mar: 20 });
         mod(ctx, 'n597_wall_and_file', 'The Wall and the File', { fortDefBonus: 2, legitimacyAdd: 0.25 });
@@ -460,7 +460,7 @@ export const EVENTS_597_NEIGHBOURS = [
         opinion(ctx, 'PAS', me, -35);
         h.chronicle(ctx, 'era', 'The governor of the house of David is proclaimed in language that everybody present understands and nobody writes down. He is not mentioned again in any record of any kind.'); } }),
 
-  N('ev597n_the_coast_under_sidon', 'The Coast Belongs to Sidon Now', -514, 5,
+  N('ev597n_the_coast_under_sidon', 'The Coast Belongs to Sidon Now', -469, 5,
     'The empire has settled the coast by giving it away. The plain from Dor to Joppa is '
     + 'assigned to Sidon and Tyre as a royal grant, in return for the ships and the crews that '
     + 'make the imperial fleet, and the Phoenician kings now govern the ports our produce has '
@@ -502,18 +502,18 @@ export const EVENTS_597_NEIGHBOURS = [
 
   N('ev597n_the_weights_of_the_satrapy', 'One Weight From Sardis to Susa', -507, 4,
     'The empire has issued its own coin and its own weight standard, and the satrapal '
-    + 'treasuries will now take payment in nothing else. The gold piece has an archer on it '
-    + 'and is good from the Aegean to the Indus; the silver is minted at half a dozen '
-    + 'places; and the old business of weighing out cut metal in front of a suspicious '
-    + 'counterparty is, within a generation, going to be over.\n\nThe district may strike '
-    + 'small silver of its own under licence, to the royal standard, with its own name on it. '
-    + 'It is a small privilege and it is the first time in seventy years that this place has '
-    + 'been offered anything with its own name on it at all.',
-    'The Persian daric and siglos standardise imperial coinage from Darius I; small silver coins inscribed YHD (Yehud) are struck in the province in the later Persian period.',
-    { label: 'Strike the small silver', tooltip: '−110 talents, +25 legitimacy, +20 governance points and "A Coin With Our Name On It" (+0.3 legitimacy a month, +9% trade, −6% cost of governing) permanently.',
+    + 'treasuries will take payment in nothing else. The gold piece has an archer on it and '
+    + 'is good from the Aegean to the Indus, and the old business of weighing out cut metal '
+    + 'in front of a suspicious counterparty is, within a generation, going to be over.\n\n'
+    + 'The question for the district is what happens to its own weights. The shekel cut in '
+    + 'limestone in every market town here is not the royal weight and never was. Keeping it '
+    + 'beside the royal one means two sets of scales in every market and a name of our own on '
+    + 'one of them; retiring it means one set, and nothing in the market that is ours.',
+    'The Persian daric and siglos standardise imperial coinage from Darius I; provincial silver inscribed YHD (Yehud) is struck here only in the later Persian period, long after the royal standard arrives.',
+    { label: 'Keep our own weight beside the royal one', tooltip: '−110 talents, +25 legitimacy, +20 governance points and "The Shekel Kept" (+0.3 legitimacy a month, +9% trade, −6% cost of governing) permanently.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -110, legitimacy: 25, gov: 20 });
-        mod(ctx, 'n597_a_coin_with_our_name', 'A Coin With Our Name On It', { legitimacyAdd: 0.3, tradeMult: 1.09, adminMult: 0.94 });
-        h.chronicle(ctx, 'era', 'Small silver is struck to the royal weight with three letters on it. It buys a day\'s bread and it is the only sovereign object this district owns.'); } },
+        mod(ctx, 'n597_the_shekel_kept', 'The Shekel Kept', { legitimacyAdd: 0.3, tradeMult: 1.09, adminMult: 0.94 });
+        h.chronicle(ctx, 'era', 'Two sets of stones sit on every counter in the district, one of them cut with a name, and the argument about which to weigh by outlasts the empire that started it.'); } },
     { label: 'Use the royal coin and save the mint', tooltip: '+130 talents and "The Royal Coin" (+10% trade, +7% income, −8% cost of governing) permanently; Persia to +20 regard.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: 130, gov: 30 });
         mod(ctx, 'n597_royal_coin', 'The Royal Coin', { tradeMult: 1.1, incomeMult: 1.07, adminMult: 0.92 });

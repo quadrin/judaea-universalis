@@ -211,7 +211,7 @@ export const EVENTS_732_NEIGHBOURS = [
         opinion(ctx, 'PLS', me, -30);
         h.chronicle(ctx, 'era', 'Press beds and weights are cut in forty hill towns. The oil is finished here, jarred here, and undersold by Ekron for a decade before it is not.'); } }),
 
-  N('ev732n_sidon_runs', 'The King of Sidon Takes Ship', -702, 3,
+  N('ev732n_sidon_runs', 'The King of Sidon Takes Ship', -701, 4,
     'Luli of Sidon, who rules the whole northern coast and half of Cyprus, has looked at the '
     + 'army coming down the shore road and left — by sea, at night, with his household, for '
     + 'Kition. The empire has installed a new king in his place before the ships were out of '
@@ -389,7 +389,7 @@ export const EVENTS_732_NEIGHBOURS = [
     + 'seen in a generation: it costs nothing, it cannot be refused, and every time the tribe '
     + 'prays it reads the name. The chancery has asked whether anything of ours is in that '
     + 'storeroom.',
-    'Esarhaddon records returning the captured deities of the Arabs, inscribed with his own name, to Hazael in exchange for tribute and submission — a standard Assyrian instrument.',
+    'Esarhaddon and Ashurbanipal both record returning captured Arab deities, inscribed with the Assyrian king\'s name, in exchange for tribute and submission — a standard Assyrian instrument.',
     { label: 'Ask what is in the storeroom', tooltip: '−100 talents, +25 legitimacy and "What Came Back" (+0.25 legitimacy a month, −0.5 unrest everywhere) permanently; Assyria to +15 regard.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -100, legitimacy: 25 });
         mod(ctx, 'n732_what_came_back', 'What Came Back', { legitimacyAdd: 0.25, unrestAll: -0.5 });
@@ -400,7 +400,7 @@ export const EVENTS_732_NEIGHBOURS = [
         mod(ctx, 'n732_nothing_in_a_cart', 'Nothing of Ours Is in a Cart', { legitimacyAdd: 0.3, moraleMult: 1.08 });
         h.chronicle(ctx, 'era', 'The answer sent north is that this house keeps no image that anybody could carry away, which is true, and which the Assyrian scribes record as an eccentricity.'); } }),
 
-  N('ev732n_the_ships_of_tyre_are_taken', 'The Ships of Tyre Are Taken', -666, 3,
+  N('ev732n_the_ships_of_tyre_are_taken', 'The Ships of Tyre Are Taken', -663, 7,
     'Tyre backed Egypt, Egypt lost, and the empire has done to Tyre what can be done to an '
     + 'island: taken the mainland, taken the water, taken the trading stations up and down '
     + 'the coast, and left the rock itself alone. The city is intact and owns nothing outside '
@@ -440,21 +440,23 @@ export const EVENTS_732_NEIGHBOURS = [
 
   N('ev732n_the_lydian_sends_for_help', 'A Letter From the Far End of the World', -657, 4,
     'A king nobody at this court had heard of, from a country at the far end of Anatolia, has '
-    + 'written to Nineveh asking for help against horsemen out of the steppe — and the news '
-    + 'that has reached us with the story is the detail the merchants care about: the Lydians '
-    + 'are stamping lumps of electrum with a mark that guarantees the weight.\n\nA lump of '
-    + 'metal you do not have to weigh is a different thing from a lump of metal you do. Our '
-    + 'whole trade runs on balances and everybody cheats.',
-    'Gyges of Lydia appealed to Ashurbanipal against the Cimmerians; the earliest stamped electrum coinage is Lydian, from the late seventh century.',
-    { label: 'Get the stamped metal and use it', tooltip: '−90 talents, +30 governance points and "Metal With a Mark On It" (+10% trade, −6% cost of governing, +5% income) permanently; Lydia to +25 regard.',
-      fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -90, gov: 30 });
-        mod(ctx, 'n732_metal_with_a_mark', 'Metal With a Mark On It', { tradeMult: 1.1, adminMult: 0.94, incomeMult: 1.05 });
+    + 'written to Nineveh asking the empire for help against horsemen out of the steppe, and '
+    + 'has been given it. He is not a tributary. He was not conquered. He wrote, offered '
+    + 'something, and bought an army he could never have raised.\n\nThe merchants who '
+    + 'brought the story add that the road he wrote along runs the whole width of Anatolia and '
+    + 'is open, and that there is a market at the end of it nobody here has ever sold into. '
+    + 'The chancery is more interested in the precedent than in the road.',
+    'Gyges of Lydia appealed to Ashurbanipal against the Cimmerians and received Assyrian support; the annals record the embassy arriving from a country whose language nobody at Nineveh could read.',
+    { label: 'Send our own men down that road', tooltip: '−90 talents, +30 influence points and "The Anatolian Road" (+10% trade, +5% income) permanently; Lydia to +25 regard.',
+      fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -90, infl: 30 });
+        mod(ctx, 'n732_anatolian_road', 'The Anatolian Road', { tradeMult: 1.1, incomeMult: 1.05 });
         opinion(ctx, 'LYD', me, 25);
-        h.chronicle(ctx, 'era', 'Stamped electrum appears in the market quarter and the money-changers hate it, which is how everybody knows it works.'); } },
-    { label: 'Keep to weighed silver and a royal standard', tooltip: '−60 talents, +25 governance points, +10 legitimacy and "The Royal Weight" (+8% income, +0.2 legitimacy a month, −0.4 unrest everywhere) permanently.',
+        h.chronicle(ctx, 'era', 'Two factors go north-west with a caravan and come back two years later with a wordlist, a price list and the names of four kings nobody here had heard of.'); } },
+    { label: 'Learn the precedent instead', tooltip: '−60 talents, +25 governance points, +10 legitimacy and "Ask, Do Not Wait to Be Asked" (+8% income, +0.2 legitimacy a month, −0.4 unrest everywhere) permanently.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -60, gov: 25, legitimacy: 10 });
-        mod(ctx, 'n732_royal_weight', 'The Royal Weight', { incomeMult: 1.08, legitimacyAdd: 0.2, unrestAll: -0.4 });
-        h.chronicle(ctx, 'era', 'A set of royal weights is cut in limestone and copies are issued to every market town, with the shekel marked on each in the old script.'); } }),
+        mod(ctx, 'n732_ask_do_not_wait', 'Ask, Do Not Wait to Be Asked', { incomeMult: 1.08, legitimacyAdd: 0.2, unrestAll: -0.4 });
+        opinion(ctx, 'ASR', me, 15);
+        h.chronicle(ctx, 'era', 'The lesson is written into the chancery\'s standing instructions: a court that asks the empire for something is a court the empire has a reason to keep.'); } }),
 
   N('ev732n_bronze_men_in_the_forts', 'Bronze Men in the Forts', -653, 6,
     'The Delta is hiring Ionians and Carians by the shipload — men in bronze, fighting '
@@ -465,10 +467,10 @@ export const EVENTS_732_NEIGHBOURS = [
     + 'flat ground a hundred of them are worth four hundred of ours. On a hillside they are '
     + 'worth considerably less, which the general keeps pointing out.',
     'Psamtik I\'s Ionian and Carian mercenaries are recorded by Herodotus II.152-154; Greek hoplite equipment appears at coastal Levantine sites from the mid-seventh century.',
-    { label: 'Hire a company', tooltip: '−180 talents, +35 martial points and "The Bronze Company" (+12% army strength, +8% morale, +0.5 unrest everywhere) for thirty years; Athens to +20 regard.',
+    { label: 'Hire a company', tooltip: '−180 talents, +35 martial points and "The Bronze Company" (+12% army strength, +8% morale, +0.5 unrest everywhere) for thirty years; Egypt to +15 regard.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -180, mar: 35 });
         mod(ctx, 'n732_bronze_company', 'The Bronze Company', { milPowerMult: 1.12, moraleMult: 1.08, unrestAll: 0.5 }, 360);
-        opinion(ctx, 'ATH', me, 20); opinion(ctx, 'MIZ', me, 15);
+        opinion(ctx, 'MIZ', me, 15);
         h.chronicle(ctx, 'era', 'A company of men in bronze is quartered below the capital, paid in silver, and used exactly twice in thirty years, both times decisively.'); } },
     { label: 'Buy the armour and teach our own', tooltip: '−140 talents, +30 martial points and "The Line of Shields" (+9% army strength, +7% manpower) permanently. It takes a decade before it is worth anything.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -140, mar: 30 });
@@ -513,7 +515,7 @@ export const EVENTS_732_NEIGHBOURS = [
         opinion(ctx, 'ASR', me, 25); opinion(ctx, 'MIZ', me, -25);
         h.chronicle(ctx, 'era', 'The oath is kept and the western approaches are walled, on the reasoning that an empire which cannot protect you can still punish you.'); } }),
 
-  N('ev732n_scythians_on_the_coast_road', 'Riders Down the Coast Road', -637, 4,
+  N('ev732n_scythians_on_the_coast_road', 'Riders Down the Coast Road', -629, 4,
     'Horsemen out of the north have come the whole length of the coast — through Syria, past '
     + 'the Phoenician cities, down the plain — and got as far as Ascalon before turning back. '
     + 'They did not besiege anything. They did not have to; nothing on the road could stand in '

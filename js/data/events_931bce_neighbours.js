@@ -368,7 +368,7 @@ export const EVENTS_931_NEIGHBOURS = [
         opinion(ctx, 'KSH', me, 15);
         h.chronicle(ctx, 'era', 'The tusks are bought at the Delta and sold at Tyre without being unloaded here. The carvers go to the coast, and the prophet finds another subject.'); } }),
 
-  N('ev931n_tyre_is_asked_first', 'Tyre Is Asked First', -859, 7, 'player',
+  N('ev931n_tyre_is_asked_first', 'Tyre Is Asked First', -858, 7, 'player',
     'The Assyrian tribute list for the coast has been read out and Tyre is at the head of '
     + 'it, with Sidon and Byblos after, and every one of them has paid without a siege, '
     + 'without a battle and apparently without much argument. The Phoenician position is '
@@ -561,8 +561,8 @@ export const EVENTS_931_NEIGHBOURS = [
         h.chronicle(ctx, 'era', 'The demand is set again every spring, a little higher each time, and the Ammonite court begins keeping its own record of what it has paid.'); } }),
 
   N('ev931n_a_fleet_again_at_the_gulf', 'A Fleet Again at the Gulf', -766, 5, 'JDH',
-    'The quay at the head of the gulf is finished and there are hulls on the slips. What '
-    + 'there are not is sailors: nobody in this kingdom has put to sea in three generations, '
+    'Elath is in our hands again, the anchorage is good, and there are hulls on the slips. '
+    + 'What there are not is sailors: nobody in this kingdom has put to sea in three generations, '
     + 'and the Red Sea is a bad place to learn, with reefs on both shores and a wind that '
     + 'runs one way for half the year.\n\nTyre will lend crews. Tyre will also, in the '
     + 'course of lending them, learn every anchorage, every well and every price on a route '
@@ -578,7 +578,7 @@ export const EVENTS_931_NEIGHBOURS = [
         mod(ctx, 'n931_our_own_sailors', 'Our Own Sailors', { tradeMult: 1.08, legitimacyAdd: 0.2 });
         h.chronicle(ctx, 'era', 'Two seasons are spent on the reefs of the gulf learning what the Tyrians already knew. In the third the ships come home loaded and crewed by men from Hebron.'); } }),
 
-  N('ev931n_the_queens_of_the_arabs', 'The Queens of the Arabs', -757, 9, 'player',
+  N('ev931n_the_queens_of_the_arabs', 'The Queens of the Arabs', -738, 9, 'player',
     'The Assyrian tribute lists from the desert name a queen. Not a queen consort and not a '
     + 'priestess — a ruling queen of the Arabs, with her own treasury, her own camels and '
     + 'her own answer to Nineveh. The chancery has checked, and there has been more than '
@@ -644,7 +644,7 @@ export const EVENTS_931_NEIGHBOURS = [
     + 'has been removed from the world as an administrative act.\n\nThe presses of the '
     + 'Shephelah have nowhere to sell. Ekron, twelve miles north and still standing, has '
     + 'sent to say it would be glad to take the whole trade, on terms.',
-    'Sargon II records the capture of Gath; the site is effectively abandoned thereafter, and Ekron becomes the largest olive-oil production centre in the ancient Near East.',
+    'Sargon II\'s annals list Gath (Gimtu) among the cities taken in his Philistine campaigns; the site is effectively abandoned in the late eighth century, and Ekron becomes the largest olive-oil production centre in the ancient Near East.',
     { label: 'Sell through Ekron on their terms', tooltip: '−40 talents, +15 influence points and "The Ekron Presses" (+10% trade, +6% income, −5% production) for forty years; Philistia to +25 regard.',
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx); h.adjust(ctx, me, { treasury: -40, infl: 15 });
         mod(ctx, 'n931_ekron_presses', 'The Ekron Presses', { tradeMult: 1.1, incomeMult: 1.06, prodMult: 0.95 }, 480);
