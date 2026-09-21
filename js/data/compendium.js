@@ -9,12 +9,14 @@ import { EVENTS_931_WORLD } from './events_931bce_world.js';
 import { EVENTS_931_YEARS } from './events_931bce_years.js';
 import { EVENTS_931_HOUSES } from './events_931bce_houses.js';
 import { EVENTS_931_NEIGHBOURS } from './events_931bce_neighbours.js';
+import { EVENTS_931_POWERS } from './events_931bce_powers.js';
 import { BOOKMARK_732 } from './bookmark_732bce.js';
 import { EVENTS_732 } from './events_732bce.js';
 import { EVENTS_732_WORLD } from './events_732bce_world.js';
 import { EVENTS_732_YEARS } from './events_732bce_years.js';
 import { EVENTS_732_HEZEKIAH } from './events_732bce_hezekiah.js';
 import { EVENTS_732_NEIGHBOURS } from './events_732bce_neighbours.js';
+import { EVENTS_732_POWERS } from './events_732bce_powers.js';
 import { BOOKMARK_597 } from './bookmark_597bce.js';
 import { EVENTS_597 } from './events_597bce.js';
 import { EVENTS_597_WORLD } from './events_597bce_world.js';
@@ -22,6 +24,7 @@ import { EVENTS_597_YEARS } from './events_597bce_years.js';
 import { EVENTS_597_DESTRUCTION } from './events_597bce_destruction.js';
 import { EVENTS_597_PERSIA } from './events_597bce_persia.js';
 import { EVENTS_597_NEIGHBOURS } from './events_597bce_neighbours.js';
+import { EVENTS_597_POWERS } from './events_597bce_powers.js';
 import { BOOKMARK_167 } from './bookmark_167bce.js';
 import { EVENTS_167 } from './events_167bce.js';
 import { EVENTS_167_KINGS } from './events_167bce_kings.js';
@@ -215,7 +218,7 @@ export const ERAS = [
     // §273: the houses package — the house of Ahab and the house of David,
   // which the chapter named and never staged: Jezebel, the Elisha cycle,
   // Jehu's revolution, Athaliah, Hosea, and the fall of Samaria.
-{ bookmark: withPolitical(BOOKMARK_931), events: EVENTS_931.concat(EVENTS_931_WORLD, EVENTS_931_YEARS, EVENTS_931_HOUSES, EVENTS_931_NEIGHBOURS, ANTIQUE) },
+{ bookmark: withPolitical(BOOKMARK_931), events: EVENTS_931.concat(EVENTS_931_WORLD, EVENTS_931_YEARS, EVENTS_931_HOUSES, EVENTS_931_NEIGHBOURS, EVENTS_931_POWERS, ANTIQUE) },
   // The century the word 'empire' is invented in (SPEC §268): Damascus made
   // into provinces, the Galilee and the Gilead made into provinces, and two
   // Israelite kingdoms finding out what a tribute schedule is. Its chain is
@@ -228,7 +231,7 @@ export const ERAS = [
   // in Samaria, which is where the Samaritans come from; the bronze serpent;
   // the tunnel and its inscription; the Rabshakeh at the conduit; the camp
   // in the morning; Manasseh; and Josiah's passover.
-{ bookmark: withPolitical(BOOKMARK_732), events: EVENTS_732.concat(EVENTS_732_WORLD, EVENTS_732_YEARS, EVENTS_732_HEZEKIAH, EVENTS_732_NEIGHBOURS, ANTIQUE) },
+{ bookmark: withPolitical(BOOKMARK_732), events: EVENTS_732.concat(EVENTS_732_WORLD, EVENTS_732_YEARS, EVENTS_732_HEZEKIAH, EVENTS_732_NEIGHBOURS, EVENTS_732_POWERS, ANTIQUE) },
   // The chapter about what survives a state (SPEC §268): the city taken and
   // not burned, an oath sworn by the wrong god, two prophets shouting numbers
   // in the temple court, and a letter north telling ten thousand deported
@@ -240,7 +243,7 @@ export const ERAS = [
   // bones, the day Jehoiachin was let out, the vessels counted back, and the
   // law read at the water gate. It rides before the shared pools like every
   // other chapter package.
-  { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, EVENTS_597_DESTRUCTION, EVENTS_597_PERSIA, EVENTS_597_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, EVENTS_597_DESTRUCTION, EVENTS_597_PERSIA, EVENTS_597_NEIGHBOURS, EVENTS_597_POWERS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_CONQUEST, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_AUGUSTAN, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_ROAD, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },

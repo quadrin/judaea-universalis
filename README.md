@@ -439,7 +439,13 @@ static site, the zero dependencies, or the missing build step changes.
   them. Every chapter now carries a **neighbours** package too — a hundred and
   eighty-seven dated cards about the courts a courier can reach in three days,
   ninety of them added to the three Iron Age chapters, which were the last to get
-  one and the thinnest in the game without it. The copper road and the queens of
+  one and the thinnest in the game without it. The same audit, run again on the
+  world spines, found the Iron Age narrating two centuries of the ancient world
+  with **eleven cards each** — no Solon, no Cleisthenes, no Twelve Tables, no
+  Carthage in the islands, and no Cyrus taking Ecbatana, which is the founding
+  act of the Persian empire. Sixty more world cards now cover the great powers
+  from 911 to 447 BCE, and a world card changes the other court's ledger rather
+  than only reporting to yours. The copper road and the queens of
   the Arabs; the governor at Megiddo and the reaper who petitioned the crown over
   a cloak; five courts in one room with a prophet wearing a yoke; the Tyrian mint
   that strikes the Temple's own coin; Gabinius replacing one national council with

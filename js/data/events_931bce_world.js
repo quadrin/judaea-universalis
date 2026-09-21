@@ -70,11 +70,41 @@ function alive(ctx, tag) {
   return !!(t && t.alive !== false);
 }
 
+// A scripted fall names the heir the history gave the ground to, and the heir
+// is sometimes already gone (SPEC §282). The AI's Assyria eats Babylonia in
+// the 620s in most campaigns; 612 then has nobody to hand Mesopotamia to, the
+// card refuses, and Assyria ends the chapter larger than it started — which is
+// exactly the "the empires never fall" report this helper exists to answer.
+//
+// The heir is not being invented. The Chaldean dynasty rising out of Babylon
+// is what the card is ABOUT, and a court that holds ground is alive again on
+// the next tick anyway (`updateTagLife`). So raise it, give it the floor a
+// restored court gets, and let the cession run. Two courts are never raised:
+// one the world has no entry for at all, and the player's own, because a
+// human chair that has fallen is a finished campaign and not a piece of
+// world news.
+function raise(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  if (!t) return false;
+  if (t.alive !== false) return true;
+  if (ctx.game.playerTag === tag) return false;
+  try {
+    t.alive = true;
+    t.overlord = null;
+    t.atWarWith = [];
+    t.warExhaustion = 0;
+    if (!Number.isFinite(t.stability) || t.stability < 0) t.stability = 0;
+    t.legitimacy = Math.max(Number(t.legitimacy) || 0, 50);
+    t.treasury = Math.max(Number(t.treasury) || 0, 25);
+    return true;
+  } catch (e) { warnOnce('raise:' + tag, e); return false; }
+}
+
 // Hand named ground over. Only ground the NAMED loser still owns moves: a
 // province the player has taken off it belongs to whoever took it, and a card
 // a thousand miles away does not get to reassign it.
 function cedeNamed(ctx, names, fromTag, toTag) {
-  if (!alive(ctx, toTag) || fromTag === toTag) return 0;
+  if (!raise(ctx, toTag) || fromTag === toTag) return 0;
   // Never the player's own court — see the note on endCourt below.
   if (ctx.game.playerTag === fromTag) return 0;
   let n = 0;
@@ -92,7 +122,7 @@ function cedeNamed(ctx, names, fromTag, toTag) {
 // the player rather than delete them, which is right for the engine and wrong
 // for a piece of world news to do unasked.
 function endCourt(ctx, dyingTag, heirTag) {
-  if (!alive(ctx, dyingTag) || !alive(ctx, heirTag)) return false;
+  if (!alive(ctx, dyingTag) || !raise(ctx, heirTag)) return false;
   if (ctx.game.playerTag === dyingTag) return false;
   try { return !!ctx.helpers.dissolveTag(ctx, dyingTag, heirTag); }
   catch (e) { warnOnce('endCourt:' + dyingTag, e); return false; }
