@@ -1454,6 +1454,26 @@ static site, the zero dependencies, or the missing build step changes.
   torc. The Iron Age and Maccabean boards went from 27, 20 and 54 courts to 35,
   31 and 57, and "Greece" is now what it should be: modern Greece, in 1948.
 
+- **Starting a game no longer stalls.** The freeze was `computeGeometry`
+  walking the whole 46-megapixel province atlas on the main thread — 2.5
+  seconds on a busy raster — to derive neighbours, areas, centroids and
+  bounds. The walk is now run-length rather than per-pixel: a real cell is
+  about 333 pixels across, so each row is encoded as runs once and the
+  arithmetic that ran 46 million times runs once per run, with the adjacency
+  kept in a 173 KB bitmap instead of a Set-add at every border pixel. 650 ms,
+  down from 2495. And a profile already computed is remembered, so browsing
+  the bookmark list and starting a chapter twice pays for the walk once.
+
+- **The west had its own powers.** The Iron Age boards ran from the Nile to
+  the Zagros and left Italy, Iberia and the islands as unclaimed waste — in
+  the centuries when Tartessos was the richest thing west of Tyre and Sardinia
+  had built seven thousand stone towers. Etruria, Tartessos, the Iberians,
+  Sardinia and the Celtiberians now hold their own ground, wearing the fasces,
+  a warrior stele, the falcata and a nuraghe. Rome joins them in 597 only:
+  931 and 732 had already called it villages sharing a market, and those
+  boards keep their judgement. Court counts went 19, 35 and 31 to 24, 40
+  and 37.
+
 ## Architecture
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free

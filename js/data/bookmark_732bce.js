@@ -242,6 +242,18 @@ put(ELA_LANDS, 'ELA'); put(MDA_LANDS, 'MDA'); put(URA_LANDS, 'URA');
 put(PHR_LANDS, 'PHR'); put(TAB_LANDS, 'TAB'); put(LYD_LANDS, 'LYD');
 put(MIZ_LANDS, 'MIZ'); put(KSH_LANDS, 'KSH'); put(QDR_LANDS, 'QDR');
 put(SAB_LANDS, 'SAB'); put(CRC_LANDS, 'CRC');
+// The west, which these boards left as unclaimed waste (SPEC §280). Etruria
+// north of the Tiber, the Samnite highlands, Tartessos on the silver, the
+// Iberian coast, the Celtiberian meseta, and an island that built seven
+// thousand towers.
+const ETR_LANDS = ['Pisae', 'Genua', 'Bononia', 'Ravenna', 'Ancona'];
+const SRD_LANDS = ['Caralis', 'Turris Libisonis'];
+const TRT_LANDS = ['Gades', 'Hispalis', 'Corduba'];
+const IBE_LANDS = ['Tarraco', 'Emporiae', 'Carthago Nova', 'Toletum'];
+put(ETR_LANDS, 'ETR'); put(SRD_LANDS, 'SRD'); put(TRT_LANDS, 'TRT');
+put(IBE_LANDS, 'IBE'); put(['Numantia'], 'CTB');
+put(['Aleria'], 'SRD');
+
 for (const n of Object.keys(OTHER_732)) OWNERS[n] = OTHER_732[n];
 
 const RELIGIONS = {};
@@ -495,6 +507,8 @@ export const BOOKMARK_732 = {
     // the Caucasus, and the Garamantes are where they always are.
     'CAR', 'GRC', 'GRM', 'SCY', 'CIM', 'HDR',
     'COR', 'ATH', 'SPT', 'CRT', 'RHO', 'SYC', 'TAR', 'THR',
+    // The west (SPEC §280).
+    'ETR', 'SRD', 'TRT', 'IBE', 'CTB',
   ],
   rivalries: [['ASR', 'BBL'], ['ASR', 'URA'], ['ASR', 'ELA'], ['JDH', 'ISL'], ['JDH', 'EDM']],
   affinities: [

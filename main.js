@@ -60,6 +60,15 @@ async function boot() {
   // this same object with Object.assign rather than replacing it.
   const geom = {};
   let profileKey = '';
+  // SPEC §279. `computeGeometry` walks the whole 46-megapixel atlas, and it is
+  // the stall a player feels when a game starts. It is also pure: the same
+  // raster and the same mapping give the same answer, and nothing downstream
+  // writes to what it returns. So a profile already computed is remembered —
+  // browsing the bookmark list and starting a chapter twice now pays for the
+  // walk once. Bounded, because each entry holds a Set per province and there
+  // is no reason to keep every profile a long session touches.
+  const GEOM_CACHE_MAX = 6;
+  const geomCache = new Map();
   function applyMapProfile(bookmark) {
     // The key covers all three profile levers: two eras with the same active
     // list can still merge different base cells (SPEC §47), and an era that
@@ -75,7 +84,18 @@ async function boot() {
     // nothing here.
     renderer.setMapRegions((bookmark && bookmark.mapRegions) || null);
     renderer.setProvinceMapping(provinceMap);
-    Object.assign(geom, computeGeometry(renderer.idArray, MAP_DATA, provinceMap));
+    let computed = geomCache.get(nextKey);
+    if (computed) {
+      // Touch it, so the least recently used profile is the one evicted.
+      geomCache.delete(nextKey);
+    } else {
+      computed = computeGeometry(renderer.idArray, MAP_DATA, provinceMap);
+      while (geomCache.size >= GEOM_CACHE_MAX) geomCache.delete(geomCache.keys().next().value);
+    }
+    geomCache.set(nextKey, computed);
+    // `geom` is the object every consumer already holds a reference to, so the
+    // result is copied into it rather than swapped for it.
+    Object.assign(geom, computed);
     profileKey = nextKey;
     return provinceMap;
   }

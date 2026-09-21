@@ -1365,6 +1365,55 @@ export const FLAGS = {
     `<rect x="9.1" y="20.5" width="5.8" height="1.7" rx="0.85" ${ACC}/>` +
     `<path d="M10.9 15.6h2.2M10.9 17.8h2.2" ${DET}/>`,
 
+  // ---- the western Mediterranean (SPEC §280) --------------------------------
+
+  // Etruria: the fasces — rods bound round an axe, which Rome took from these
+  // people along with the curule chair, the triumph and the alphabet.
+  ETR:
+    `<path d="M7.4 5.6h9.2l-1.1 15.2H8.5Z" ${SIL}/>` +
+    `<path d="M8.6 7.2h6.8M8.4 10.2h7.2M8.2 13.2h7.6M8 16.2h8M7.8 19.2h8.4" ${DET}/>` +
+    `<rect x="6.4" y="8.4" width="11.2" height="1.5" rx="0.75" ${ACC}/>` +
+    `<rect x="6.4" y="14.6" width="11.2" height="1.5" rx="0.75" ${ACC}/>` +
+    `<path d="M15.2 2.2h1.8v6h-1.8Z" ${SIL}/>` +
+    `<path d="M17 1.6c2.4.4 3.8 1.8 3.8 3.4s-1.4 3-3.8 3.4Z" ${ACC}/>`,
+
+  // The Samnites: the bull of the Oscan coinage, which on the Social War
+  // silver is goring a Roman wolf.
+  SMN:
+    `<path d="M5.4 12.2c0-2.6 2.9-4.4 6.6-4.4s6.6 1.8 6.6 4.4c0 3.4-2.6 6.8-6.6 6.8s-6.6-3.4-6.6-6.8Z" ${SIL}/>` +
+    `<path d="M5.6 10.4c-2.4-.8-3.8-2.6-3.8-4.8 2.6-.2 4.6.8 5.8 2.8Z" ${ACC}/>` +
+    `<path d="M18.4 10.4c2.4-.8 3.8-2.6 3.8-4.8-2.6-.2-4.6.8-5.8 2.8Z" ${ACC}/>` +
+    `<circle cx="9.5" cy="12" r="0.9" fill="${FO}" stroke="none"/>` +
+    `<circle cx="14.5" cy="12" r="0.9" fill="${FO}" stroke="none"/>` +
+    `<path d="M10.6 16.2h2.8" ${DET}/>`,
+
+  // Tartessos: the warrior stele of the south-west — a round shield with its
+  // boss, a spear, and the mirror that is on almost every one of them.
+  TRT:
+    `<circle cx="12" cy="12.6" r="6.4" ${ACC}/>` +
+    `<circle cx="12" cy="12.6" r="4.2" ${DET}/>` +
+    `<circle cx="12" cy="12.6" r="1.7" ${SIL}/>` +
+    `<path d="M3.2 2.6 8.6 8M3.2 2.6l.4 2.4 2.4.4Z" ${SIL}/>` +
+    `<circle cx="19" cy="5" r="2.4" ${SIL}/>` +
+    `<path d="M19.6 7.2 21 10.4" ${DET}/>`,
+
+  // Sardinia: the nuraghe — a truncated cone of dry stone, of which the
+  // island built seven thousand and explained none.
+  SRD:
+    `<path d="M5.6 20.4 8.4 5.2h7.2l2.8 15.2Z" ${SIL}/>` +
+    `<path d="M8.9 9.2h6.2M8.2 13h7.6M7.6 16.8h8.8" ${DET}/>` +
+    `<rect x="7.4" y="3.6" width="9.2" height="1.8" rx="0.9" ${ACC}/>` +
+    `<path d="M10.9 16.8h2.2v3.6h-2.2Z" ${ACC}/>` +
+    `<rect x="4.4" y="20.4" width="15.2" height="1.8" rx="0.9" ${ACC}/>`,
+
+  // The Iberians: the falcata, the forward-curving sword the whole
+  // Mediterranean eventually copied, with its horse-head pommel.
+  IBE:
+    `<path d="M9.8 20.6c-1.4-3.6-1.2-7 .6-10.2 1.6-2.8 4-4.6 7.2-5.6l1.8 2.2c-2.8 1.2-4.8 2.8-6 4.8-1.4 2.4-1.6 5.2-.6 8.4Z" ${SIL}/>` +
+    `<path d="M11.4 18.8c-.8-2.8-.5-5.4.9-7.8 1.2-2 2.9-3.4 5.1-4.4" ${DET}/>` +
+    `<path d="M8.4 20.4h5.4v1.8H8.4Z" ${ACC}/>` +
+    `<path d="M17.6 2.4c2 0 3.4 1.4 3.4 3.2 0 1-.5 1.8-1.4 2.2l-1.8-2.2Z" ${ACC}/>`,
+
   // ---- the Greek world, on its own coins (SPEC §278) ------------------------
   // Fourteen courts that used to be one blob called Greece. Each wears what it
   // actually struck, because a Greek city's coin type IS its emblem and the
