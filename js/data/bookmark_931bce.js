@@ -269,6 +269,19 @@ put(MOA_LANDS, 'MOB'); put(AMN_LANDS, 'AMO'); put(EDM_LANDS, 'EDM');
 put(CRC_LANDS, 'CRC'); put(TAB_LANDS, 'TAB'); put(ASR_LANDS, 'ASR');
 put(BAB_LANDS, 'BBL'); put(ELA_LANDS, 'ELA'); put(KMT_LANDS, 'MIZ');
 put(QDR_LANDS, 'QDR'); put(SAB_LANDS, 'SAB'); put(KSH_LANDS, 'KSH');
+// The west, which these boards left as unclaimed waste (SPEC §280). Etruria
+// north of the Tiber, the Samnite highlands, Tartessos on the silver, the
+// Iberian coast, the Celtiberian meseta, and an island that built seven
+// thousand towers.
+const ETR_LANDS = ['Pisae', 'Genua', 'Bononia', 'Ravenna', 'Ancona'];
+const SRD_LANDS = ['Caralis', 'Turris Libisonis'];
+const TRT_LANDS = ['Gades', 'Hispalis', 'Corduba'];
+const IBE_LANDS = ['Tarraco', 'Emporiae', 'Carthago Nova', 'Toletum'];
+put(ETR_LANDS, 'ETR'); put(SRD_LANDS, 'SRD'); put(TRT_LANDS, 'TRT');
+put(IBE_LANDS, 'IBE'); put(['Numantia'], 'CTB');
+// Corsica keeps its own towers: Aleria is Phocaean only from 565.
+put(['Aleria'], 'SRD');
+
 for (const n of Object.keys(OTHER_931)) OWNERS[n] = OTHER_931[n];
 
 // ---- the map of faiths, four centuries before the exile ---------------------
@@ -525,6 +538,8 @@ export const BOOKMARK_931 = {
   activeTags: [
     'ISL', 'JDH', 'PLS', 'TYR', 'DMS', 'HMT', 'MOB', 'AMO', 'EDM',
     'CRC', 'TAB', 'ASR', 'BBL', 'ELA', 'MIZ', 'QDR', 'SAB', 'KSH',
+    // The west (SPEC §280).
+    'ETR', 'SRD', 'TRT', 'IBE', 'CTB',
   ],
 
   // Standing rivalries (SPEC §73). The two halves of one nation are the

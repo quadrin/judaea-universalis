@@ -20159,3 +20159,92 @@ a tag named Greece should be.
   board with the court count up in all three chapters; and the property that
   keeps a reassignment honest — the new courts hold ONLY the cells this
   section names, so a change that quietly took Tyre off Tyre would fail.
+
+## §279 — The start stall is a forty-six-megapixel walk
+
+Reported from play: starting a game freezes for a moment. It does, and the
+cause is `computeGeometry`, which walks the whole province atlas —
+7264 × 6337, **46 megapixels** — to derive neighbours, areas, centroids,
+bounds and the coastal and offshore lists. Measured at **2.5 seconds** on a
+raster with many small cells and about 1.2 on a realistic one, synchronously,
+on the main thread.
+
+It is not new, but §271 made it bite more often: `mapProfileKey` now includes
+`mapRegions`, so a chapter that draws its own borders can never share a
+profile with one that does not, and starting an Iron Age chapter after any
+other always recomputes where before a matching active/merge set would have
+been reused.
+
+**The walk is now run-length, not per-pixel.** A real cell is roughly
+333 × 333, so a row crosses only a handful of them. Each row is encoded as
+runs once; the accumulation (area, the centroid sums, the bounds) becomes
+O(runs) with the centroid sum computed in closed form over the span; the
+horizontal adjacency is one comparison per run boundary instead of one per
+pixel; and the vertical adjacency is a two-pointer merge of this row's runs
+against the row below's. Every pixel is still READ exactly once — that part
+is the floor — but the arithmetic that ran 46 million times now runs once per
+run. Three per-pixel closure calls to `mappedId` became one lookup table, the
+`{x0,y0,x1,y1}` object per pixel became four `Int32Array`s, and the pair of
+`Set.add`s at every border pixel became an adjacency bitmap of
+(N+1)² bytes — 173 KB for 415 provinces — read out into Sets once at the end.
+
+| raster | before | after |
+|---|---|---|
+| many small cells | 2495 ms | 650 ms |
+| realistic cells | 1159 ms | 650 ms |
+
+**And a profile already computed is remembered.** `computeGeometry` is pure —
+the same raster and mapping give the same answer, and nothing downstream
+writes to what it returns — so `main.js` keeps the last six results by
+profile key. Browsing the bookmark list and starting a chapter twice now pays
+for the walk once. The cache is bounded because each entry holds a Set per
+province and a long session has no reason to keep every profile it touched.
+
+- **Regression contract**: the rewrite is checked by *comparison*, not by
+  assertion: `computeGeometry` before and after, over thirty random boards and
+  12,480 province comparisons, agreeing exactly on neighbours, areas,
+  centroids and bounds. (A first attempt was checked against a hand-written
+  reference that reproduced only the accumulation loop and not the later
+  passes, and reported mismatches that were the reference's own.)
+
+## §280 — The west had its own powers
+
+The Iron Age boards ran from the Nile to the Zagros and left Italy, Iberia and
+the islands as unclaimed waste — in the centuries when Tartessos was the
+richest thing west of Tyre, Etruria was the power north of the Tiber, and
+Sardinia had built seven thousand stone towers.
+
+Five courts, plus two the catalog already had, seated on the three earliest
+boards:
+
+| court | holds | wears |
+|---|---|---|
+| Etruria | Pisae, Genua, Bononia, Ravenna, Ancona | the fasces, which Rome took from them |
+| Tartessos | Gades, Hispalis, Corduba | a warrior stele's shield, spear and mirror |
+| the Iberians | Tarraco, Emporiae, Carthago Nova, Toletum | the falcata |
+| Sardinia | Caralis, Turris Libisonis (+ Aleria to 597) | a nuraghe |
+| the Celtiberians | Numantia | (already in the catalog) |
+| Rome | Roma, **in 597 only** | (already in the catalog) |
+
+**Rome is the judgement worth naming.** All three boards had already decided
+it, in their own comments: not founded in 931, *"villages sharing a market"*
+in 732, and in 597 *"a town with kings and no empire"*. The first two stand
+untouched. The third is the one this section changes, on the ground that a
+town with kings is a state and one cell under the Tarquins is the whole of
+it — the only Italian crown on that board.
+
+`SMN` (the Samnites) is defined and drawn but seated nowhere: Capua is
+Etruscan until 424 and Brundisium is Messapian, so there is no honest ground
+for it in these three centuries. It waits, like any other catalogued court.
+
+| chapter | courts before | after |
+|---|---|---|
+| 931 BCE | 19 | **24** |
+| 732 BCE | 35 | **40** |
+| 597 BCE | 31 | **37** |
+
+- **Regression contract**: `smoke193.mjs` extended — every western court
+  catalogued, drawn and distinct; the named seats held in each chapter; Rome
+  waste in 931 and 732 and a state in 597; every court alive and holding
+  ground on a booted board with the count up in all three; and the same
+  "nothing else moved" property as §278, over the western cells too.

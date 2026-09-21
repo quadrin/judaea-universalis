@@ -28,7 +28,9 @@ const ok = (cond, msg) => {
 };
 
 const NATIONS = DEFINES.NATIONS || DEFINES.TAGS || {};
-const NEW = ['MAC', 'ATH', 'SPT', 'COR', 'ACH', 'RHO', 'CRT', 'SYC', 'TAR', 'CYR', 'MIL', 'PRG', 'BIT', 'GLT'];
+const NEW = ['MAC', 'ATH', 'SPT', 'COR', 'ACH', 'RHO', 'CRT', 'SYC', 'TAR', 'CYR', 'MIL', 'PRG', 'BIT', 'GLT',
+  // …and the west (SPEC §280).
+  'ETR', 'SMN', 'TRT', 'SRD', 'IBE'];
 
 const snap = JSON.parse(fs.readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
 const bus = { emit() {}, on() { return () => {}; } };
@@ -112,6 +114,12 @@ const EXPECT = {
   '597bce': { COR: 'Corinth', ATH: 'Athens', SPT: 'Sparta', CRT: 'Gortyn', RHO: 'Rhodes', SYC: 'Syracusae', TAR: 'Tarentum', CYR: 'Cyrene', MIL: 'Sinope' },
   '167bce': { MAC: 'Thessalonica', ACH: 'Corinth', ATH: 'Athens', CRT: 'Gortyn', RHO: 'Rhodes', BIT: 'Nicaea', PRG: 'Smyrna', GLT: 'Ancyra' },
 };
+// The west, which the Iron Age boards left as unclaimed waste (SPEC §280).
+const WEST = {
+  '931bce': { ETR: 'Pisae', SRD: 'Caralis', TRT: 'Gades', IBE: 'Tarraco', CTB: 'Numantia' },
+  '732bce': { ETR: 'Pisae', SRD: 'Caralis', TRT: 'Gades', IBE: 'Tarraco', CTB: 'Numantia' },
+  '597bce': { ETR: 'Pisae', SRD: 'Caralis', TRT: 'Gades', IBE: 'Tarraco', CTB: 'Numantia', ROM: 'Roma' },
+};
 {
   for (const [chapter, want] of Object.entries(EXPECT)) {
     const o = ERAS.find((e) => e.bookmark.id === chapter).bookmark.owners || {};
@@ -146,9 +154,16 @@ console.log('== nothing else moved ==');
 {
   // The only cells that changed hands are the ones this section names. A
   // reassignment that quietly took Tyre off Tyre would pass every check above.
-  const TOUCHED = new Set(['Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Byzantion',
+  const TOUCHED = new Set([
+    // §278, the Greek world
+    'Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Byzantion',
     'Syracusae', 'Tarentum', 'Rhegium', 'Cyrene', 'Sinope', 'Trapezus', 'Attalia',
-    'Halicarnassus', 'Thessalonica', 'Hadrianopolis', 'Nicaea', 'Smyrna', 'Ancyra']);
+    'Halicarnassus', 'Thessalonica', 'Hadrianopolis', 'Nicaea', 'Smyrna', 'Ancyra',
+    // §280, the west
+    'Pisae', 'Genua', 'Bononia', 'Ravenna', 'Ancona', 'Caralis', 'Turris Libisonis',
+    'Aleria', 'Gades', 'Hispalis', 'Corduba', 'Tarraco', 'Emporiae',
+    'Carthago Nova', 'Toletum', 'Numantia', 'Roma',
+  ]);
   for (const chapter of Object.keys(EXPECT)) {
     const o = ERAS.find((e) => e.bookmark.id === chapter).bookmark.owners || {};
     const strays = Object.entries(o)
@@ -156,6 +171,37 @@ console.log('== nothing else moved ==');
       .map(([cell, tag]) => cell + '→' + tag);
     ok(!strays.length, chapter + ': the new courts hold only the cells this section names'
       + (strays.length ? ' — also ' + strays.join(', ') : ''));
+  }
+}
+
+// ---------------------------------------------------------------------------
+console.log('== the west is on the board (SPEC §280) ==');
+{
+  for (const [chapter, want] of Object.entries(WEST)) {
+    const o = ERAS.find((e) => e.bookmark.id === chapter).bookmark.owners || {};
+    const wrong = Object.entries(want).filter(([tag, cell]) => o[cell] !== tag)
+      .map(([tag, cell]) => cell + ' is ' + o[cell] + ', not ' + tag);
+    ok(!wrong.length, chapter + ': ' + Object.keys(want).length + ' western courts hold their seats'
+      + (wrong.length ? ' — ' + wrong.join('; ') : ''));
+  }
+  // Rome is a judgement the boards had already made, and two of them keep it:
+  // "villages sharing a market" in 732, and not founded at all in 931.
+  const o931 = ERAS.find((e) => e.bookmark.id === '931bce').bookmark.owners || {};
+  const o732 = ERAS.find((e) => e.bookmark.id === '732bce').bookmark.owners || {};
+  const o597 = ERAS.find((e) => e.bookmark.id === '597bce').bookmark.owners || {};
+  ok(o931.Roma === 'WASTE' && o732.Roma === 'WASTE',
+    'Rome is still waste in 931 and 732, as those boards always said');
+  ok(o597.Roma === 'ROM', 'and a state in 597, where the board calls it a town with kings');
+  // Court counts, measured on booted boards.
+  const before = { '931bce': 19, '732bce': 35, '597bce': 31 };
+  for (const chapter of Object.keys(WEST)) {
+    const b = boot(chapter);
+    const live = Object.keys(b.g.tags).filter((t) => b.g.tags[t] && b.g.tags[t].alive !== false);
+    ok(live.length > before[chapter], chapter + ': ' + live.length
+      + ' courts live at boot, up from ' + before[chapter]);
+    const landless = Object.keys(WEST[chapter]).filter((t) => !b.live(t) || b.held(t) < 1);
+    ok(!landless.length, '  and every western court is alive and holding ground'
+      + (landless.length ? ' — ' + landless.join(',') : ''));
   }
 }
 

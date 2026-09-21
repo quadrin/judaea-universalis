@@ -187,10 +187,12 @@ const OTHER_597 = {
   // Carthage's sea: the African emporia and the Sicilian corner it holds
   // against the Greeks of Syracuse.
   'Oea': 'CAR', 'Leptis Magna': 'CAR', 'Macomades': 'CAR', 'Panormus': 'CAR',
-  // …and what is still nobody's. Rome is a town with kings and no empire, the
-  // Illyrian and Thracian shores have no polity this map can name, and the
-  // Caucasus is the Caucasus.
-  'Roma': 'WASTE', 'Capua': 'WASTE', 'Brundisium': 'WASTE',
+  // …and what is still nobody's. The Illyrian and Thracian shores have no
+  // polity this map can name, and the Caucasus is the Caucasus. Rome comes
+  // off this list at §280: a town with kings is a state, and one cell under
+  // the Tarquins is the whole of it. It is 931 and 732 that leave Roma waste,
+  // because in those centuries it is villages sharing a market.
+  'Capua': 'WASTE', 'Brundisium': 'WASTE',
   'Dyrrhachium': 'WASTE', 'Thessalonica': 'WASTE', 'Hadrianopolis': 'WASTE',
   'Nicaea': 'WASTE', 'Phasis': 'WASTE', 'Caucasian Albania': 'WASTE',
 };
@@ -214,6 +216,19 @@ put(MOB_LANDS, 'MOB'); put(AMO_LANDS, 'AMO'); put(EDM_LANDS, 'EDM');
 put(MIZ_LANDS, 'MIZ'); put(MDA_LANDS, 'MDA'); put(PAS_LANDS, 'PAS');
 put(LYD_LANDS, 'LYD'); put(TAB_LANDS, 'TAB'); put(KSH_LANDS, 'KSH');
 put(QDR_LANDS, 'QDR'); put(SAB_LANDS, 'SAB');
+// The west, which these boards left as unclaimed waste (SPEC §280). Etruria
+// north of the Tiber, the Samnite highlands, Tartessos on the silver, the
+// Iberian coast, the Celtiberian meseta, and an island that built seven
+// thousand towers.
+const ETR_LANDS = ['Pisae', 'Genua', 'Bononia', 'Ravenna', 'Ancona'];
+const SRD_LANDS = ['Caralis', 'Turris Libisonis'];
+const TRT_LANDS = ['Gades', 'Hispalis', 'Corduba'];
+const IBE_LANDS = ['Tarraco', 'Emporiae', 'Carthago Nova', 'Toletum'];
+put(ETR_LANDS, 'ETR'); put(SRD_LANDS, 'SRD'); put(TRT_LANDS, 'TRT');
+put(IBE_LANDS, 'IBE'); put(['Numantia'], 'CTB');
+// Rome under the Tarquins: one cell, and the only Italian crown on this board.
+put(['Roma'], 'ROM');
+
 for (const n of Object.keys(OTHER_597)) OWNERS[n] = OTHER_597[n];
 
 const RELIGIONS = {};
@@ -466,6 +481,8 @@ export const BOOKMARK_597 = {
     // and the Garamantes are where they always are.
     'CAR', 'GRC', 'SCY', 'GRM', 'HDR',
     'COR', 'ATH', 'SPT', 'CRT', 'RHO', 'SYC', 'TAR', 'THR', 'CYR', 'MIL', 'MAS',
+    // The west (SPEC §280).
+    'ETR', 'SRD', 'TRT', 'IBE', 'CTB', 'ROM',
   ],
   rivalries: [['BBL', 'MIZ'], ['BBL', 'MDA'], ['JDH', 'EDM'], ['MDA', 'LYD']],
   affinities: [

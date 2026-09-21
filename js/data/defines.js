@@ -147,6 +147,13 @@ export const DEFINES = {
     UK: { aggression: 0.1, caution: 2.0 },
     ITA: { aggression: 0.1, caution: 2.0 },
     // formable crowns (SPEC §24)
+    // The west's own tempers (SPEC §280): the highland levies push, the
+    // trading states do not, and the island minds its towers.
+    ETR: { aggression: 0.9, caution: 1.15 },
+    SMN: { aggression: 1.25, caution: 0.85 },
+    TRT: { aggression: 0.6, caution: 1.35 },
+    SRD: { aggression: 0.7, caution: 1.4 },
+    IBE: { aggression: 1.0, caution: 1.05 },
     // The Greek world's own tempers (SPEC §278): the leagues talk, the
     // military states do not, and the trading cities avoid everybody.
     MAC: { aggression: 1.25, caution: 0.85 },
@@ -440,6 +447,7 @@ export const DEFINES = {
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
+    ETR: 'republic', SMN: 'tribal', TRT: 'monarchy', SRD: 'tribal', IBE: 'tribal',
     MAC: 'monarchy', ATH: 'republic', SPT: 'monarchy', COR: 'republic',
     ACH: 'republic', RHO: 'republic', CRT: 'republic', SYC: 'monarchy',
     TAR: 'republic', CYR: 'monarchy', MIL: 'republic', PRG: 'monarchy',
@@ -1074,6 +1082,41 @@ export const DEFINES = {
       ideas: { incomeMult: 1.05 },
     },
     // ---- formable crowns (SPEC §24): never in a bookmark's activeTags ----
+    // ---- the western Mediterranean, which had its own powers (SPEC §280) ----
+    // The Iron Age boards ran from the Nile to the Zagros and left Italy,
+    // Iberia and the islands as unclaimed waste — in the centuries when
+    // Tartessos was the richest thing west of Tyre, Etruria was the power
+    // north of the Tiber, and Rome was twenty-one years old.
+    ETR: {
+      name: 'Etruria', adj: 'Etruscan', color: [146, 64, 72], religion: 'roman_cult', culture: 'italic', capital: 'Pisae',
+      description: 'Twelve cities that share a language nobody else can read, a priesthood '
+        + 'that tells the future from livers, and the trade of the whole Tyrrhenian sea.',
+      ideas: { tradeMult: 1.15, incomeMult: 1.1, diploSeats: -4 },
+    },
+    SMN: {
+      name: 'the Samnites', adj: 'Samnite', color: [110, 96, 68], religion: 'roman_cult', culture: 'italic', capital: 'Capua',
+      description: 'Four highland tribes with no cities worth the name and the best infantry '
+        + 'in Italy, who will take three wars and fifty years to beat.',
+      ideas: { manpowerMult: 1.2, hillDefBonus: 2, incomeMult: 0.85 },
+    },
+    TRT: {
+      name: 'Tartessos', adj: 'Tartessian', color: [178, 146, 58], religion: 'punic', culture: 'iberian', capital: 'Gades',
+      description: 'Silver out of the Sierra Morena in quantities the east finds hard to '
+        + 'believe, a king the Greeks say reigned eighty years, and no site anyone has found.',
+      ideas: { incomeMult: 1.22, tradeMult: 1.12, manpowerMult: 0.8 },
+    },
+    SRD: {
+      name: 'Sardinia', adj: 'Sardinian', color: [94, 120, 98], religion: 'punic', culture: 'iberian', capital: 'Caralis',
+      description: 'Seven thousand stone towers and no written word: an island that built '
+        + 'more fortresses than anywhere on earth and never once explained why.',
+      ideas: { hillDefBonus: 3, manpowerMult: 1.1, tradeMult: 0.9 },
+    },
+    IBE: {
+      name: 'the Iberians', adj: 'Iberian', color: [126, 92, 132], religion: 'punic', culture: 'iberian', capital: 'Tarraco',
+      description: 'City-states along the eastern coast with a curved sword everyone else '
+        + 'eventually copies, and a habit of hiring out to whoever is fighting Carthage.',
+      ideas: { disciplineMult: 1.1, manpowerMult: 1.08, diploSeats: -3 },
+    },
     // ---- the Greek world, which was never one country (SPEC §278) ----------
     // `GRC` held Athens, Sparta, Corinth, Rhodes and Gortyn as a single state
     // in 732 BCE — and Syracuse, Tarentum and Rhegium with them, four

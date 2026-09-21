@@ -15,39 +15,112 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
   const isActive = (id) => !provinceMap || provinceMap[id] === id;
 
   const neighbors = new Array(N + 1);
-  for (let i = 0; i <= N; i++) neighbors[i] = new Set();
   const areas = new Int32Array(N + 1);
   const sumX = new Float64Array(N + 1);
   const sumY = new Float64Array(N + 1);
   const bbox = new Array(N + 1);
-  for (let i = 0; i <= N; i++) bbox[i] = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+
+  // SPEC §279. This loop walks the whole atlas — 46 megapixels — and it is the
+  // reason starting a game stalls. It used to call `mappedId` three times per
+  // pixel (about 138 million closure calls), touch a `{x0,y0,x1,y1}` object per
+  // pixel, and do a pair of `Set.add`s at every border pixel. All three are
+  // replaced below by flat typed arrays: a lookup table for the mapping, four
+  // Int32Arrays for the bounds, and an adjacency bitmap that becomes Sets once
+  // at the end. Same output, and the whole pass is read-only over `idArray`.
+  const lut = new Uint16Array(N + 1);
+  for (let raw = 1; raw <= N; raw++) {
+    const target = provinceMap && provinceMap.length > raw ? provinceMap[raw] : raw;
+    lut[raw] = target && target <= N ? target : 0;
+  }
+  const bx0 = new Int32Array(N + 1).fill(0x7fffffff);
+  const by0 = new Int32Array(N + 1).fill(0x7fffffff);
+  const bx1 = new Int32Array(N + 1).fill(-0x80000000);
+  const by1 = new Int32Array(N + 1).fill(-0x80000000);
+  // (N+1)² flags — 415 provinces is 173 KB, which is nothing beside the atlas.
+  const stride = N + 1;
+  const adj = new Uint8Array(stride * stride);
 
   if (idArray && idArray.length >= W * H) {
-    for (let y = 0; y < H; y++) {
-      const row = y * W;
+    // Run-length, not per-pixel. A real cell is about 333×333 pixels, so a row
+    // crosses only a handful of them: encoding each row as runs turns the
+    // accumulation and the horizontal adjacency into O(runs) instead of O(W),
+    // and the vertical adjacency becomes a two-pointer merge of this row's
+    // runs against the row below's. Every pixel is still READ exactly once —
+    // that part is unavoidable and cheap — but the arithmetic that used to
+    // run 46 million times now runs once per run.
+    let runStart = new Int32Array(W + 1);
+    let runId = new Uint16Array(W + 1);
+    let nextStart = new Int32Array(W + 1);
+    let nextId = new Uint16Array(W + 1);
+    let nRuns = 0;
+    let nNext = 0;
+
+    const encode = (rowBase, starts, ids) => {
+      let n = 0;
+      let prev = -1;
       for (let x = 0; x < W; x++) {
-        const id = mappedId(idArray[row + x]);
-        if (id === 0 || id > N) continue;
-        areas[id]++;
-        sumX[id] += x + 0.5;
-        sumY[id] += y + 0.5;
-        const b = bbox[id];
-        if (x < b.x0) b.x0 = x;
-        if (x > b.x1) b.x1 = x;
-        if (y < b.y0) b.y0 = y;
-        if (y > b.y1) b.y1 = y;
-        if (x + 1 < W) {
-          const r = mappedId(idArray[row + x + 1]);
-          if (r !== id && r !== 0 && r <= N) { neighbors[id].add(r); neighbors[r].add(id); }
+        const raw = idArray[rowBase + x];
+        const v = raw !== 0 && raw <= N ? lut[raw] : 0;
+        if (v !== prev) { starts[n] = x; ids[n] = v; n++; prev = v; }
+      }
+      starts[n] = W; // sentinel end
+      return n;
+    };
+
+    nRuns = encode(0, runStart, runId);
+    for (let y = 0; y < H; y++) {
+      const lastRow = y + 1 >= H;
+      if (!lastRow) nNext = encode((y + 1) * W, nextStart, nextId);
+
+      for (let k = 0; k < nRuns; k++) {
+        const id = runId[k];
+        const x0 = runStart[k];
+        const x1 = runStart[k + 1];
+        const len = x1 - x0;
+        if (id !== 0) {
+          areas[id] += len;
+          // Σ(x + 0.5) over [x0, x1) — the same total the per-pixel loop made.
+          sumX[id] += len * (x0 + (len - 1) * 0.5 + 0.5);
+          sumY[id] += len * (y + 0.5);
+          if (x0 < bx0[id]) bx0[id] = x0;
+          if (x1 - 1 > bx1[id]) bx1[id] = x1 - 1;
+          if (y < by0[id]) by0[id] = y;
+          if (y > by1[id]) by1[id] = y;
+          // The pixel to the right of this run's last pixel is the next run's
+          // first — one comparison per boundary instead of one per pixel.
+          if (x1 < W) {
+            const r = runId[k + 1];
+            if (r !== id && r !== 0) { adj[id * stride + r] = 1; adj[r * stride + id] = 1; }
+          }
         }
-        if (y + 1 < H) {
-          const d = mappedId(idArray[row + W + x]);
-          if (d !== id && d !== 0 && d <= N) { neighbors[id].add(d); neighbors[d].add(id); }
+        if (lastRow || id === 0) continue;
+        // Vertical: merge this run's span against the row below's runs.
+        let m = 0;
+        while (m < nNext && nextStart[m + 1] <= x0) m++;
+        for (; m < nNext && nextStart[m] < x1; m++) {
+          const d = nextId[m];
+          if (d !== id && d !== 0) { adj[id * stride + d] = 1; adj[d * stride + id] = 1; }
         }
+      }
+
+      if (!lastRow) {
+        const ts = runStart; runStart = nextStart; nextStart = ts;
+        const ti = runId; runId = nextId; nextId = ti;
+        nRuns = nNext;
       }
     }
   } else {
     console.warn('[geometry] idArray missing or wrong size — geometry falls back to seed positions');
+  }
+
+  for (let i = 0; i <= N; i++) {
+    const set = new Set();
+    const base = i * stride;
+    for (let j = 0; j <= N; j++) if (adj[base + j]) set.add(j);
+    neighbors[i] = set;
+    bbox[i] = areas[i] > 0
+      ? { x0: bx0[i], y0: by0[i], x1: bx1[i], y1: by1[i] }
+      : { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
   }
 
   const centroids = new Array(N + 1);
