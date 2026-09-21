@@ -42,16 +42,6 @@ function mod(ctx, id, name, effects, months) {
   });
 }
 
-function tagMod(ctx, tag, id, name, effects, months) {
-  try {
-    const t = ctx.game.tags && ctx.game.tags[tag];
-    if (!t || t.alive === false) return;
-    ctx.helpers.addTagModifier(ctx, tag, {
-      id, name, months: Number.isFinite(months) ? months : -1, effects,
-    });
-  } catch (e) { warnOnce('tagMod:' + id, e); }
-}
-
 // `ctx.helpers` has no addOpinion — a content package writes the regard it
 // changes straight onto the court that holds it, inside the same clamp the
 // sim uses.
