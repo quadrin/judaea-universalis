@@ -20307,3 +20307,98 @@ thirty-seven.
   seats two, with a guard-warning detector that is itself proved against a
   deliberately broken card body; the density figures above; no roomy decade in
   the three chapters below three dated cards; and the 700–640 BCE count.
+
+## §282 — A fall whose heir is already dead
+
+Reported from play, twice: *"these country collapse events still aren't
+happening"*. §277 fixed the card bodies and proved them by firing each option
+on a fresh board — which is exactly the test that could not see this.
+
+Played through, the 732 BCE chapter ended with **Assyria alive and larger
+than it started** in most campaigns:
+
+| seed | Assyria in 605 BCE — before | after |
+|---|---|---|
+| 4242 | 39 provinces, alive | **0, fallen** |
+| 777 | 0, fallen | 0, fallen |
+| 31337 | 37 provinces, alive | **0, fallen** |
+| 99 | not run | 0, fallen |
+| 5150 | not run | 0, fallen |
+
+The cause is a collision between the AI and the script. The AI's Assyria eats
+Babylonia in the 620s in most campaigns. When the fall of Nineveh then arrives
+in 612 and hands Mesopotamia to Babylon, `cedeNamed` finds the heir dead,
+returns 0, and says nothing — inside the guard, so nothing is logged and
+nothing is on screen. The chapter's whole ending silently does not happen.
+
+**The heir is raised rather than refused.** `raise(ctx, tag)` sets a dead
+court living again, clears its overlord and its wars, and gives it the floor a
+restored court gets (stability 0, legitimacy 50, treasury 25). Two courts are
+never raised: one the world has no entry for at all, and the player's own,
+because a human chair that has fallen is a finished campaign and not a piece
+of world news.
+
+This is not an invention. A court that holds ground is alive again on the next
+tick anyway (`updateTagLife`), and the Chaldean dynasty rising out of Babylon
+is what the card is *about*. §283's `ev732p_the_chaldean_takes_babylon` makes
+the same point explicitly at 626, where the history puts it.
+
+- **Regression contract**: `smoke195.mjs` — Babylon killed the way the AI
+  kills it and the fall of Nineveh fired anyway, with the map checked
+  afterwards; the player's own fallen chair not raised; and **the chapter
+  played through**, a century and a quarter of ticks with the queue drained on
+  its recorded course, on two seeds, asserting that Assyria ends at zero. The
+  other two chapters are played through too: Aram gone by 714, Carchemish
+  annexed, Babylon and Lydia gone by 530, Media absorbed in 550.
+
+## §283 — The world outside was eleven cards wide
+
+The Iron Age chapters narrated two centuries of the ancient world with eleven
+world cards each. Three packages, sixty cards:
+
+| chapter | dated world cards — before | after | dated cards per decade |
+|---|---|---|---|
+| 931 BCE | 11 | **29** | 4.9 → **5.7** |
+| 732 BCE | 11 | **31** | 6.7 → **8.2** |
+| 597 BCE | 16 | **38** | 6.4 → **7.9** |
+
+- **`events_931bce_powers.js`** (18 cards, 911–717 BCE). Assyria's recovery;
+  iron becoming ordinary; Euboeans at Al Mina; the Chaldean tribes; the silver
+  of Tarshish; twenty-seven cities against the king; a queen who signed; the
+  first mention of the Medes; the alphabet going west with vowels in it;
+  Napata; the forty quiet years; the cities of Etruria; Urartu at its height;
+  Cumae; Sparta taking Messenia; the Kushite taking the double crown; Sargon;
+  and Carchemish annexed out of existence.
+- **`events_732bce_powers.js`** (20 cards, 719–610 BCE). Carchemish; the sack
+  of Musasir; Merodach-baladan driven out; a capital built on a field and
+  abandoned; the Jerwan aqueduct; the Cimmerians breaking Phrygia; the widest
+  extent; the succession sworn by every vassal in the world; Egypt taken twice
+  and lost anyway; Psamtik; the library; Byzantion; the Scythians over the
+  Medes; Babylon starved out by its own brother; Cyaxares' regiments;
+  Naukratis; **a Chaldean taking Babylon in 626**; Draco; Assur; and the last
+  Assyrian king crossing the Euphrates westward into silence.
+- **`events_597bce_powers.js`** (22 cards, 594–447 BCE). Solon; a war about a
+  road; Carthage taking the islands; the Ishtar Gate; Amasis; Croesus;
+  Pisistratus; **Cyrus taking Ecbatana**, which is the founding act of the
+  Persian empire and was not on the board at all; Alalia; the first tragedy;
+  Cyrus dying on the steppe; Behistun; Persepolis; a bridge of ships; the
+  Tarquin driven out; Cleisthenes; Aricia; the canal to the Red Sea; Cumae;
+  the Long Walls; the Twelve Tables; and a temple paid for with somebody
+  else's defence fund.
+
+Two of these are collapses the board never had: **Carchemish** (annexed by
+Sargon in 717, ending the last Neo-Hittite state) and **Media** (absorbed by
+Cyrus in 550, which is why Persia looks like Persia afterwards).
+
+A world card here also changes the *other* court, not only the player's
+ledger: `powerMod` hangs the age's consequence on Assyria, Egypt, Lydia,
+Carthage, Etruria, Rome or Athens directly.
+
+- **Regression contract**: `smoke195.mjs` — the counts and densities above;
+  each package imports nothing, rolls no dice, never calls the `addOpinion`
+  that does not exist, and carries a source note and a ticker line on every
+  card; every court a card addresses is seated on that chapter's own board;
+  and **98 card firings** on real boards with both crowns where a chapter
+  seats two, with a guard-warning detector proved against a deliberately
+  broken card body — the check that catches a package calling a helper it
+  forgot to define, which is how the first draft of the 732 package shipped.
