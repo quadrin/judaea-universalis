@@ -87,9 +87,16 @@ function freeDraw(ctx, month) {
 // separate claims and `smoke148` holds them apart: a suite that could only see
 // the two multiplied together would have to roll a hundred times to test a
 // window.
+// The town is one half of the gate; a Jew in it is the other. The Iron Age
+// chapters (931, 732, 597 BCE) have a Tingis on the map and no Jewish
+// diaspora anywhere west of Egypt to put in it — there is no "Jew" yet, only
+// Judahites, and the communities of the western Mediterranean are Hellenistic
+// at the earliest. So the card also asks the calendar, and only for that.
+const IKUS_FROM_YEAR = -200;
 export function ikusWindow(ctx) {
   const m = monthOfChapter(ctx);
   if (m < 0 || !T(ctx) || !tingis(ctx)) return -1;
+  if (!(ctx.game && ctx.game.date && ctx.game.date.y >= IKUS_FROM_YEAR)) return -1;
   return m;
 }
 

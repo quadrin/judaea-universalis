@@ -181,7 +181,7 @@ console.log('== on a won board it fires, and the north is written in ==');
   ok(ais.name === 'United Kingdom of Israel', 'it wears its own name (' + (ais && ais.name) + ')');
   ok(game.playerTag === 'JDH' || game.tagAliases.JDH === 'AIS',
     'and the chapter\'s cards can still find it by the name they were written with');
-  ok(ais.ruler && /King of All Israel/.test(String(ais.ruler.title || '')),
+  ok(ais.ruler && /King of Israel/.test(String(ais.ruler.title || '')),
     'the man who proclaimed it is styled by it (' + (ais.ruler && ais.ruler.title) + ')');
   ok((ais.modifiers || []).some((m) => m.id === 'ais_the_two_sticks')
     && (ais.modifiers || []).some((m) => m.id === 'ais_the_house_of_david'),

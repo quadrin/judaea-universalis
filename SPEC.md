@@ -20025,9 +20025,9 @@ empire that deports everybody else.
 
 **Renamed.** The crown is now the **United Kingdom of Israel**, and the decision
 is *Proclaim the United Kingdom of Israel*: the name the age is known by, one
-monarchy over the tribes of the north and of Judah. The ruler keeps the style
-King of All Israel, and the tag stays `AIS`, so saves still load. A crown
-already proclaimed in an older save keeps the name it was proclaimed under.
+monarchy over the tribes of the north and of Judah. The proclaimer is styled
+King of Israel. The tag stays `AIS`, so saves still load. A crown already
+proclaimed in an older save keeps the name and style it was proclaimed under.
 
 ## §277 — When an empire falls, the map says so
 
@@ -20596,3 +20596,52 @@ count alone.
   then the aftermath's), not as two roads open at once, and checks the arc
   only on the kingdoms that stood. `smoke12` expects reparations as a share
   of the payer's income.
+
+## §285 — The Iron Age keeps its own religion
+
+The three chapters before the exile (931, 732 and 597 BCE) are played in
+Yahwism: the First Temple's religion, which is not Judaism. A Samaritan
+faith, with its own canon and its own temple on Gerizim, is a Persian- and
+Hellenistic-age development, four centuries after the last of them. An audit
+of these chapters (their start state, a 200-year all-AI run of every playable
+court, and every file they load) found four places where a later faith got in:
+
+- **The name.** The religion was called *The Worship of YHWH*. It is now
+  **Yahwism**, which is what the key, the comments and the scholarship call it.
+- **The resettled district (713 BCE).** The first answer to *They Feared the
+  LORD and Served Their Own Gods* converted Samaria and Shechem to
+  Samaritanism, and it is the AI's answer, so every 732 BCE run turned both
+  provinces Samaritan in 713. The district now stays Yahwist; the mixed
+  practice of 2 Kings 17 is carried by *Two Practices, One District* and
+  *The Mixed District*, as before.
+- **The holy mountains.** `HOLY_FAITH` gives the Temple Mount to Judaism and
+  Gerizim to Samaritanism in every chapter. In the Iron Age a Yahwist king
+  holding Jerusalem drew nothing from it. A chapter may now name its own
+  (`bookmark.holyFaith`, read through `holyFaithOf`), and the three Iron Age
+  chapters give both mountains to Yahwism. The later chapters keep the table.
+- **The letter from Tingis.** The marginal card about "a Jew named Ikus" in
+  Tingis was gated on the town existing, and the Iron Age maps have the town.
+  It now also needs a date after 200 BCE: there is no Jewish diaspora west of
+  Egypt before the Hellenistic age.
+
+Kept on purpose:
+
+- The `historical` notes that explain where a later institution comes from
+  ("the synagogue as an institution has no pre-exilic evidence", "the passage
+  later writers took as the origin of the Samaritans"). They are notes about
+  the sources, not the world's own religion.
+- "Jew" and "Jewish" on the 597 BCE cards set in the Persian period
+  (Ishmael at Mizpah, the letter of Ezra 4, the Elephantine garrison, the
+  cupbearer's commission). That is the sources' own word for Judaeans in
+  that century (*Yehudi*, *yhwdy'*), not the name of a religion.
+- A chronicle line that looks forward to the Maccabees. The narrator knows
+  what comes next; the world does not act on it.
+
+- **Regression contract**: `smoke197.mjs`. The religion is called Yahwism.
+  No province, community or court opens an Iron Age chapter in Judaism or
+  Samaritanism. Both holy mountains are Yahwism's there, and Judah holding
+  Jerusalem draws on the holy site (+1 governance over the same game without
+  the override), while 66 CE keeps the Mount as Judaism's. The 713 BCE
+  ruling leaves Samaria and Shechem Yahwist and keeps the mixed district's
+  modifier. No Iron Age file gives Judaism or Samaritanism as a faith.
+  `smoke148` shuts the Tingis card in the Iron Age by the calendar.

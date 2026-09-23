@@ -113,7 +113,7 @@ console.log('== the card is in the margins of every chapter ==');
     'it is NOT in the generic pool — that pool\'s 10/10/2 era banding is its own invariant');
 }
 
-console.log('== the gate is the town, not the century ==');
+console.log('== the gate is the town — and, before any diaspora, the century ==');
 {
   const has = (w) => {
     for (let i = 1; i < w.game.provinces.length; i++) {
@@ -122,14 +122,19 @@ console.log('== the gate is the town, not the century ==');
     }
     return false;
   };
+  // The Iron Age chapters have the town and no Jew to put in it: the card is
+  // shut there by the calendar, not the map.
+  const IRON = new Set(['931bce', '732bce', '597bce']);
   for (const era of ERAS) {
     const w = boot(era.bookmark.id);
     const town = has(w);
-    const wants = era.bookmark.id !== '1948ce';
-    ok(town === wants, era.bookmark.id + ': the map ' + (town ? 'has' : 'has no') + ' Tingis');
+    const mapWants = era.bookmark.id !== '1948ce';
+    const wants = mapWants && !IRON.has(era.bookmark.id);
+    ok(town === mapWants, era.bookmark.id + ': the map ' + (town ? 'has' : 'has no') + ' Tingis');
     setAge(w, 0, 1);
     ok((ikusWindow(w.ctx) >= 0) === wants,
-      '  and the card ' + (wants ? 'may' : 'may not') + ' be dealt');
+      '  and the card ' + (wants ? 'may' : 'may not') + ' be dealt'
+      + (IRON.has(era.bookmark.id) ? ' — too early for a Jew in Tingis' : ''));
   }
   // The control that makes the claim mean something: 1948 is shut because the
   // cell is called Tangier, not because it is 1948. Give the town its name
@@ -172,6 +177,7 @@ console.log('== 100% inside ten game years, and the proof is the last month ==')
   // window, against twenty thousand different stream positions.
   for (const era of ERAS) {
     if (era.bookmark.id === '1948ce') continue; // no Tingis: shut by design
+    if (['931bce', '732bce', '597bce'].includes(era.bookmark.id)) continue; // before the diaspora
     const w = boot(era.bookmark.id);
     setAge(w, 9, 11); // month 119
     ok(ikusWindow(w.ctx) === 119, era.bookmark.id + ': month 119 is inside the window');

@@ -617,6 +617,10 @@ export const BOOKMARK_931 = {
 
   // The argument this chapter is actually about (SPEC §201): one altar or
   // many, and whose.
+  // Both holy mountains are Yahwism's in this age (SPEC §284): the Temple
+  // Mount before there is a Judaism, and Shechem's altars before there is a
+  // Samaritan faith to claim Gerizim.
+  holyFaith: { temple_mount: 'yahwism', gerizim: 'yahwism' },
   schools: { ISL: 'altars_and_the_house', JDH: 'altars_and_the_house' },
 
   // The court factions (SPEC §34). The engine ticks them for the human player
