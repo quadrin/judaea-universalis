@@ -2882,7 +2882,7 @@ export const FORMABLES = [
   {
     id: 'form_ais_jdh',
     from: 'JDH', to: 'AIS',
-    name: 'Proclaim the Kingdom of All Israel',
+    name: 'Proclaim the United Kingdom of Israel',
     desc: 'The elders came to Shechem to ask one question and were answered with whips '
       + 'and scorpions, and the kingdom has been two kingdoms ever since. The north is '
       + 'finished, its capital and its sanctuaries are under this crown, and the man in '

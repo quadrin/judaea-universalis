@@ -178,7 +178,7 @@ console.log('== on a won board it fires, and the north is written in ==');
 
   const ais = game.tags.AIS;
   ok(!!ais && !game.tags.JDH, 'Judah is no more and All Israel stands');
-  ok(ais.name === 'All Israel', 'it wears its own name (' + (ais && ais.name) + ')');
+  ok(ais.name === 'United Kingdom of Israel', 'it wears its own name (' + (ais && ais.name) + ')');
   ok(game.playerTag === 'JDH' || game.tagAliases.JDH === 'AIS',
     'and the chapter\'s cards can still find it by the name they were written with');
   ok(ais.ruler && /King of All Israel/.test(String(ais.ruler.title || '')),
