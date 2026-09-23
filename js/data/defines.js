@@ -750,7 +750,7 @@ export const DEFINES = {
     // penalty wearing a reward's clothes. The north is written in instead, by
     // the formable's own hand.
     AIS: {
-      name: 'All Israel', adj: 'Israelite', color: [92, 76, 160], religion: 'yahwism', culture: 'judean', capital: 'Jerusalem',
+      name: 'United Kingdom of Israel', adj: 'Israelite', color: [92, 76, 160], religion: 'yahwism', culture: 'judean', capital: 'Jerusalem',
       description: 'What the elders came to Shechem to make and did not: one kingdom from Dan '
         + 'to the Negev, under the house that has held Jerusalem since David. The ten tribes '
         + 'are written into the rolls of the two.',
