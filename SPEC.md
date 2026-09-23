@@ -20025,9 +20025,9 @@ empire that deports everybody else.
 
 **Renamed.** The crown is now the **United Kingdom of Israel**, and the decision
 is *Proclaim the United Kingdom of Israel*: the name the age is known by, one
-monarchy over the tribes of the north and of Judah. The ruler keeps the style
-King of All Israel, and the tag stays `AIS`, so saves still load. A crown
-already proclaimed in an older save keeps the name it was proclaimed under.
+monarchy over the tribes of the north and of Judah. The proclaimer is styled
+King of Israel. The tag stays `AIS`, so saves still load. A crown already
+proclaimed in an older save keeps the name and style it was proclaimed under.
 
 ## §277 — When an empire falls, the map says so
 

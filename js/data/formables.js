@@ -2908,7 +2908,7 @@ export const FORMABLES = [
     bonus: {
       legitimacy: 25, stability: 2,
       grant: { treasury: 200, manpower: 6000, gov: 45, infl: 45, mar: 45 },
-      rulerTitle: 'King of All Israel',
+      rulerTitle: 'King of Israel',
       modifier: {
         id: 'ais_the_two_sticks', name: 'The Two Sticks Made One', months: -1,
         effects: { manpowerMult: 1.1, moraleMult: 1.05, unrestAll: -0.5 },
