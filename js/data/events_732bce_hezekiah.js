@@ -395,12 +395,15 @@ export const EVENTS_732_HEZEKIAH = [
     + 'ever managed to enforce. A ruling either way will outlive everyone in the room.',
     '2 Kings 17:29-41: every nation made gods of its own and set them in the high places the Samaritans had made — "they feared the LORD, and served their own gods" — the passage later writers took as the origin of the Samaritans.',
     { label: 'Let them keep both, and let the district settle',
-      tooltip: '−40 talents and "Two Practices, One District" (+10% income, +8% growth, −0.6 unrest everywhere) permanently. Samaria and Shechem take a faith of their own, and a nation is founded by administrative neglect.',
+      tooltip: '−40 talents and "Two Practices, One District" (+10% income, +8% growth, −0.6 unrest everywhere) permanently. Samaria and Shechem keep the god of the land by a practice of their own, and "The Mixed District" (+10% tax, −0.5 unrest) stands there for good.',
+      // Still Yahwism (SPEC §284): the district "feared the LORD", and a
+      // Samaritan faith with its own canon and temple is a Persian- and
+      // Hellenistic-age development, four centuries past this card. What the
+      // ruling founds is a practice, not a religion — the modifiers carry it.
       fx: (ctx) => { const h = ctx.helpers; const me = P(ctx);
         h.adjust(ctx, me, { treasury: -40, legitimacy: -10, gov: 15 });
         mod(ctx, 'h732_two_practices', 'Two Practices, One District', { incomeMult: 1.1, growthMult: 1.08, unrestAll: -0.6 });
         for (const n of ['Sebaste', 'Neapolis']) {
-          h.changeFaith(ctx, n, 'samaritanism');
           pmod(ctx, n, 'h732_the_mixed_district', 'The Mixed District', { taxMult: 1.1, unrest: -0.5 }, -1);
         }
         h.setFlag(ctx, 'samaritansSeated', true);

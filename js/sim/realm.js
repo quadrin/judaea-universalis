@@ -639,6 +639,14 @@ export function monthlyFaithDrift(ctx) {
 // ---------------------------------------------------------------- holy sites & wonders
 // Each holy site belongs to a faith forever, whatever happens to the province.
 export const HOLY_FAITH = { temple_mount: 'judaism', gerizim: 'samaritanism' };
+// …except where a chapter is older than the faith (SPEC §284). The Iron Age
+// has both mountains and neither religion: the house in Jerusalem and the
+// altars at Shechem are Yahwism's, and a Yahwist king holding Jerusalem drew
+// nothing from it while the table gave the site to a Judaism not yet born.
+export function holyFaithOf(ctx, p) {
+  const own = ctx.bookmark && ctx.bookmark.holyFaith;
+  return (own && own[p.holy]) || HOLY_FAITH[p.holy] || p.religion;
+}
 // Wonders yield to whoever owns AND controls them (monthly).
 export const WONDER_YIELD = {
   temple: { gov: 1, legitimacy: 0.2, desc: '+1 governance point and +0.2 legitimacy a month to its keeper' },
@@ -653,7 +661,7 @@ export function monthlyHolySites(ctx) {
     try {
       // Holy sites: a controller of the same faith draws strength from it...
       if (p.holy) {
-        const faith = HOLY_FAITH[p.holy] || p.religion;
+        const faith = holyFaithOf(ctx, p);
         const c = g.tags[p.controller];
         if (c && c.alive && c.religion === faith) {
           c.points.gov = clamp(num(c.points.gov) + 1, 0, 999);

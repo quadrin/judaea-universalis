@@ -602,7 +602,7 @@ export const DEFINES = {
     // `judaic` group is right — everything that becomes Judaism is in here —
     // and the separate key is what lets a chapter ask the question the
     // Deuteronomists asked, instead of assuming their answer.
-    yahwism:        { name: 'The Worship of YHWH',    color: [32, 72, 134],  group: 'judaic' },
+    yahwism:        { name: 'Yahwism',                color: [32, 72, 134],  group: 'judaic' },
     // Baal, Hadad, Chemosh, Milcom, Dagon, Astarte: one banner for the cults
     // of the Levant at the scale this map draws. The neighbours quarrel with
     // Israel over land and tribute, never over theology — Mesha of Moab

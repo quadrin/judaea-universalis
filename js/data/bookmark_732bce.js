@@ -571,6 +571,10 @@ export const BOOKMARK_732 = {
     ],
   },
 
+  // Both holy mountains are Yahwism's in this age (SPEC §284): the Temple
+  // Mount before there is a Judaism, and Shechem's altars before there is a
+  // Samaritan faith to claim Gerizim.
+  holyFaith: { temple_mount: 'yahwism', gerizim: 'yahwism' },
   schools: { ISL: 'altars_and_the_house', JDH: 'altars_and_the_house' },
 
   factions: {
