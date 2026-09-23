@@ -1,5 +1,6 @@
 // UI verification — SPEC §33: the Objectives block tops the realm panel,
-// H opens the help primer, and the battle window offers Withdraw.
+// H opens the help primer, and the battle window offers Withdraw — and,
+// since SPEC §284, gives the odds.
 import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp/claude-0/-home-user-judaea-universalis/14e3ad23-6546-5a93-b028-f73783a98caf/scratchpad') + '/');
 const { chromium } = require('playwright');
@@ -92,6 +93,13 @@ await page.waitForTimeout(300);
 await page.locator('#outliner [data-battle]').first().click();
 await page.waitForSelector('#battle-modal:not(.hidden)');
 ok((await page.locator('[data-ref="withdraw"]').count()) === 1, 'the Withdraw button stands');
+// SPEC §284: the window gives the odds from our side. (Spawning the two hosts
+// in Emmaus starts the battle before the scripted one is pushed, and Judah's
+// own band joins the defence — so the window reads that field, not 2 on 8.)
+const odds = (await page.locator('.bw-odds').textContent().catch(() => '')) || '';
+const pct = Number((odds.match(/(\d+)%/) || [])[1]);
+ok(/our chance of holding the field/.test(odds) && pct >= 1 && pct <= 99, 'the odds line reads: ' + odds);
+await page.screenshot({ path: OUT + 'v284-battle-odds.png' });
 await page.locator('[data-ref="withdraw"]').click();
 await page.waitForTimeout(300);
 const after = await page.evaluate(() => {

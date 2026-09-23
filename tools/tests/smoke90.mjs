@@ -338,14 +338,27 @@ console.log('== end to end: the crown costs the chapter nothing ==');
         if (d) { acts.enactDecision(d.key); crowned = w.game.playerTag; }
       }
     }
-    return { fired: new Set(Object.keys(w.game.firedEvents)), crowned };
+    // Whether this run's realm ever became the successor to Antioch — the
+    // gate of the imperial strand (events_167bce_empire.js), which is a
+    // question of who won the wars, not of what the crown was called.
+    const f = w.game.flags || {};
+    const empire = !!(f.seleucidSuccessor || f.diademInDust || f.yokeReversed);
+    return { fired: new Set(Object.keys(w.game.firedEvents)), crowned, empire };
   }
 
   const plain = play(false);
   const crowned = play(true);
   ok(crowned.crowned === 'MLI', 'the crowned run really did proclaim the Kingdom of Israel');
   const scripted = (id) => !/^dyn_/.test(id);
-  const lost = [...plain.fired].filter((id) => !crowned.fired.has(id) && scripted(id));
+  // SPEC §284: since the war planner, the AI fights its wars to win them, and
+  // whether the Hasmonean realm swallows the Seleucid empire is decided in
+  // the field in both runs. The imperial strand (ev_x_*) opens only on that
+  // conquest — three provinces of the old empire and Antioch's diadem in the
+  // dust — so when the crowned run never reached its first card, the rest of
+  // the strand is the war's drift, not the crown's cost.
+  const reachedEmpire = (run) => run.empire || run.fired.has('ev_x_the_successor_state');
+  const conquestGated = (id) => /^ev_x_/.test(id) && reachedEmpire(plain) && !reachedEmpire(crowned);
+  const lost = [...plain.fired].filter((id) => !crowned.fired.has(id) && scripted(id) && !conquestGated(id));
   ok(lost.length <= 2,
     'taking the crown costs at most a card of seeded drift, not a strand ('
       + lost.length + (lost.length ? ': ' + lost.join(', ') : '') + ')');

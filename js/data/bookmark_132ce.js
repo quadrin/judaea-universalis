@@ -1371,6 +1371,15 @@ export const BOOKMARK_132 = {
     });
   },
 
+  // The ground this chapter's verdicts turn on (SPEC §284). The war planner
+  // weighs provinces by war score, and a fortress that decides the chapter
+  // can be worth little score against a large enemy; these tell each court's
+  // generals what the war is actually about.
+  aiObjectives: {
+    JUD: ['Jerusalem'],
+    ROM: ['Jerusalem'],
+  },
+
   aiHints: {
     ROM: { rally: ['Caesarea Maritima', 'Antioch'], targetRegiments: 50 },
     JUD: { rally: ['Hebron', 'Emmaus'], targetRegiments: 24 },

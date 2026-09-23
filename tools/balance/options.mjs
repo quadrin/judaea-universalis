@@ -60,7 +60,8 @@ export function summarize(runs) {
   for (const r of runs) {
     const key = [r.id, r.tag, r.profile, r.difficulty].join('/');
     if (!groups.has(key)) groups.set(key, { key, runs: 0, completed: 0, crashes: 0,
-      wins: 0, losses: 0, unresolved: 0, survived: 0, bankruptcies: 0, debtSpirals: 0 });
+      wins: 0, losses: 0, unresolved: 0, survived: 0, bankruptcies: 0, debtSpirals: 0,
+      meanScore: null, _scores: [] });
     const g = groups.get(key);
     g.runs++;
     if (r.error) { g.crashes++; continue; }
@@ -69,6 +70,13 @@ export function summarize(runs) {
     if (r.metrics.aliveAtEnd) g.survived++;
     if (r.metrics.firstBankruptcyDay !== null) g.bankruptcies++;
     if (r.metrics.firstDebtSpiralDay !== null) g.debtSpirals++;
+    if (Number.isFinite(r.metrics.resultScore)) g._scores.push(r.metrics.resultScore);
+  }
+  // The mean verdict score (SPEC §284): chapters whose endings are graded
+  // (Adiabene's 100–160) are not described by a win count alone.
+  for (const g of groups.values()) {
+    if (g._scores.length) g.meanScore = Math.round(g._scores.reduce((a, b) => a + b, 0) / g._scores.length);
+    delete g._scores;
   }
   return [...groups.values()];
 }

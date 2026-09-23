@@ -8,7 +8,7 @@ import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from
 import { icon, flagChip, unitIcon } from './icons.js';
 import { unlockedGen, cappedGen, doctrinesFor, techLevelName } from '../data/tech.js';
 import { armGenName } from '../data/units.js';
-import { forceLimitOf, regCount } from '../sim/military.js';
+import { forceLimitOf, regCount, reservesTerms } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
 import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 
@@ -1060,11 +1060,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
 
   function refreshActions(t, g) {
     const pts = t.points || {};
-    const canRes = (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0);
+    // Once a year (SPEC §284): the villages remember being asked.
+    const res = ctx ? reservesTerms(ctx, g.playerTag) : { can: true, why: '' };
+    const canRes = (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0) && res.can;
+    const resTerms = 'Call up reserves: +2,000 manpower (50 martial points, once a year)';
     setAct(refs.actReserves, canRes, canRes
-      ? 'Call up reserves: +2,000 manpower (50 martial points)'
-      : ((pts.mar || 0) < 50 ? 'Not enough martial points (50 required).' : 'Every fighting man is already mustered.')
-        + '\nCall up reserves: +2,000 manpower (50 martial points)');
+      ? resTerms
+      : ((pts.mar || 0) < 50 ? 'Not enough martial points (50 required).'
+        : !res.can ? res.why : 'Every fighting man is already mustered.')
+        + '\n' + resTerms);
     const canStab = (pts.gov || 0) >= 75 && (t.stability || 0) < 3;
     setAct(refs.actStability, canStab, canStab
       ? 'Restore order: +1 stability (75 governance points)'

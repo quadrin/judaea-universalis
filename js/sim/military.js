@@ -835,12 +835,23 @@ export function warBetween(ctx, a, b) {
   }
   return null;
 }
-function awardBattleScore(ctx, winnerTag, loserTag) {
+// What a won battle is worth (SPEC §284): the men the loser lost there, not
+// the fact of winning. A flat two points a win made a skirmish of three
+// hundred worth exactly what a Beth Horon was, so the cheapest war score in
+// the game was a lot of small detachments picking off a lot of small ones.
+// A battle that costs the loser 3,000 men still pays the two points every
+// battle used to; a rout of a patrol pays half a point; a Cannae pays four.
+export function battleScoreFor(ctx, losses) {
+  const BAL = ctx.DEFINES.BALANCE || {};
+  return clamp(num(losses) / num(BAL.battleScorePerMen, 1500),
+    num(BAL.battleScoreMin, 0.5), num(BAL.battleScoreMax, 4));
+}
+function awardBattleScore(ctx, winnerTag, loserTag, losses) {
   const w = warBetween(ctx, winnerTag, loserTag);
   if (!w) return;
   if (!w._bs) w._bs = { att: 0, def: 0 };
   const key = w.attackers.indexOf(winnerTag) >= 0 ? 'att' : 'def';
-  w._bs[key] = Math.min(40, num(w._bs[key]) + 2);
+  w._bs[key] = Math.min(40, num(w._bs[key]) + battleScoreFor(ctx, losses));
 }
 export function addWarExhaustion(ctx, tag, amt) {
   const t = ctx.game.tags[tag];
@@ -892,7 +903,7 @@ function moraleDamage(X, Y, rollX, rollY) {
   const ratio = clamp(X.men / Math.max(1, Y.men), 0.05, 2.5); // tiny remnants can't break a legion's will
   return (0.16 + 0.045 * edge) * ratio * X.disc;
 }
-function sideStats(ctx, armies, phase) {
+export function sideStats(ctx, armies, phase) {
   let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0, gen = 0, armor = 0;
   const minArmorGen = num((ctx.DEFINES.ARMOR || {}).minGen, 5);
   const tags = new Set();
@@ -1056,7 +1067,10 @@ function battleRound(ctx, b) {
   endBattle(ctx, b, winKey); // remove battle first so routing can't double-resolve it
   const winnersMen = winners.reduce((s, a) => s + num(a.men), 0);
   const losersMen = losers.reduce((s, a) => s + num(a.men), 0);
-  if (winnersMen >= 10 * Math.max(1, losersMen) || losersMen < 300) {
+  const wiped = winnersMen >= 10 * Math.max(1, losersMen) || losersMen < 300;
+  // The loser's bill: what the field cost it, and the whole remnant on a wipe.
+  const losses = num(atkBroke ? b.casAtk : b.casDef) + (wiped ? losersMen : 0);
+  if (wiped) {
     // Stackwipe: an overwhelming victory annihilates the remnant instead of
     // letting it rout, recover, and re-engage forever.
     for (const a of losers.slice()) {
@@ -1068,7 +1082,7 @@ function battleRound(ctx, b) {
   } else {
     for (const a of losers.slice()) routArmy(ctx, a);
   }
-  awardBattleScore(ctx, winnerTag, loserTag);
+  awardBattleScore(ctx, winnerTag, loserTag, losses);
   addWarExhaustion(ctx, loserTag, 1);
   const player = g.playerTag;
   if (winnerTag === player || loserTag === player) {
@@ -1185,6 +1199,12 @@ export function airNet(ctx, provId, ourTags, foeTags) {
 // tidy two-sided battle to read sides off.
 export function airNetAgainst(ctx, provId, tag) {
   const g = ctx.game;
+  // No aircraft anywhere (every chapter before the age of flight): the sky
+  // is nobody's, and the answer is the zero airNet would compute the long way.
+  if (!g.airwings) return 0;
+  let anyWing = false;
+  for (const k in g.airwings) { if (g.airwings[k]) { anyWing = true; break; } }
+  if (!anyWing) return 0;
   const foes = [];
   for (const k of Object.keys(g.tags || {})) {
     if (k === tag) continue;
@@ -1503,8 +1523,37 @@ export function withdrawFromBattle(ctx, tag, provId) {
     }
   }
   if (!mine.length) return { ok: false, why: 'none of our armies stand in this battle' };
+  // Leaving the field is losing it (SPEC §284). Once a round has been fought
+  // the side that stays scores the battle exactly as if it had broken us —
+  // otherwise a withdrawal was a free way to refuse every battle the dice
+  // were turning, and the two points a win is worth went to nobody. Refusing
+  // battle before a blow is struck costs the rout and nothing else.
+  const gone = new Set(mine.map((a) => a.id));
+  const struck = num(b.day) >= 1;
+  b._withdrawKey = (b.atk || []).some((id) => gone.has(id)) ? 'atk' : 'def';
+  const stayers = [];
+  for (const key of ['atk', 'def']) {
+    b[key] = (b[key] || []).filter((id) => !gone.has(id));
+    for (const id of b[key]) {
+      const a = g.armies[id];
+      if (a && a.men > 0) stayers.push({ a, key });
+    }
+  }
   for (const a of mine) routArmy(ctx, a);
-  return { ok: true, armies: mine.length };
+  if (stayers.length) {
+    const winKey = stayers[0].key;
+    const winnerTag = stayers[0].a.tag;
+    endBattle(ctx, b, winKey);
+    if (struck) {
+      const withdrewAtk = (b._withdrawKey || '') === 'atk';
+      awardBattleScore(ctx, winnerTag, mine[0].tag, withdrewAtk ? num(b.casAtk) : num(b.casDef));
+      addWarExhaustion(ctx, mine[0].tag, 1);
+    }
+  } else {
+    const i = g.battles.indexOf(b);
+    if (i >= 0) g.battles.splice(i, 1);
+  }
+  return { ok: true, armies: mine.length, scored: struck && stayers.length > 0 };
 }
 
 // Everything the battle window shows: per-army rows, side totals, yesterday's
@@ -5030,8 +5079,9 @@ export const PEACE = {
   goldCostPer100: 10,    // warscore per 100 talents demanded
   goldStep: 25,          // UI stepper granularity
   humiliateCost: 15,
-  reparationsCost: 15,   // warscore for 8 talents/month over 24 months (SPEC §24)
-  reparationsAmount: 8,
+  reparationsCost: 15,   // warscore for up to 8 talents/month over 24 months (SPEC §24)
+  reparationsAmount: 8,  // the ceiling; a poor court pays reparationsShare of its income (SPEC §284)
+  reparationsShare: 0.3,
   reparationsMonths: 24,
   subjugateBase: 25,     // warscore to make the enemy leader a client kingdom...
   subjugatePerDev: 0.25, // ...plus this per point of their total development
@@ -5055,6 +5105,15 @@ export const PEACE = {
   freshWarMonths: 12,    // a war younger than this refuses white peace unless the enemy is losing
   withdrawWhiteGrace: 15, // extra tolerance for a JUNIOR's white withdrawal — the enemy is glad to shed a coalition member
 };
+// What a beaten court pays each month in reparations (SPEC §284): a share of
+// what it earns, never more than the old flat eight. Eight talents a month was
+// pocket money to Rome and twice the whole income of the Samaritan rising,
+// whose first peace bankrupted it in every seed the harness ran.
+export function reparationsAmountFor(ctx, payer) {
+  const t = ctx.game.tags[payer];
+  const share = Math.round(num(t && t.income) * PEACE.reparationsShare * 2) / 2;
+  return clamp(share, 1, PEACE.reparationsAmount);
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // The offered collar (SPEC §92): clientship without a war.
 //
@@ -6685,7 +6744,7 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     goldCostPer100: PEACE.goldCostPer100,
     humiliateCost: PEACE.humiliateCost,
     reparationsCost: PEACE.reparationsCost,
-    reparationsAmount: PEACE.reparationsAmount,
+    reparationsAmount: reparationsAmountFor(ctx, enemyLeader),
     reparationsMonths: PEACE.reparationsMonths,
     canSubjugate, whyNotSubjugate, subjugateCost,
     subjugateGoalAligned: subjugateAdj.aligned,
@@ -8025,11 +8084,12 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     // Reparations ride the subsidy pipe (SPEC §24): a forced monthly flow.
     if (!Array.isArray(g.subsidies)) g.subsidies = [];
     g.subsidies = g.subsidies.filter((s) => !(s && s.reparation && s.from === info.enemyLeader && s.to === byTag));
+    const amount = reparationsAmountFor(ctx, info.enemyLeader);
     g.subsidies.push({
       from: info.enemyLeader, to: byTag,
-      amount: PEACE.reparationsAmount, monthsLeft: PEACE.reparationsMonths, reparation: true,
+      amount, monthsLeft: PEACE.reparationsMonths, reparation: true,
     });
-    terms.push('pays reparations (' + PEACE.reparationsAmount + ' talents a month for '
+    terms.push('pays reparations (' + amount + ' talents a month for '
       + Math.round(PEACE.reparationsMonths / 12) + ' years)');
   }
   if (ev.humiliate && info.enemyLeader && me) {
@@ -8194,4 +8254,48 @@ export function updateWarscores(ctx) {
       }
     }
   }
+}
+
+// ------------------------------------------------ the levers with memories
+// SPEC §284. Two of the cheapest levers in the game had no memory at all.
+// Establishing rule took 15% off a province's autonomy for 25 points, as
+// often as the points allowed, so one afternoon took a fresh conquest below
+// the overextension line and four took it to full income; and the reserves
+// turned 50 martial points into 2,000 men every month the pool allowed.
+// Both now wait on the calendar, and the price of rule scales with what is
+// being ruled. The AI pulls exactly the same levers through these helpers.
+function _bal(ctx, key, fallback) {
+  const BAL = ctx.DEFINES.BALANCE || {};
+  return Number.isFinite(BAL[key]) ? BAL[key] : fallback;
+}
+export function establishRuleTerms(ctx, p) {
+  const cost = Math.round(25 + _bal(ctx, 'establishRuleCostPerDev', 2) * devTotal(p));
+  const cd = _bal(ctx, 'establishRuleCooldownMonths', 12);
+  if (p && p.ruleTightened && monthsBetween(p.ruleTightened, ctx.game.date) < cd) {
+    const left = cd - monthsBetween(p.ruleTightened, ctx.game.date);
+    return { can: false, cost, why: 'The magistrates of ' + p.name + ' are still settling in — '
+      + left + ' more month' + (left === 1 ? '' : 's') + ' before the grip can close again.' };
+  }
+  return { can: true, cost, why: '' };
+}
+export function applyEstablishRule(ctx, p) {
+  p.autonomy = Math.max(0, clamp(num(p.autonomy, 0.25), 0, 0.9) - 0.15);
+  p.ruleTightened = { ...ctx.game.date };
+  p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'tightened_grip');
+  p.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
+}
+export function reservesTerms(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  const cd = _bal(ctx, 'reservesCooldownMonths', 12);
+  if (t && t.reservesCalled && monthsBetween(t.reservesCalled, ctx.game.date) < cd) {
+    const left = cd - monthsBetween(t.reservesCalled, ctx.game.date);
+    return { can: false, why: 'The villages sent their sons already — ' + left + ' more month'
+      + (left === 1 ? '' : 's') + ' before they can be asked again.' };
+  }
+  return { can: true, why: '' };
+}
+export function callReservesCore(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  t.manpower = Math.min(num(t.maxManpower), num(t.manpower) + 2000);
+  t.reservesCalled = { ...ctx.game.date };
 }

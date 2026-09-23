@@ -680,7 +680,7 @@ const RISING_LABELS = {
     }
     refs.integBlock.classList.toggle('hidden', !info);
     if (!info) return;
-    const ruleTerms = 'Establish Rule — 25 governance points\n−15% autonomy (more of the province\'s taxes reach the crown); +2 unrest for 6 months while the locals adjust.';
+    const ruleTerms = `Establish Rule — ${info.establishCost || 25} governance points\n−15% autonomy (more of the province's taxes reach the crown); +2 unrest for 6 months while the locals adjust. Once a year per province.`;
     refs.integRule.classList.toggle('disabled', !info.canEstablish);
     refs.integRule.dataset.tt = info.canEstablish ? ruleTerms : `${info.whyNotEstablish}\n――――――\n${ruleTerms}`;
     // Integrate (SPEC §56): schools, land and the civil service.

@@ -146,7 +146,10 @@ async function runBookmark(experiment, rawGeom) {
     const alive = !!t && t.alive !== false;
     metrics.aliveAtEnd = alive;
     if (!alive && metrics.firstEliminationDay === null) metrics.firstEliminationDay = day;
-    if (game.result && metrics.result === null) { metrics.result = game.result; metrics.resultDay = day; }
+    if (game.result && metrics.result === null) {
+      metrics.result = game.result; metrics.resultDay = day;
+      metrics.resultTitle = game.resultTitle || ''; metrics.resultScore = game.resultScore;
+    }
     if (!t) return;
     metrics.minTreasury = Math.min(metrics.minTreasury, t.treasury);
     if (t.treasury < -200 && metrics.firstDebtSpiralDay === null) metrics.firstDebtSpiralDay = day;

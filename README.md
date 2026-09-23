@@ -30,6 +30,29 @@ python3 -m http.server 8613 --directory .
 
 ## Map readability and balance coverage
 
+**The enemy now fights for the war score** (SPEC §284). The old field AI
+gathered every army into one stack and marched it at the nearest cheap
+province. The new war planner (`js/sim/ai_war.js`) gives each army a job by
+what it is worth in war score: relieve a siege of its own land, take back what
+it lost, meet your column on its road when it can get there first, hold the war
+goal and the capital, and besiege only where no army that could beat it can
+arrive in time. It fights only at odds of 3 in 4 or better, and an army that
+would lose steps away before you arrive, so you do not get cheap battle score.
+Every judgement uses a forecast that runs the real battle formulas forward,
+with the same terrain, generals, discipline, morale and pips. The odds are
+calibrated against real battles, and the battle window now shows you the same
+number. A court at war with you looks at the field every five days, and
+between looks it watches the routes of your columns: if one is coming that
+would beat it, it moves at once.
+
+Four levers now have memories, for you and the AI alike: a won battle scores
+the loser's losses (0.5 to 4 points) instead of a flat 2; withdrawing after a
+round has been fought gives the enemy the battle; establishing rule costs more
+in rich provinces and works once a year per province; and the reserves answer
+once a year. The AI also keeps stability at +2 and builds markets and shrines
+in peacetime. The best 614 CE ending now needs two years of holding, and the
+529 CE rising is fed by its hills like every other rising.
+
 The Levant now keeps small capitals, selected provinces, and important towns
 readable at campaign zoom. Province labels avoid army banners and landmark
 icons; political colors are softer, desert texture is quieter, and the Jezreel

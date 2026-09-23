@@ -20402,3 +20402,191 @@ Carthage, Etruria, Rome or Athens directly.
   seats two, with a guard-warning detector proved against a deliberately
   broken card body — the check that catches a package calling a helper it
   forgot to define, which is how the first draft of the 732 package shipped.
+
+## §284 — The enemy fights for the score
+
+The field AI was one rule, in `runTagAI`: gather every army into one stack,
+march it at the nearest cheap province, and retreat to a fort when anything
+more than 1.4 times its size stood next door. So it could not hold two
+places at once, it never went back for what it had lost, it let a player
+besiege freely wherever its one stack was not, and the odds check it did
+make was a rough headcount that knew nothing of terrain, generals,
+discipline or morale. It planned once a month, so a player could march,
+fight and siege inside one of its turns.
+
+War score is three sums (`sideComponents`): occupation of the enemy's
+development (to 60), battles won (to 40), and the war goal that ticks for
+whoever holds it (to 25). The new planner, `js/sim/ai_war.js`, asks every
+court at war what each of those sums is worth to it this week, and gives
+each army a job:
+
+- **Relieve** a siege of its own land, and **take back** what it has lost.
+  An occupied province is score the enemy is holding. It is weighed by its
+  share of the realm's development, so Judaea runs to retake Lydda (a tenth
+  of the realm) while Rome does not march for one town of an empire. That is
+  what the score says, so it is what the AI does.
+- **Fight** an enemy army only where the odds are 3 in 4 or better. The fight
+  can be where the enemy stands, or on its line of march when the AI can get
+  there first. The first army on a field defends it and gets the terrain. A
+  battle is worth the war score it earns (the loser's losses, as below), plus
+  what the beaten army could otherwise take, plus the town it was marching on.
+  A field that the enemy's main army can reach within two weeks after the
+  battle is worth less than half, because the winner may not walk away from it.
+- **Hold** the war goal and the capital against any army that can reach them.
+- **Besiege** the enemy only where nothing that could beat the besiegers can
+  arrive in the first two weeks. A big army with nothing near it sends off a
+  detachment to take the next town.
+- **Leave** before it loses. An army whose chance of holding its ground falls
+  below even goes to where it can hold, or to where the enemy cannot catch it.
+  It prefers its own country, the hills and a fort, not the far corner of
+  somebody else's. A lost battle is score and a rout, so the AI does not stand
+  to give one. A siege that will fall before the relief arrives is finished
+  first.
+- **Stay home** when nothing is worth the march. A siege must be worth at
+  least 0.8 points of war score per unit of time and road before an army
+  leaves for it. A small rising no longer marches its army to Byblos for a
+  town that is 0.3% of an empire.
+
+Armies ordered to the same battle march together. One that would arrive more
+than four days before the slowest waits for it, so none arrives alone. Idle
+armies no longer merge into one stack. Only remnants under three regiments
+fold into a bigger army beside them, and only up to what the province can
+feed. Everything else spreads out to stand where it can intercept, within the
+support limit.
+
+**Chapter objectives.** A chapter can name the provinces its verdicts turn on
+(`bookmark.aiObjectives`). The planner adds 15 to a siege of one and 7.5 to
+guarding one. Without this, Jerusalem (a level-3 fortress worth a few points
+of war score against a 21-province enemy) was never besieged by the AI Herod,
+whose chapter is decided there. Set for 40 BCE, 66 CE, 67 BCE, 132 CE,
+167 BCE, 529 CE, 614 CE and 1948.
+
+Routes avoid provinces where an enemy half the column's size or more is
+standing. A column can march *to* such a province to fight there, but not
+*through* it on the way somewhere else.
+
+### The forecast
+
+Every judgement about a battle goes through `forecastBattle`. It runs the
+real round formulas of `battleRound` forward on expected dice, with the same
+discipline, morale, generals, terrain, doctrine, air, armor and arm-mix pips
+the battle will roll. There is no separate idea of "strength" that can drift
+away from the battle system. `winChance` turns the result into odds. A battle
+of about a week averages out to about a pip and a half of luck either way
+(`LUCK = 1.5`), so the chance to win is the chance that the luck clears the
+point where the expected result flips. That point is found by bisection.
+
+Measured against 624 real battles over four terrains and 13 match-ups, the
+odds are calibrated: where the forecast says 88%, the attacker won 89%; where
+it says 18%, it won 19%. `smoke196` keeps the forecast honest against real
+battles.
+
+The player sees the same number. The battle window now shows *N% our chance
+of holding the field*, from the same forecast.
+
+### When it plans
+
+Monthly from `runTagAI`, as before, and again from the daily tick
+(`runTacticalAI`). A court at war with a human plans again every five days,
+so it answers a march the week the march starts. Wars between AI courts only
+are planned again at mid-month, so a long all-AI century spends its time where
+a player can see it.
+
+Two daily checks work between plans, and they are cheap:
+
+- **The watch** (`aiDangerWatch`). Every day each AI army reads the routes of
+  the columns marching against it. If one will stand in its province within
+  12 days (enough time to march out of the way) and would win there, that
+  court plans again at once. A court re-plans on the watch at most once every
+  three days.
+- **The march guard** (`aiMarchGuard`). An AI column one day from a province
+  where hostile armies stand, or will arrive tomorrow, checks the odds of the
+  fight it is about to start. It counts every friend already there and every
+  comrade arriving the same day. If the odds are worse than even, it halts,
+  and the next plan decides what it does instead.
+
+A scripted lull (`aiPassive`) still starts nothing, but an army that would
+be destroyed where it stands now steps aside. A court at peace now also hunts
+rebels that hold its towns.
+
+### The levers with memories
+
+Four rules the AI now obeys, and the player too:
+
+| lever | before | now |
+|---|---|---|
+| battle score | +2 per won battle, whatever its size | the loser's losses ÷ 1,500, from 0.5 to 4 (3,000 men lost is still 2) |
+| withdrawing from a battle | free: no score to anybody | once a round has been fought, the side that stays scores it as a won battle |
+| establish rule | 25 governance, as often as the points allow | 25 + 2 × development, once a year per province |
+| call reserves | 50 martial for 2,000 men, every month | once a year |
+
+The flat two points made a routed patrol of three hundred worth exactly as
+much as a Beth Horon, so the cheapest war score in the game was many small
+detachments picking off many small ones. A free withdrawal was a way to refuse
+every battle the dice were turning. A withdrawn army also stayed on the
+battle's roll call, so the battle could go on after the army had left. It now
+comes off the roll call.
+
+**Reparations** were a flat 8 talents a month for two years, whatever the
+loser earned: pocket money to Rome, and twice the whole income of the
+Samaritan rising, whose first peace bankrupted it in every seed. They are now
+three tenths of the payer's income, from 1 to the old 8.
+
+**Credit.** The AI takes a loan only while the interest on all its loans stays
+under a quarter of its income. At war, a court that can no longer borrow now
+disbands as soon as its treasury is below −30, not −150: every month in the
+red heats the bankruptcy crisis.
+
+The AI also buys stability back to +2 once governance is plentiful (it sat at
++1 while the player sat at +3). In peacetime it lays one public work at a
+time: a shrine where the streets are restless, otherwise a market in its
+richest town. It only builds from a treasury that covers the work plus a
+year of running costs, with its books in the black, and never with a war on.
+
+### Chapter balance
+
+- **614 CE.** *The Kingdom Restored* used to be met in month six of every
+  campaign, because the Persian conquest hands the Return Jerusalem, the coast
+  and eight districts in its first summer. It now asks for two unbroken years
+  of holding them. The historical administration lasted three.
+- **529 CE.** Every other chapter's rising lives off the country it stands in
+  (`maintMult` 0.55–0.7). The Keepers alone paid Imperial rates from a
+  treasury the Statutes had already cut by a quarter. In the harness they
+  went bankrupt by month 22 in 20 seeds out of 20. *The Hills Are Ours* now
+  carries `maintMult: 0.6` for its 36 months.
+
+Two harness distortions are fixed. The aid petition and the arms market
+skipped the player's chair by tag, so when the AI ran that chair (the balance
+harness, an abandoned seat) it never asked anyone for money or weapons. The
+harness's Israel was the one state of 1948 that never petitioned. Both now
+skip only a human chair.
+
+The harness records which verdict a run reached and what it scored
+(`resultTitle`, `resultScore`, and `meanScore` in the summary). A chapter with
+graded endings, such as Adiabene's 100 to 160, is not described by its win
+count alone.
+
+- **Regression contract**: `smoke196.mjs`. The forecast agrees with the real
+  battle it forecasts, and with at least 93% of the fights it calls at 85% or
+  better. Equal hosts in the hills: whoever holds the ground wins. An army
+  that would lose leaves before the enemy arrives. A siege is relieved when
+  the relief would win, and not when it would lose. Judaea goes back for
+  Lydda. A column on the march is met on its road. The planner looks again on
+  the sixth of the month. The march guard halts three regiments a day from
+  twelve and lets thirty march on. The watch moves a legion out of the way
+  the day a column sets out for it. A scripted lull starts nothing but steps
+  out of harm's way. A court at peace takes its towns back from rebels. The
+  battle window gives the odds. A withdrawal after a round has been fought
+  scores for the other side, and one before any round does not. Battle score
+  follows losses. Reparations follow the payer's income. Rome's generals
+  march on Jerusalem, the chapter's objective, not on the nearest open town.
+  Rule and reserves wait on the calendar. The AI lays one public work at a
+  time. `uitest18` reads the odds line in the battle window.
+
+  Three older suites assumed an AI that could not finish a war. `smoke90`
+  now separates the imperial strand, which opens only on conquering Antioch,
+  from the cost of taking the crown. `smoke81` now reads a kingdom in the
+  hills that Rome later conquers as one road that ended (its own cards first,
+  then the aftermath's), not as two roads open at once, and checks the arc
+  only on the kingdoms that stood. `smoke12` expects reparations as a share
+  of the payer's income.

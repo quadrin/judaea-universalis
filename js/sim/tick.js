@@ -20,7 +20,8 @@ import { monthlyWeather } from './weather.js';
 import { monthlyAmbient } from './ambient.js';
 import { monthlyDiaspora } from './diaspora.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
-import { runMonthlyAI } from './ai.js';
+import { runMonthlyAI, runTacticalAI } from './ai.js';
+import { aiMarchGuard, aiDangerWatch } from './ai_war.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
 import { monthlyArms, monthlyPrograms } from './arms.js';
@@ -169,6 +170,8 @@ export function tickDay(ctx) {
     let truce = null;
     safe('ceasefire', () => { truce = ceasefireHolds(ctx); });
     if (!truce) {
+      safe('marchGuard', () => aiMarchGuard(ctx)); // no column walks into a fight it would lose (SPEC §284)
+      safe('dangerWatch', () => aiDangerWatch(ctx)); // …and no army waits for one to arrive
       safe('move', () => moveArmiesDaily(ctx));
       safe('fleets', () => fleetsDaily(ctx));
     }
@@ -177,6 +180,8 @@ export function tickDay(ctx) {
       safe('battles', () => tickBattles(ctx));
       safe('sieges', () => tickSieges(ctx));
       safe('raids', () => flyPendingRaids(ctx)); // ordered strikes fly when time moves
+      // Every court at war re-reads the field between councils (SPEC §284).
+      if (g.date.d % 5 === 1 && g.date.d !== 1) safe('tacticalAI', () => runTacticalAI(ctx));
     }
     safe('airfields', () => sweepAirfields(ctx)); // wings caught on fallen fields
     safe('dateEvents', () => checkDateEvents(ctx));

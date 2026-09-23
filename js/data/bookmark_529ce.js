@@ -852,9 +852,15 @@ export const BOOKMARK_529 = {
       id: 'the_statutes', name: 'The Statutes of Justinian', months: -1,
       effects: { incomeMult: 0.75, unrestAll: 1.5 },
     });
+    // The villages feed the rising (SPEC §284). Every other chapter's rising
+    // — the Maccabees, the Great Revolt, Bar Kokhba, the Galilee in 351 — is
+    // fed by the country it stands in (maintMult 0.55–0.7). The Keepers were
+    // the one that paid its levies at the Empire's rates, from a treasury the
+    // Statutes had already cut by a quarter, and went bankrupt in the harness
+    // by month 22 in twenty seeds out of twenty.
     h.addTagModifier(ctx, 'SAM', {
       id: 'the_hills_are_ours', name: 'The Hills Are Ours', months: 36,
-      effects: { hillDefBonus: 1, moraleMult: 1.06 },
+      effects: { hillDefBonus: 1, moraleMult: 1.06, maintMult: 0.6 },
     });
     // Justinian's reign is two years old, the codification is running, Africa
     // is being planned, and the Persian truce is not going to hold.
@@ -1619,6 +1625,15 @@ export const BOOKMARK_529 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { legitimacy: 15, infl: 25 }),
       },
     ],
+  },
+
+  // The ground this chapter's verdicts turn on (SPEC §284). The war planner
+  // weighs provinces by war score, and a fortress that decides the chapter
+  // can be worth little score against a large enemy; these tell each court's
+  // generals what the war is actually about.
+  aiObjectives: {
+    SAM: ['Neapolis', 'Sebaste'],
+    BYZ: ['Neapolis'],
   },
 
   aiHints: {
