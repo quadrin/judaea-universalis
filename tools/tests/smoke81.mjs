@@ -178,13 +178,17 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
     game.tags.JUD.ai = true;
     game.paused = false;
     const fired = new Set();
+    const firedAt = new Map(); // id -> the day it first fired
+    let day = 0;
     for (let y = 0; y < 299; y++) for (let d = 0; d < 360; d++) {
       tickDay(ctx);
+      day++;
       let guard = 0;
       while (game.pendingEvents.length && guard++ < 50) {
         const pe = game.pendingEvents[0];
         const e = EV.find((x) => x && x.id === pe.eventId);
         fired.add(pe.eventId);
+        if (!firedAt.has(pe.eventId)) firedAt.set(pe.eventId, day);
         try { actions.chooseEventOption(pe.instanceId, (e && e.aiOption) || 0); }
         catch (err) { game.pendingEvents.shift(); }
         game.paused = false;
@@ -201,6 +205,15 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
       standIds: STANDS_ARC.filter((id) => fired.has(id)),
       office: fired.has('ev2_g_what_the_office_was_for'),
       flag: !!game.flags.galileeKingdom,
+      // SPEC §284: a kingdom in the hills that Rome later conquers. Its own
+      // cards fire first, then the aftermath's — one road that ended, not two
+      // opening at once. Before the war planner Rome could not finish a war
+      // against the hills, so this never happened in three centuries.
+      fell: (() => {
+        const ran = GAL.filter((id) => fired.has(id)).map((id) => firedAt.get(id));
+        const aft = AFTERMATH_ARC.filter((id) => fired.has(id)).map((id) => firedAt.get(id));
+        return ran.length > 0 && aft.length > 0 && Math.min(...aft) > Math.max(...ran);
+      })(),
     };
   });
 
@@ -210,15 +223,19 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
     const roads = [r.ran.length > 0, r.stands.length > 0, r.after.length > 0].filter(Boolean).length;
     ok(roads >= 1, `seed ${r.seed} finishes on a road (galilee ${r.ran.length}, `
       + `stands ${r.stands.length}, aftermath ${r.after.length})`);
-    ok(roads === 1, `  and on exactly one of them`
-      + (roads !== 1 ? ` [galilee ${r.ran.length}, stands ${JSON.stringify(r.standIds)}, aftermath ${JSON.stringify(r.afterIds)}]` : ''));
+    const one = roads === 1 || (roads === 2 && r.fell && r.stands.length === 0);
+    ok(one, `  and on exactly one of them` + (r.fell ? ' (the kingdom in the hills, until it fell)' : '')
+      + (!one ? ` [galilee ${r.ran.length}, stands ${JSON.stringify(r.standIds)}, aftermath ${JSON.stringify(r.afterIds)}]` : ''));
     // A seed that took the Galilee road must have marked it, whether or not it
     // got all the way to 425 — the marker is what makes a road a road.
     if (r.ran.length) ok(r.flag, `  and records which road it took`);
   }
 
   const took = runs.filter((r) => r.ran.length > 0);
-  const whole = took.filter((r) => r.ran.length === GAL.length && r.office);
+  // A kingdom that fell plays no more of its road; the arc checks below are
+  // about the ones that stood.
+  const stood = took.filter((r) => !r.fell);
+  const whole = stood.filter((r) => r.ran.length === GAL.length && r.office);
   ok(took.length > 0,
     `the Galilee road is reachable (${took.length}/${SEEDS.length} seeds took it)`);
   // The invariant that does NOT depend on the draw: once the road is entered
@@ -240,7 +257,7 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
   // here to catch, and it would now say which card.
   const dated = new Set(EVENTS_132_GALILEE.filter((e) => e && e.date).map((e) => e.id));
   const windowed = GAL.filter((id) => !dated.has(id));
-  const broken = took.filter((r) => windowed.some((id) => !r.ran.includes(id)));
+  const broken = stood.filter((r) => windowed.some((id) => !r.ran.includes(id)));
   for (const b of broken) {
     console.log('    [seed ' + b.seed + ' missing windowed: '
       + windowed.filter((id) => !b.ran.includes(id)).join(', ') + ']');
@@ -254,14 +271,14 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
   // really asserting is that the cards a run lacks are dated ones, never
   // windowed ones — which the check above already guarantees, so this states
   // the same thing from the other side and names the cards when it trips.
-  const wrongMiss = took.filter((r) => GAL.some((id) => !r.ran.includes(id) && !dated.has(id)));
+  const wrongMiss = stood.filter((r) => GAL.some((id) => !r.ran.includes(id) && !dated.has(id)));
   ok(wrongMiss.length === 0,
     '  and a short run is short from the dated tail, not from the middle'
     + (wrongMiss.length ? ' [' + wrongMiss.map((r) => r.seed).join(',') + ']' : ''));
-  ok(whole.length * 2 >= took.length,
+  ok(whole.length * 2 >= stood.length,
     `and it runs end to end on most of them — 425 says what the office was for `
-    + `(${whole.length}/${took.length}: `
-    + took.map((r) => `seed ${r.seed} ${r.ran.length}/${GAL.length}`).join(', ') + ')');
+    + `(${whole.length}/${stood.length}: `
+    + took.map((r) => `seed ${r.seed} ${r.ran.length}/${GAL.length}${r.fell ? ' fell' : ''}`).join(', ') + ')');
 }
 
 console.log(failures ? `smoke81: ${failures} FAIL` : 'smoke81: ALL PASS');

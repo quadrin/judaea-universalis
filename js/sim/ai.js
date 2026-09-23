@@ -3,8 +3,8 @@
 // DOM-free.
 
 import {
-  num, clamp, B, devTotal, levyOf, regCount, armiesOf, armiesInProv, isHostile, sameSide,
-  canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
+  num, clamp, B, devTotal, levyOf, regCount, armiesOf, armiesInProv, isHostile,
+  issueMove, recruitRegiment, bfsDistances,
   resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, monthsBetween,
@@ -14,6 +14,7 @@ import {
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
   tagGen, mechanicOn, tagDef, resolveTagAdd, armsGate,
+  establishRuleTerms, applyEstablishRule, reservesTerms, callReservesCore, buildingFace, isHumanChair,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
 import { deference } from './standing.js';
@@ -21,11 +22,12 @@ import { institutionMult } from './institutions.js';
 import { attentionThreat } from './weather.js';
 import { aiNavalOperation, reservedForNavalOp } from './invasion.js';
 import { fireEvent } from './events.js';
+import { planWar } from './ai_war.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { eraIdeaGroupsFor, eraIdeaUnlocked, eraIdeaCost } from '../data/era_ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, techCeiling, genUpkeepMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
-import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
+import { LOAN_SIZE, LOAN_INTEREST_PER_MONTH, developCore, developInfo, DEV_KINDS } from './economy.js';
 import { popTotal, popTension } from './population.js';
 import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
 import { emptyQuarter, outlawsRisen } from './outlaws.js';
@@ -54,17 +56,6 @@ function hasTagEffect(ctx, tag, key) {
   const t = ctx.game.tags[tag];
   if (!t) return false;
   return (t.modifiers || []).some((mod) => mod && mod.effects && mod.effects[key]);
-}
-function armyStrength(ctx, a) {
-  const moraleFrac = a.maxMorale > 0 ? clamp(num(a.morale) / a.maxMorale, 0.1, 1) : 0.5;
-  return a.men * disciplineOf(ctx, a.tag) * (0.5 + 0.5 * moraleFrac);
-}
-function stackStrengthAt(ctx, provId, predicate) {
-  let s = 0;
-  for (const a of armiesInProv(ctx, provId)) {
-    if (!a.retreating && a.men > 0 && predicate(a)) s += armyStrength(ctx, a);
-  }
-  return s;
 }
 function pickRecruitProv(ctx, tag, hints) {
   const g = ctx.game;
@@ -226,8 +217,12 @@ function aiShedUnaffordable(ctx, tag) {
   if (num(t.income) >= num(t.expenses)) return;
   const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
   // At peace, shed before the debt starts; at war, only when deep in it
-  // (deserters) — a war chest running dry is normal, a collapse is not.
-  if (num(t.treasury) > (atWar ? -150 : 25)) return;
+  // (deserters) — a war chest running dry is normal, a collapse is not. But
+  // a court at war that can no longer borrow sheds as soon as it is in the
+  // red (SPEC §284): every month below zero heats the bankruptcy crisis, and
+  // a host the books cannot carry melts into the crisis's desertions anyway.
+  const floor = atWar ? (canBorrow(t) ? -150 : -30) : 25;
+  if (num(t.treasury) > floor) return;
   const armies = armiesOf(ctx, tag).filter((a) => regCount(a) > 0 && !a.inBattle);
   if (!armies.length) return;
   // Desertion scales with the hole in the treasury: one regiment a month,
@@ -253,63 +248,8 @@ function aiShedUnaffordable(ctx, tag) {
     }
   }
 }
-function retreatToFort(ctx, army) {
-  const g = ctx.game;
-  let best = 0, bestDist = Infinity;
-  const dists = bfsDistances(ctx, army.prov, (id) => canEnter(ctx, army.tag, id), 20);
-  for (let i = 1; i < g.provinces.length; i++) {
-    const p = g.provinces[i];
-    if (!p || p.impassable || p.controller !== army.tag || !(p.fort > 0)) continue;
-    const d = dists.has(p.id) ? dists.get(p.id) : Infinity;
-    if (d < bestDist) { bestDist = d; best = p.id; }
-  }
-  if (best && best !== army.prov) issueMove(ctx, army, best);
-}
-function threatened(ctx, army) {
-  const own = stackStrengthAt(ctx, army.prov, (a) => sameSide(ctx, army.tag, a.tag)) || armyStrength(ctx, army);
-  const nbs = ctx.geom && ctx.geom.neighbors ? ctx.geom.neighbors[army.prov] : null;
-  if (!nbs) return false;
-  const shy = 1.4 / Math.max(0.5, num(personality(ctx, army.tag).caution, 1));
-  for (const nb of nbs) {
-    const enemy = stackStrengthAt(ctx, nb, (a) => isHostile(ctx, army.tag, a.tag));
-    if (enemy > own * shy) return true;
-  }
-  return false;
-}
-function pickTarget(ctx, army, enemies) {
-  const g = ctx.game;
-  const dists = bfsDistances(ctx, army.prov, (id) => canEnter(ctx, army.tag, id), 32);
-  const own = stackStrengthAt(ctx, army.prov, (a) => sameSide(ctx, army.tag, a.tag)) || armyStrength(ctx, army);
-  let best = 0, bestScore = Infinity;
-  for (let i = 1; i < g.provinces.length; i++) {
-    const p = g.provinces[i];
-    if (!p || p.impassable || i === army.prov) continue;
-    if (enemies.indexOf(p.controller) < 0) continue;
-    if (!dists.has(i)) continue;
-    // Odds check: never march into a defended province we can't beat —
-    // terrain multiplies the defenders' effective strength.
-    const defenders = stackStrengthAt(ctx, i, (a) => isHostile(ctx, army.tag, a.tag));
-    if (defenders > 0) {
-      const terr = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
-      const defFactor = 1 + 0.25 * (terr ? num(terr.defBonus, 0) : 0);
-      if (defenders * defFactor > own * 0.9) continue;
-    }
-    // Reduce the countryside before the fortresses (Vespasian's method):
-    // forts and attrition terrain are strongly deprioritized, not forbidden.
-    const terr2 = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
-    const score = dists.get(i) * 3 + (p.fort | 0) * 12 + (terr2 ? num(terr2.attrition, 0) * 3 : 0) - devTotal(p) * 0.15;
-    if (score < bestScore) { bestScore = score; best = i; }
-  }
-  return best;
-}
 function busy(a) {
   return a.inBattle || a.retreating || (a.path && a.path.length > 0);
-}
-function besiegingHere(ctx, army) {
-  const p = ctx.byId(army.prov);
-  if (!p) return false;
-  if (p.siege) return p.siege.by === army.tag || sameSide(ctx, army.tag, p.siege.by);
-  return isHostile(ctx, army.tag, p.controller);
 }
 
 // A band that has arrived somewhere worth stopping (SPEC §217): ownerless
@@ -354,6 +294,15 @@ export function runRebelAI(ctx) {
   }
 }
 
+// Credit a court can service (SPEC §284): the next loan's interest, with
+// the ones already owed, must stay under a quarter of its income. A rising
+// that earns a talent a month used to take three loans and pay nine a month
+// in interest on them, which is not a war chest but the bankruptcy itself.
+function canBorrow(t) {
+  const loans = num(t.loans);
+  return loans < 3 && num(t.income) * 0.25 >= LOAN_INTEREST_PER_MONTH * (loans + 1);
+}
+
 // Wartime credit: borrow when the campaign chest runs dry (never past 3 loans
 // — the AI keeps headroom the player may spend to 5), settle debts in plenty.
 function aiLoans(ctx, tag) {
@@ -365,7 +314,7 @@ function aiLoans(ctx, tag) {
     return;
   }
   const atWar = (t.atWarWith || []).some((e) => ctx.game.tags[e] && ctx.game.tags[e].alive);
-  if (atWar && num(t.treasury) < -50 && num(t.loans) < 3) {
+  if (atWar && num(t.treasury) < -50 && canBorrow(t)) {
     t.treasury = num(t.treasury) + LOAN_SIZE;
     t.loans = num(t.loans) + 1;
   }
@@ -390,10 +339,14 @@ function aiAssaults(ctx, tag) {
 function aiSpendPoints(ctx, tag) {
   const t = ctx.game.tags[tag];
   if (!t || !t.points) return;
+  // A settled court is worth keeping settled (SPEC §284): the AI buys back to
+  // +1 whenever it can, and on to +2 once governance is plentiful — the
+  // player sits at +3 while the old AI sat at +1 and bled unrest for it.
   if (t.stability < 1 && num(t.points.gov) >= 100) { t.points.gov -= 75; t.stability = clamp(t.stability + 1, -3, 3); }
-  if (num(t.manpower) < num(t.maxManpower) * 0.2 && num(t.points.mar) >= 100) {
+  else if (t.stability < 2 && num(t.points.gov) >= 250) { t.points.gov -= 75; t.stability = clamp(t.stability + 1, -3, 3); }
+  if (num(t.manpower) < num(t.maxManpower) * 0.2 && num(t.points.mar) >= 100 && reservesTerms(ctx, tag).can) {
     t.points.mar -= 50;
-    t.manpower = Math.min(num(t.maxManpower), num(t.manpower) + 2000);
+    callReservesCore(ctx, tag);
   }
 }
 
@@ -411,13 +364,12 @@ function aiIntegration(ctx, tag) {
       const p = g.provinces[i];
       if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
       const au = num(p.autonomy, 0.25);
-      if (au > 0.3 && (!best || au > num(best.autonomy, 0))) best = p;
+      if (au > 0.3 && (!best || au > num(best.autonomy, 0)) && establishRuleTerms(ctx, p).can) best = p;
     }
-    if (best) {
-      t.points.gov -= 25;
-      best.autonomy = Math.max(0, num(best.autonomy, 0.25) - 0.15);
-      best.modifiers = (best.modifiers || []).filter((m) => m && m.id !== 'tightened_grip');
-      best.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
+    const terms = best ? establishRuleTerms(ctx, best) : null;
+    if (best && num(t.points.gov) >= terms.cost + 100) {
+      t.points.gov -= terms.cost;
+      applyEstablishRule(ctx, best);
     }
   }
   // Integration (SPEC §56): with governance to spare, the AI runs the
@@ -500,34 +452,56 @@ function runTagAI(ctx, tag) {
   // sailing even after a peace or under a scripted lull — passivity plans
   // nothing NEW, and peace turns the fleets for home inside the module.
   try { aiNavalOperation(ctx, tag, hasAiPassive(ctx, tag)); } catch (e) { warnOnce('naval:' + tag, 'naval operation failed for', tag, e); }
-  if (!enemies.length) return; // non-warring AI holds its garrisons and waits
+  // A court at peace holds its garrisons and waits — unless rebels hold its
+  // towns or march on its land (SPEC §284): the planner hunts them exactly as
+  // it would a foreign army, because an occupied province is lost income and
+  // a rising left alone is how a realm unravels.
+  if (!enemies.length && !rebelsOnOurLand(ctx, tag)) return;
   // Storming an already-invested fortress is siege prosecution, not a new
   // offensive — it runs even under aiPassive so scripted lulls don't freeze
   // half-finished sieges forever.
   aiAssaults(ctx, tag);
-  if (hasAiPassive(ctx, tag)) return; // armies hold, no new offensives
-  // Armies reserved for a naval operation, and cargo already aboard, belong
-  // to the sea — the land AI neither gathers nor marches them (SPEC §82).
-  const armies = armiesOf(ctx, tag).filter((a) => a.men > 0 && !a.inBattle && !a.retreating
-    && !a.aboard && !reservedForNavalOp(t, a.id));
-  if (!armies.length) return;
-  let main = armies[0];
-  for (const a of armies) if (a.men > main.men) main = a;
-  // gather: every idle non-main stack converges on the main stack — a 0.6x
-  // threshold left mid-sized armies permanently orderless after a lost battle
-  for (const a of armies) {
-    if (a === main) continue;
-    if (a.prov === main.prov) { mergeInto(ctx, a.id, main.id); continue; }
-    if (!busy(a) && !besiegingHere(ctx, a)) {
-      issueMove(ctx, a, main.prov);
-    }
+  // Armies hold, no new offensives — but an army that would be destroyed
+  // where it stands still steps aside (SPEC §284).
+  if (hasAiPassive(ctx, tag)) { planWar(ctx, tag, { passive: true }); return; }
+  // The field is the war planner's (SPEC §284): what each army is for is
+  // decided by what it buys in war score — relief, recovery, a battle the
+  // forecast says it wins, a siege nobody can break — not by one stack
+  // marching at the nearest cheap province.
+  planWar(ctx, tag);
+}
+
+function rebelsOnOurLand(ctx, tag) {
+  const g = ctx.game;
+  for (const id in g.armies) {
+    const a = g.armies[id];
+    if (!a || a.tag !== 'REB' || a.men <= 0) continue;
+    const p = ctx.byId(a.prov);
+    if (p && p.owner === tag) return true;
   }
-  // main stack: flee bad odds, hold sieges, else march on the best target
-  if (!g.armies[main.id]) return;
-  if (threatened(ctx, main)) { retreatToFort(ctx, main); return; }
-  if (busy(main) || besiegingHere(ctx, main)) return;
-  const target = pickTarget(ctx, main, enemies);
-  if (target) issueMove(ctx, main, target);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && p.owner === tag && p.controller === 'REB') return true;
+  }
+  return false;
+}
+
+// The second look (SPEC §284): between monthly councils a court at war with
+// a human re-reads the field every five days, so it answers a march the week
+// it starts. Wars between AI courts only are looked at again mid-month — a
+// long all-AI century spends its time where a player can see it. Scripted
+// lulls (aiPassive) only step aside, as in the monthly pass.
+export function runTacticalAI(ctx) {
+  const g = ctx.game;
+  const midMonth = g.date.d === 16;
+  for (const tag of Object.keys(g.tags)) {
+    const t = g.tags[tag];
+    if (!t || !t.alive || !t.ai || tag === 'REB') continue;
+    const foes = (t.atWarWith || []).filter((e) => g.tags[e] && g.tags[e].alive);
+    if (!foes.length) continue;
+    if (!midMonth && !foes.some((e) => isHumanChair(g, e))) continue;
+    try { planWar(ctx, tag, { passive: hasAiPassive(ctx, tag) }); } catch (e) { warnOnce('plan:' + tag, 'war planner failed for', tag, e); }
+  }
 }
 
 // Opportunistic wars (monthly). A stable, unengaged AI power that despises a
@@ -1428,6 +1402,41 @@ function monthlyWarDiplomacy(ctx) {
   }
 }
 
+// Public works (SPEC §284). The AI never built anything, so every court but
+// the player's stood still in peacetime while the player's markets compounded.
+// A solvent court now lays one work at a time: a market in its richest town,
+// or a shrine where the streets are restless — only from a treasury that
+// covers the work and a year of its own running costs besides, only with
+// its books in the black, and never with a war on.
+function aiBuild(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t) return;
+  if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
+  if (num(t.income) < num(t.expenses)) return;
+  const B2 = ctx.DEFINES.BUILDINGS || {};
+  const reserve = Math.max(150, num(t.expenses) * 12);
+  let busy = false;
+  let market = null, shrine = null;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    if (p.construction) { busy = true; break; }
+    if (p.controller !== tag || p.siege) continue;
+    const has = (k) => Array.isArray(p.buildings) && p.buildings.indexOf(k) >= 0;
+    if (!has('market') && devTotal(p) >= 6 && (!market || devTotal(p) > devTotal(market))) market = p;
+    if (!has('shrine') && num(p.unrest) >= 3 && (!shrine || num(p.unrest) > num(shrine.unrest))) shrine = p;
+  }
+  if (busy) return;
+  const pick = shrine && B2.shrine ? { p: shrine, key: 'shrine' } : market && B2.market ? { p: market, key: 'market' } : null;
+  if (!pick) return;
+  const b = B2[pick.key];
+  if (num(t.treasury) < num(b.cost) + reserve) return;
+  const face = buildingFace(b, num(t.tech && t.tech.mar));
+  t.treasury = num(t.treasury) - num(b.cost);
+  pick.p.construction = { key: pick.key, monthsLeft: Math.max(1, num(face.months, num(b.months, 1))) };
+}
+
 // With a healthy surplus the AI enacts the next reform tier — one per month,
 // keeping a buffer so it can still develop, drill and convert. The era ideas
 // (SPEC §179) queue behind the universal trees on the same one-a-month
@@ -1723,6 +1732,7 @@ export function runMonthlyAI(ctx) {
       aiModernize(ctx, tag);
       aiAirPower(ctx, tag);
       aiDevelop(ctx, tag);
+      aiBuild(ctx, tag);
       // Last in the sequence: if the tag forms a greater nation the old key is
       // gone and nothing may touch it again this month.
       aiFormNation(ctx, tag);

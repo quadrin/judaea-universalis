@@ -99,9 +99,12 @@ for (let i = 1; i < game.provinces.length; i++) {
 mil.updateWarscores(ctx);
 const evDeal = mil.evaluatePeaceDeal(ctx, w2, 'JUD', { provinces: [], gold: 0, reparations: true });
 ok(evDeal.cost === 15 && evDeal.reparations, 'reparations cost 15 war score');
+// SPEC §284: three tenths of what the loser earns, from 1 to the old flat 8.
+const owed = mil.reparationsAmountFor(ctx, 'NAB');
 mil.executePeaceDeal(ctx, w2, 'JUD', { provinces: [], gold: 0, reparations: true });
 const rep = game.subsidies.find((s) => s.reparation);
-ok(rep && rep.from === 'NAB' && rep.to === 'JUD' && rep.amount === 8, 'the defeated pay: ' + JSON.stringify(rep));
+ok(rep && rep.from === 'NAB' && rep.to === 'JUD' && rep.amount === owed && owed >= 1 && owed <= 8,
+  'the defeated pay a share of their income: ' + JSON.stringify(rep));
 
 console.log('== the new crowns are offered ==');
 jud.atWarWith = [];

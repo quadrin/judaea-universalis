@@ -2122,6 +2122,18 @@ export const DEFINES = {
   // coalition, great-power containment, the national force limit, and the
   // escalating price of conquest at the peace table.
   BALANCE: {
+    // A won battle scores the loser's losses (SPEC §284): this many men per
+    // point, never less than the floor nor more than the ceiling. 3,000 men
+    // lost is the two points every battle used to be worth.
+    battleScorePerMen: 1500,
+    battleScoreMin: 0.5,
+    battleScoreMax: 4,
+    // Levies and magistrates have memories (SPEC §284): the reserves answer
+    // once a year, and a province whose rule was tightened must settle before
+    // the grip can close again.
+    reservesCooldownMonths: 12,
+    establishRuleCooldownMonths: 12,
+    establishRuleCostPerDev: 2,
     infamyPerDev: 0.5,       // infamy per point of ceded development (was 1/3)
     infamySubjugate: 12,     // infamy for forcing a crown to bend the knee
     infamyHumiliate: 5,      // infamy for a humiliation

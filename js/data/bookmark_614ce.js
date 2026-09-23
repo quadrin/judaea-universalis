@@ -154,6 +154,10 @@ for (const n of JUD_LANDS.concat(['Nehardea', 'Arbela', 'Khaybar'])) RELIGIONS[n
 RELIGIONS['Neapolis'] = 'samaritanism';
 RELIGIONS['Sebaste'] = 'samaritanism';
 
+// How long the Return must hold Jerusalem, Caesarea and eight districts
+// before the state it proclaimed counts as one (SPEC §284).
+const RESTORED_HOLD_MONTHS = 24;
+
 export const BOOKMARK_614 = {
   id: '614ce',
   name: 'The Persian Gambit',
@@ -364,7 +368,7 @@ export const BOOKMARK_614 = {
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {
     JUD: [
-      'Win: hold Jerusalem and Caesarea with 8 provinces — a state, not a garrison.',
+      'Win: hold Jerusalem and Caesarea with 8 provinces for two unbroken years — a state, not a garrison.',
       'Win: still hold Jerusalem with 4+ provinces in mid-628, when the empires\' war ends.',
       'Crown the chain: the final mission raises the Third House on the Mount.',
       'Lose: the Return extinguished — by either empire.',
@@ -1109,6 +1113,15 @@ export const BOOKMARK_614 = {
     ],
   },
 
+  // The ground this chapter's verdicts turn on (SPEC §284). The war planner
+  // weighs provinces by war score, and a fortress that decides the chapter
+  // can be worth little score against a large enemy; these tell each court's
+  // generals what the war is actually about.
+  aiObjectives: {
+    JUD: ['Jerusalem', 'Caesarea Maritima'],
+    BYZ: ['Jerusalem'],
+  },
+
   aiHints: {
     BYZ: { rally: ['Iconium', 'Alexandria'], targetRegiments: 40 },
     SAS: { rally: ['Damascus', 'Seleucia-Ctesiphon'], targetRegiments: 45 },
@@ -1130,8 +1143,27 @@ export const BOOKMARK_614 = {
       const jerusalemJud = judAlive && h.controls(ctx, 'JUD', 'Jerusalem');
 
       if (g.playerTag === who(ctx, 'JUD')) {
-        // The dream: Jerusalem AND the coast, a real state, before the wheel turns.
-        if (jerusalemJud && h.controls(ctx, 'JUD', 'Caesarea Maritima') && judProvs >= 8) {
+        // The dream: Jerusalem AND the coast, a real state, before the wheel
+        // turns — and HELD (SPEC §284). The Persian conquest hands the Return
+        // Jerusalem, the coast and eight districts in its first summer in
+        // every campaign, so the old test was met in month six whatever the
+        // player did, and the best ending in the chapter was the opening. A
+        // state is what is still standing two years later; the historical
+        // administration lasted three.
+        const restored = jerusalemJud && h.controls(ctx, 'JUD', 'Caesarea Maritima') && judProvs >= 8;
+        const since = h.getFlag(ctx, 'restoredSince');
+        if (!restored && since) h.setFlag(ctx, 'restoredSince', null);
+        if (restored && !since) {
+          h.setFlag(ctx, 'restoredSince', { y: g.date.y, m: g.date.m });
+          if (ctx.bus) ctx.bus.emit('notify', {
+            title: 'A state, for now',
+            text: 'Jerusalem, the coast and eight districts answer to the Return. Hold them for two years and it '
+              + 'is a kingdom; lose any of it and the count starts again.',
+            type: 'good',
+          });
+        }
+        const heldMonths = restored && since ? (g.date.y - since.y) * 12 + (g.date.m - since.m) : 0;
+        if (restored && heldMonths >= RESTORED_HOLD_MONTHS) {
           h.endGame(ctx, {
             result: 'win',
             title: 'The Kingdom Restored',

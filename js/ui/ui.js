@@ -395,7 +395,7 @@ export function initUI(staticCtx) {
           <span class="peace-prov-name">Humiliate them before the nations</span>
           <span class="peace-prov-cost">${info.humiliateCost}</span>
         </label>
-        <label class="peace-prov" data-tt="War reparations: they pay ${info.reparationsAmount || 8} talents a month for ${Math.round((info.reparationsMonths || 24) / 12)} years — a defaulting debtor must be deep in debt to escape it.\nCosts ${info.reparationsCost || 15} war score">
+        <label class="peace-prov" data-tt="War reparations: they pay ${info.reparationsAmount || 8} talents a month (three tenths of their income, eight at most) for ${Math.round((info.reparationsMonths || 24) / 12)} years — a defaulting debtor must be deep in debt to escape it.\nCosts ${info.reparationsCost || 15} war score">
           <input type="checkbox" data-ref="reparations">
           <span class="peace-prov-name">Demand war reparations</span>
           <span class="peace-prov-cost">${info.reparationsCost || 15}</span>
@@ -796,7 +796,7 @@ export function initUI(staticCtx) {
         </div>
         <div class="peace-sec">War score: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
         <div class="bar wo-bar"><div class="bar-fill" style="width:${barPct}%"></div></div>
-        ${bdRow('From battles', bd.battles, 'Field victories, net of theirs (each side caps at 40)')}
+        ${bdRow('From battles', bd.battles, 'Field victories, net of theirs: each scores the loser’s losses, 1,500 men a point (½ to 4 a battle; each side caps at 40)')}
         ${bdRow('From occupation', bd.occupation, 'Enemy development under our control, net of theirs (each side caps at 60)')}
         ${info.goal ? bdRow('From war goal', bd.goal, 'Holding the declared objective after its six-month grace period (caps at 25)') : ''}
         ${bd.events ? bdRow('From events', bd.events, 'Scripted swings of history') : ''}
@@ -1006,6 +1006,14 @@ export function initUI(staticCtx) {
         <div class="bw-cas" data-tt="Casualties suffered in this battle so far">Fallen: ${fmtMen(s.casualties)}</div>
       </div>`;
     };
+    // The odds from here (SPEC §284), told from our side when we have one.
+    let oddsHtml = '';
+    if (Number.isFinite(info.atkChance)) {
+      const ours = info.playerSide === 'def' ? 1 - info.atkChance : info.atkChance;
+      const pct = Math.round(Math.max(0.01, Math.min(0.99, ours)) * 100);
+      const who = info.playerSide ? 'our chance of holding the field' : 'the attackers’ chance';
+      oddsHtml = ` · <span class="bw-odds" data-tt="${esc('The same forecast the enemy decides its battles by: the rest of this fight run forward on the dice’s average, and how much luck it would take to turn it.')}">${pct}% ${who}</span>`;
+    }
     const phaseHtml = info.phase === 'fire'
       ? icon('flame', 'icon-sm') + ' fire phase'
       : icon('swords', 'icon-sm') + ' shock phase';
@@ -1013,12 +1021,12 @@ export function initUI(staticCtx) {
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card bw-card">
         <h2 class="peace-title">Battle of ${esc(info.provName)}</h2>
-        <div class="peace-dim bw-meta">Day ${info.day} · ${phaseHtml} · ${esc(info.terrain)}${info.defBonus ? ` <span data-tt="Terrain adds +${info.defBonus} to the defender’s die">(+${info.defBonus} def)</span>` : ''}</div>
+        <div class="peace-dim bw-meta">Day ${info.day} · ${phaseHtml} · ${esc(info.terrain)}${info.defBonus ? ` <span data-tt="Terrain adds +${info.defBonus} to the defender’s die">(+${info.defBonus} def)</span>` : ''}${oddsHtml}</div>
         <div class="bw-sides">
           ${sideBlock(info.atk, 'atk')}
           ${sideBlock(info.def, 'def')}
         </div>
-        ${info.playerSide ? `<button class="btn bw-withdraw" data-ref="withdraw" data-tt="Sound the withdrawal: our whole side quits the field shattered — broken morale, a forced march to friendly ground — and the enemy keeps the field.">${icon('retreat', 'icon-sm')} Withdraw</button>` : ''}
+        ${info.playerSide ? `<button class="btn bw-withdraw" data-ref="withdraw" data-tt="Sound the withdrawal: our whole side quits the field shattered — broken morale, a forced march to friendly ground — and the enemy keeps the field. Once a blow has been struck, they score it as a won battle.">${icon('retreat', 'icon-sm')} Withdraw</button>` : ''}
         <button class="btn peace-cancel">Close</button>
       </div>`;
     battleEl.classList.remove('hidden');

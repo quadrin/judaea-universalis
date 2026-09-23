@@ -174,8 +174,9 @@ export function monthlyArms(ctx) {
   const exporters = armsExporters(ctx);
   for (const tag of Object.keys(g.tags)) {
     const t = g.tags[tag];
+    // The player's chair run by the AI signs like any other court (SPEC
+    // §284); a human chair is already out (t.ai is false).
     if (!t || !t.alive || !t.ai || tag === 'REB') continue;
-    if (tag === g.playerTag) continue;
     if (isArsenal(ctx, tag) || isSelfArsenal(ctx, tag) || isOffmapTag(ctx, tag)) continue;
     if (book[tag]) continue;
     let best = null;
@@ -402,7 +403,7 @@ function aiPrograms(ctx) {
   const oneAtATime = !!P(ctx, 'aiOne', 1);
   for (const tag of Object.keys(g.tags)) {
     const t = g.tags[tag];
-    if (!t || !t.alive || !t.ai || tag === 'REB' || tag === g.playerTag) continue;
+    if (!t || !t.alive || !t.ai || tag === 'REB') continue; // the AI-run player chair too (SPEC §284)
     if (isOffmapTag(ctx, tag)) continue;
     const defs = armsProgramsFor(ctx.bookmark, tag, t);
     if (!defs.length) continue;

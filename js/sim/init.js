@@ -1,6 +1,7 @@
 // Judaea Universalis — sim entry: initGame / makeCtx / gameActions / simHelpers
 // (SPEC §6.1, §6.2, §6.4, §6.6). DOM-free; imports only core/rng + sim siblings.
 
+import { winChance } from './ai_war.js';
 import { createRng } from '../core/rng.js';
 import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
@@ -31,6 +32,7 @@ import {
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
   armSpeedOf, isHumanChair,
+  establishRuleTerms, applyEstablishRule, reservesTerms, callReservesCore,
 } from './military.js';
 // The land roster (SPEC §191): the shot arm's names, and the cue a column of
 // each pattern makes when it takes the road.
@@ -1008,6 +1010,10 @@ export const simHelpers = {
     const g = ctx.game;
     if (g.result) return; // already decided
     g.result = result || 'loss';
+    // Which verdict, and what it was worth (SPEC §284): a chapter with several
+    // endings is not balanced by its win rate alone, and the harness reads these.
+    g.resultTitle = title || '';
+    g.resultScore = num(score, 0);
     chronicleCore(ctx, 'verdict', (title ? title + ' — ' : '')
       + (text || (g.result === 'win' ? 'Victory.' : 'Defeat.')));
     // The verdict does NOT touch the player's wars (v5.8 fix — 'nothing
@@ -2623,8 +2629,10 @@ export function gameActions(ctx) {
         if (!t) return;
         if (num(t.points.mar) < 50) { say('Reserves', 'Not enough martial points (50 required).', 'bad'); return; }
         if (num(t.manpower) >= num(t.maxManpower)) { say('Reserves', 'Every fighting man is already mustered.', 'info'); return; }
+        const res = reservesTerms(ctx, g.playerTag);
+        if (!res.can) { say('Reserves', res.why, 'info'); return; }
         t.points.mar -= 50;
-        t.manpower = Math.min(num(t.maxManpower), num(t.manpower) + 2000);
+        callReservesCore(ctx, g.playerTag);
         say('Reserves', 'The villages send their sons: +2,000 manpower.', 'good');
       } catch (e) { warnOnce('reserves', 'callReserves failed', e); }
     },
@@ -3212,7 +3220,18 @@ export function gameActions(ctx) {
 
     // ---- battle window ---------------------------------------------------------
     getBattleInfo(provId) {
-      try { return battleInfo(ctx, provId | 0); } catch (e) { warnOnce('battleInfo', 'getBattleInfo failed', e); return null; }
+      try {
+        const info = battleInfo(ctx, provId | 0);
+        if (!info) return info;
+        // The odds from here (SPEC §284): the same forecast the AI decides its
+        // battles by, run from the field as it stands today.
+        const b = (g.battles || []).find((x) => x && x.prov === (provId | 0));
+        if (b) {
+          const side = (key) => (b[key] || []).map((id) => g.armies[id]).filter((a) => a && a.men > 0);
+          info.atkChance = winChance(ctx, side('atk'), side('def'), provId | 0);
+        }
+        return info;
+      } catch (e) { warnOnce('battleInfo', 'getBattleInfo failed', e); return null; }
     },
 
     // ---- ledger ----------------------------------------------------------------
@@ -3511,8 +3530,10 @@ export function gameActions(ctx) {
         if (p.owner !== g.playerTag || p.controller !== g.playerTag) return null;
         const autonomy = clamp(num(p.autonomy, 0.25), 0, 0.9);
         let whyNotEstablish = '';
+        const rule = establishRuleTerms(ctx, p);
         if (autonomy <= 0.001) whyNotEstablish = 'The province already answers directly to the crown.';
-        else if (num(t.points.gov) < 25) whyNotEstablish = 'Not enough governance points (25 required).';
+        else if (!rule.can) whyNotEstablish = rule.why;
+        else if (num(t.points.gov) < rule.cost) whyNotEstablish = 'Not enough governance points (' + rule.cost + ' required).';
         const foreign = t.religion && p.religion !== t.religion;
         // A bookmark may retire state conversion outright (SPEC §52) — no
         // modern republic sends missionaries to re-faith a district. The
@@ -3548,7 +3569,7 @@ export function gameActions(ctx) {
           canIntegrate: !whyNotIntegrate, whyNotIntegrate,
           integrating: p.integrating
             ? { monthsLeft: Math.max(0, num(p.integrating.monthsLeft) | 0) } : null,
-          canEstablish: !whyNotEstablish, whyNotEstablish,
+          canEstablish: !whyNotEstablish, whyNotEstablish, establishCost: rule.cost,
           showConvert,
           canConvert: !whyNotConvert, whyNotConvert,
           converting: p.conversion ? { monthsLeft: Math.max(0, num(p.conversion.monthsLeft) | 0) } : null,
@@ -3566,11 +3587,11 @@ export function gameActions(ctx) {
         const t = g.tags[g.playerTag];
         if (!p || !t || p.owner !== g.playerTag || p.controller !== g.playerTag) return;
         if (clamp(num(p.autonomy, 0.25), 0, 0.9) <= 0.001) { say('Establish rule', p.name + ' already answers directly to the crown.', 'info'); return; }
-        if (num(t.points.gov) < 25) { say('Establish rule', 'Not enough governance points (25 required).', 'bad'); return; }
-        t.points.gov = num(t.points.gov) - 25;
-        p.autonomy = Math.max(0, clamp(num(p.autonomy, 0.25), 0, 0.9) - 0.15);
-        p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'tightened_grip');
-        p.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
+        const rule = establishRuleTerms(ctx, p);
+        if (!rule.can) { say('Establish rule', rule.why, 'info'); return; }
+        if (num(t.points.gov) < rule.cost) { say('Establish rule', 'Not enough governance points (' + rule.cost + ' required).', 'bad'); return; }
+        t.points.gov = num(t.points.gov) - rule.cost;
+        applyEstablishRule(ctx, p);
         say('Rule established', 'Our magistrates take ' + p.name + ' in hand: autonomy falls to '
           + Math.round(p.autonomy * 100) + '%. The locals grumble for a season.', 'good');
       } catch (e) { warnOnce('establishRule', 'establishRule failed', e); }

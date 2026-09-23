@@ -39,7 +39,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
       </div>
       <div class="tb-item" data-ref="manpowerWrap">
         <span class="tb-ico">${icon('spears')}</span><span class="tb-v" data-ref="manpower">0</span>
-        <button class="tb-buy" data-ref="buyMp" data-tt="Call up reserves: +2,000 manpower (50 martial points)">${icon('plus')}</button>
+        <button class="tb-buy" data-ref="buyMp" data-tt="Call up reserves: +2,000 manpower (50 martial points, once a year)">${icon('plus')}</button>
       </div>
       <div class="tb-item" data-ref="stabilityWrap">
         <span class="tb-ico">${icon('scales')}</span><span class="tb-v" data-ref="stability">0</span>

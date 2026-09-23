@@ -46,6 +46,31 @@ and anomaly flags:
 - EXHAUSTED    manpower zero with almost no army
 - DEAD         eliminated
 
+Since §284 (the war planner) every court fights for the war score, and the
+harness reads differently. Measured at eight years, 20 seeds per faction:
+
+- The risings lose more often, because the empires they rise against no
+  longer hand them battles: 66 CE Judaea 0 wins, 11 losses, 9 unresolved
+  (was 9 / 10 / 1); 132 CE Judaea 0 / 20 (was 4 / 15); 167 BCE Hasmoneans
+  0 / 20 (was 0 / 16). These are AI-played rebels. The AI rebel stays near
+  home and will not attack below 3-in-4 odds, so once its homeland is
+  occupied it has nothing it can take; a human plays the hit-and-run war
+  these chapters are about. Read these rows as the floor, not the human rate.
+- 614 CE's best ending now needs two years of holding: 14 wins at about
+  2.5 years (was 20 at month six).
+- 1948 Israel wins every seed and still reaches stage-3 bankruptcy in 1950.
+  That is the absorption strand: the harness answers `ev48y_the_camps`,
+  `ev_ab_the_maabarot`, `ev_i_development_towns` and
+  `ev_ab_ezra_and_nehemiah` with their historical (dearest) options, about
+  600 talents in 18 months. Each card has a cheaper answer. Accepted.
+- 529 CE Samaria no longer goes bankrupt at the rising's start or at its first
+  peace. It still reaches stage 3 later, at peace on 4–5 talents a month, when
+  the flat 40–140 talent generic cards land on a realm with no buffer. Known
+  and open: the generic deck's sums do not scale with the realm.
+- The summary has a `meanScore` column, and every run records `resultTitle`
+  and `resultScore`. Adiabene (100–160) and the other graded chapters are
+  read by their score, not their win count.
+
 Accepted flags (by design, do not "fix"): SEL dies in 67 BCE (Pompey's
 arc), ROM snowballs in 67/40 BCE (scripted annexations), and HAS/HER/ATG
 bleed while their fight-to-the-death scripted wars run (plunder-funded

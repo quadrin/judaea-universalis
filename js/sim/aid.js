@@ -194,8 +194,12 @@ export function monthlyAid(ctx) {
   }
   for (const tag of Object.keys(g.tags)) {
     const t = g.tags[tag];
+    // A human chair asks for itself (t.ai is false). The player's chair run
+    // by the AI — the balance harness, an abandoned seat — asks like any
+    // other court (SPEC §284): skipping it by tag left the harness's Israel
+    // the one state of 1948 that never petitioned anyone, and bankrupt by
+    // 1950 in every seed.
     if (!t || !t.alive || !t.ai || tag === 'REB') continue;
-    if (tag === g.playerTag) continue;
     if (isAidDonor(ctx, tag) || isOffmapTag(ctx, tag)) continue;
     if (num(t.treasury) >= A(ctx, 'aiFloor', 30)) continue;
     let best = null;
