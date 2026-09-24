@@ -2,7 +2,7 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick, onToolsClick }) {
+export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick, onToolsClick, onTechClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -49,9 +49,9 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
         <span class="tb-ico">${icon('laurel')}</span><span class="tb-v" data-ref="legitimacy">0</span>
       </div>
       <div class="tb-points">
-        <span class="tb-pt" data-tt="Government points"><b>G</b><span data-ref="gov">0</span></span>
-        <span class="tb-pt" data-tt="Influence points"><b>I</b><span data-ref="infl">0</span></span>
-        <span class="tb-pt" data-tt="Martial points"><b>M</b><span data-ref="mar">0</span></span>
+        <span class="tb-pt" data-tt="Government points"><b>G</b><span data-ref="gov">0</span><button class="tb-bell hidden" data-ref="govBell" data-tech="gov" aria-label="A government level is ready">${icon('bell')}</button></span>
+        <span class="tb-pt" data-tt="Influence points"><b>I</b><span data-ref="infl">0</span><button class="tb-bell hidden" data-ref="inflBell" data-tech="infl" aria-label="An influence level is ready">${icon('bell')}</button></span>
+        <span class="tb-pt" data-tt="Martial points"><b>M</b><span data-ref="mar">0</span><button class="tb-bell hidden" data-ref="marBell" data-tech="mar" aria-label="A military level is ready">${icon('bell')}</button></span>
       </div>
       <div class="tb-spacer"></div>
       <div class="tb-date" data-ref="date"></div>
@@ -95,6 +95,14 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
       try { actions.buyStability(); } catch (e) { warnOnce('buyStab', e); }
       refresh();
     });
+    // A ready rung rings (SPEC §286): the bell opens the Technology tab.
+    for (const k of ['gov', 'infl', 'mar']) {
+      refs[k + 'Bell'].addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (onTechClick) onTechClick(k);
+      });
+      refs[k + 'Bell'].addEventListener('animationend', () => refs[k + 'Bell'].classList.remove('ring'));
+    }
     refs.buyMp.addEventListener('click', () => {
       try { actions.callReserves(); } catch (e) { warnOnce('buyMp', e); }
       refresh();
@@ -193,6 +201,29 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     setText(refs.gov, String(Math.floor(pts.gov || 0)));
     setText(refs.infl, String(Math.floor(pts.infl || 0)));
     setText(refs.mar, String(Math.floor(pts.mar || 0)));
+    // The bells (SPEC §286): a ladder whose next level the pool can pay for
+    // now rings beside its points, the way a claimable mission marks its tab.
+    let tech = null;
+    if (actions && typeof actions.getTech === 'function') {
+      try { tech = actions.getTech(); } catch (e) { warnOnce('getTech', e); tech = null; }
+    }
+    for (const k of ['gov', 'infl', 'mar']) {
+      const row = tech && tech.rows ? tech.rows.find((r) => r.key === k) : null;
+      const bell = refs[k + 'Bell'];
+      const ready = !!(row && row.canBuy);
+      if (ready && bell.classList.contains('hidden')) {
+        // Ring once as it appears; the class is dropped when the animation ends.
+        bell.classList.remove('hidden');
+        bell.classList.add('ring');
+      } else if (!ready) {
+        bell.classList.add('hidden');
+        bell.classList.remove('ring');
+      }
+      if (ready) {
+        bell.dataset.tt = `${row.name} ${row.level + 1}${row.nextName ? ' — ' + row.nextName : ''} is ready`
+          + ` — it costs ${row.cost}, you have ${row.have}.\nClick to open Technology.`;
+      }
+    }
     refs.buyStab.classList.toggle('afford', (pts.gov || 0) >= 75 && (t.stability || 0) < 3);
     refs.buyMp.classList.toggle('afford', (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0));
 

@@ -109,6 +109,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // a reward a player can walk past for a decade if nothing says it is there.
   // Written by refreshMissions, read by refreshTabs — which runs after it.
   let readyClaims = 0;
+  // Ladders whose next level the pool can pay for (SPEC §286): the Technology
+  // tab's own badge, beside the Missions tab's claims.
+  let readyTech = 0;
   const refs = {};
 
   function setText(node, s) {
@@ -639,10 +642,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
 
   // open() shows the player's own realm; open('ROM') shows Rome's court
   // read-only. viewing() reports the foreign tag (null when it's our own).
-  function open(tag) {
+  // `tabId` opens straight onto a tab — the topbar's tech bell (SPEC §286).
+  function open(tag, tabId) {
     if (!ctx) return;
     const g = ctx.game;
     viewTag = (tag && tag !== g.playerTag && g.tags && g.tags[tag]) ? tag : null;
+    if (tabId && TABS.some((t) => t.id === tabId)) tab = tabId;
     el.classList.remove('hidden');
     refresh();
     el.scrollTop = 0;
@@ -719,12 +724,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!avail.some((t) => t.id === tab)) tab = (avail[0] || { id: DEFAULT_TAB }).id;
     el.dataset.tab = tab;
     setHtml(refs.tabs, avail.map((t) => {
-      // The claim badge (SPEC §229): the one tab that can be owed something.
-      const badge = t.id === 'missions' && readyClaims
-        ? `<i class="np-tab-badge">${readyClaims}</i>` : '';
-      const tt = badge
-        ? t.tt + '\n' + readyClaims + ' accomplishment' + (readyClaims === 1 ? '' : 's')
-          + ' ready to claim.' : t.tt;
+      // The claim badge (SPEC §229) and the tech badge (SPEC §286): the two
+      // tabs that can be owed something.
+      const n = t.id === 'missions' ? readyClaims : t.id === 'tech' ? readyTech : 0;
+      const badge = n ? `<i class="np-tab-badge">${n}</i>` : '';
+      const tt = !n ? t.tt
+        : t.id === 'missions'
+          ? t.tt + '\n' + n + ' accomplishment' + (n === 1 ? '' : 's') + ' ready to claim.'
+          : t.tt + '\n' + n + ' level' + (n === 1 ? '' : 's') + ' ready to buy.';
       return `<button class="np-tab${t.id === tab ? ' active' : ''}" data-tab-go="${esc(t.id)}"`
         + ` role="tab" aria-selected="${t.id === tab}" data-tt="${esc(tt)}">`
         + `${esc(terms[t.term] || t.label)}${badge}</button>`;
@@ -1002,6 +1009,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // A foreign court owes us nothing (SPEC §229) — and refreshMissions, which
     // is what normally writes this, does not run for one.
     if (!self) readyClaims = 0;
+    readyTech = 0;
+    if (self && actions && typeof actions.getTech === 'function') {
+      try {
+        const info = actions.getTech();
+        readyTech = info && info.rows ? info.rows.filter((r) => r.canBuy).length : 0;
+      } catch (e) { warnOnce('np-readyTech', e); }
+    }
     refs.decisionsBlock.classList.toggle('hidden', !self);
     if (!self) refs.chapterBlock.classList.add('hidden');
     if (!self) refs.doctrineBlock.classList.add('hidden');

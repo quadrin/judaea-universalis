@@ -161,6 +161,8 @@ export function initUI(staticCtx) {
     onChronicleClick: () => toggleChronicle(),
     onSavesClick: () => { if (savesPanel) savesPanel.open(); },
     onToolsClick: () => toggleTools(),
+    // A ringing tech bell (SPEC §286) opens our own court on Technology.
+    onTechClick: () => { setSelectedProv(0); nationPanel.open(null, 'tech'); },
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const nationPanel = createNationPanel(els.nation, {

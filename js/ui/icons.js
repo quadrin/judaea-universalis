@@ -143,6 +143,10 @@ export const ICONS = {
   retreat:
     '<path d="M9 6.5 3.5 12l5.5 5.5"/>' +
     '<path d="M3.5 12h11a6 6 0 0 1 6 6v1.5"/>',
+  // The notification bell (SPEC §286): a rung of a ladder is ready to buy.
+  bell:
+    '<path d="M6.2 16.6V11a5.8 5.8 0 0 1 11.6 0v5.6l1.7 2H4.5Z"/>' +
+    '<path d="M10 20.6a2 2 0 0 0 4 0"/>',
   alert:
     '<path d="M12 4.3 21.2 19.7H2.8Z"/>' +
     '<path d="M12 9.8v4.4"/>' +
