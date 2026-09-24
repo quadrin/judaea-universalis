@@ -20645,3 +20645,25 @@ Kept on purpose:
   ruling leaves Samaria and Shechem Yahwist and keeps the mixed district's
   modifier. No Iron Age file gives Judaism or Samaritanism as a faith.
   `smoke148` shuts the Tingis card in the Iron Age by the calendar.
+
+## §286 — A ready rung rings
+
+A claimable mission marked its tab with a red badge (SPEC §229); a
+technology level the pool could already pay for marked nothing, and the
+points sat in the topbar until the player happened to open the panel.
+
+- **The bell.** When a ladder's next level can be bought (the same `canBuy`
+  the Technology section reads from `getTech`), a small red bell appears
+  beside that pool's points in the topbar — G for Government, I for Influence,
+  M for Military. It pops in and rings once as it appears (no motion under
+  `prefers-reduced-motion`), and goes away when the points are spent or the
+  level is bought. Its tooltip names the level and its cost; a click opens
+  the nation panel straight onto Technology.
+- **The tab.** The Technology tab carries the same red badge as Missions,
+  with the number of ladders ready.
+- `nationPanel.open(tag, tabId)` may now open on a named tab.
+
+- **Regression contract**: `uitest53.mjs` — no bell with empty pools; with
+  government and military payable, bells beside G and M and none beside I;
+  the tooltip says what is ready; a bell opens the panel on Technology, whose
+  tab reads 2; spending the points silences the bells; no page errors.

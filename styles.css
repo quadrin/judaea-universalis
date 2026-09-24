@@ -161,6 +161,39 @@ button {
 
 .tb-points { display: flex; gap: 10px; padding-left: 4px; border-left: 1px solid rgba(201, 162, 39, 0.3); }
 .tb-pt { display: flex; align-items: baseline; gap: 4px; font-variant-numeric: tabular-nums; }
+/* A ladder's next level is ready (SPEC §286): the red of the mission badge,
+   beside the points that can pay for it. It pops in and rings once. */
+.tb-bell {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 1px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--red-deep);
+  color: var(--parch-hi);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 6px rgba(160, 30, 20, 0.55);
+  cursor: pointer;
+}
+.tb-bell svg { width: 11px; height: 11px; stroke-width: 2.6; }
+.tb-bell:hover { filter: brightness(1.25); }
+.tb-bell.ring { animation: tb-bell-ring 0.9s ease-out 1; transform-origin: 50% 20%; }
+@keyframes tb-bell-ring {
+  0% { transform: scale(0.2); opacity: 0; }
+  30% { transform: scale(1.25); opacity: 1; }
+  45% { transform: scale(1) rotate(-16deg); }
+  60% { transform: rotate(12deg); }
+  75% { transform: rotate(-7deg); }
+  90% { transform: rotate(3deg); }
+  100% { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tb-bell.ring { animation: none; }
+}
 .tb-pt b {
   color: var(--gold-bright);
   font-size: 11px;
