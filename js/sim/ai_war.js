@@ -35,7 +35,7 @@
 import {
   num, clamp, devTotal, regCount, armiesOf, isHostile, sameSide, canEnter,
   hopDays, genSpeed, armSpeedOf, splitArmyCore, mergeInto, sideStats, airNet, airPips, armorPips, armPips,
-  warGoalInfo, sideComponents, tagDef, ceasefireHolds, isHumanChair, battleScoreFor,
+  warGoalInfo, sideComponents, tagDef, ceasefireHolds, isHumanChair, battleScoreFor, resolveTagMult,
 } from './military.js';
 import { doctrinePips } from '../data/tech.js';
 import { MOUNTED_TERRAIN } from '../data/units.js';
@@ -447,7 +447,8 @@ function siegeDays(ctx, p, regs, byTag) {
   const need = Math.max(1, Math.ceil(num(p.garrison) / 1000));
   if (regs < need) return Infinity;
   const season = Math.max(0.3, num(seasonSiegeFactor(ctx), 1));
-  const rate = (1.2 + 0.6 + 0.03 * clamp(regs - need, 0, 20)) * season / fort;
+  const walls = p.controller ? resolveTagMult(ctx, p.controller, 'siegeDefenseMult') : 1;
+  const rate = (1.2 + 0.6 + 0.03 * clamp(regs - need, 0, 20)) * season / (fort * walls);
   const left = 100 - (p.siege && (p.siege.by === byTag) ? num(p.siege.progress) : 0);
   return Math.max(3, left / Math.max(0.05, rate));
 }

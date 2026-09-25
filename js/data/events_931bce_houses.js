@@ -779,7 +779,7 @@ export const EVENTS_931_HOUSES = [
       tooltip: '+70 talents kept and spent on masonry: +20% siege defence permanently and +8% force limit. The shortfall is on the record: −12 legitimacy and "A Kingdom Worth the March" (+1 unrest everywhere) — the next king of Assyria reads this ledger before he decides where to go.',
       fx: (ctx) => { const h = ctx.helpers;
         h.adjust(ctx, 'JDH', { treasury: 70, legitimacy: -12 });
-        mod(ctx, 'h931_into_the_walls', 'Into the Walls', { hillDefBonus: 20, forceLimitMult: 1.08 });
+        mod(ctx, 'h931_into_the_walls', 'Into the Walls', { siegeDefenseMult: 1.2, forceLimitMult: 1.08 });
         mod(ctx, 'h931_worth_the_march', 'A Kingdom Worth the March', { unrestAll: 1 });
         h.setFlag(ctx, 'tributeShort', true);
         h.chronicle(ctx, 'era', 'The old figure is paid and the difference goes into masonry; the shortfall is entered in a ledger that is read in Nineveh.'); } }),

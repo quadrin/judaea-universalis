@@ -1777,8 +1777,12 @@ function siegeDay(ctx, p) {
       // in Av is watching the cisterns go down inside the wall, which is how
       // the sieges of this country were actually decided.
       const season = seasonSiegeFactor(ctx);
+      // The defender's own works (SPEC §287): `siegeDefenseMult` on the court
+      // that holds the walls slows every siege of them — what the "+N% siege
+      // defence" of the wall-building cards has always promised.
+      const walls = p.controller ? resolveTagMult(ctx, p.controller, 'siegeDefenseMult') : 1;
       s.progress += season * airSiege * resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1) * firepower
-        * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
+        * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / (fort * walls);
       if (p.garrison <= 0) s.progress += 3;
     }
     let decay = 0.0015;

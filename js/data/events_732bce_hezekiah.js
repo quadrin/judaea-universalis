@@ -872,7 +872,7 @@ export const EVENTS_732_HEZEKIAH = [
       tooltip: '+120 talents kept. +12% force limit and +15% siege defence for forty years — and "The Lapsed Tribute" (+1.5 unrest everywhere, −10% growth) permanently, because the empire is still perfectly capable and sends to find out.',
       fx: (ctx) => { const h = ctx.helpers;
         h.adjust(ctx, 'JDH', { treasury: 120, legitimacy: 8 });
-        mod(ctx, 'h732_lapsed_tribute', 'The Lapsed Tribute', { forceLimitMult: 1.12, hillDefBonus: 15 }, 480);
+        mod(ctx, 'h732_lapsed_tribute', 'The Lapsed Tribute', { forceLimitMult: 1.12, siegeDefenseMult: 1.15 }, 480);
         mod(ctx, 'h732_lapsed_cost', 'What the Lapse Cost', { unrestAll: 1.5, growthMult: 0.9 });
         h.setFlag(ctx, 'tributeLapsed', true);
         h.chronicle(ctx, 'era', 'The tribute is allowed to lapse and the kingdom spends the difference on its walls; the empire is not yet too busy to notice.'); } }),

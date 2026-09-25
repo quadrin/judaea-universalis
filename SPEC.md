@@ -20667,3 +20667,37 @@ points sat in the topbar until the player happened to open the panel.
   government and military payable, bells beside G and M and none beside I;
   the tooltip says what is ready; a bell opens the panel on Technology, whose
   tab reads 2; spending the points silences the bells; no page errors.
+
+## §287 — The road names the map's towns, and siege defence is siege defence
+
+**The United Kingdom could not be followed.** Its province requirement read
+"Own and control Jerusalem, Hebron, Sebaste, Neapolis, Scythopolis,
+Sepphoris and Caesarea Philippi". The check keys on canonical cells and was
+always right, but no Iron Age map shows those names: the cells are Tirzah
+(Samaria from 732 BCE, once Omri has built it), Shechem, Beth-Shean, Shimron
+and Dan. A player looked for five towns that were not on the map. A
+requirement row may now carry a `liveLabel(ctx, tag)`, which the decisions
+panel prefers to its static `label`; the United Kingdom's lists the seven
+cells by the names the current map uses. The static label (read by the
+compendium, which has no map) uses the Iron Age names. The United Kingdom's
+*A Coast of Our Own* now says Dor and Aphek, not Dora and Antipatris.
+
+**"+N% siege defence" granted N pips of hill combat.** Six effects promised
+siege defence and wrote it as `hillDefBonus: N` — Into the Walls (931 BCE,
++20), The Lapsed Tribute (732, +15), The Stones Were Kept (597, +18), The
+North Face (597, +25), The Hill Forts (67 BCE, +15) and the United Kingdom's
+*The Kingdom That Was Not Deported* (+10). `hillDefBonus` is pips on the
+battle die in the hills, for whichever side holds it, attacking or defending,
+and every other use of it in the game is 1 to 3. Ten or more pips wins any
+battle in the hills. There was no siege-defence key at all. There is now:
+`siegeDefenseMult` on the court that controls the walls divides the daily
+progress of any siege of them (`siegeDay`), and the war planner's siege-time
+estimate reads it too. The six effects grant `siegeDefenseMult` 1.10–1.25,
+which is what their tooltips always said.
+
+- **Regression contract**: `smoke198.mjs`. In 931, 732 and 597 BCE the
+  requirement names Tirzah or Samaria, Shechem, Beth-Shean, Shimron and Dan,
+  and no Roman name; holding the seven cells still ticks it. +25% siege
+  defence makes a siege of Jerusalem exactly a quarter slower. No effect in
+  the data hands out five or more pips of hill bonus, and the six cards speak
+  `siegeDefenseMult`. `smoke191` reads the 931 requirement by the map's names.

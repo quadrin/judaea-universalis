@@ -138,7 +138,7 @@ export const EVENTS_67_AUGUSTAN = [
       fx: (ctx) => { const h = ctx.helpers;
         pay(ctx, { treasury: -180 });
         stir(ctx, HEART, { id: 'a67_the_interior', name: 'Roads and Cisterns', months: -1, effects: { taxMult: 1.12, unrest: -1.2 } });
-        mod(ctx, 'a67_hill_forts', 'The Hill Forts', { hillDefBonus: 15 }, -1);
+        mod(ctx, 'a67_hill_forts', 'The Hill Forts', { siegeDefenseMult: 1.15 }, -1);
         h.chronicle(ctx, 'era', 'The money goes into roads, cisterns and the hill forts rather than into the sea; the trade keeps going overland to Tyre.'); } }),
 
   Y('ev67a_a_third_of_the_tax', 'A Third of It, and Say Why', -20, 3,
