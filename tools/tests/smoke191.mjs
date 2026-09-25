@@ -138,8 +138,14 @@ console.log('== at the opening it is offered and refused ==');
   const unmet = row ? row.desc.split('\n').filter((l) => l.indexOf('\u2717') === 0) : [];
   ok(unmet.some((l) => /northern kingdom is finished/.test(l)),
     '  the north still being a kingdom is one of the reasons');
-  ok(unmet.some((l) => /Sebaste/.test(l)),
-    '  and Samaria not being ours is another');
+  // SPEC §287: the row names the places as the map does — in 931 the cell
+  // Sebaste is Tirzah, the northern capital before Omri builds Samaria, and
+  // Caesarea Philippi is Dan. A label in Roman names cannot be followed.
+  const cells = unmet.find((l) => /Own and control Jerusalem/.test(l)) || '';
+  ok(/Tirzah/.test(cells) && /\bDan\b/.test(cells) && /Shechem/.test(cells),
+    '  and the north\'s towns not being ours is another, by the map\'s names: ' + cells.replace(/^\u2717\s*/, ''));
+  ok(!/Sebaste|Neapolis|Scythopolis|Sepphoris|Caesarea Philippi/.test(cells),
+    '  with no Roman name a player could not find on this map');
   const ticks = row ? row.desc.split('\n').filter((l) => /^[\u2713\u2717]/.test(l)) : [];
   ok(ticks.length === 8, '  all eight rows are shown, ticked or not (' + ticks.length + ')');
 }

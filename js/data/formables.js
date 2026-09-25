@@ -2410,6 +2410,16 @@ function israelFrom(from, bookmarks) {
 // Samaria and Neapolis is Shechem (the bookmark renames them for the era), and
 // Caesarea Philippi is Panion at the foot of Hermon — the Dan end of the only
 // phrase the sources use for the whole land.
+// A place list in the words the map is using (SPEC §287). The checks key on
+// canonical cells, which is right — a cell is the same ground under every
+// name — but a label that lists the canonical names sends an Iron Age player
+// looking for a "Sebaste" and a "Caesarea Philippi" that his map calls
+// Samaria (Tirzah, before Omri builds it) and Dan.
+function placesNow(ctx, names) {
+  const shown = names.map((n) => { const p = ctx.prov(n); return (p && p.name) || n; });
+  return shown.length > 1 ? shown.slice(0, -1).join(', ') + ' and ' + shown[shown.length - 1] : shown.join('');
+}
+
 const ALL_ISRAEL_CELLS = [
   'Jerusalem', 'Hebron',              // Judah's own seat and its second city
   'Sebaste', 'Neapolis',              // Samaria, and the town the kingdom broke at
@@ -2491,7 +2501,7 @@ const AIS_MISSIONS = [
   {
     id: 'ais_the_sea', name: 'A Coast of Our Own',
     icon: 'ship', col: 0, row: 3, requires: ['ais_the_land'],
-    desc: 'Neither kingdom ever held a port. Hold Dora and Antipatris, and the trade that '
+    desc: 'Neither kingdom ever held a port. Hold Dor and Aphek, and the trade that '
       + 'has always gone to Tyre comes here instead.',
     rewardText: '"The Coast Road": +14% trade and +10% income, permanent.',
     check: (ctx) => ownsAndControls(ctx, 'AIS', ['Dora', 'Antipatris']),
@@ -2540,7 +2550,7 @@ const AIS_MISSIONS = [
       ctx.helpers.adjust(ctx, 'AIS', { treasury: 400 });
       ctx.helpers.addTagModifier(ctx, 'AIS', {
         id: 'ais_not_deported', name: 'The Kingdom That Was Not Deported', months: -1,
-        effects: { manpowerMult: 1.12, hillDefBonus: 10, legitimacyAdd: 0.4 },
+        effects: { manpowerMult: 1.12, siegeDefenseMult: 1.1, legitimacyAdd: 0.4 },
       });
     },
   },
@@ -2895,7 +2905,8 @@ export const FORMABLES = [
     requires: [
       { label: 'The northern kingdom is finished', check: (ctx) => northEnded(ctx) },
       {
-        label: 'Own and control Jerusalem, Hebron, Sebaste, Neapolis, Scythopolis, Sepphoris and Caesarea Philippi',
+        label: 'Own and control Jerusalem, Hebron, Samaria, Shechem, Beth-Shean, Shimron and Dan',
+        liveLabel: (ctx) => 'Own and control ' + placesNow(ctx, ALL_ISRAEL_CELLS),
         check: (ctx, tag) => ownsAndControls(ctx, tag, ALL_ISRAEL_CELLS),
       },
       { label: 'Own and control twenty-two provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 22 },

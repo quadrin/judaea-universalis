@@ -425,7 +425,7 @@ export const EVENTS_597_PERSIA = [
       tooltip: '−15 talents. The courses stand, unmortared, for fifteen years: "The Stones Were Kept" (+18% siege defence, +10% fortification value when the work resumes) permanently, and +1 stability. Obedience that costs nothing irrecoverable.',
       fx: (ctx) => { const h = ctx.helpers;
         h.adjust(ctx, 'JDH', { treasury: -15, stability: 1 });
-        mod(ctx, 'p597_stones_kept', 'The Stones Were Kept', { hillDefBonus: 18 }, -1);
+        mod(ctx, 'p597_stones_kept', 'The Stones Were Kept', { siegeDefenseMult: 1.18 }, -1);
         stir(ctx, ['Jerusalem'], { id: 'p597_stones_kept_p', name: 'The Stones Were Kept', months: -1, effects: { unrest: -0.5 } });
         h.setFlag(ctx, 'wallStonesKept', true);
         h.chronicle(ctx, 'era', 'The work stops the day the order is read and not an hour before; the dressed stone is stacked and counted and left where it is.'); } },
@@ -433,7 +433,7 @@ export const EVENTS_597_PERSIA = [
       tooltip: '−70 talents and six frantic weeks. Jerusalem gains a real wall on the side it needs one: +25% siege defence permanently. The province is on record as having continued after an order: −20 legitimacy, −12 diplomatic weight for thirty years, and the next commission from the capital is harder to get.',
       fx: (ctx) => { const h = ctx.helpers;
         h.adjust(ctx, 'JDH', { treasury: -70, legitimacy: -20 });
-        mod(ctx, 'p597_north_face', 'The North Face', { hillDefBonus: 25, diploSeats: -12 }, -1);
+        mod(ctx, 'p597_north_face', 'The North Face', { siegeDefenseMult: 1.25, diploSeats: -12 }, -1);
         stir(ctx, ['Jerusalem'], { id: 'p597_north_face_p', name: 'The North Face', months: -1, effects: { unrest: 0.6 } });
         h.setFlag(ctx, 'wallFinishedIllegally', true);
         h.chronicle(ctx, 'era', 'The north face is closed in six weeks and the order is obeyed on the seventh; Jerusalem has a wall on the side it needed one and a note in the imperial file.'); } }),

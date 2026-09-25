@@ -1718,7 +1718,12 @@ export function gameActions(ctx) {
       const rows = (f.requires || []).map((r) => {
         let ok = false;
         try { ok = !!r.check(ctx, g.playerTag); } catch (e) { warnOnce('form:' + f.id, 'requirement check failed', e); }
-        return { label: r.label, ok };
+        // A row may name its places in the map's own words (SPEC §287).
+        let label = r.label;
+        if (typeof r.liveLabel === 'function') {
+          try { label = String(r.liveLabel(ctx, g.playerTag) || r.label); } catch (e) { warnOnce('form-label:' + f.id, 'requirement label failed', e); }
+        }
+        return { label, ok };
       });
       out.push({ f, rows, met: rows.every((r) => r.ok) });
     }
