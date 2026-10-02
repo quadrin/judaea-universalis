@@ -937,9 +937,14 @@ boot().catch((e) => {
   document.body.appendChild(el);
 });
 
-// PWA: network-first service worker (offline shell + no stale modules when online).
+// PWA: network-first service worker (no stale modules when online). Install
+// caches the whole game, so it plays with no connection (SPEC §288); after an
+// online boot the page asks the worker to fetch anything still missing.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('[sw]', e));
+    navigator.serviceWorker.ready.then((reg) => {
+      if (reg.active && navigator.onLine !== false) reg.active.postMessage({ type: 'ju-precache' });
+    }).catch(() => {});
   });
 }

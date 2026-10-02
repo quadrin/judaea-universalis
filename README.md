@@ -28,6 +28,12 @@ python3 -m http.server 8613 --directory .
 # open http://localhost:8613
 ```
 
+**Offline.** Open the game once with a connection, and it plays with none
+after that: the first visit saves every file of the game in the browser
+(SPEC §288). On a phone or tablet, *Add to Home Screen* gives it an icon of its
+own. Saves stay on the device. Only the optional cloud and online multiplayer
+need the network.
+
 ## Map readability and balance coverage
 
 **The enemy now fights for the war score** (SPEC §284). The old field AI
