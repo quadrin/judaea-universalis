@@ -20734,6 +20734,9 @@ with no connection could not boot — the first `import` failed.
   reachable from `main.js`, plus the shell and icons; offline, all of them and
   a navigation with a query string come back with the bytes on disk; the
   top-up fetches exactly the one file that went missing and nothing when none
-  is; activate drops the old cache. `uitest54.mjs` does it in Chromium: one
-  online visit, then with the network gone a reload and a new tab boot to the
-  carousel, a campaign starts and its days run, with no page errors.
+  is; activate drops the old cache. `uitest54.mjs` does it in Chromium: it
+  serves the game on a port of its own, makes one online visit, then shuts
+  the server down (Playwright's `setOffline` does not reach the worker's own
+  fetches, so it alone would pass a worker that cached nothing). A reload and
+  a new tab boot to the carousel, a campaign starts and its days run, with no
+  page errors. Against the old worker the offline reload never boots.
