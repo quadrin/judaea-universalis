@@ -20701,3 +20701,39 @@ which is what their tooltips always said.
   defence makes a siege of Jerusalem exactly a quarter slower. No effect in
   the data hands out five or more pips of hill bonus, and the six cards speak
   `siegeDefenseMult`. `smoke191` reads the 931 requirement by the map's names.
+
+## §288 — The game plays offline
+
+The service worker was network-first and cached each file as it passed, but
+`main.js` registers it only after the page has loaded. On the first visit
+every module was fetched before the worker existed, so the cache held five
+files: the page, the stylesheet, `main.js` and the manifest. A second visit
+with no connection could not boot — the first `import` failed.
+
+- **Install caches the whole game.** `sw.js` fetches the shell (page,
+  stylesheet, manifest, the five icons) and then walks the module graph from
+  `main.js`: it reads each module's relative `import … from`, `export … from`
+  and bare `import '…'` specifiers and fetches those in turn. There is no
+  build step and no file list to keep in step with the code; a new module is
+  cached the day something imports it. A false match costs one 404, which is
+  skipped. The cache is now `ju-v2`, and activate drops `ju-v1`.
+- **The page tops it up.** After an online boot the page posts `ju-precache`
+  to the worker, which walks the graph again and fetches only what the cache
+  does not hold (an install cut off by a dropped connection). When nothing
+  is missing it costs no network.
+- **Offline navigation ignores the query string**, so a link or home-screen
+  shortcut with `?…` still finds the page.
+- Online nothing changes: every request still goes to the network first with
+  `cache: 'reload'`, and the cache is only the fallback.
+- Single-player, saves (IndexedDB) and every chapter work offline. The cloud
+  (invite codes, save sync) and online multiplayer need a connection.
+
+- **Regression contract**: `smoke199.mjs` runs `sw.js` in a vm with an
+  in-memory Cache Storage and a fetch that reads the repository: install
+  caches every module that V8's own parser (`vm.SourceTextModule`) finds
+  reachable from `main.js`, plus the shell and icons; offline, all of them and
+  a navigation with a query string come back with the bytes on disk; the
+  top-up fetches exactly the one file that went missing and nothing when none
+  is; activate drops the old cache. `uitest54.mjs` does it in Chromium: one
+  online visit, then with the network gone a reload and a new tab boot to the
+  carousel, a campaign starts and its days run, with no page errors.
