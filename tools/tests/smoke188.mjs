@@ -180,7 +180,7 @@ console.log('== 6. the dateline ==');
 
 // A real campaign, with a human chair, for the rest of the suite.
 const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
-function boot(id, years) {
+function boot(id, years, seed = 1234567) {
   const entry = ERAS.find((e) => e.bookmark.id === id);
   const bookmark = entry.bookmark;
   const provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
@@ -203,7 +203,7 @@ function boot(id, years) {
   const tag = bookmark.playableTags[0].tag;
   const game = initGame({
     DEFINES, MAP_DATA, geom, bookmark, events: entry.events,
-    playerTag: tag, rngSeed: 1234567, provinceMap, difficulty: 'normal',
+    playerTag: tag, rngSeed: seed, provinceMap, difficulty: 'normal',
   });
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events: entry.events, provinceMap });
   return { ctx, game, tag, years };
@@ -255,8 +255,16 @@ console.log('== 9. a campaign actually hears the world ==');
   const { tickDay } = await import(R + '/js/sim/tick.js');
   const { findEventById, resolveEventOption } = await import(R + '/js/sim/events.js');
   const results = [];
-  for (const id of ['931bce', '66ce', '1948ce']) {
-    const { ctx, game, tag } = boot(id);
+  // 1948 hears only its own four modern cards, so three of them in one ten-year
+  // seed is a claim about the seed, not the table (measured at §292: on the
+  // old tree one seed in six dealt three; the mean was under two). Its claim is
+  // sampled instead, as smoke81 samples its road: three seeds, each hearing the
+  // weather at all, and between them at least half of the four. The ancient
+  // chapters draw on sixteen cards and keep the single-seed bar.
+  const runs = [['931bce', 1234567], ['66ce', 1234567], ['1948ce', 1234567], ['1948ce', 1], ['1948ce', 2]];
+  const modernSeen = new Set();
+  for (const [id, seed] of runs) {
+    const { ctx, game, tag } = boot(id, undefined, seed);
     const fired = [];
     for (let d = 0; d < 10 * 12 * 30; d++) {
       tickDay(ctx);
@@ -271,14 +279,21 @@ console.log('== 9. a campaign actually hears the world ==');
     }
     const wx = new Set(fired.filter((f) => String(f).startsWith('wx_')));
     const murmurs = murmurLog(ctx).length;
-    results.push({ id, wx: wx.size, murmurs, alive: !!game.tags[tag].alive });
-    ok(wx.size >= 3, id + ': ' + wx.size + ' distinct weather cards in ten years');
-    ok(murmurs >= 25, id + ': ' + murmurs + ' lines of dateline in ten years');
+    results.push({ id, seed, wx: wx.size, murmurs, alive: !!game.tags[tag].alive });
+    if (id === '1948ce') {
+      for (const k of wx) modernSeen.add(k);
+      ok(wx.size >= 1, id + ' (seed ' + seed + '): ' + wx.size + ' distinct weather cards in ten years');
+    } else {
+      ok(wx.size >= 3, id + ': ' + wx.size + ' distinct weather cards in ten years');
+    }
+    ok(murmurs >= 25, id + ' (seed ' + seed + '): ' + murmurs + ' lines of dateline in ten years');
     // The era bands hold on the live board, not just in the table.
     const modernFired = [...wx].filter((k) => k.startsWith('wx_modern_'));
     if (id === '1948ce') ok(modernFired.length === wx.size, '1948 hears only the modern weather');
     else ok(modernFired.length === 0, id + ' hears no modern weather');
   }
+  const modernPool = WEATHER_EVENTS.filter((e) => e && String(e.id).startsWith('wx_modern_')).length;
+  ok(modernSeen.size * 2 >= modernPool, '1948, three seeds: ' + modernSeen.size + ' of the ' + modernPool + ' modern cards heard (' + [...modernSeen].join(', ') + ')');
   console.table(results);
 }
 

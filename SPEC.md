@@ -19743,7 +19743,9 @@ months of every twelve, somebody was waiting for the weather.
   and gated so 1948 hears only its own voice; the dateline's bands and
   shape; two centuries of ambient passes with the seeded stream unmoved and
   the chronicle unflooded; an all-AI table hearing nothing; three chapters
-  played ten years each and actually hearing the world; and the wiring proved
+  played ten years each and actually hearing the world (1948, with only four
+  modern cards, sampled over three seeds since §292: each hears the weather,
+  and between them at least half of the four); and the wiring proved
   on the live board — the same march through grain country taking longer in
   Tevet than in Nisan through the sim's own `hopDays`, and the same crossing
   taking longer through `seaHopDays`. And the whole weather pool fired
