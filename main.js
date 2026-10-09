@@ -18,6 +18,7 @@ import {
 import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
+import { getSetting } from './js/ui/settings.js';
 import { createLobby } from './js/ui/lobby.js';
 import {
   remapGuestChairs, resolveSnapshotChair, restoreHostChair, runUnderChair,
@@ -659,7 +660,9 @@ async function boot() {
   }
   bus.on('saveRequest', () => { doSave(false).catch((e) => console.warn('[save]', e)); });
   // Yearly autosave. Fire-and-forget: a slow shelf must never stall the tick.
+  // The player may turn it off (SPEC §289).
   bus.on('month', ({ date }) => {
+    if (!getSetting('autosave')) return;
     if (date && date.m === 1) doSave(true).catch((e) => console.warn('[autosave]', e));
   });
 

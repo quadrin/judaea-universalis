@@ -20740,3 +20740,108 @@ with no connection could not boot — the first `import` failed.
   fetches, so it alone would pass a worker that cached nothing). A reload and
   a new tab boot to the carousel, a campaign starts and its days run, with no
   page errors. Against the old worker the offline reload never boots.
+
+## §289 — Settings, and the score's songs
+
+There was nowhere to turn anything down. Sound was one switch and music
+another (a pair of floating buttons, and two tiles on the phone's tools
+sheet); an effect and a song were always at the level `sound.js` chose.
+
+**The settings window.** A faders button in the topbar, the **O** key, or a
+Settings tile on the tools sheet opens a parchment card in four sections.
+Escape closes it, like every other window. While it is open the game's own
+keys (Space, 1–5, N, L, C, H) stand down, so Space on a focused switch does
+not also pause the campaign.
+
+- *Sound*: the Sound switch (the old mute), the main volume, the effects
+  volume, and Button clicks (the soft tick under every button).
+- *Music*: the Music switch (the old music button), the music volume, the
+  song (automatic, every song shuffled, or one song), what is playing now,
+  and Next song.
+- *Game*: the yearly autosave on or off, and how long a notice stays (short
+  4 s, normal 6 s, long 10 s; a murmur, §272, never stays longer than 4.2 s).
+- *Display*: Reduce motion, which stills every CSS animation and transition
+  of the interface (`html.ju-reduce-motion`). The operating system's own
+  switch still does this where an animation declares it. The map's canvas is
+  not CSS, and this does not touch it.
+- *Defaults* puts every setting back, the two switches included.
+
+The settings live in `js/ui/settings.js`, in one key (`ju_settings`) in this
+browser. A save does not carry them, and a multiplayer table never sees them.
+A bad or missing value falls back to its default. Readers ask the store when
+they need a value (`getSetting`) and are told of a change (`onSettingChange`),
+so a slider moved mid-campaign is heard on the next note. The two old
+switches keep their own keys (`ju_muted`, `ju_music`).
+
+**The mix.** `sound.js` now has an effects bus (with its own reverb send)
+between the effects and the master, and the score's reverb send follows the
+music level, so a silenced score leaves no tail. A slider's 0–100 is squared
+into a gain. The master is 0.22 × main, the effects bus × effects, the score
+0.55 × music.
+
+**The songs.** Ten original compositions, written for this game, join the
+generative score (§27, §51). They are data (`js/data/songs.js`): a key, a
+mode, a meter and a tempo; melodies in scale degrees and harmonies in
+semitones, bar by bar; and a form that arranges them — which voice plays
+which part at which octave, with harp or oud arpeggios, a bass, a strings
+pad and a drum pattern. `js/ui/song_engine.js` turns a song into timed events
+and plays them on a band of eight voices made, like every other sound in the
+game, of oscillators, filtered noise and envelopes: kinnor, halil (flute),
+reed, oud, horns, strings, choir and shofar, with doum, tek, snare and the big
+drum.
+
+| Song | Age | Mood | Mode |
+|---|---|---|---|
+| Song of the Well | Kings and Prophets, Second Temple | peace | D Dorian |
+| The Hill Country | Kings and Prophets, Second Temple | peace | G Adonai Malakh, 3/4 |
+| By the Rivers | Kings and Prophets, Second Temple, Rabbis and Emperors | peace, war | A minor, 3/4 |
+| The Hammer | Second Temple | war, battle | D Freygish |
+| Watchfires on the Walls | Kings and Prophets, Second Temple | war, battle | A Dorian |
+| Lamps of Tiberias | Rabbis and Emperors | peace | D Misheberakh |
+| The Wedding at Sepphoris | Rabbis and Emperors, Second Temple, the State | peace | A Freygish, 3+3+2 |
+| The Banner of the Return | Rabbis and Emperors | war, battle | D minor |
+| Dawn over the Negev | the State | peace | D Adonai Malakh |
+| The Road to Jerusalem | the State | war, battle | A minor hora |
+
+The ages go by bookmark: 931, 732 and 597 BCE are Kings and Prophets; 167,
+67 and 40 BCE and 66 CE the Second Temple; 132, 351, 529 and 614 CE Rabbis
+and Emperors; 1948 the State. Every age has a song for peace, for war and
+for battle.
+
+- **Automatic** (the default): the open score plays for 25–40 s, then a song
+  of this age written for this mood, not one of the last three. Between songs
+  the open score returns for 35–70 s. A peace song gives way, with a short
+  fade, when the war or the battle comes; a war song plays out after the
+  peace is signed. A song from another age gives way when the campaign
+  changes.
+- **Every song, shuffled**, or **one song**: the songs follow each other with
+  five seconds of the open score between them.
+- While a song plays, the open score rests and its pad steps aside. Muted or
+  silenced, the song keeps its time: what fell behind is dropped, not
+  crammed in.
+- `window._sound.music.state()` names the song (`song`, `age`, `songIn`);
+  `songs()` is the catalogue; `next()` skips; `window._sound.levels()` reads
+  the three live gains.
+
+**Hearing them outside the game.** `tools/render_songs.mjs` renders each song
+through the same engine in an OfflineAudioContext in Chromium, writes a
+44.1 kHz WAV at the game's own level, and, with ffmpeg on the PATH, an MP3
+brought to −16 LUFS. Nothing it writes is part of the game; the game still
+has no audio files.
+
+- **Regression contract**: `smoke200.mjs` — every song's notation is sound
+  (every bar holds the meter, every melody is as long as its harmony, every
+  voice and drum pattern exists), and the checker catches a short bar, a
+  short melody and a missing instrument; every timeline is in order, one to
+  three minutes long and in range; every bookmark is in the age table, and
+  every age has a song for peace, war and battle; every event of every song
+  plays on a stand-in audio context and every source that starts, stops; the
+  settings store keeps a good value, repairs a bad one, tells its listeners
+  once per change and resets. `uitest55.mjs` — the topbar button and the O
+  key open the window and Escape closes it; the main, effects and music
+  sliders move the live gains and are stored; a chosen song plays and the
+  window names it; automatic plays a Second Temple war song in the Great
+  Revolt and Next song changes it; the switches are stored and reduce motion
+  marks the page; the Music switch is the old music button; a Short notice is
+  gone by 5.1 s; Defaults resets; at 390 px the tools sheet opens the window
+  and it fits; no page errors.

@@ -11,6 +11,7 @@ import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
 import { createWiki } from './wiki.js';
 import { createSavesPanel } from './saves.js';
+import { createSettingsPanel } from './settings.js';
 import { icon, flagChip, unitIcon } from './icons.js';
 import { armGenName } from '../data/units.js';
 
@@ -154,6 +155,12 @@ export function initUI(staticCtx) {
   // The shelf (SPEC §93): built once, opened from the title screen and from
   // the scroll beside the topbar quill. main.js hands us the tools it needs.
   let savesPanel = null;
+  // The settings (SPEC §289): sound, music, the autosave, the notices. The
+  // song list is the score's own, read each time the window opens.
+  const settings = createSettingsPanel({
+    getSongs: () => (window._sound && window._sound.music && window._sound.music.songs
+      ? window._sound.music.songs() : []),
+  });
   const topbar = createTopbar(els.topbar, {
     DEFINES,
     onFlagClick: () => toggleNationPanel(),
@@ -161,6 +168,7 @@ export function initUI(staticCtx) {
     onChronicleClick: () => toggleChronicle(),
     onSavesClick: () => { if (savesPanel) savesPanel.open(); },
     onToolsClick: () => toggleTools(),
+    onSettingsClick: () => settings.toggle(),
     // A ringing tech bell (SPEC §286) opens our own court on Technology.
     onTechClick: () => { setSelectedProv(0); nationPanel.open(null, 'tech'); },
   });
@@ -1500,6 +1508,9 @@ export function initUI(staticCtx) {
     if (!els.start.classList.contains('hidden')) return;
     if (eventModal.isOpen()) return; // buttons only while an event is up
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    // Settings keeps Space, the arrows and the digits for its own controls:
+    // only Escape and O, which close it, reach the game.
+    if (settings.isOpen() && e.key !== 'Escape' && e.key !== 'o' && e.key !== 'O') return;
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
       try { state.actions.togglePause(); } catch (err) { warnOnce('togglePause', err); }
@@ -1509,6 +1520,7 @@ export function initUI(staticCtx) {
       topbar.refresh();
     } else if (e.key === 'Escape') {
       if (toolsOpen()) { closeTools(); return; }
+      if (settings.isOpen()) { settings.close(); return; }
       if (helpOpen()) { closeHelp(); return; }
       if (inspectEl && !inspectEl.classList.contains('hidden')) { closeUnitInspector(); return; }
       if (battleWindowOpen()) { closeBattleWindow(); return; }
@@ -1529,6 +1541,8 @@ export function initUI(staticCtx) {
       toggleChronicle();
     } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
       toggleHelp();
+    } else if (e.key === 'o' || e.key === 'O') {
+      settings.toggle();
     }
   });
 
@@ -1569,7 +1583,8 @@ export function initUI(staticCtx) {
       + toolTile('save', 'Save', 'quill', 'Write this moment down')
       + toolTile('loadsave', 'Campaigns', 'amphora', 'Load a saved game')
       + toolTile('music', st.music ? 'Music on' : 'Music off', 'note', 'The score')
-      + toolTile('sound', st.sound ? 'Sound on' : 'Sound off', 'speaker', 'Effects');
+      + toolTile('sound', st.sound ? 'Sound on' : 'Sound off', 'speaker', 'Effects')
+      + toolTile('settings', 'Settings', 'sliders', 'Volume, songs, game');
     body.querySelectorAll('.tools-tile').forEach((b) => {
       b.classList.toggle('off',
         (b.dataset.tool === 'music' && !st.music) || (b.dataset.tool === 'sound' && !st.sound));
@@ -1600,6 +1615,7 @@ export function initUI(staticCtx) {
           else if (act === 'help') { closeTools(); toggleHelp(); }
           else if (act === 'save') { closeTools(); state.ctx.bus.emit('saveRequest', {}); }
           else if (act === 'loadsave') { closeTools(); if (savesPanel) savesPanel.open(); }
+          else if (act === 'settings') { closeTools(); settings.open(); }
           else if (act === 'music') {
             if (window._sound && window._sound.music) window._sound.music.toggle();
             renderTools();
@@ -1634,7 +1650,7 @@ export function initUI(staticCtx) {
               <div class="peace-sec">Keys</div>
               <div class="help-row"><b>Space</b> pause · <b>1–5</b> speed</div>
               <div class="help-row"><b>N</b> realm panel · <b>L</b> ledger · <b>C</b> chronicle</div>
-              <div class="help-row"><b>H</b> this help · <b>Esc</b> close / deselect</div>
+              <div class="help-row"><b>H</b> this help · <b>O</b> settings · <b>Esc</b> close / deselect</div>
               <div class="help-row"><b>Click</b> select a province, army, fleet, or air wing · <b>Shift-click</b> group armies</div>
               <div class="help-row"><b>Right-click</b> move the selected unit (air wings rebase between airfields)</div>
               <div class="help-row"><b>Shift-click</b> armies (banners or outliner rows) to build a group, then <b>click</b> a province: the whole group marches there</div>

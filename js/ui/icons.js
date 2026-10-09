@@ -269,6 +269,13 @@ export const ICONS = {
     '<path d="M9 9.4l9-1.8"/>' +
     '<ellipse cx="7" cy="17.8" rx="2.4" ry="1.9"/>' +
     '<ellipse cx="16" cy="15.8" rx="2.4" ry="1.9"/>',
+  // Settings (SPEC §289): three faders, each at its own height — the mixing
+  // desk reads as "adjust" at 15px where a cog would be a blot.
+  sliders:
+    '<path d="M6 4.5v15M12 4.5v15M18 4.5v15"/>' +
+    '<rect x="4" y="13" width="4" height="2.6" rx="0.8"/>' +
+    '<rect x="10" y="7.2" width="4" height="2.6" rx="0.8"/>' +
+    '<rect x="16" y="11" width="4" height="2.6" rx="0.8"/>',
   // Effects: a speaker with two waves.
   speaker:
     '<path d="M4.5 9.5h3.2L12 6v12l-4.3-3.5H4.5Z"/>' +

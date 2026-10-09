@@ -5,13 +5,22 @@
 // 1948), harp arpeggios in the quiet stretches, drums that swell with the
 // mood. Each age keeps its own lead voice — kinnor, reed, horns. All playback
 // is a silent no-op until the first user gesture creates the AudioContext.
+//
+// The settings (SPEC §289) set three levels — the whole mix, the music, the
+// effects — and the score hands over to composed songs (js/data/songs.js)
+// between stretches of the open score.
+import { getSetting, onSettingChange } from './settings.js';
+import { SONGS, songCatalogue, songAgeOf } from '../data/songs.js';
+import { buildTimeline, createSongVoices } from './song_engine.js';
 
 export function initSound(bus, getGame) {
   // ------------------------------------------------------------- state
   let ac = null;            // AudioContext (lazy)
-  let master = null;        // master gain (~0.22)
+  let master = null;        // master gain (~0.22 × the main volume)
   let muteGain = null;      // 1 or 0, after master
   let verbIn = null;        // reverb send input
+  let sfxBus = null;        // the effects, × the effects volume, into master
+  let sfxSend = null;       // the effects' reverb sends, × the same
   let noiseBuf = null;      // shared white-noise buffer
   let muted = false;
   let musicOn = true;
@@ -52,7 +61,7 @@ export function initSound(bus, getGame) {
     if (!AC) return false;
     ac = new AC();
     master = ac.createGain();
-    master.gain.value = 0.22;
+    master.gain.value = MASTER_LVL * level('master');
     muteGain = ac.createGain();
     muteGain.gain.value = muted ? 0 : 1;
     master.connect(muteGain);
@@ -77,6 +86,13 @@ export function initSound(bus, getGame) {
     damp.connect(wet);
     wet.connect(master);
 
+    sfxBus = ac.createGain();
+    sfxBus.gain.value = level('sfx');
+    sfxBus.connect(master);
+    sfxSend = ac.createGain();
+    sfxSend.gain.value = level('sfx');
+    sfxSend.connect(verbIn);
+
     noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -91,6 +107,24 @@ export function initSound(bus, getGame) {
   window.addEventListener('keydown', unlock, { once: true, capture: true });
 
   function ready() { return !!ac && ensureCtx(); }
+
+  // A slider's 0–100 as a gain: squared, so the travel feels even to the ear.
+  const MASTER_LVL = 0.22;
+  function level(k) {
+    const v = Number(getSetting(k));
+    return Number.isFinite(v) ? Math.pow(Math.max(0, Math.min(100, v)) / 100, 2) : 1;
+  }
+  function glide(param, v) {
+    try { param.setTargetAtTime(v, ac.currentTime, 0.06); } catch (e) { param.value = v; }
+  }
+  // A moved slider is heard on the next note.
+  onSettingChange((k) => {
+    if (!ac) return;
+    if (k === 'master') glide(master.gain, MASTER_LVL * level('master'));
+    else if (k === 'sfx') { glide(sfxBus.gain, level('sfx')); glide(sfxSend.gain, level('sfx')); }
+    else if (k === 'music') applyMusicLevel();
+    else if (k === 'song') songChoiceChanged();
+  });
 
   // ------------------------------------------------------------- primitives
   // Detuned oscillator pair with exponential-decay envelope.
@@ -114,12 +148,12 @@ export function initSound(bus, getGame) {
       g.connect(f);
       out = f;
     }
-    out.connect(master);
+    out.connect(sfxBus);
     if (opts.send) {
       const s = ac.createGain();
       s.gain.value = opts.send;
       out.connect(s);
-      s.connect(verbIn);
+      s.connect(sfxSend);
     }
     const oscs = det > 0 ? [det, -det] : [0];
     for (const cents of oscs) {
@@ -160,12 +194,12 @@ export function initSound(bus, getGame) {
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + attack + dur);
     src.connect(f);
     f.connect(g);
-    g.connect(master);
+    g.connect(sfxBus);
     if (opts.send) {
       const s = ac.createGain();
       s.gain.value = opts.send;
       g.connect(s);
-      s.connect(verbIn);
+      s.connect(sfxSend);
     }
     src.start(t0);
     src.stop(t0 + attack + dur + 0.1);
@@ -483,6 +517,12 @@ export function initSound(bus, getGame) {
     horaTurn: 0,            // 1948 alternates the heroic theme and the hora
     arpStep: 0,             // harp arpeggio position on the chord tones
     notes: 0,               // debug counter (tests read this)
+    send: null,             // the score's reverb send (follows the music level)
+    // The songs (SPEC §289): one plays at a time, on its own bus, and the
+    // open score (everything above) rests while it does.
+    song: null,             // {def, events, idx, start, end, bus}
+    nextSongAt: 0,          // ac time the next song may begin
+    recent: [],             // ids of the last songs, so they do not repeat
   };
 
   function noteHz(rootHz, mode, degree) {
@@ -524,6 +564,10 @@ export function initSound(bus, getGame) {
     mus.mood = mood;
     mus.era = era;
     mus.style = style;
+    try {
+      const g = getGame ? getGame() : null;
+      if (g) songAge = songAgeOf(g.bookmarkId, g.date && g.date.y);
+    } catch (e) { warnOnce('song-age', e); }
   }
 
   function musTone(opts) {
@@ -546,7 +590,7 @@ export function initSound(bus, getGame) {
       const s = ac.createGain();
       s.gain.value = opts.send;
       out.connect(s);
-      s.connect(verbIn);
+      s.connect(mus.send);
     }
     const o = ac.createOscillator();
     o.type = opts.type || 'triangle';
@@ -593,8 +637,11 @@ export function initSound(bus, getGame) {
     if (mus.started || !ac) return;
     mus.started = true;
     mus.gain = ac.createGain();
-    mus.gain.gain.value = musicOn ? MUSIC_LVL : 0;
+    mus.gain.gain.value = musicOn ? MUSIC_LVL * level('music') : 0;
     mus.gain.connect(master);
+    mus.send = ac.createGain();
+    mus.send.gain.value = musicOn ? level('music') : 0;
+    mus.send.connect(verbIn);
 
     // The string pad: three persistent voices (root, fifth, third) that
     // glide between chords through a slow-breathing lowpass — a section,
@@ -630,16 +677,128 @@ export function initSound(bus, getGame) {
     lfo.start();
 
     mus.nextBeat = ac.currentTime + 0.2;
+    // The open score opens the campaign; the first song follows it — at once
+    // when the player chose one.
+    mus.nextSongAt = ac.currentTime + (getSetting('song') === 'auto' ? 25 + Math.random() * 15 : 1.5);
     mus.timer = setInterval(scheduleAhead, 200);
+  }
+
+  // ---------------------------------------------------------- the songs --
+  const MOOD_RANK = { peace: 0, war: 1, battle: 2 };
+  let songAge = 'temple';
+
+  // Which song is next, by the setting: one song, every song, or (automatic)
+  // a song of this age written for this mood, not one heard just now.
+  function pickSong() {
+    const choice = getSetting('song');
+    if (choice !== 'auto' && choice !== 'shuffle') {
+      const one = SONGS.find((x) => x.id === choice);
+      if (one) return one;
+    }
+    let pool = choice === 'shuffle' ? SONGS.slice()
+      : SONGS.filter((x) => x.ages.includes(songAge) && x.moods.includes(mus.mood));
+    if (!pool.length) return null;
+    const fresh = pool.filter((x) => !mus.recent.includes(x.id));
+    if (fresh.length) pool = fresh;
+    return pool[(Math.random() * pool.length) | 0];
+  }
+
+  function startSong(def, at) {
+    const tl = buildTimeline(def);
+    const songBus = ac.createGain();
+    songBus.gain.value = 1;
+    songBus.connect(mus.gain);
+    mus.song = {
+      def, events: tl.events, idx: 0, start: at, end: at + tl.duration, bus: songBus,
+      play: createSongVoices(ac, songBus, mus.send, noiseBuf),
+    };
+    mus.recent.push(def.id);
+    while (mus.recent.length > Math.min(3, SONGS.length - 1)) mus.recent.shift();
+    // the open score's pad steps aside; scheduleBeat brings it back after
+    try { mus.droneGain.gain.setTargetAtTime(0, at, 0.8); } catch (e) { /* fine */ }
+  }
+
+  // Let the song go: a short fade, then its bus is let go too.
+  function endSong(fade) {
+    const cur = mus.song;
+    if (!cur) return;
+    mus.song = null;
+    const now = ac.currentTime;
+    try {
+      cur.bus.gain.setTargetAtTime(0, now, fade ? 0.5 : 0.05);
+      setTimeout(() => { try { cur.bus.disconnect(); } catch (e) { /* gone */ } }, fade ? 4000 : 600);
+    } catch (e) { warnOnce('song-end', e); }
+    mus.nextBeat = Math.max(mus.nextBeat, now + 0.1);
+  }
+
+  // Between songs the open score plays: a long stretch when automatic, a
+  // breath when the player asked for songs.
+  function gapAfterSong() {
+    return getSetting('song') === 'auto' ? 35 + Math.random() * 35 : 5;
+  }
+
+  function songChoiceChanged() {
+    if (!ac || !mus.started) return;
+    endSong(true);
+    mus.recent = [];
+    mus.nextSongAt = ac.currentTime + 1.5;
+  }
+
+  // Skip ahead: the next song of the hour (one chosen song starts over).
+  function nextSong() {
+    if (!ac || !mus.started) return;
+    endSong(true);
+    mus.nextSongAt = ac.currentTime + 1.2;
+  }
+
+  // Called every scheduler pass: keeps the song fed, ends it, starts the next.
+  function songTick(horizon) {
+    const now = ac.currentTime;
+    const cur = mus.song;
+    if (cur) {
+      // automatic: a peace song gives way when the war or the battle comes
+      // (never the other way: a war song plays out after the peace is signed),
+      // and a song from another age gives way to this one's
+      if (getSetting('song') === 'auto') {
+        const def = cur.def;
+        const louder = !def.moods.includes(mus.mood)
+          && MOOD_RANK[mus.mood] > Math.max(...def.moods.map((m) => MOOD_RANK[m]));
+        if (louder || !def.ages.includes(songAge)) {
+          endSong(true);
+          mus.nextSongAt = now + 1;
+          return false;
+        }
+      }
+      while (cur.idx < cur.events.length && cur.start + cur.events[cur.idx].t < horizon) {
+        const ev = cur.events[cur.idx++];
+        const at = cur.start + ev.t;
+        if (at < now - 0.05) continue; // fell behind (muted, a hidden tab): drop, keep time
+        try { cur.play(ev, Math.max(at, now)); mus.notes++; } catch (e) { warnOnce('song-note', e); }
+      }
+      if (now >= cur.end) {
+        mus.song = null;
+        try { cur.bus.disconnect(); } catch (e) { /* gone */ }
+        mus.nextSongAt = now + gapAfterSong();
+        return false;
+      }
+      return true;
+    }
+    if (now >= mus.nextSongAt) {
+      const def = pickSong();
+      if (def) { startSong(def, now + 0.25); return true; }
+      mus.nextSongAt = now + 20; // nothing for this hour: the open score, and look again
+    }
+    return false;
   }
 
   function scheduleAhead() {
     if (!ac || !musicOn || muted) return;
     try {
       pollMood();
+      const horizon = ac.currentTime + 0.6;
+      if (songTick(horizon)) return; // a song holds the floor
       // after a mute/toggle, resume from now — never burst-schedule the gap
       if (mus.nextBeat < ac.currentTime) mus.nextBeat = ac.currentTime + 0.1;
-      const horizon = ac.currentTime + 0.6;
       while (mus.nextBeat < horizon) {
         const beatDur = mus.mood === 'battle' ? 0.44 : mus.mood === 'war' ? 0.52 : 0.66;
         scheduleBeat(mus.nextBeat, mus.beat++, beatDur);
@@ -760,13 +919,19 @@ export function initSound(bus, getGame) {
     }
   }
 
+  function applyMusicLevel(tc) {
+    if (!mus.gain || !ac) return;
+    const v = musicOn ? level('music') : 0;
+    try {
+      mus.gain.gain.setTargetAtTime(MUSIC_LVL * v, ac.currentTime, tc || 0.06);
+      mus.send.gain.setTargetAtTime(v, ac.currentTime, tc || 0.06);
+    } catch (e) { mus.gain.gain.value = MUSIC_LVL * v; mus.send.gain.value = v; }
+  }
+
   function setMusicOn(v) {
     musicOn = !!v;
     try { localStorage.setItem('ju_music', musicOn ? '1' : '0'); } catch (e) { /* ignore */ }
-    if (mus.gain && ac) {
-      try { mus.gain.gain.setTargetAtTime(musicOn ? MUSIC_LVL : 0, ac.currentTime, 0.4); }
-      catch (e) { mus.gain.gain.value = musicOn ? MUSIC_LVL : 0; }
-    }
+    applyMusicLevel(0.4);
     if (musicBtn) applyMusicBtn();
   }
 
@@ -935,6 +1100,7 @@ export function initSound(bus, getGame) {
       if (!t || !t.closest || !t.closest('button')) return;
       const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
       if (now - lastLoudAt < 280) return;
+      if (!getSetting('clicks')) return; // the player turned the ticks off (SPEC §289)
       if (!allow('click')) return;
       if (!ready()) return;
       sfx.uiTick();
@@ -1028,11 +1194,27 @@ export function initSound(bus, getGame) {
     play,
     mute() { setMuted(true); },
     unmute() { setMuted(false); },
+    // the live gains, for tests (SPEC §289)
+    levels() {
+      if (!ac) return null;
+      return { master: master.gain.value, sfx: sfxBus.gain.value, music: mus.gain ? mus.gain.gain.value : null };
+    },
     music: {
       on() { setMusicOn(true); },
       off() { setMusicOn(false); },
       toggle() { setMusicOn(!musicOn); },
-      state() { return { on: musicOn, started: mus.started, mood: mus.mood, era: mus.era, style: mus.style, notes: mus.notes }; },
+      state() {
+        const cur = mus.song;
+        return {
+          on: musicOn, started: mus.started, mood: mus.mood, era: mus.era, style: mus.style, notes: mus.notes,
+          age: songAge,
+          song: cur ? { id: cur.def.id, title: cur.def.title, blurb: cur.def.blurb } : null,
+          songIn: cur || !ac ? 0 : Math.max(0, mus.nextSongAt - ac.currentTime),
+        };
+      },
+      // The songs (SPEC §289): the catalogue, and the next one now.
+      songs() { return songCatalogue(); },
+      next() { nextSong(); },
     },
   };
 
