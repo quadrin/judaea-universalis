@@ -21326,3 +21326,77 @@ own.
   outliner names it; Land troops, then Lay up, from the panel, and the panel
   says so; Recommission; Escape closes it; a Roman squadron at Joppa at war
   draws a battle disc with both sides' hulls. No page errors.
+
+## §295 — The score hands over cleanly, and every song goes to war
+
+**Two scores at once.** The open score (§48) played from the first click,
+and 25 to 40 seconds into a campaign a song (§289) started on top of it: the
+song's band came in at full level while the score's last notes and its pad
+were still sounding, and the band was louder than the score. What the player
+heard was one music being talked over by another.
+
+**The hand-over.** The open score now has its own bus, and the score and the
+songs crossfade instead of overlapping:
+
+- the title screen hears the open score and no song;
+- a campaign opens on a song: the moment a game is on the board, the first
+  song comes up over 2.5 seconds while the whole open score steps aside
+  (its bus to nothing, time constant 0.7 s) — the score is never under a song;
+- when a song ends, the open score returns gently (time constant 1.4 s) for
+  the gap before the next one; a song that follows another at once (the next
+  song, a new choice in the settings, a song going to war) keeps the score out;
+- the songs sit at the open score's loudness: their bus plays at
+  `SONG_LVL`, measured against the score on the music bus's own meter.
+
+**Every song goes to war.** War used to change the music only in the
+automatic setting, and only by ending the song of peace and waiting for a
+song written for war. Now every song of peace has a war version of the same
+tune (`warVersionOf` in `js/data/songs.js`), built from a `war` spec on the
+song:
+
+- the melody keeps its notes and beats, sounded in the war mode — the open
+  score's own rule, peace in Adonai Malakh and war in Freygish;
+- the harmony keeps its roots, moved by scale degree into the war mode and
+  played as open fifths, so no third argues with the new mode;
+- it is quicker; the lyre and the halil give way to horns and the reed;
+- every section with a tune marches to the spec's drums (alternating two
+  patterns), the intro and the close toll, and the bass walks throughout.
+
+| song | war version | mode | beat |
+|---|---|---|---|
+| Song of the Well | The Well Defended | Freygish | 84 → 104 |
+| The Hill Country | The Hill Country in Arms | Freygish | 96 → 120 |
+| By the Rivers | By the Rivers, the Walls Burning | minor | 66 → 82 |
+| Lamps of Tiberias | Tiberias Under Arms | Freygish | 80 → 104 |
+| The Wedding at Sepphoris | The Sword Dance at Sepphoris | Freygish | 138 → 152 |
+| Dawn over the Negev | The Negev Brigade | minor | 76 → 108 |
+
+The four songs written for war (The Hammer, Watchfires on the Walls, The
+Banner of the Return, The Road to Jerusalem) are their own war versions.
+
+When the player's court goes to war (or into battle), the song playing turns
+into its war version at its next section — the same tune taken up by the war
+band, with a 1.2-second crossfade — in every setting: automatic, every song
+shuffled, or one chosen song. A song that starts at war starts in its war
+version. Automatic at war draws on the age's songs for war and the war
+versions of its songs of peace. The other way is never cut: a war version
+plays out after the peace is signed, and the next song is a song of peace.
+The settings window names what is playing, war title and all, and
+`tools/render_songs.mjs` renders the war versions (`well-war`, …) beside the
+songs.
+
+- **Regression contract**: `smoke200.mjs` — every song of peace has a war
+  version with sound notation, the same tune note for note in Freygish or
+  the minor, quicker, open fifths on the same roots moved by scale degree, a
+  march under every section with a tune and the edges tolling, one to three
+  minutes long with a start time for every section; a war song is its own
+  war version; every age has more pieces for war than songs of peace; the
+  catalogue names each war version; the band plays every note of every war
+  version. `uitest61.mjs` — the title screen hears the open score and no
+  song; a campaign opens on a song and the open score steps aside; a song
+  of peace sits within 4 dB of the open score; at peace a chosen song plays
+  as itself, war comes and the same song turns to its war version, at war
+  loudness within 5 dB, named in the settings window; peace is signed and
+  the war version plays out; at war a chosen song starts in its war
+  version. `uitest55.mjs` — automatic at war in the Great Revolt plays a
+  piece for war of the Second Temple.

@@ -10,7 +10,7 @@
 // effects — and the score hands over to composed songs (js/data/songs.js)
 // between stretches of the open score.
 import { getSetting, onSettingChange } from './settings.js';
-import { SONGS, songCatalogue, songAgeOf } from '../data/songs.js';
+import { SONGS, songCatalogue, songAgeOf, warVersionOf, isWarSong } from '../data/songs.js';
 import { buildTimeline, createSongVoices } from './song_engine.js';
 
 export function initSound(bus, getGame) {
@@ -504,6 +504,14 @@ export function initSound(bus, getGame) {
   };
   const CHORD_BEATS = 8;
   const MUSIC_LVL = 0.55;   // into master (which already sits at ~0.22)
+  // The two halves of the score, matched by ear and by meter (SPEC §295): the
+  // band of a song is fuller than the open score's few voices, so it sits a
+  // little lower and the hand-over keeps one loudness.
+  const SCORE_LVL = 1;
+  const SONG_LVL = 0.62;
+  const FADE_IN = 2.5;      // seconds for a song to come up
+  const SCORE_OUT = 0.7;    // time constant of the score stepping aside
+  const SCORE_IN = 1.4;     // …and of its return after a song
   const mus = {
     started: false,
     gain: null, droneGain: null, droneFilter: null, droneOscs: [],
@@ -523,6 +531,11 @@ export function initSound(bus, getGame) {
     song: null,             // {def, events, idx, start, end, bus}
     nextSongAt: 0,          // ac time the next song may begin
     recent: [],             // ids of the last songs, so they do not repeat
+    // SPEC §295: the open score and the songs each have a bus, and hand over
+    // by crossfading: one is never heard starting over the other.
+    scoreBus: null,
+    meter: null,            // an analyser on the whole score, for the tests
+    campaign: false,        // a campaign has begun (it opens on a song)
   };
 
   function noteHz(rootHz, mode, degree) {
@@ -567,6 +580,11 @@ export function initSound(bus, getGame) {
     try {
       const g = getGame ? getGame() : null;
       if (g) songAge = songAgeOf(g.bookmarkId, g.date && g.date.y);
+      // A campaign has begun: its first song comes up now (SPEC §295).
+      if (g && !mus.campaign && ac) {
+        mus.campaign = true;
+        if (!mus.song) mus.nextSongAt = ac.currentTime + 1.2;
+      }
     } catch (e) { warnOnce('song-age', e); }
   }
 
@@ -585,7 +603,7 @@ export function initSound(bus, getGame) {
       g.connect(f);
       out = f;
     }
-    out.connect(mus.gain);
+    out.connect(mus.scoreBus);
     if (opts.send) {
       const s = ac.createGain();
       s.gain.value = opts.send;
@@ -628,7 +646,7 @@ export function initSound(bus, getGame) {
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + (opts.attack || 0.004) + (opts.dur || 0.08));
     src.connect(f);
     f.connect(g);
-    g.connect(mus.gain);
+    g.connect(mus.scoreBus);
     src.start(t0);
     src.stop(t0 + (opts.attack || 0.004) + (opts.dur || 0.08) + 0.1);
   }
@@ -639,6 +657,12 @@ export function initSound(bus, getGame) {
     mus.gain = ac.createGain();
     mus.gain.gain.value = musicOn ? MUSIC_LVL * level('music') : 0;
     mus.gain.connect(master);
+    mus.scoreBus = ac.createGain();
+    mus.scoreBus.gain.value = SCORE_LVL;
+    mus.scoreBus.connect(mus.gain);
+    mus.meter = ac.createAnalyser();
+    mus.meter.fftSize = 2048;
+    mus.gain.connect(mus.meter);
     mus.send = ac.createGain();
     mus.send.gain.value = musicOn ? level('music') : 0;
     mus.send.connect(verbIn);
@@ -653,7 +677,7 @@ export function initSound(bus, getGame) {
     mus.droneFilter.frequency.value = 640;
     mus.droneFilter.Q.value = 0.6;
     mus.droneFilter.connect(mus.droneGain);
-    mus.droneGain.connect(mus.gain);
+    mus.droneGain.connect(mus.scoreBus);
     for (const [hz, level] of [[73.42, 1], [110, 0.7], [92.5, 0.55]]) {
       const o = ac.createOscillator();
       o.type = 'sawtooth';
@@ -677,58 +701,91 @@ export function initSound(bus, getGame) {
     lfo.start();
 
     mus.nextBeat = ac.currentTime + 0.2;
-    // The open score opens the campaign; the first song follows it — at once
-    // when the player chose one.
-    mus.nextSongAt = ac.currentTime + (getSetting('song') === 'auto' ? 25 + Math.random() * 15 : 1.5);
+    // The title screen hears the open score; a campaign opens on a song
+    // (SPEC §295), so the first thing a campaign hears is never the score
+    // being talked over. pollMood starts the song the moment a game appears.
+    mus.nextSongAt = Infinity;
+    mus.campaign = false;
     mus.timer = setInterval(scheduleAhead, 200);
   }
 
   // ---------------------------------------------------------- the songs --
-  const MOOD_RANK = { peace: 0, war: 1, battle: 2 };
   let songAge = 'temple';
 
   // Which song is next, by the setting: one song, every song, or (automatic)
   // a song of this age written for this mood, not one heard just now.
+  // At war every song plays as its war version (SPEC §295): a chosen song,
+  // the shuffle and the automatic choice alike. Automatic at war draws on the
+  // age's war songs and the war versions of its songs of peace.
   function pickSong() {
     const choice = getSetting('song');
+    const atWar = mus.mood !== 'peace';
+    const dress = (x) => (atWar ? warVersionOf(x) : x);
     if (choice !== 'auto' && choice !== 'shuffle') {
       const one = SONGS.find((x) => x.id === choice);
-      if (one) return one;
+      if (one) return dress(one);
     }
     let pool = choice === 'shuffle' ? SONGS.slice()
-      : SONGS.filter((x) => x.ages.includes(songAge) && x.moods.includes(mus.mood));
+      : SONGS.filter((x) => x.ages.includes(songAge) && (atWar || x.moods.includes('peace')));
     if (!pool.length) return null;
     const fresh = pool.filter((x) => !mus.recent.includes(x.id));
     if (fresh.length) pool = fresh;
-    return pool[(Math.random() * pool.length) | 0];
+    return dress(pool[(Math.random() * pool.length) | 0]);
   }
 
-  function startSong(def, at) {
+  // `fromSection`: begin at that section of the form (a war version taking
+  // over a song mid-way starts where the peace version had got to).
+  function startSong(def, at, fromSection, fadeIn) {
     const tl = buildTimeline(def);
     const songBus = ac.createGain();
-    songBus.gain.value = 1;
+    const lift = fadeIn === undefined ? FADE_IN : fadeIn;
+    songBus.gain.setValueAtTime(lift > 0 ? 0.0001 : SONG_LVL, at);
+    if (lift > 0) songBus.gain.linearRampToValueAtTime(SONG_LVL, at + lift);
     songBus.connect(mus.gain);
+    const skip = fromSection > 0 && tl.sections[fromSection] !== undefined ? tl.sections[fromSection] : 0;
+    let idx = 0;
+    while (idx < tl.events.length && tl.events[idx].t < skip - 1e-6) idx++;
     mus.song = {
-      def, events: tl.events, idx: 0, start: at, end: at + tl.duration, bus: songBus,
+      def, events: tl.events, idx, start: at - skip, end: at - skip + tl.duration, bus: songBus,
+      sections: tl.sections,
       play: createSongVoices(ac, songBus, mus.send, noiseBuf),
     };
-    mus.recent.push(def.id);
+    const base = def.base || def.id;
+    mus.recent = mus.recent.filter((x) => x !== base);
+    mus.recent.push(base);
     while (mus.recent.length > Math.min(3, SONGS.length - 1)) mus.recent.shift();
-    // the open score's pad steps aside; scheduleBeat brings it back after
-    try { mus.droneGain.gain.setTargetAtTime(0, at, 0.8); } catch (e) { /* fine */ }
+    // the open score steps aside, all of it, while the song comes up
+    try { mus.scoreBus.gain.setTargetAtTime(0, at, SCORE_OUT); } catch (e) { /* fine */ }
+  }
+  // Which section of its form the song is in now.
+  function sectionNow(cur, now) {
+    const t = now - cur.start;
+    let k = 0;
+    for (let i = 0; i < (cur.sections || []).length; i++) if (cur.sections[i] <= t) k = i;
+    return k;
   }
 
   // Let the song go: a short fade, then its bus is let go too.
-  function endSong(fade) {
+  // `handOver`: another song follows at once, so the open score stays out.
+  function endSong(fade, handOver) {
     const cur = mus.song;
     if (!cur) return;
     mus.song = null;
     const now = ac.currentTime;
     try {
+      cur.bus.gain.cancelScheduledValues(now);
       cur.bus.gain.setTargetAtTime(0, now, fade ? 0.5 : 0.05);
       setTimeout(() => { try { cur.bus.disconnect(); } catch (e) { /* gone */ } }, fade ? 4000 : 600);
     } catch (e) { warnOnce('song-end', e); }
+    if (!handOver) scoreReturns(now + (fade ? 1.2 : 0.2));
     mus.nextBeat = Math.max(mus.nextBeat, now + 0.1);
+  }
+  // The open score comes back up after a song, gently.
+  function scoreReturns(at) {
+    try {
+      mus.scoreBus.gain.cancelScheduledValues(at);
+      mus.scoreBus.gain.setTargetAtTime(SCORE_LVL, at, SCORE_IN);
+    } catch (e) { /* fine */ }
   }
 
   // Between songs the open score plays: a long stretch when automatic, a
@@ -739,7 +796,7 @@ export function initSound(bus, getGame) {
 
   function songChoiceChanged() {
     if (!ac || !mus.started) return;
-    endSong(true);
+    endSong(true, true);
     mus.recent = [];
     mus.nextSongAt = ac.currentTime + 1.5;
   }
@@ -747,7 +804,7 @@ export function initSound(bus, getGame) {
   // Skip ahead: the next song of the hour (one chosen song starts over).
   function nextSong() {
     if (!ac || !mus.started) return;
-    endSong(true);
+    endSong(true, true);
     mus.nextSongAt = ac.currentTime + 1.2;
   }
 
@@ -756,18 +813,24 @@ export function initSound(bus, getGame) {
     const now = ac.currentTime;
     const cur = mus.song;
     if (cur) {
-      // automatic: a peace song gives way when the war or the battle comes
-      // (never the other way: a war song plays out after the peace is signed),
-      // and a song from another age gives way to this one's
-      if (getSetting('song') === 'auto') {
-        const def = cur.def;
-        const louder = !def.moods.includes(mus.mood)
-          && MOOD_RANK[mus.mood] > Math.max(...def.moods.map((m) => MOOD_RANK[m]));
-        if (louder || !def.ages.includes(songAge)) {
-          endSong(true);
-          mus.nextSongAt = now + 1;
-          return false;
+      // War comes (SPEC §295): a song of peace turns into its war version at
+      // its next section — the same tune, taken up by the war band — in every
+      // setting. Never the other way: a war version plays out after the peace
+      // is signed, and the next song is a song of peace.
+      if (mus.mood !== 'peace' && !isWarSong(cur.def)) {
+        const war = warVersionOf(cur.def);
+        if (war && war !== cur.def) {
+          const k = Math.min(sectionNow(cur, now) + 1, war.form.length - 1);
+          endSong(true, true);
+          startSong(war, now + 0.6, Math.max(1, k), 1.2);
+          return true;
         }
+      }
+      // automatic: a song from another age gives way to this one's
+      if (getSetting('song') === 'auto' && !cur.def.ages.includes(songAge)) {
+        endSong(true, true);
+        mus.nextSongAt = now + 1;
+        return false;
       }
       while (cur.idx < cur.events.length && cur.start + cur.events[cur.idx].t < horizon) {
         const ev = cur.events[cur.idx++];
@@ -779,6 +842,7 @@ export function initSound(bus, getGame) {
         mus.song = null;
         try { cur.bus.disconnect(); } catch (e) { /* gone */ }
         mus.nextSongAt = now + gapAfterSong();
+        scoreReturns(now);
         return false;
       }
       return true;
@@ -1208,12 +1272,23 @@ export function initSound(bus, getGame) {
         return {
           on: musicOn, started: mus.started, mood: mus.mood, era: mus.era, style: mus.style, notes: mus.notes,
           age: songAge,
-          song: cur ? { id: cur.def.id, title: cur.def.title, blurb: cur.def.blurb } : null,
+          song: cur ? { id: cur.def.id, title: cur.def.title, blurb: cur.def.blurb, war: isWarSong(cur.def), base: cur.def.base || cur.def.id } : null,
+          score: mus.scoreBus ? mus.scoreBus.gain.value : null,
           songIn: cur || !ac ? 0 : Math.max(0, mus.nextSongAt - ac.currentTime),
         };
       },
       // The songs (SPEC §289): the catalogue, and the next one now.
       songs() { return songCatalogue(); },
+      // The score's loudness now (RMS of the music bus, dBFS), for the tests.
+      meter() {
+        if (!mus.meter) return null;
+        const buf = new Float32Array(mus.meter.fftSize);
+        mus.meter.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+        const rms = Math.sqrt(sum / buf.length);
+        return rms > 0 ? 20 * Math.log10(rms) : -120;
+      },
       next() { nextSong(); },
     },
   };

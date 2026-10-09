@@ -108,7 +108,9 @@ await page.waitForTimeout(2500);
 await page.waitForFunction(() => !!window._sound.music.state().song, null, { timeout: 8000 }).catch(() => {});
 ms = await page.evaluate(() => window._sound.music.state());
 ok(ms.age === 'temple', 'the Great Revolt is an age of the Second Temple: ' + ms.age);
-ok(ms.song && ['hammer', 'watchfires', 'rivers'].includes(ms.song.id), 'a Second Temple war song: ' + JSON.stringify(ms.song));
+// at war every song of the age plays in its war version (SPEC §295)
+ok(ms.song && ms.song.war && ['well', 'hills', 'rivers', 'hammer', 'watchfires', 'wedding'].includes(ms.song.base),
+  'a Second Temple piece for war: ' + JSON.stringify(ms.song));
 const first = ms.song && ms.song.id;
 await page.locator('#settings-modal [data-act="next"]').click();
 await page.waitForFunction((id) => {

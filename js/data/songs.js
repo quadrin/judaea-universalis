@@ -80,6 +80,13 @@ export const SONGS = [
       O: { c: '10:4 | 0m:4' },
     },
     drums: { soft: 'D...k...' },
+    // In war (SPEC §295): the shepherd's tune taken up by horns and a reed in
+    // Freygish, over a march — the well the clans muster at.
+    war: {
+      title: 'The Well Defended', mode: 'freygish', bpm: 104,
+      voices: { kinnor: 'horn', flute: 'reed' },
+      drums: { march: 'D.k.D.kk', drive: 'D.TkD.TT', call: 'B...B...' }, drum: ['march', 'drive'], edge: 'call',
+    },
     form: [
       { c: 'I', harp: 1, pad: 0.05 },
       { c: 'A', m: [['A', 'kinnor', 0, 1]], harp: 1, bass: 1, pad: 0.045 },
@@ -109,6 +116,13 @@ export const SONGS = [
       O: { c: '10:3 | 0:3' },
     },
     drums: { step: 'D...k.' },
+    // In war: the terraces' waltz turned to a three-step march in Freygish,
+    // horns where the halil was.
+    war: {
+      title: 'The Hill Country in Arms', mode: 'freygish', bpm: 120,
+      voices: { flute: 'horn', kinnor: 'reed' },
+      drums: { tread: 'D.TDT.', hard: 'DTTDTT', call: 'B.....' }, drum: ['tread', 'hard'], edge: 'call',
+    },
     form: [
       { c: 'I', harp: 1, pad: 0.04 },
       { c: 'A', m: [['A', 'flute', 1, 0.9]], harp: 1, bass: 1 },
@@ -139,6 +153,13 @@ export const SONGS = [
       O: { c: '7:3 | 0m:3' },
     },
     drums: {},
+    // In war: the lament with the walls burning. The choir keeps the tune; a
+    // horn answers it, and the great drum tolls under both.
+    war: {
+      title: 'By the Rivers, the Walls Burning', mode: 'minor', bpm: 82,
+      voices: { kinnor: 'horn' },
+      drums: { toll: 'B.....', toll2: 'B..D..' }, drum: ['toll', 'toll2'], edge: 'toll',
+    },
     form: [
       { c: 'I', pad: 0.06 },
       { c: 'A', m: [['A', 'choir', 0, 1]], pad: 0.05, bass: 1 },
@@ -225,6 +246,13 @@ export const SONGS = [
       O: { c: '2:4 | 0m:4' },
     },
     drums: { lake: 'D..k..k.' },
+    // In war: the lake's evening song, sharpened to Freygish and quickened; the
+    // horn leads and the oud drives the rhythm.
+    war: {
+      title: 'Tiberias Under Arms', mode: 'freygish', bpm: 104,
+      voices: { reed: 'horn' },
+      drums: { ride: 'D.TkD.Tk', toll: 'B...B...' }, drum: ['ride'], edge: 'toll',
+    },
     form: [
       { c: 'I', harp: 'oud', pad: 0.045 },
       { c: 'A', m: [['A', 'reed', 0, 1]], harp: 'oud', bass: 1 },
@@ -253,6 +281,13 @@ export const SONGS = [
       O: { c: '1:4 | 0:4' },
     },
     drums: { bulgar: 'D..T..T.', light: 'D..k..k.' },
+    // In war: the wedding dance become a war dance — faster, horns over the
+    // reed, the frame drums struck hard.
+    war: {
+      title: 'The Sword Dance at Sepphoris', mode: 'freygish', bpm: 152,
+      voices: { reed: 'horn', flute: 'reed' },
+      drums: { bulgar: 'D..T..T.', strike: 'D.TTD.TT', call: 'B...B...' }, drum: ['bulgar', 'strike'], edge: 'call',
+    },
     form: [
       { c: 'I', drum: 'bulgar', pad: 0.03 },
       { c: 'A', m: [['A', 'reed', 0, 1]], bass: 1, drum: 'bulgar' },
@@ -311,6 +346,13 @@ export const SONGS = [
       O: { c: '10:4 | 0:4' },
     },
     drums: { soft: 'D.......' },
+    // In war (1948): the kibbutz dawn in the minor, horns and strings over a
+    // snare — the Negev brigades on the move.
+    war: {
+      title: 'The Negev Brigade', mode: 'minor', bpm: 108,
+      voices: { flute: 'strings' },
+      drums: { snare: 'D.S.D.SS', roll: 'D.SSD.SS', toll: 'B...SSSS' }, drum: ['snare', 'roll'], edge: 'toll',
+    },
     form: [
       { c: 'I', harp: 1, pad: 0.045 },
       { c: 'A', m: [['A', 'flute', 0, 1]], harp: 1, bass: 1 },
@@ -352,10 +394,92 @@ export const SONGS = [
   },
 ];
 
+// ------------------------------------------------------- the war versions --
+// Every song plays at war (SPEC §295). A war song is its own war version. A
+// song of peace has a war arrangement of the same tune, built from its `war`
+// spec: the melody keeps its degrees but sounds them in the war mode (the
+// open score's own rule — peace in Adonai Malakh, war in Freygish), the
+// harmony keeps its roots, moved by scale degree into the war mode and
+// played as open fifths (no third to argue with the new mode), the voices
+// trade the lyre and the halil for horns and the reed, every section with a
+// tune marches to the spec's drums (alternating when it gives two), the
+// intro and the close toll, and the bass walks throughout.
+//   war.title  the war version's name     war.mode  the war mode
+//   war.bpm    its beat                   war.voices  {peace voice: war voice}
+//   war.drums  its patterns               war.drum  [pattern, …] for the tune
+//   war.edge   the pattern for the sections without a tune
+function mapRoot(off, from, to) {
+  const a = MODES[from];
+  const b = MODES[to];
+  if (!a || !b || from === to) return off;
+  const oct = Math.floor(off / 12);
+  const pc = ((off % 12) + 12) % 12;
+  const k = a.indexOf(pc);
+  return k < 0 ? off : oct * 12 + b[k];
+}
+function warChords(str, from, to) {
+  return String(str || '').split(/\s+/).filter(Boolean).map((tok) => {
+    if (tok === '|') return tok;
+    const m = /^(-?\d+)([mp]?)(?::(\d*\.?\d+))?$/.exec(tok);
+    if (!m) return tok;
+    return mapRoot(Number(m[1]), from, to) + 'p' + (m[3] !== undefined ? ':' + m[3] : '');
+  }).join(' ');
+}
+const _warCache = new Map();
+export function warVersionOf(song) {
+  if (!song) return null;
+  if (song.isWar || !song.war) return song;
+  if (_warCache.has(song.id)) return _warCache.get(song.id);
+  const w = song.war;
+  const mode = w.mode || song.mode;
+  const parts = {};
+  for (const [name, p] of Object.entries(song.parts)) {
+    parts[name] = { ...p };
+    if (p.c) parts[name].c = warChords(p.c, song.mode, mode);
+  }
+  const tunes = Array.isArray(w.drum) ? w.drum : [w.drum];
+  let n = 0;
+  const form = song.form.map((sec) => {
+    const out = { ...sec };
+    const lines = sec.m || [];
+    if (!lines.length) {
+      out.drum = w.edge || tunes[0];
+      out.pad = (sec.pad !== undefined ? sec.pad : 0.04) + 0.01;
+      return out;
+    }
+    out.m = lines.map(([pn, voice, oct, lvl]) => [pn, (w.voices || {})[voice] || voice, oct, lvl]);
+    out.drum = tunes[n++ % tunes.length];
+    out.bass = 1;
+    if (out.harp === 1) delete out.harp; // the harp's walk gives way to the drums
+    out.pad = (sec.pad !== undefined ? sec.pad : 0.04) + 0.015;
+    return out;
+  });
+  const v = {
+    id: song.id + '-war', base: song.id, isWar: true,
+    title: w.title || song.title + ' (war)',
+    blurb: 'The war version of ' + song.title + '.',
+    ages: song.ages.slice(), moods: ['war', 'battle'],
+    key: song.key, mode, meter: song.meter, bpm: w.bpm || Math.round(song.bpm * 1.2),
+    parts, drums: { ...(song.drums || {}), ...(w.drums || {}) }, form,
+  };
+  _warCache.set(song.id, v);
+  return v;
+}
+// Is this song (or version) the war one?
+export function isWarSong(song) {
+  return !!song && (song.isWar || !song.moods.includes('peace'));
+}
+// The peace version of a war version, or the song itself.
+export function peaceVersionOf(song) {
+  if (!song || !song.isWar) return song;
+  return SONGS.find((x) => x.id === song.base) || song;
+}
+
 // The catalogue as the settings window lists it.
 export function songCatalogue() {
   return SONGS.map((s) => ({
     id: s.id, title: s.title, blurb: s.blurb,
     age: SONG_AGES[s.ages[0]], ages: s.ages.slice(), moods: s.moods.slice(),
+    warTitle: s.war ? warVersionOf(s).title : '',
   }));
 }
