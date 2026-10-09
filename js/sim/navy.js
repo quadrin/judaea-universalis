@@ -12,7 +12,13 @@ import { queueUnitRecruitment } from './recruitment.js';
 import { seasonSeaFactor } from './seasons.js';
 
 const SHIP_COST = 30;        // talents to lay down a hull
-const SHIP_UPKEEP = 0.5;     // talents per ship per month
+export const SHIP_UPKEEP = 0.5; // talents per ship per month
+// Laid up in ordinary (SPEC §293): a squadron moored in a harbor of ours with
+// its crews paid off costs a quarter of its upkeep. It cannot sail or carry
+// troops, fights at half strength if an enemy finds it, and is lost if the
+// harbor falls. Recommissioning takes a month of signing on crews.
+export const LAID_UP_UPKEEP = 0.25;
+export const RECOMMISSION_DAYS = 30;
 const SEA_PX_PER_DAY = 34;   // fleets are faster than legions
 const CAPACITY = 1000;       // men per ship
 const MERCHANT_PX_PER_DAY = 22;           // round-bellied tubs sail slower than war fleets
@@ -112,7 +118,66 @@ export function navalGen(ctx, tag) {
   return cappedGen(num(t && t.tech && t.tech.mar, 0), ctx && ctx.bookmark);
 }
 export function fleetPowerOf(ctx, fleet) {
-  return resolveTagMult(ctx, fleet.tag, 'navalMult') * genMult(num(fleet.gen, 0));
+  return resolveTagMult(ctx, fleet.tag, 'navalMult') * genMult(num(fleet.gen, 0)) * fleetReadiness(fleet);
+}
+// Half a crew aboard a ship laid up, three quarters while it recommissions.
+export function fleetReadiness(fleet) {
+  if (!fleet) return 1;
+  if (fleet.laidUp) return 0.5;
+  if (num(fleet.recommission) > 0) return 0.75;
+  return 1;
+}
+// Why a fleet may not sail now (laid up or still signing on crews), or ''.
+export function fleetIdleWhy(fleet) {
+  if (!fleet) return '';
+  if (fleet.laidUp) return 'The squadron is laid up in ordinary. Recommission it first.';
+  if (num(fleet.recommission) > 0) return 'The squadron is signing on crews: ' + Math.ceil(num(fleet.recommission)) + ' days more.';
+  return '';
+}
+// What a squadron costs a month (SPEC §293): its hulls, oil for a modern
+// pattern (SPEC §52), a quarter while it is laid up.
+export function fleetUpkeep(ctx, fleet) {
+  if (!fleet || !(fleet.ships > 0)) return 0;
+  const F = ctx.DEFINES && ctx.DEFINES.FUEL;
+  const fueled = F && num(fleet.gen, 0) >= num(F.gen, 5);
+  const each = SHIP_UPKEEP * (fueled ? num(F.shipMult, 1.5) : 1);
+  return fleet.ships * each * (fleet.laidUp ? LAID_UP_UPKEEP : 1);
+}
+export function navalUpkeep(ctx, tag) {
+  let sum = 0;
+  for (const f of Object.values(ctx.game.fleets || {})) if (f && f.tag === tag) sum += fleetUpkeep(ctx, f);
+  return sum;
+}
+export function layUpInfo(ctx, tag, fleet) {
+  const out = { can: false, why: '', laidUp: !!(fleet && fleet.laidUp), save: 0, days: num(fleet && fleet.recommission) };
+  if (!fleet || fleet.tag !== tag || !(fleet.ships > 0)) { out.why = 'No such squadron of ours.'; return out; }
+  out.save = fleetUpkeep(ctx, fleet) * (fleet.laidUp ? (1 / LAID_UP_UPKEEP - 1) : (1 - LAID_UP_UPKEEP));
+  if (fleet.laidUp) { out.can = true; return out; } // recommission: always
+  if (num(fleet.recommission) > 0) { out.why = 'The squadron is signing on crews.'; return out; }
+  if (fleet.path && fleet.path.length) { out.why = 'A squadron under sail cannot be laid up.'; return out; }
+  const p = ctx.byId(fleet.prov);
+  if (!p || p.owner !== tag || p.controller !== tag) { out.why = 'A squadron is laid up only in a harbor of ours.'; return out; }
+  if (Object.values(ctx.game.armies || {}).some((a) => a && a.aboard === fleet.id)) { out.why = 'Put the troops ashore first.'; return out; }
+  if (fleetsAt(ctx, fleet.prov).some((f) => isHostile(ctx, f.tag, tag))) { out.why = 'Not with an enemy squadron off the harbor.'; return out; }
+  out.can = true;
+  return out;
+}
+// on: lay up; off: recommission (it takes RECOMMISSION_DAYS).
+export function layUpCore(ctx, tag, fleet, on) {
+  const info = layUpInfo(ctx, tag, fleet);
+  if (!info.can) return { ok: false, why: info.why };
+  if (!!on === !!fleet.laidUp) return { ok: false, why: on ? 'The squadron is already laid up.' : 'The squadron is in commission.' };
+  if (on) {
+    fleet.laidUp = true;
+    fleet.recommission = 0;
+    fleet.mission = null;
+    fleet.path = [];
+    fleet.moveDaysLeft = 0;
+  } else {
+    delete fleet.laidUp;
+    fleet.recommission = RECOMMISSION_DAYS;
+  }
+  return { ok: true, days: on ? 0 : RECOMMISSION_DAYS };
 }
 export function modernizeFleetInfo(ctx, fleet) {
   const cur = navalGen(ctx, fleet.tag);
@@ -146,6 +211,7 @@ export function issueFleetMove(ctx, fleet, targetId) {
   // The truce is on the water too (SPEC §261).
   if (ceasefireHolds(ctx)) return false;
   if (!fleet || fleet.ships <= 0) return false;
+  if (fleetIdleWhy(fleet)) return false; // laid up, or signing on crews (SPEC §293)
   if (!isCoastal(ctx, targetId)) return false;
   if (targetId === fleet.prov) { fleet.path = []; fleet.moveDaysLeft = 0; return true; }
   fleet.path = [targetId]; // open water: one direct hop
@@ -158,6 +224,7 @@ export function embarkCore(ctx, fleet, armyId) {
   const a = g.armies[armyId];
   if (!fleet || !a) return { ok: false, why: 'no such army' };
   if (a.tag !== fleet.tag && !sameSide(ctx, a.tag, fleet.tag)) return { ok: false, why: 'not our fleet' };
+  if (fleetIdleWhy(fleet)) return { ok: false, why: fleetIdleWhy(fleet) };
   if (a.prov !== fleet.prov) return { ok: false, why: 'the army is not at the harbor' };
   if (a.inBattle || a.aboard) return { ok: false, why: 'the army cannot board now' };
   const aboardMen = Object.values(g.armies)
@@ -199,8 +266,9 @@ export function disembarkCore(ctx, fleet) {
 export function mergeableFleetsAt(ctx, fleet) {
   if (!fleet || fleet.ships <= 0) return [];
   if (fleet.path && fleet.path.length) return [];
+  if (fleetIdleWhy(fleet)) return [];
   return fleetsAt(ctx, fleet.prov).filter((f) => f && f.id !== fleet.id
-    && f.tag === fleet.tag && !(f.path && f.path.length));
+    && f.tag === fleet.tag && !(f.path && f.path.length) && !fleetIdleWhy(f));
 }
 // …and why not, in the words the outliner prints on a dead button.
 export function mergeFleetsInfo(ctx, fleet) {
@@ -208,6 +276,7 @@ export function mergeFleetsInfo(ctx, fleet) {
   if (fleet.path && fleet.path.length) {
     return { can: false, count: 0, ships: 0, why: 'A fleet under sail takes nothing under its command.' };
   }
+  if (fleetIdleWhy(fleet)) return { can: false, count: 0, ships: 0, why: fleetIdleWhy(fleet) };
   const here = mergeableFleetsAt(ctx, fleet);
   const ships = here.reduce((n, f) => n + num(f.ships), 0);
   if (!here.length) return { can: false, count: 0, ships: 0, why: 'No other squadron of ours rides at this anchor.' };
@@ -218,6 +287,7 @@ export function mergeFleetsCore(ctx, fromFleet, intoFleet) {
   if (!fromFleet || !intoFleet || fromFleet.id === intoFleet.id) return false;
   if (fromFleet.tag !== intoFleet.tag || fromFleet.prov !== intoFleet.prov) return false;
   if ((fromFleet.path && fromFleet.path.length) || (intoFleet.path && intoFleet.path.length)) return false;
+  if (fleetIdleWhy(fromFleet) || fleetIdleWhy(intoFleet)) return false;
   intoFleet.ships = num(intoFleet.ships) + num(fromFleet.ships);
   intoFleet.gen = Math.min(num(intoFleet.gen, 0), num(fromFleet.gen, 0));
   if (!intoFleet.admiral && fromFleet.admiral) intoFleet.admiral = fromFleet.admiral;
@@ -251,6 +321,24 @@ export function fleetsDaily(ctx) {
     const f = g.fleets[id];
     if (!f) continue;
     if (f.ships <= 0) { disembarkCore(ctx, f); delete g.fleets[id]; continue; }
+    if (num(f.recommission) > 0) { f.recommission = num(f.recommission) - 1; if (f.recommission <= 0) delete f.recommission; }
+    // A squadron laid up in a harbor that falls is lost with it (SPEC §293):
+    // the crews are ashore, and the enemy holds the quays.
+    if (f.laidUp) {
+      const port = ctx.byId(f.prov);
+      if (!port || port.controller !== f.tag) {
+        if (f.tag === g.playerTag) {
+          ctx.bus.emit('notify', {
+            title: 'A squadron lost in port',
+            text: f.name + ' was laid up at ' + ((port && port.name) || 'a fallen harbor') + '. The harbor has fallen, and the ' + f.ships + ' hulls with it.',
+            type: 'bad', provName: port && port.name,
+          });
+        }
+        f.ships = 0;
+        delete g.fleets[id];
+        continue;
+      }
+    }
     if (!f.path || !f.path.length) continue;
     if (f.moveDaysLeft <= 0) { f.moveDaysLeft = seaHopDays(ctx, f.prov, f.path[0]); f.hopTotal = f.moveDaysLeft; }
     f.moveDaysLeft--;
@@ -311,20 +399,16 @@ export function fleetsDaily(ctx) {
   }
 }
 
-// Monthly: upkeep. An exhausted treasury lets hulls rot. Oil-fired patterns
-// (SPEC §52) pay a fuel premium — a destroyer flotilla bunkers oil where a
-// penteconter shipped oars.
+// Monthly: an exhausted treasury lets hulls rot. The upkeep itself (oil-fired
+// patterns paying a fuel premium, SPEC §52) is a line of the ledger since
+// SPEC §293 (economy.js, navalUpkeep): it was taken here, out of sight of
+// the month's balance, the AI's budget and the player's ledger.
 export function monthlyNavy(ctx) {
   const g = ctx.game;
-  const F = ctx.DEFINES.FUEL;
-  const fuelGen = F ? num(F.gen, 5) : Infinity;
-  const shipMult = F ? num(F.shipMult, 1.5) : 1;
   for (const f of Object.values(g.fleets || {})) {
     if (!f || f.ships <= 0) continue;
     const t = g.tags[f.tag];
     if (!t) continue;
-    const fueled = num(f.gen, 0) >= fuelGen;
-    t.treasury = num(t.treasury) - f.ships * SHIP_UPKEEP * (fueled ? shipMult : 1);
     if (t.treasury <= -150 && f.ships > 0) f.ships--; // rot
   }
 }

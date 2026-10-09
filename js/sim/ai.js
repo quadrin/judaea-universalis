@@ -15,8 +15,9 @@ import {
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
   tagGen, mechanicOn, tagDef, resolveTagAdd, armsGate,
   establishRuleTerms, applyEstablishRule, reservesTerms, callReservesCore, buildingFace, isHumanChair,
+  fortUpkeep, mothballFortCore, capitalProvince, fortOnBorder,
 } from './military.js';
-import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
+import { modernizeFleetInfo, modernizeFleetCore, navalUpkeep, layUpCore, fleetUpkeep, LAID_UP_UPKEEP } from './navy.js';
 import { aiTrade } from './trade.js';
 import { deference } from './standing.js';
 import { institutionMult } from './institutions.js';
@@ -104,7 +105,11 @@ function aiRecruit(ctx, tag, hints, fraction) {
   // merchant or a lost market town can take it in a month, and an army sized
   // to it is an army the treasury cannot keep when it goes.
   const steady = num(t.income) - 0.5 * Math.max(0, num(t.marketTrade));
-  const affordable = Math.max(3, Math.floor((steady * 0.65) / maintPerReg));
+  // The fleet and the walls are paid first (SPEC §293): what is left of the
+  // 0.65 is what the regiments may cost.
+  let fixed = 0;
+  try { fixed = navalUpkeep(ctx, tag) + fortUpkeep(ctx, tag); } catch (e) { fixed = 0; }
+  const affordable = Math.max(3, Math.floor((steady * 0.65 - fixed) / maintPerReg));
   let desired = num(hints && hints.targetRegiments, 20);
   // The establishment grows with the realm (SPEC §21 extended): the bookmark
   // hint is a floor frozen at start, not a ceiling — a court that has doubled
@@ -451,6 +456,7 @@ function runTagAI(ctx, tag) {
   // naked just because nobody has attacked it yet (v2.1 harness finding).
   const rearmingAtPeace = !enemies.length && hints.threatRearm
     && g.flags && g.flags.postwarRearmament;
+  try { aiUpkeep(ctx, tag, enemies.length > 0); } catch (e) { warnOnce('upkeep:' + tag, 'upkeep AI failed for', tag, e); }
   aiRecruit(ctx, tag, hints, enemies.length || rearmingAtPeace ? 1 : 0.5);
   aiShedUnaffordable(ctx, tag);
   // The sea has its own clock (SPEC §82): an armada mid-crossing keeps
@@ -477,6 +483,53 @@ function runTagAI(ctx, tag) {
   // forecast says it wins, a siege nobody can break — not by one stack
   // marching at the nearest cheap province.
   planWar(ctx, tag);
+}
+
+// The walls and the fleet in peace and war (SPEC §293). At war, or with
+// rebels on our land, every mothballed fort is manned and every squadron laid
+// up is recommissioned. At peace a fort deep inside the realm is mothballed
+// (no court but ours, our clients or our overlord borders it), the capital's
+// excepted; a court in the red mothballs its border forts too, and lays up
+// the squadrons idle in its harbors. A court back in surplus recommissions.
+export function aiUpkeep(ctx, tag, atWar) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t || !t.alive || tag === 'REB') return;
+  const danger = atWar || rebelsOnOurLand(ctx, tag);
+  const broke = num(t.income) < num(t.expenses) && num(t.treasury) < 50;
+  const cap = capitalProvince(ctx, tag);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.owner !== tag || p.controller !== tag || p.siege || !((p.fort | 0) > 0)) continue;
+    if (danger) {
+      if (p.mothballed) mothballFortCore(ctx, tag, i, false);
+      continue;
+    }
+    if (p.mothballed || (cap && cap.id === i)) continue;
+    if (broke || !fortOnBorder(ctx, tag, i)) mothballFortCore(ctx, tag, i, true);
+  }
+  const fleets = Object.values(g.fleets || {}).filter((f) => f && f.tag === tag && f.ships > 0);
+  if (!fleets.length) return;
+  if (danger) {
+    for (const f of fleets) if (f.laidUp) layUpCore(ctx, tag, f, false);
+    return;
+  }
+  if (broke) {
+    for (const f of fleets) {
+      if (f.laidUp || f.mission || (f.path && f.path.length)) continue;
+      layUpCore(ctx, tag, f, true);
+    }
+    return;
+  }
+  // back in surplus: recommission while the books can carry the full upkeep
+  let spare = num(t.income) - num(t.expenses);
+  if (num(t.treasury) < 150) return;
+  for (const f of fleets) {
+    if (!f.laidUp) continue;
+    const extra = fleetUpkeep(ctx, f) * (1 / LAID_UP_UPKEEP - 1);
+    if (spare < 3 * extra) continue;
+    if (layUpCore(ctx, tag, f, false).ok) spare -= extra;
+  }
 }
 
 function rebelsOnOurLand(ctx, tag) {

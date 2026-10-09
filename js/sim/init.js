@@ -33,6 +33,7 @@ import {
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
   armSpeedOf, isHumanChair,
   establishRuleTerms, applyEstablishRule, reservesTerms, callReservesCore,
+  mothballInfo, mothballFortCore, fortOnBorder, capitalProvince as capitalOf,
 } from './military.js';
 // The land roster (SPEC §191): the shot arm's names, and the cue a column of
 // each pattern makes when it takes the road.
@@ -45,6 +46,7 @@ import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
   mergeFleetsInfo, mergeableFleetsAt, mergeFleetsCore,
+  fleetIdleWhy, fleetUpkeep, layUpInfo, layUpCore,
 } from './navy.js';
 import { migrateTradeState, tradeView, merchantTargets, provinceTrade, buildSites, buildMerchantCore, buildMerchantInfo, sendMerchantCore as sendTradeMerchantCore, recallMerchantCore, setFleetMissionCore, merchantsOf, touchTrade } from './trade.js';
 import { navalGenName } from '../data/tech.js';
@@ -2814,6 +2816,10 @@ export function gameActions(ctx) {
               canHireAdmiral: !f.admiral && num(g.tags[me].points && g.tags[me].points.mar) >= 50,
               canMerge: gi.can, mergeCount: gi.count, mergeShips: gi.ships, whyMerge: gi.why || '',
               mission: f.mission ? { kind: f.mission.kind, node: f.mission.node } : null,
+              // laid up in ordinary (SPEC §293)
+              laidUp: !!f.laidUp, recommission: Math.ceil(num(f.recommission)),
+              upkeep: Math.round(fleetUpkeep(ctx, f) * 100) / 100,
+              ...(() => { const li = layUpInfo(ctx, me, f); return { canLayUp: li.can, whyLayUp: li.why || '', layUpSave: Math.round(li.save * 100) / 100 }; })(),
             };
           });
         // The merchants (SPEC §292) for the outliner's line: how many, how
@@ -2970,6 +2976,58 @@ export function gameActions(ctx) {
         return true;
       } catch (e) { warnOnce('setFleetMission', e); return false; }
     },
+    // ---- the walls and the fleet laid up (SPEC §293) --------------------------
+    // Every fort of ours, for the Defense tab: its level, garrison, upkeep,
+    // whether it faces another court, and whether it can be mothballed or
+    // manned now.
+    getForts() {
+      try {
+        const me = g.playerTag;
+        const cap = capitalOf(ctx, me);
+        const out = [];
+        for (let i = 1; i < g.provinces.length; i++) {
+          const p = g.provinces[i];
+          if (!p || p.owner !== me || !((p.fort | 0) > 0)) continue;
+          const mi = mothballInfo(ctx, me, i);
+          out.push({
+            prov: i, name: p.name, fort: p.fort | 0, garrison: Math.round(num(p.garrison)), maxGarrison: Math.round(num(p.maxGarrison)),
+            mothballed: !!p.mothballed, upkeep: Math.round(mi.upkeep * 100) / 100, can: mi.can, why: mi.why || '',
+            border: fortOnBorder(ctx, me, i), capital: !!cap && cap.id === i, siege: !!p.siege, held: p.controller === me,
+          });
+        }
+        return out.sort((a, b) => Number(b.border) - Number(a.border) || b.fort - a.fort || a.name.localeCompare(b.name));
+      } catch (e) { warnOnce('getForts', e); return []; }
+    },
+    getFortInfo(provId) {
+      try { return mothballInfo(ctx, g.playerTag, provId | 0); }
+      catch (e) { warnOnce('getFortInfo', e); return null; }
+    },
+    // on: mothball the fort (no upkeep, the walls do not hold); off: man it.
+    mothballFort(provId, on) {
+      try {
+        const res = mothballFortCore(ctx, g.playerTag, provId | 0, !!on);
+        const p = ctx.byId(provId | 0);
+        if (!res.ok) { say('The walls stay as they are', res.why, 'bad'); return false; }
+        say(on ? 'The fort is mothballed' : 'The walls are manned',
+          on ? 'The garrison of ' + p.name + ' goes home. The fort costs nothing now, and will not hold: a siege takes it like an open town. ' + res.upkeep.toFixed(1) + ' talents a month saved.'
+            : p.name + ' is manned again (' + res.upkeep.toFixed(1) + ' talents a month). The garrison grows back month by month; until it does, the walls are thinly held.', 'info');
+        return true;
+      } catch (e) { warnOnce('mothballFort', e); return false; }
+    },
+    // on: lay the squadron up in ordinary; off: recommission it.
+    layUpFleet(fleetId, on) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return false;
+        const res = layUpCore(ctx, g.playerTag, f, !!on);
+        if (!res.ok) { say('Orders refused', res.why, 'bad'); return false; }
+        if (on) touchTrade(g);
+        say(on ? 'Laid up in ordinary' : 'Recommissioning',
+          on ? f.name + ' is moored with its crews paid off: a quarter of the upkeep. It cannot sail, fights at half strength if found, and is lost if the harbor falls.'
+            : f.name + ' signs on crews. It can sail in ' + res.days + ' days.', 'info');
+        return true;
+      } catch (e) { warnOnce('layUpFleet', e); return false; }
+    },
     moveFleet(fleetId, provId) {
       try {
         const f = (g.fleets || {})[fleetId];
@@ -2980,6 +3038,7 @@ export function gameActions(ctx) {
           return;
         }
         if (!isCoastal(ctx, provId | 0)) { say('No harbor there', 'Fleets sail port to port — pick a coastal province.', 'bad'); return; }
+        if (fleetIdleWhy(f)) { say('The squadron stays', fleetIdleWhy(f), 'bad'); return; }
         // a hand on the tiller ends a trade mission (SPEC §292)
         if (f.mission) { f.mission = null; touchTrade(g); }
         issueFleetMove(ctx, f, provId | 0);

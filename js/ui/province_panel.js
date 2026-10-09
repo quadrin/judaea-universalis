@@ -146,6 +146,7 @@ const RISING_LABELS = {
       <div class="pp-block hidden" data-ref="fortBlock">
         <div class="pp-bar-label"><span data-ref="fortLabel"></span><span data-ref="garrisonText"></span></div>
         <div class="bar bar-garrison"><div class="bar-fill" data-ref="garrisonFill"></div></div>
+        <button class="btn pp-mothball hidden" data-ref="mothball"></button>
       </div>
       <div class="pp-block pp-siege hidden" data-ref="siegeBlock">
         <div class="pp-bar-label"><span data-ref="siegeLabel"></span><span data-ref="siegePct"></span></div>
@@ -311,6 +312,13 @@ const RISING_LABELS = {
         : b.dataset.waste === 'settle' ? 'settleProvince' : 'annexWasteland';
       try { if (typeof actions[fn] === 'function') actions[fn](provId); }
       catch (err) { warnOnce('waste-' + b.dataset.waste, err); }
+      refresh();
+    });
+    // Mothball the fort, or man it again (SPEC §293).
+    refs.mothball.addEventListener('click', () => {
+      if (!actions || typeof actions.mothballFort !== 'function' || refs.mothball.classList.contains('disabled')) return;
+      const p = ctx && ctx.byId(provId);
+      try { actions.mothballFort(provId, !(p && p.mothballed)); } catch (e) { warnOnce('mothballFort', e); }
       refresh();
     });
     refs.buildShip.addEventListener('click', () => {
@@ -540,8 +548,23 @@ const RISING_LABELS = {
     refs.fortBlock.classList.toggle('hidden', !hasFort);
     if (hasFort) {
       setHtml(refs.fortLabel, (p.fort || 0) > 0
-        ? 'Fort ' + icon('tower', 'icon-pip').repeat(Math.min(5, p.fort))
+        ? 'Fort ' + icon('tower', 'icon-pip').repeat(Math.min(5, p.fort)) + (p.mothballed ? ' <i class="pp-mothballed">mothballed</i>' : '')
         : 'Garrison');
+      // The walls' upkeep (SPEC §293): our own fort can be mothballed, or
+      // manned again.
+      let fi = null;
+      if (p.owner === g.playerTag && (p.fort || 0) > 0 && actions && typeof actions.getFortInfo === 'function') {
+        try { fi = actions.getFortInfo(p.id); } catch (e) { warnOnce('getFortInfo', e); }
+      }
+      refs.mothball.classList.toggle('hidden', !fi);
+      if (fi) {
+        setText(refs.mothball, p.mothballed ? 'Man the walls · ' + fi.upkeep.toFixed(1) + '/mo' : 'Mothball · save ' + fi.upkeep.toFixed(1) + '/mo');
+        refs.mothball.classList.toggle('disabled', !fi.can);
+        refs.mothball.dataset.tt = !fi.can ? fi.why
+          : p.mothballed
+            ? 'Man the walls again: the fort costs ' + fi.upkeep.toFixed(1) + ' talents a month and holds against a siege. The garrison grows back month by month, so a fort manned the week the enemy comes is thinly held.'
+            : 'Mothball the fort: it costs nothing, but nobody mans it. The garrison goes home, and a siege takes it like an open town. Saves ' + fi.upkeep.toFixed(1) + ' talents a month.';
+      }
       const maxG = Math.max(1, p.maxGarrison || 0);
       setText(refs.garrisonText, `${fmtMen(p.garrison)} / ${fmtMen(p.maxGarrison)}`);
       refs.garrisonFill.style.width = Math.max(0, Math.min(100, ((p.garrison || 0) / maxG) * 100)) + '%';

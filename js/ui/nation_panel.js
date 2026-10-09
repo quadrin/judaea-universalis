@@ -288,6 +288,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
              literal, and one closes it. -->
         <div class="np-bulk" data-ref="hostActs"></div>
       </div>
+      <div class="pp-build hidden" data-ref="fortsBlock" data-tab="war">
+        <div class="pp-build-title" data-tt="Every fort costs its upkeep each month. A mothballed fort costs nothing, but nobody mans it: a siege takes it like an open town, and when it is manned again the garrison grows back month by month.">The Walls</div>
+        <div class="np-forts" data-ref="forts"></div>
+      </div>
       <!-- What wants orders (SPEC §246). §244 gave this tab a report and three
            bulk levers, and a report is not a choice: every line was a count
            you could read and not act on, and the levers acted on ALL of it or
@@ -378,6 +382,23 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           return;
         }
       } catch (err) { warnOnce('np-trade-click', err); }
+      refresh();
+    });
+    // The walls (SPEC §293): mothball a fort, man it, or find it on the map.
+    refs.forts.addEventListener('click', (e) => {
+      const t = e.target instanceof Element ? e.target : null;
+      if (!t || !actions) return;
+      const b = t.closest('[data-fort-mb],[data-fort-go]');
+      if (!b || b.classList.contains('disabled')) return;
+      e.stopPropagation();
+      try {
+        if (b.dataset.fortGo) {
+          if (onProvinceClick) onProvinceClick(b.dataset.fortGo | 0);
+          return;
+        }
+        const [prov, on] = b.dataset.fortMb.split('|');
+        actions.mothballFort(prov | 0, on === '1');
+      } catch (err) { warnOnce('np-forts-click', err); }
       refresh();
     });
     refs.trade.addEventListener('change', (e) => {
@@ -1080,6 +1101,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshTech(t, self);
     refreshPrograms(self);
     refreshHostState(self);
+    refreshForts(self);
     refreshOrders(self);
     refreshLedger(self);
     refreshTrade(self);
@@ -2522,6 +2544,36 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // each squadron's select was last set to, kept across the daily redraw.
   let tradePick = 0;
   const fleetPick = {};
+  // The walls (SPEC §293): every fort of ours, border forts first, with what
+  // it costs and a button to mothball it or man it again.
+  function refreshForts(self) {
+    if (!refs.fortsBlock) return;
+    let forts = [];
+    if (self && actions && typeof actions.getForts === 'function') {
+      try { forts = actions.getForts() || []; } catch (e) { warnOnce('np-forts', e); }
+    }
+    refs.fortsBlock.classList.toggle('hidden', !forts.length);
+    if (!forts.length) { setHtml(refs.forts, ''); return; }
+    const cost = forts.reduce((s, f) => s + (f.mothballed ? 0 : f.upkeep), 0);
+    const mb = forts.filter((f) => f.mothballed).length;
+    let h = `<div class="np-tr-sum"><span>${icon('tower', 'icon-sm')} <b>${forts.length}</b> ${forts.length === 1 ? 'fort' : 'forts'}</span>`
+      + `<span>upkeep <b>${cost.toFixed(1)}</b> a month</span>${mb ? `<span>${mb} mothballed</span>` : ''}</div>`;
+    for (const f of forts) {
+      const where = f.capital ? 'the capital' : f.border ? 'faces another court' : 'inside the realm';
+      const state = !f.held ? 'held by the enemy' : f.siege ? 'under siege' : f.mothballed ? 'mothballed' : fmtMen(f.garrison) + ' / ' + fmtMen(f.maxGarrison);
+      const tt = f.name + ', fort ' + f.fort + ' (' + where + '). '
+        + (f.mothballed ? 'Mothballed: it costs nothing and will not hold against a siege.' : 'Manned: ' + f.upkeep.toFixed(1) + ' talents a month.')
+        + (f.can ? '' : '\n' + f.why);
+      const btn = f.mothballed
+        ? `<button class="np-tr-btn${f.can ? '' : ' disabled'}" data-fort-mb="${f.prov}|0" data-tt="${esc(f.can ? 'Man the walls again: ' + f.upkeep.toFixed(1) + ' talents a month. The garrison grows back month by month.' : f.why)}">Man</button>`
+        : `<button class="np-tr-btn${f.can ? '' : ' disabled'}" data-fort-mb="${f.prov}|1" data-tt="${esc(f.can ? 'Mothball: save ' + f.upkeep.toFixed(1) + ' talents a month. Nobody mans it, and a siege takes it like an open town.' : f.why)}">Mothball</button>`;
+      h += `<div class="np-tr-m${f.mothballed ? ' np-fort-mb' : ''}" data-tt="${esc(tt)}"><span class="np-tr-mk"><button class="np-tr-node" data-fort-go="${f.prov}">${esc(f.name)}</button> `
+        + `${icon('tower', 'icon-pip').repeat(Math.min(5, f.fort))} <i>${esc(state)}${f.border || f.capital ? '' : ' · interior'}</i></span>`
+        + `<span class="np-tr-acts"><span class="np-fort-cost">${f.mothballed ? '—' : '−' + f.upkeep.toFixed(1)}</span>${btn}</span></div>`;
+    }
+    setHtml(refs.forts, h);
+  }
+
   function refreshTrade(self) {
     if (!refs.tradeBlock) return;
     let v = null;

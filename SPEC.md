@@ -21169,3 +21169,96 @@ Adiabene).
   political map draws none. `uitest20.mjs` (the province panel's market
   block fits out a ship), `uitest28.mjs` and `uitest56.mjs` (§290's ships,
   now merchants) were moved to the new merchants. No page errors.
+
+## §293 — The walls and the fleet cost money, and both can be put away
+
+A fort cost nothing to keep. A warship cost 0.5 a month, but that was taken
+out of the treasury by `monthlyNavy`, out of sight: it was not in the
+ledger, not in the month's balance the topbar shows, not in `t.expenses`
+that the AI and the bankruptcy crisis read, and not in the AI's recruiting
+budget. An army cost its upkeep (0.35 a regiment, ×3 for the part over the
+force limit) and could be stood down (§21), but there was no way to keep a
+fort or a fleet and pay less for it. EU4 has both levers: forts cost
+maintenance and can be mothballed.
+
+**Forts cost money.** Every fort level costs `fortUpkeepPerLevel` (0.3) a
+month while its owner holds it. The ledger has a Fortresses line. In 66 CE
+Judaea's four forts (ten levels) cost 3 a month, against a balance of about
+5.
+
+**The fleet is on the ledger.** Naval maintenance (0.5 a ship, ×1.5 for an
+oil-fired pattern, §52) is a line of the ledger, part of the month's
+balance and of `t.expenses`. `monthlyNavy` only lets hulls rot past −150.
+
+**Mothballing a fort.** A fort of ours, held and not under siege, can be
+mothballed from the province panel or from the Defense tab's new Walls list
+(border forts first, each with its level, garrison and upkeep). A mothballed
+fort costs nothing, and its walls do not hold: `effectiveFort` is 0, so a
+siege takes it like an open town (about ten days), and the AI's war
+planner sees no fort there. Its garrison goes home, a third a month. Manned
+again, it costs its upkeep and its walls hold at once, but the garrison
+grows back at the usual 5% a month: a fort manned the week the enemy comes
+is a fort with nobody in it. The tower on the map is drawn faded.
+
+**Laying a squadron up in ordinary.** A squadron at anchor in a harbor of
+ours, with nobody aboard and no enemy squadron off the harbor, can be laid
+up (the anchor button on its outliner row). It costs a quarter of its
+upkeep. It cannot sail, carry troops, take a trade mission or merge; it
+fights at half strength if an enemy squadron finds it; and if the harbor
+falls, it is lost with it. Recommissioned, it signs on crews for 30 days at
+the full upkeep, fighting at three quarters, and then sails. A new hull
+from the yard joins a squadron in commission, never one laid up. It is drawn
+faded on the map.
+
+**The AI.** `aiUpkeep` runs before recruiting. At war, or with rebels on its
+land, a court mans every fort and recommissions every squadron. At peace it
+mothballs every fort that faces no other court (its own provinces, its
+clients and its overlord around it), except the capital's. A court in the
+red (income under expenses, treasury under 50) mothballs its border forts
+too and lays up its idle squadrons in harbor. Back in surplus (treasury
+over 150), it recommissions a squadron when the month's surplus is three
+times the upkeep it adds. Recruiting pays the fleet and the walls first:
+the regiments may cost 0.65 of steady income less the naval and fort
+upkeep.
+
+**Balance.** The all-AI harness, 6 years, 10 seeds, the trade commit (§292)
+→ this section (player court in debt spiral / bankrupt, counted over seeds;
+lowest treasury on average):
+
+| chapter | spiral | bankrupt | lowest treasury | note |
+|---|---|---|---|---|
+| 931 BCE | 0 → 0 | 0 → 0 | 89 → 89 | |
+| 732 BCE | 0 → 0 | 2 → 2 | −76 → −61 | Moab and Ammon survive more often |
+| 597 BCE | 0 → 0 | 0 → 0 | 50 → 51 | |
+| 167 BCE | 0 → 0 | 5 → 3 | −37 → −21 | |
+| 67 BCE | 0 → 0 | 0 → 0 | −68 → −35 | |
+| 40 BCE | 2 → 3 | 6 → 9 | −112 → −142 | 20 seeds: 12 → 13 bankrupt, −112 → −108 |
+| 66 CE | 6 → 6 | 10 → 9 | −220 → −202 | Rome 125 → 111 net (its fleet on the ledger) |
+| 132 CE | 1 → 1 | 7 → 7 | −118 → −118 | |
+| 351 CE | 0 → 0 | 9 → 9 | −92 → −94 | |
+| 529 CE | 3 → 3 | 10 → 10 | −150 → −151 | |
+| 614 CE | 0 → 0 | 1 → 1 | −38 → −18 | Byzantium 147 → 127 net |
+| 1948 | 10 → 10 | 10 → 10 | −595 → −568 | Israel, Iraq, Germany no longer bleed |
+
+The 40 BCE line was checked again at 20 seeds, where the difference is one
+run in twenty: noise, not a cost of the walls. The big fleets (Rome,
+Byzantium) pay for their hulls on the ledger now, as they always paid off it.
+
+- **Regression contract**: `smoke203.mjs` in 66 CE — Judaea's ten fort levels
+  cost 3 and Rome's fourteen ships 7 on the ledger; the treasury moves by the
+  month's balance with the fleet in it, and `t.expenses` holds both.
+  Machaerus mothballed: it saves 0.6, its walls do not hold and stay, the
+  garrison goes home to nobody, three Nabataean regiments take it in ten
+  days, nobody mans or mothballs it under siege, and the enemy's hold is not
+  ours to man; manned again its walls hold and its garrison grows back
+  slowly; Rome's fort is not ours. A squadron of four laid up at Joppa: from
+  2 a month to 0.5; it cannot sail, embark or guard the lanes; it fights at
+  half; recommissioned it waits 30 days at full upkeep and then sails; not
+  with troops aboard, not in a harbor not ours; laid up and Joppa falls, it
+  is lost. The AI: Rome at peace mothballs its interior forts and not its
+  capital or a border fort; in the red the rest and its idle squadrons; back
+  in surplus they are recommissioned; at war everything is manned. A save
+  keeps it. `uitest59.mjs` in the Great Revolt — the province panel's
+  Mothball button; the Defense tab's Walls list with its upkeep and Man
+  button; the outliner's anchor button lays a squadron up and recommissions
+  it; the ledger's Fortresses and Naval maintenance lines; no page errors.

@@ -1671,7 +1671,14 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
               const gy = sy + (p.wonder ? 30 : 26);
               labelObstacles.push({ x: sx - keys.length * step / 2, y: gy - 8 * s, w: keys.length * step, h: 16 * s });
               let gx = sx - ((keys.length - 1) * step) / 2;
-              for (const k of keys) { drawStructGlyph(k, gx, gy, s); gx += step; }
+              for (const k of keys) {
+                // a mothballed fort's tower is drawn faded (SPEC §293)
+                const faded = k === 'walls' && p.mothballed;
+                if (faded) { x2.save(); x2.globalAlpha = 0.4; }
+                drawStructGlyph(k, gx, gy, s);
+                if (faded) x2.restore();
+                gx += step;
+              }
             }
           }
         }
@@ -1720,13 +1727,14 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
           x2.restore();
         }
         x2.save();
+        if (f.laidUp) x2.globalAlpha = 0.5; // laid up in ordinary (SPEC §293)
         shipFrame(m.x, m.y, m.heading, m.sc, f.id, tSea);
         // The warship wears its age (v5.5): a ram-bowed galley for the oared
         // patterns, a tall-rigged hull for sail, a grey destroyer for oil.
         drawWarshipGlyph(f, col);
         if (m.moving) bowWave(tSea, still, 15);
         x2.restore();
-        shipLog.push({ kind: 'fleet', id: f.id, x: m.x, y: m.y, s: m.s, moving: m.moving, heading: m.heading });
+        shipLog.push({ kind: 'fleet', id: f.id, x: m.x, y: m.y, s: m.s, moving: m.moving, heading: m.heading, laidUp: !!f.laidUp });
         shipBadge(m.x + 15 * m.sc, m.y - 11 * m.sc, String(f.ships), m.sc);
       }
 

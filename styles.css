@@ -1823,6 +1823,14 @@ button {
   font-size: 12.5px;
 }
 .pp-assault .icon { width: 13px; height: 13px; }
+/* province panel — mothball or man the fort (SPEC §293) */
+.pp-mothball {
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px 6px;
+  font-size: 12px;
+}
+.pp-mothballed { color: var(--text-dim, #a89a7c); font-size: 11px; }
 
 /* outliner — mini action buttons on the selected army row */
 .ol-acts { display: inline-flex; gap: 3px; margin-left: 1px; flex: none; }
@@ -1845,6 +1853,11 @@ button {
   color: var(--text-light);
   filter: none;
 }
+/* the realm panel's walls (SPEC §293) */
+.np-fort-mb .np-tr-mk { opacity: 0.6; }
+.np-fort-cost { min-width: 34px; text-align: right; color: var(--text-dim); font-size: 11.5px; }
+/* a squadron laid up in ordinary (SPEC §293): the anchor button lit */
+.ol-act.on { color: var(--gold-bright); border-color: var(--gold); background: rgba(201, 162, 39, 0.18); }
 .ol-disband { color: #d98779; border-color: rgba(196, 86, 70, 0.35); }
 .ol-disband:hover { color: #ffb1a3; border-color: #cf6654; }
 

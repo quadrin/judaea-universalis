@@ -59,6 +59,15 @@ collect or to steer. Warships guard a market's lanes or raid them, and a
 raider at war can take the enemy's merchant ships. The trade map mode shows
 each market, what it is worth, and the lanes as arrows (SPEC §292).
 
+**Upkeep.** Armies, fleets and forts all cost money every month, and the
+ledger shows each (Army maintenance, Naval maintenance, Fortresses). A fort
+can be mothballed (the province panel, or the Walls list in the Defense tab):
+it costs nothing, but a siege takes it like an open town, and when it is
+manned again its garrison takes months to grow back. A squadron in a harbor
+of ours can be laid up in ordinary (the anchor button in the outliner): a
+quarter of the upkeep, but it cannot sail, fights at half strength, and is
+lost if the harbor falls; recommissioning takes 30 days (SPEC §293).
+
 **The score.** Ten composed songs now join the generative score, each age with
 its own for peace and for war: *Song of the Well*, *The Hill Country*, *By the
 Rivers*, *The Hammer*, *Watchfires on the Walls*, *Lamps of Tiberias*, *The

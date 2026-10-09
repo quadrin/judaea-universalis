@@ -13,7 +13,7 @@ const { GENERIC_EVENTS } = await import(R + '/js/data/events_generic.js');
 const { initGame, makeCtx, gameActions, reconcileGameProvinces } = await import(R + '/js/sim/init.js');
 const { checkTriggeredEvents } = await import(R + '/js/sim/events.js');
 const { incomeBreakdown, adminExpense, fuelExpense, controlsOilProvince } = await import(R + '/js/sim/economy.js');
-const { monthlyNavy } = await import(R + '/js/sim/navy.js');
+const { monthlyNavy, navalUpkeep } = await import(R + '/js/sim/navy.js');
 const { mechanicOn, regCount, armiesOf, resolveTagMult, devTotal, buildingFace } = await import(R + '/js/sim/military.js');
 const { genUpkeepMult, unlockedGen } = await import(R + '/js/data/tech.js');
 
@@ -203,15 +203,14 @@ console.log('== oil on the map, oil at sea ==');
     'the ancient chapters keep their base goods');
   ok(DEFINES.GOODS.oil && DEFINES.GOODS.oil.price >= 5,
     'oil is the priciest class of good');
-  // Oil-fired hulls bunker at a premium: gen-5 fleet vs gen-0 fleet.
-  const t = m.game.tags.ISR;
-  const before = t.treasury = 1000;
+  // Oil-fired hulls bunker at a premium: gen-5 fleet vs gen-0 fleet. Since
+  // SPEC §293 the navy is paid on the ledger (Naval maintenance), not taken
+  // out of the treasury by monthlyNavy.
   m.game.fleets = {
     f1: { id: 'f1', tag: 'ISR', ships: 2, gen: 5 },
     f2: { id: 'f2', tag: 'ISR', ships: 2, gen: 0 },
   };
-  monthlyNavy(m.ctx);
-  const spent = before - t.treasury;
+  const spent = navalUpkeep(m.ctx, 'ISR');
   ok(near(spent, 2 * 0.5 * DEFINES.FUEL.shipMult + 2 * 0.5, 0.01),
     `destroyers bunker oil at ${DEFINES.FUEL.shipMult}x while rowed hulls do not (${spent.toFixed(2)})`);
 }

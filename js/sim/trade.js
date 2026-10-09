@@ -28,7 +28,7 @@ import {
   num, clamp, devTotal, hasBuilding, isHostile, sameSide, resolveTagMult, addOpinion, chronicle,
   capitalProvince, isHumanChair, ceasefireHolds,
 } from './military.js';
-import { isCoastal, blockadedBy, fleetPowerOf, issueFleetMove, merchantHopDays } from './navy.js';
+import { isCoastal, blockadedBy, fleetPowerOf, issueFleetMove, merchantHopDays, fleetIdleWhy } from './navy.js';
 import { embargoTradeMult } from './embargo.js';
 
 const _warned = new Set();
@@ -157,7 +157,7 @@ function provPower(ctx, p) {
 
 // Is this fleet on its trade mission now (at anchor in the node)?
 export function fleetMissionActive(ctx, f) {
-  if (!f || !f.mission || f.ships <= 0) return false;
+  if (!f || !f.mission || f.ships <= 0 || fleetIdleWhy(f)) return false;
   if (Array.isArray(f.path) && f.path.length) return false;
   return nodeOfProv(ctx, f.prov) === f.mission.node;
 }
@@ -614,6 +614,7 @@ export function setFleetMissionCore(ctx, tag, fleetId, kind, nodeId) {
     return { ok: true };
   }
   if (kind !== 'protect' && kind !== 'raid') return { ok: false, why: 'A squadron protects trade or raids it.' };
+  if (fleetIdleWhy(f)) return { ok: false, why: fleetIdleWhy(f) };
   const def = TRADE_NODE_BY_ID[nodeId];
   if (!def) return { ok: false, why: 'No such market.' };
   const station = missionStation(ctx, nodeId, f.prov, kind === 'raid' ? tag : null);
@@ -823,7 +824,7 @@ function aiTradeFleets(ctx, tag, passive) {
   // while one is planned or under way, the fleets are its, not trade's.
   if (t.aiState && t.aiState.navalOp) return;
   const res = computeTrade(ctx);
-  const free = fleets.filter((f) => !(Array.isArray(f.path) && f.path.length && !f.mission));
+  const free = fleets.filter((f) => !(Array.isArray(f.path) && f.path.length && !f.mission) && !fleetIdleWhy(f));
   if (!free.length) return;
   if (enemies.length) {
     // hunt: a hostile raider working our home node or a node we collect in

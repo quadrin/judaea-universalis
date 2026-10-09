@@ -109,6 +109,15 @@ export function createOutliner(el, {
       if (!fg.classList.contains('disabled')) runArmyAction('mergeAllFleets', Number(fg.dataset.fleetMerge));
       return;
     }
+    // Lay the squadron up in ordinary, or recommission it (SPEC §293).
+    const flu = e.target.closest('[data-fleet-layup]');
+    if (flu) {
+      if (!flu.classList.contains('disabled') && actions && typeof actions.layUpFleet === 'function') {
+        try { actions.layUpFleet(Number(flu.dataset.fleetLayup), flu.dataset.on === '1'); } catch (err) { warnOnce('layUpFleet', err); }
+        refresh(true);
+      }
+      return;
+    }
     const fm = e.target.closest('[data-fleet-modernize]');
     if (fm) {
       if (!fm.classList.contains('disabled')) runArmyAction('modernizeFleet', Number(fm.dataset.fleetModernize));
@@ -277,7 +286,8 @@ export function createOutliner(el, {
         const sel = g.ui && g.ui.selectedFleet === f.id;
         const adm = f.admiral ? `\nAdmiral: ${f.admiral.name} (seamanship ${f.admiral.maneuver})` : '';
         const tt = `${f.name} — ${f.ships} ships of ${f.genName || 'the old pattern'} (${fmtMen(f.capacity)} capacity)${adm}\n`
-          + (f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
+          + (f.laidUp ? 'Laid up in ordinary at ' + f.provName : f.recommission ? 'Signing on crews at ' + f.provName + ', ' + f.recommission + ' days more' : f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
+          + (Number.isFinite(f.upkeep) ? `\nUpkeep ${f.upkeep.toFixed(1)} talents a month` : '')
           + (f.aboardMen ? `\nCarrying ${fmtMen(f.aboardMen)} men` : '')
           + '\nSelect, then right-click a coastal province to sail.';
         const admTT = f.canHireAdmiral
@@ -293,6 +303,11 @@ export function createOutliner(el, {
             + `(${f.mergeCount} fleet${f.mergeCount === 1 ? '' : 's'}, ${f.mergeShips} `
             + `hull${f.mergeShips === 1 ? '' : 's'}) — a mixed line fights at its oldest pattern`
           : (f.whyMerge || 'No other squadron of ours rides at this anchor');
+        const layTT = f.laidUp
+          ? `Recommission: sign on crews (30 days), and the squadron costs its full upkeep again (+${(f.layUpSave || 0).toFixed(1)} a month)`
+          : f.canLayUp
+            ? `Lay up in ordinary: crews paid off, a quarter of the upkeep (save ${(f.layUpSave || 0).toFixed(1)} a month). It cannot sail, fights at half strength if found, and is lost if the harbor falls`
+            : (f.whyLayUp || 'The squadron cannot be laid up now');
         html += `
           <div class="ol-row ol-fleet${sel ? ' sel' : ''}" data-fleet="${f.id}" data-tt="${esc(tt)}">
             <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.provName)}</span>
@@ -303,7 +318,10 @@ export function createOutliner(el, {
     + `<button class="ol-act${f.canMerge ? '' : ' disabled'}" data-fleet-merge="${f.id}" data-tt="${esc(mergeTT)}">${icon('ship')}</button>`
     + `<button class="ol-act${f.canHireAdmiral ? '' : ' disabled'}" data-fleet-admiral="${f.id}" data-tt="${esc(admTT)}">${icon('helmet')}</button>`
     + `<button class="ol-act${f.canModernize ? '' : ' disabled'}" data-fleet-modernize="${f.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>`
-    + `</span>` : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}
+    + `<button class="ol-act${f.laidUp || f.canLayUp ? '' : ' disabled'}${f.laidUp ? ' on' : ''}" data-fleet-layup="${f.id}" data-on="${f.laidUp ? '0' : '1'}" data-tt="${esc(layTT)}">${icon('anchor')}</button>`
+    + `</span>` : f.laidUp ? `<span class="ol-sub">${icon('anchor', 'icon-row')} laid up</span>`
+      : f.recommission ? `<span class="ol-sub">crews ${f.recommission}d</span>`
+        : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}
           </div>`;
       }
     }

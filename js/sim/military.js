@@ -1672,6 +1672,65 @@ function playerConcerned(ctx, p, byTag) {
   const pt = ctx.game.playerTag;
   return byTag === pt || p.owner === pt || p.controller === pt;
 }
+// ---- the walls' upkeep, and mothballing (SPEC §293) -----------------------
+// A fort costs its owner fortUpkeepPerLevel a month for every level, while
+// the owner holds it. A mothballed fort costs nothing, and its walls do not
+// hold: nobody mans them, the garrison goes home, and a siege takes it like
+// an open town. Manned again, the walls hold at once, but the garrison grows
+// back at the usual pace (monthlyGarrisons), so a fort reopened the day the
+// enemy arrives is a fort with nobody in it.
+export function effectiveFort(p) {
+  return p && !p.mothballed ? Math.max(0, p.fort | 0) : 0;
+}
+export function fortUpkeepOf(ctx, p) {
+  if (!p || p.mothballed || !((p.fort | 0) > 0)) return 0;
+  return (p.fort | 0) * B(ctx, 'fortUpkeepPerLevel', 0.3);
+}
+export function fortUpkeep(ctx, tag) {
+  const g = ctx.game;
+  let sum = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.owner !== tag || p.controller !== tag) continue;
+    sum += fortUpkeepOf(ctx, p);
+  }
+  return sum;
+}
+// Does a fort of ours face another court? A province beside it held by a
+// court that is not ours, our client or our overlord.
+export function fortOnBorder(ctx, tag, provId) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const nb = ctx.geom && ctx.geom.neighbors;
+  if (!nb || !nb[provId]) return true;
+  for (const n of nb[provId]) {
+    const q = g.provinces[n];
+    if (!q || q.impassable || !q.owner || q.owner === tag) continue;
+    if ((g.tags[q.owner] && g.tags[q.owner].overlord === tag) || (t && t.overlord === q.owner)) continue;
+    return true;
+  }
+  return false;
+}
+export function mothballInfo(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  const out = { can: false, why: '', mothballed: !!(p && p.mothballed), fort: p ? p.fort | 0 : 0, upkeep: 0 };
+  if (!p || !((p.fort | 0) > 0)) { out.why = 'There is no fort here.'; return out; }
+  out.upkeep = (p.fort | 0) * B(ctx, 'fortUpkeepPerLevel', 0.3);
+  if (p.owner !== tag || p.controller !== tag) { out.why = 'The fort is not in our hands.'; return out; }
+  if (p.siege) { out.why = 'Not while the fort is under siege.'; return out; }
+  out.can = true;
+  return out;
+}
+export function mothballFortCore(ctx, tag, provId, on) {
+  const info = mothballInfo(ctx, tag, provId);
+  if (!info.can) return { ok: false, why: info.why };
+  const p = ctx.byId(provId);
+  if (!!on === !!p.mothballed) return { ok: false, why: on ? 'The fort is already mothballed.' : 'The walls are already manned.' };
+  if (on) p.mothballed = true;
+  else delete p.mothballed;
+  return { ok: true, upkeep: info.upkeep };
+}
+
 // Armies in the province able to press the siege led by byTag.
 export function besiegersOf(ctx, p, byTag) {
   return armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && num(a.shatteredDays) <= 0 && a.men > 0 &&
@@ -1684,7 +1743,7 @@ export function ensureSiege(ctx, p, byTag) {
   if (!besiegers.length) return;
   const regs = besiegers.reduce((s, a) => s + regCount(a), 0);
   const need = Math.max(1, Math.ceil(num(p.garrison) / 1000));
-  if ((p.fort | 0) > 0 && regs < need) return;
+  if (effectiveFort(p) > 0 && regs < need) return;
   p.siege = { by: byTag, progress: 0, breach: 0, days: 0 };
   ctx.bus.emit('siegeStart', { provId: p.id, by: byTag });
   if (playerConcerned(ctx, p, byTag)) {
@@ -1738,7 +1797,7 @@ function siegeDay(ctx, p) {
   }
   if (g.battles.some((b) => b.prov === p.id)) return; // battle rages; siege pauses
   s.days++;
-  const fort = p.fort | 0;
+  const fort = effectiveFort(p); // a mothballed fort is an open town (SPEC §293)
   const regs = besiegers.reduce((sum, a) => sum + regCount(a), 0);
   const bonus = resolveTagAdd(ctx, s.by, 'siegeBonus');
   if (fort <= 0) {
@@ -1811,7 +1870,7 @@ export function assaultInfo(ctx, p, byTag) {
   const men = besiegers.reduce((sum, a) => sum + num(a.men), 0);
   if (men <= 0) { out.why = 'No army is fit to storm the walls.'; return out; }
   const garrison = Math.max(0, num(p.garrison));
-  const fort = Math.max(0, p.fort | 0);
+  const fort = effectiveFort(p);
   out.can = true;
   out.chance = clamp(0.15 + 0.25 * num(s.breach) + 0.15 * (men / Math.max(1, garrison) - 1), 0.05, 0.9);
   out.chancePct = Math.round(out.chance * 100);
@@ -2152,6 +2211,11 @@ export function monthlyGarrisons(ctx) {
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.siege || !(p.maxGarrison > 0)) continue;
+    // a mothballed fort's garrison goes home, a third of it a month (SPEC §293)
+    if (p.mothballed) {
+      if (p.garrison > 0) p.garrison = Math.max(0, Math.floor(p.garrison * 0.66) - 10);
+      continue;
+    }
     if (p.garrison < p.maxGarrison) {
       p.garrison = Math.min(p.maxGarrison, Math.round(p.garrison + Math.max(10, p.maxGarrison * 0.05)));
     }

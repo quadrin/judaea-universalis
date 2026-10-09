@@ -216,6 +216,11 @@ export const ICONS = {
     '<path d="M7 17.5V9h8M15 9V5h3M15 9l4 4"/>' +
     '<path d="M10 17.5v-5M13 17.5v-5"/>',
   // Merchantman: square sail over a broad civilian hull
+  // Laid up in ordinary (SPEC §293): an anchor, ring, stock and flukes.
+  anchor:
+    '<circle cx="12" cy="4.6" r="1.7"/>' +
+    '<path d="M12 6.3v13.4M8.4 9.2h7.2"/>' +
+    '<path d="M5 13.4c.4 3.6 3.3 6.2 7 6.3 3.7-.1 6.6-2.7 7-6.3M5 13.4l-1.4 1.6M5 13.4l2 .5M19 13.4l1.4 1.6M19 13.4l-2 .5"/>',
   ship:
     '<path d="M12 4v11M12 5.2 6.5 8v5H12M12 6l5 2.4V13h-5"/>' +
     '<path d="M3.8 15h16.4l-2.5 4H7Z"/>' +

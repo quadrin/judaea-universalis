@@ -1,9 +1,9 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, levyOf, forceLimitOf, changeOwnerCore, resolveDisplayName, tagDef } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, levyOf, forceLimitOf, changeOwnerCore, resolveDisplayName, tagDef, fortUpkeep } from './military.js';
 import { POP_PER_DEV, addPopulation } from './population.js';
-import { blockadedBy, isCoastal } from './navy.js';
+import { blockadedBy, isCoastal, navalUpkeep } from './navy.js';
 import { tradeIncomeOf } from './trade.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
@@ -179,7 +179,7 @@ function domesticIncome(ctx, tag) {
 export function incomeBreakdown(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
-  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, fuel: 0, admin: 0, develop: 0, interest: 0, trade: 0, pilgrims: 0, net: 0 };
+  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, navy: 0, forts: 0, fuel: 0, admin: 0, develop: 0, interest: 0, trade: 0, pilgrims: 0, net: 0 };
   if (!t) return out;
   Object.assign(out, domesticIncome(ctx, tag));
   // Client tribute: a share of each vassal's own income flows to the overlord.
@@ -219,6 +219,11 @@ export function incomeBreakdown(ctx, tag) {
   // Air wings (SPEC §29): spares and pay ride the maintenance line.
   const wingUpkeep = (ctx.DEFINES.AIR && ctx.DEFINES.AIR.wingUpkeep) || 1;
   out.maint += airWingsOf(ctx, tag).length * wingUpkeep;
+  // The fleet and the walls (SPEC §293): what the squadrons cost (a quarter
+  // for one laid up in ordinary), and every fort level the court holds (none
+  // for a mothballed one).
+  out.navy = navalUpkeep(ctx, tag);
+  out.forts = fortUpkeep(ctx, tag);
   // Oil (SPEC §52) and administration (SPEC §52): the two lines that grow
   // with the age and the realm respectively.
   out.fuel = fuelExpense(ctx, tag);
@@ -245,7 +250,7 @@ export function incomeBreakdown(ctx, tag) {
     out.offmapIn = om ? num(om.income, 0) : 0;
   } catch (e) { out.offmapIn = 0; }
   out.net = out.income + out.tributeIn + out.subsIn + out.offmapIn
-    - out.tributeOut - out.subsOut - out.maint - out.fuel - out.admin - out.develop - out.interest;
+    - out.tributeOut - out.subsOut - out.maint - out.navy - out.forts - out.fuel - out.admin - out.develop - out.interest;
   return out;
 }
 
@@ -315,7 +320,7 @@ export function runMonthlyEconomy(ctx) {
       // The markets' share of it (SPEC §292): the AI budgets its army on the
       // steadier part of its income (ai.js aiRecruit).
       t.marketTrade = Math.round((num(bd.trade) - num(bd.tolls)) * 100) / 100;
-      t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, the works, interest & tribute folded in
+      t.expenses = Math.round((bd.maint + bd.navy + bd.forts + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut) * 100) / 100; // the fleet, the walls, fuel, admin, the works, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
       // The court consumes what the country cannot justify holding (SPEC §101).
       const bleed = hoardBleed(ctx, tag, bd);
@@ -386,6 +391,8 @@ export function explainIncome(ctx, tag) {
     } else {
       rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
     }
+    if (bd.navy > 0) rows.push({ label: 'Naval maintenance', value: r2(-bd.navy) });
+    if (bd.forts > 0) rows.push({ label: 'Fortresses', value: r2(-bd.forts) });
     if (bd.fuel > 0) rows.push({ label: 'Fuel', value: r2(-bd.fuel) });
     if (bd.admin > 0) rows.push({ label: 'Administration', value: r2(-bd.admin) });
     if (bd.develop > 0) rows.push({ label: 'The works, still building', value: r2(-bd.develop) });
