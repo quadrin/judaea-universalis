@@ -55,9 +55,9 @@ ok((await olLine.count()) === 1, 'the outliner has a Merchants line');
 await olLine.click();
 await page.waitForSelector('#nation-panel:not(.hidden)');
 ok((await page.locator('#nation-panel').getAttribute('data-tab')) === 'trade', 'it opens the realm panel on Trade');
-const sum = (await page.locator('#nation-panel .np-tr-sum').textContent()) || '';
+const sum = (await page.locator('#nation-panel [data-ref="trade"] .np-tr-sum').textContent()) || '';
 ok(/a month/.test(sum) && /home/.test(sum) && /roads end at Rome/.test(sum) && /merchants 0 \/ \d/.test(sum), 'the summary: ' + sum.replace(/\s+/g, ' ').trim());
-const rows = await page.locator('#nation-panel .np-tr-row:not(.np-tr-th)').count();
+const rows = await page.locator('#nation-panel [data-ref="trade"] .np-tr-row:not(.np-tr-th)').count();
 ok(rows >= 1, 'a row for every market where we have a stake: ' + rows);
 await page.screenshot({ path: OUT + 'v292-trade-tab.png' });
 
@@ -89,7 +89,7 @@ if ((await send.count()) === 0) {
 await page.waitForTimeout(300);
 const m1 = await page.evaluate(() => (window._ctx.game.merchants || []).find((m) => m.tag === window._ctx.game.playerTag));
 ok(m1.state === 'out' && m1.node === target && m1.order === 'collect' && m1.daysLeft > 0, 'it is on the road, ' + m1.daysLeft + ' days');
-const mtxt = (await page.locator('#nation-panel .np-tr-m').first().textContent()) || '';
+const mtxt = (await page.locator('#nation-panel [data-ref="trade"] .np-tr-m').first().textContent()) || '';
 ok(/bound for/.test(mtxt), 'the tab says where it is bound: ' + mtxt.replace(/\s+/g, ' ').trim());
 await page.screenshot({ path: OUT + 'v292-trade-sent.png' });
 
@@ -132,7 +132,7 @@ await guard.click();
 await page.waitForTimeout(300);
 const mis = await page.evaluate((id) => window._ctx.game.fleets[id].mission, fid);
 ok(mis && mis.kind === 'protect' && !!mis.node, 'Guard gives it a mission: ' + JSON.stringify(mis));
-const ftxt = await page.locator('#nation-panel .np-tr-m', { hasText: 'Test squadron' }).textContent();
+const ftxt = await page.locator('#nation-panel [data-ref="trade"] .np-tr-m', { hasText: 'Test squadron' }).textContent();
 ok(/guarding/.test(ftxt), 'the tab says so: ' + ftxt.replace(/\s+/g, ' ').trim());
 await page.locator(`#nation-panel [data-tr-mission="${fid}|"]`).click();
 await page.waitForTimeout(250);
