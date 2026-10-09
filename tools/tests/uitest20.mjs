@@ -1,5 +1,6 @@
 // UI verification — no sideways province-panel crawl, no ancient airfields,
-// merchant shipyards, and the confirmed army stand-down action.
+// the market block of a shipyard harbor (SPEC §292), and the confirmed army
+// stand-down action.
 import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp/claude-0/-home-user-judaea-universalis/14e3ad23-6546-5a93-b028-f73783a98caf/scratchpad') + '/');
 const { chromium } = require('playwright');
@@ -61,7 +62,7 @@ const buildNames = await page.locator('#province-panel [data-build]').allTextCon
 ok(!buildNames.some((name) => /Airfield/i.test(name)), 'the ancient building grid contains no airfield control');
 ok(buildNames.some((name) => /Shipyard/i.test(name)), 'the coastal building grid offers a shipyard');
 
-console.log('== a shipyard opens the merchant marine ==');
+console.log('== a shipyard harbor fits out merchant ships (SPEC §292) ==');
 const merchantBefore = await page.evaluate(() => {
   const ctx = window._ctx;
   const p = ctx.game.provinces.find((row) => row && row.owner === ctx.game.playerTag
@@ -70,13 +71,14 @@ const merchantBefore = await page.evaluate(() => {
   if (!p.buildings.includes('shipyard')) p.buildings.push('shipyard');
   ctx.game.tags[ctx.game.playerTag].treasury = 200;
   ctx.bus.emit('provinceOwner', { id: p.id });
-  return { id: p.id, ships: p.merchantShips || 0 };
+  return { id: p.id, count: (ctx.game.merchants || []).filter((m) => m.tag === ctx.game.playerTag).length };
 });
 await page.waitForSelector('#province-panel .pp-merchant:not(.hidden)');
-await page.locator('#province-panel [data-ref="merchantShip"]').click();
-const merchantAfter = await page.evaluate((id) => window._ctx.game.provinces[id].merchantShips || 0, merchantBefore.id);
-ok(merchantAfter === merchantBefore.ships + 1,
-  `commissioning a merchantman updates the persistent port count (${merchantBefore.ships} → ${merchantAfter})`);
+ok(/The Market of/.test(await page.locator('#province-panel [data-ref="marketTitle"]').textContent()), 'the panel names the market of the province');
+await page.locator('#province-panel [data-ref="merchantShip"]:not(.hidden)').click();
+const merchantAfter = await page.evaluate((id) => (window._ctx.game.merchants || []).filter((m) => m.tag === window._ctx.game.playerTag && m.home === id).length, merchantBefore.id);
+ok(merchantAfter >= 1 && merchantAfter > 0,
+  `a merchant ship is fitted out at the harbor (${merchantBefore.count} merchants → ${merchantAfter} here)`);
 
 console.log('== selected armies can stand down ==');
 const before = await page.evaluate(() => Object.values(window._ctx.game.armies).filter((a) => a && a.tag === window._ctx.game.playerTag).length);

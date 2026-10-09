@@ -20969,3 +20969,200 @@ must still hold when claimed).
   rings, names it, and sits beside the flag; it rings once and rests; a
   second ready mission rings it again; a click opens Missions; with none
   ready it goes. No page errors.
+
+## §292 — Markets, merchants and the lanes
+
+Trade was five routes (§20) whose stops paid whoever held them, plus a
+merchant marine (§58): hulls berthed at a shipyard that earned a flat
+sum while their port was open, and trade runs (§60) that sailed to a
+foreign harbor for a month and came home with a lump. Nothing in it was a
+choice the player made more than once, and nothing in it gave a warship a
+reason to leave port. This section replaces the merchant marine and the trade
+runs with EU4's model: markets, power, collecting and steering, merchants
+that are sent, and fleets that guard or raid. All of the sim is in
+`js/sim/trade.js` and `js/data/trade_nodes.js`, DOM-free.
+
+**The markets.** `TRADE_NODES` is 27 markets (nodes), each with a market town
+(its center), the nodes downstream of it (`to`), and the provinces placed in
+it by hand. Every other province joins the node whose town is nearest; all
+415 provinces of the map are in one node. The sources, east and south, also
+take goods from beyond the map (`offmap`, talents a month): Transoxiana 5,
+Charax 8, Arabia Felix 10, Adulis 4, Meroe 2. A node is found by the base
+map's name, so a chapter's label (1948's Tel Aviv-Jaffa) does not move it.
+Where a chapter folds the town into a larger province (§232), that province
+is the town if it is in the same node (1948's Spain for Gades); if it is in
+another node, the node has no town (1948's Soviet Union holds Merv): its
+goods still flow, but no merchant goes there and nobody keeps its customs.
+
+**The ages.** Where the roads end moves with the centuries. `AGE_LANES`
+rewires a few lanes per age, and each chapter has one:
+
+| age | chapters | the end of the roads |
+|---|---|---|
+| tyre | 931, 732, 597 BCE | Tyre: Phoenicia's sea |
+| rome | 167 BCE – 132 CE | Rome |
+| byzantion | 351, 529, 614 CE | Byzantion |
+| suez | 1948 | Egypt (the Canal) |
+
+`tradeGraph(age)` gives the lanes, the order to run the nodes (upstream
+first; there are no cycles), what each node can reach, and the end (sink).
+
+**The value.** A node's value each month is its own goods plus what flows in.
+Its own goods are, for each province in it, production development × 0.2
+(EU4's goods per point) × the price of its good × 0.1 (`valueScale`,
+calibrated against the old route values), plus its offmap goods × 0.7.
+
+**The power.** Every court with power in a node holds that share of it:
+
+- a province it owns and controls, not besieged: development × 0.2, +1 for a
+  harbor, +2 for a market, +1 for a shipyard, +5 for the market town, all
+  halved while a hostile squadron blockades the port;
+- a merchant posted there: +8;
+- a squadron guarding the node: +2 per ship × its strength (`fleetPowerOf`).
+
+**Collecting and steering.** A court collects its share, as money, in its home
+node (the node of its capital), in a node whose market town it holds (the
+customs house; not while the town is besieged), and in a node where it has a
+merchant set to collect. At the end of the roads everyone collects. Anywhere
+else its share is steered downstream: down the lane toward its home node if
+home is downstream, down the lane a merchant set to steer names, or else
+evenly down every lane. What nobody holds runs on evenly. Each merchant
+steering a lane adds 5% to what flows down it (25% at most). A node's value
+is split exactly: what is collected, steered and stolen is all of it, and
+what a node takes in is exactly what upstream sends it.
+
+**Raiders.** A squadron raiding a node takes its share first: raid power is
++2 per ship × its strength, and a raider takes value × its raid power / (all
+power + all raid power). The rest is shared as above. A raider at war with
+the court of a merchant ship posted in the node may take it: each month the
+chance is (hostile raid power / (hostile raid power + friendly guard power +
+20)) × 0.3. Raiding a court at peace costs 4 of its opinion of the raider
+each month.
+
+**What it pays.** `tradeIncome` = the markets × the court's trade efficiency
+(`tradeMult`) × any embargo on it (§100), + the tolls. The five routes of §20
+still pay their stops, at half (`TOLL_SHARE` 0.5): they are what Petra and
+Palmyra lived on, and the markets do not pay for them. The ledger has a
+Trade line and a Tolls line. `computeTrade` is cached per game, day and
+`g.tradeRev`; every order bumps the revision (`touchTrade`).
+
+**Merchants.** A court keeps 2 merchants, and one more for every three
+markets and shipyards it holds, 6 at most. A merchant ship (30 talents) is
+fitted out at a shipyard harbor of ours that is not besieged or blockaded;
+a caravan (20) at a market town of ours or the capital. It waits there until
+it is sent to a node, to collect or to steer down one of the node's lanes. A
+ship sails only between harbors (`merchantHopDays`); a caravan goes
+overland, on the shortest road over the land (3 days + its length / 16 px,
+90 at most). On the road it serves nowhere and takes no new orders. A new
+order at its own post takes effect at once. Recalled, it goes home; if home
+is lost, a ship goes to another shipyard harbor or any harbor of ours, a
+caravan to the capital, and with nowhere left it is lost.
+
+**Squadrons.** A squadron is given a mission in a node: guard (`protect`) or
+raid. It sails to the node's market town (a guard) or to the node's harbor
+nearest it that no enemy of its own holds (a raider, so that working the
+lanes is not by itself a blockade of the enemy's port), and serves while it
+rides at anchor in the node. Moving the fleet by hand ends the mission. The
+truce of §261 holds on the water too.
+
+**The AI.** A court builds at most one merchant every six months, and only
+while its income covers its expenses: at peace a ship (with 120 talents to
+spare) or else a caravan at its capital; at war only a caravan, with 300 to
+spare, because a merchant ship in a war is a prize. It posts each idle
+merchant where one more merchant collects the most (or, upstream of home,
+steers home, when that is worth more), with the days on the road counted
+against it, and reconsiders every January. Its squadrons, unless a naval
+invasion has them (§82): at war, hunt hostile raiders in the nodes it
+collects in, then raid the richest node an enemy collects in; at peace,
+stop raiding, and send a spare squadron to guard home. AI recruiting counts
+only half of a court's market trade as steady income (`t.marketTrade`),
+because the markets move with every war; without this, small courts that
+did well in trade recruited past what they could keep (the 614 harness
+spiral).
+
+**The Trade tab.** The realm panel has a Trade tab: what we take a month,
+home, where the roads end, merchants n / cap; buttons to fit out a ship or a
+caravan at each site; each merchant with where it is and Send… (the ten
+best markets it can reach, each with Collect +x a month and a → button for
+each lane) and Recall; our markets (worth, our share, what we take, with
+the powers there in the tooltip); and our squadrons, each with a market,
+Guard, Raid and Stand down. The province panel shows the province's market
+and its buttons to fit out a merchant there. The outliner has a Merchants
+line (always, so the tab can be found before the first merchant) that opens
+the tab.
+
+**The trade map.** The trade map mode colours each node in its own colour
+(a golden-angle palette), our provinces lighter, the market towns
+brightest, occupied ground striped. Over it each market town has a label
+with the market's worth and a gold bar of our share (home outlined in red),
+and each lane is an arrow as thick as the trade it carries, along the sea
+route when both towns are on the sea. Merchant ships on the road sail their
+route (§290); caravans walk their road; merchants at rest are drawn at
+their harbor or town with a count. `window._overlay.trade()` lists the
+labels and lanes drawn on the last frame.
+
+**Old saves.** A save from before this section has hulls at shipyards
+(`p.merchantShips`) and voyages: each becomes an idle merchant ship at its
+harbor (`migrateTradeState`, on revive). The voyages and the market gluts of
+v6.1 are dropped.
+
+**Balance.** The all-AI harness, 6 years, 10 seeds, before → after (player
+court in debt spiral / bankrupt, counted over seeds):
+
+| chapter | spiral | bankrupt | note |
+|---|---|---|---|
+| 931 BCE | 0 → 0 | 0 → 0 | Tyre +6 net |
+| 732 BCE | 0 → 0 | 1 → 2 | Assyria 43 → 30; KSH, ELA no longer bleed |
+| 597 BCE | 0 → 0 | 0 → 0 | |
+| 167 BCE | 0 → 0 | 4 → 5 | |
+| 67 BCE | 0 → 0 | 0 → 0 | Rome 44 → 57 |
+| 40 BCE | 2 → 2 | 4 → 6 | Parthia 11 → 19 |
+| 66 CE | 6 → 6 | 10 → 10 | Adiabene no longer bleeds |
+| 132 CE | 1 → 1 | 9 → 7 | |
+| 351 CE | 0 → 0 | 10 → 9 | |
+| 529 CE | 3 → 3 | 9 → 10 | |
+| 614 CE | 2 → 0 | 4 → 1 | |
+| 1948 | 10 → 10 | 10 → 10 | Egypt 14 → 1 net, Israel 8 → 4 |
+
+Accepted: trade moves wealth toward the ends of the roads and the courts on
+the lanes (Rome, Parthia, the Sasanians, Himyar, Aksum), and away from
+courts whose income was a merchant marine. 1948 Egypt loses most of its net
+because the old Suez hulls are gone and the canal's market is shared with
+Britain; it is still solvent. New AI bleeding flags: Commagene (67 BCE) 6 →
+10 seeds, Moab (597 BCE) 1 → 4; many more went away (Kush, Elam, Ammon,
+Adiabene).
+
+- **Regression contract**: `smoke202.mjs` — the graph of every age (every
+  node run once, every lane downstream, every road reaches the end, the right
+  end); every chapter has an age; every province in one market, every market
+  with provinces, every town in its own market, and 1948's folded towns;
+  nothing made and nothing lost in 931, 66, 529 and 1948 (each node splits
+  its value exactly, takes in what upstream sends, and the courts earn what
+  is collected and stolen); Rome collects at home (Antioch in 66) and at the
+  end of the roads; the customs of Alexandria, not while besieged; every
+  other share steered, home where home is downstream; a merchant steering
+  Tyre's lane to Alexandria, with its 5%; the ledger's Trade line and trade
+  = markets + tolls; the Trade tab's view; a merchant and its order survive
+  a save; 18 months of all-AI 66 CE leave merchants of several courts on
+  valid orders, under every cap, valid squadron missions, and the flow still
+  exact. `smoke21.mjs` — a shipyard fits out a merchant ship (30 talents),
+  posted at home it adds trade income. `smoke37.mjs` — the cap; a ship sails
+  to Alexandria, serves nowhere on the way, takes no new orders, collects on
+  arrival; nowhere to steer from the end of the roads (Egypt, 1948); steering
+  from the Aegean; a new order at its post at once; recalled, it docks at
+  home; a caravan from the capital with a road to Damascus; a ship cannot
+  sail inland; a fallen home port sends it to another harbor, and with none
+  it is lost; old saves' hulls and voyages become idle merchant ships.
+  `smoke39.mjs` — a raider takes its share first and the market loses
+  exactly that; a squadron serves only at anchor in its node; a guard adds
+  power; raiding at peace costs opinion; at war a raider's odds of a prize,
+  lower under guard, and the ship taken; a raider rides off a harbor its
+  enemy does not hold, a guard off the market town; no court orders
+  another's squadron. `uitest58.mjs` in the Great Revolt — the outliner's
+  Merchants line opens Trade; the summary and our markets; a caravan made
+  ready and sent from the tab, on the road and said so; drawn further along
+  its road each day; a squadron guards and stands down from the tab; the
+  trade map labels the markets with home marked and draws the lanes; the
+  political map draws none. `uitest20.mjs` (the province panel's market
+  block fits out a ship), `uitest28.mjs` and `uitest56.mjs` (§290's ships,
+  now merchants) were moved to the new merchants. No page errors.

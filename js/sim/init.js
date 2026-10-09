@@ -45,10 +45,8 @@ import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
   mergeFleetsInfo, mergeableFleetsAt, mergeFleetsCore,
-  merchantShipInfo, commissionMerchantShipCore, merchantShipsOf,
-  merchantDestinations, sendMerchantCore, merchantVoyagesOf,
-  tradeRunDestinations, sendTradeRunCore,
 } from './navy.js';
+import { migrateTradeState, tradeView, merchantTargets, provinceTrade, buildSites, buildMerchantCore, buildMerchantInfo, sendMerchantCore as sendTradeMerchantCore, recallMerchantCore, setFleetMissionCore, merchantsOf, touchTrade } from './trade.js';
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
@@ -256,7 +254,8 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
     fleets: {}, nextFleetId: 1,
     airwings: {}, nextWingId: 1, // squadrons at their airfields (SPEC §29)
-    merchantVoyages: [], // civilian hulls at sea between harbors (SPEC §58)
+    merchantVoyages: [], // retired by §292 (merchants); kept empty for old readers
+    merchants: [], nextMerchantId: 1, tradeRev: 0, // merchant ships and caravans (SPEC §292)
     nextRecruitId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     rivals: {}, retiredRivalries: {},
@@ -2814,22 +2813,17 @@ export function gameActions(ctx) {
               admiral: f.admiral ? { name: f.admiral.name, maneuver: num(f.admiral.maneuver) } : null,
               canHireAdmiral: !f.admiral && num(g.tags[me].points && g.tags[me].points.mar) >= 50,
               canMerge: gi.can, mergeCount: gi.count, mergeShips: gi.ships, whyMerge: gi.why || '',
+              mission: f.mission ? { kind: f.mission.kind, node: f.mission.node } : null,
             };
           });
-        const merchant = merchantShipsOf(ctx, me);
-        const voyages = merchantVoyagesOf(ctx, me).map((v) => ({
-          from: v.from, to: v.to, daysLeft: v.daysLeft,
-          fromName: (ctx.byId(v.from) || {}).name || ('#' + v.from),
-          toName: v.kind === 'trade' && v.leg === 'dwell'
-            ? 'trading at ' + (((ctx.byId(v.to) || {}).name) || ('#' + v.to)) + (v.payout ? ', ~' + v.payout + ' talents' : '')
-            : ((ctx.byId(v.to) || {}).name || ('#' + v.to)) + (v.kind === 'trade' && v.leg === 'home' && v.payout ? ' (~' + v.payout + ' talents aboard)' : ''),
-        }));
+        // The merchants (SPEC §292) for the outliner's line: how many, how
+        // many serving at a market now.
+        const ms = merchantsOf(ctx, me);
         return {
           fleets,
-          merchant,
-          voyages,
-          merchantCount: merchant.reduce((sum, row) => sum + row.count, 0) + voyages.length,
-          merchantActive: merchant.reduce((sum, row) => sum + (row.active ? row.count : 0), 0),
+          merchantCount: ms.length,
+          merchantActive: ms.filter((m) => m.state === 'posted').length,
+          merchantsOut: ms.filter((m) => m.state === 'out' || m.state === 'back').length,
         };
       } catch (e) { warnOnce('getNavy', 'getNavy failed', e); return { fleets: [] }; }
     },
@@ -2901,49 +2895,80 @@ export function gameActions(ctx) {
           + num(res.queued && res.queued.totalMonths, unitRecruitMonths(ctx, 'ship')) + ' months.', 'good');
       } catch (e) { warnOnce('buildShip', 'buildShip failed', e); }
     },
-    getMerchantShipInfo(provId) {
-      try { return merchantShipInfo(ctx, g.playerTag, provId | 0); }
-      catch (e) { warnOnce('merchantInfo', e); return { visible: false, can: false, why: 'Unavailable.' }; }
+    // ---- trade (SPEC §292): markets, merchants, the lanes ---------------------
+    // The whole picture for our court: every market, our power and share,
+    // what we take, our merchants and our squadrons' missions.
+    getTrade() {
+      try { return tradeView(ctx, g.playerTag); }
+      catch (e) { warnOnce('getTrade', 'getTrade failed', e); return null; }
     },
-    commissionMerchantShip(provId) {
+    // The market a province belongs to, and what can be fitted out there.
+    getProvinceTrade(provId) {
+      try { return provinceTrade(ctx, g.playerTag, provId | 0); }
+      catch (e) { warnOnce('getProvinceTrade', e); return null; }
+    },
+    // Where merchants of ours can be fitted out.
+    getMerchantSites() {
+      try { return buildSites(ctx, g.playerTag); }
+      catch (e) { warnOnce('getMerchantSites', e); return []; }
+    },
+    // Where a merchant of ours can go, and how long it takes.
+    getMerchantTargets(merchantId) {
+      try { return merchantTargets(ctx, g.playerTag, merchantId | 0); }
+      catch (e) { warnOnce('getMerchantTargets', e); return []; }
+    },
+    // Can a merchant ship ('ship') or a caravan ('caravan') be fitted out here?
+    getBuildMerchant(provId, kind) {
+      try { return buildMerchantInfo(ctx, g.playerTag, provId | 0, kind === 'caravan' ? 'caravan' : 'ship'); }
+      catch (e) { warnOnce('getBuildMerchant', e); return { can: false, why: 'Unavailable.' }; }
+    },
+    buildMerchant(provId, kind) {
       try {
+        const k = kind === 'caravan' ? 'caravan' : 'ship';
+        const res = buildMerchantCore(ctx, g.playerTag, provId | 0, k);
         const p = ctx.byId(provId | 0);
-        const res = commissionMerchantShipCore(ctx, g.playerTag, provId | 0);
-        if (!res.ok) { say('No merchantman today', res.why, 'bad'); return false; }
-        say('A merchantman takes the water', ((p && p.name) || 'The port') + ' now supports '
-          + res.count + ' of ' + res.cap + ' civilian ships (+' + res.incomeEach + ' trade each month while the harbor is open).', 'good');
+        if (!res.ok) { say(k === 'ship' ? 'No merchant ship today' : 'No caravan today', res.why, 'bad'); return false; }
+        say(k === 'ship' ? 'A merchant ship is fitted out' : 'A caravan is made ready',
+          (k === 'ship' ? 'She waits at ' : 'It waits at ') + ((p && p.name) || 'home')
+          + '. Send it to a market in the Trade tab to collect there, or to steer its trade toward us.', 'good');
         return true;
-      } catch (e) { warnOnce('commissionMerchant', e); return false; }
+      } catch (e) { warnOnce('buildMerchant', e); return false; }
     },
-    // Where this port's merchantmen may sail (SPEC §58): our other working
-    // shipyard harbors, nearest first, with berth availability.
-    getMerchantDestinations(provId) {
-      try { return merchantDestinations(ctx, g.playerTag, provId | 0); }
-      catch (e) { warnOnce('merchantDest', e); return []; }
-    },
-    sendMerchantShip(fromId, toId) {
+    sendMerchant(merchantId, nodeId, order, steerTo) {
       try {
-        const res = sendMerchantCore(ctx, g.playerTag, fromId | 0, toId | 0);
-        if (!res.ok) { say('The ship stays home', res.why, 'bad'); return false; }
-        say('A merchantman puts to sea', 'She makes for ' + res.toName + ' — about '
-          + res.days + ' days under sail. She earns nothing while at sea.', 'good');
+        const res = sendTradeMerchantCore(ctx, g.playerTag, merchantId | 0, nodeId, order, steerTo);
+        if (!res.ok) { say('The merchant stays', res.why, 'bad'); return false; }
+        const m = res.merchant;
+        const what = order === 'steer' ? 'to steer its trade toward ' + ((tradeView(ctx, g.playerTag).nodes.find((n) => n.id === steerTo) || {}).name || 'us')
+          : 'to collect there';
+        const node = (tradeView(ctx, g.playerTag).nodes.find((n) => n.id === nodeId) || {}).name || 'the market';
+        say(res.days ? (m.kind === 'ship' ? 'A merchant ship sails' : 'A caravan sets out') : 'New orders',
+          res.days ? 'Bound for ' + node + ', ' + what + '. About ' + res.days + ' days on the way; it serves when it arrives.'
+            : 'At ' + node + ', ' + what + '.', 'good');
         return true;
       } catch (e) { warnOnce('sendMerchant', e); return false; }
     },
-    // Trade runs (v6.1): the foreign harbors open (or closed) to this port's
-    // merchantmen, with the lump sum a completed round trip lands.
-    getTradeRunDestinations(provId) {
-      try { return tradeRunDestinations(ctx, g.playerTag, provId | 0); }
-      catch (e) { warnOnce('tradeDest', e); return []; }
-    },
-    sendTradeRun(fromId, toId) {
+    recallMerchant(merchantId) {
       try {
-        const res = sendTradeRunCore(ctx, g.playerTag, fromId | 0, toId | 0);
-        if (!res.ok) { say('The market is closed to us', res.why, 'bad'); return false; }
-        say('A trade run puts to sea', 'She makes for ' + res.toName + ' under ' + res.hostName
-          + '\'s peace — a month in their market, then home with about ' + res.payout + ' talents.', 'good');
+        const res = recallMerchantCore(ctx, g.playerTag, merchantId | 0);
+        if (!res.ok) { say('The merchant stays', res.why, 'bad'); return false; }
         return true;
-      } catch (e) { warnOnce('sendTradeRun', e); return false; }
+      } catch (e) { warnOnce('recallMerchant', e); return false; }
+    },
+    // A squadron's trade mission: 'protect' or 'raid' a market, or null.
+    setFleetMission(fleetId, kind, nodeId) {
+      try {
+        const res = setFleetMissionCore(ctx, g.playerTag, fleetId | 0, kind || null, nodeId);
+        if (!res.ok) { say('Orders refused', res.why, 'bad'); return false; }
+        if (kind) {
+          const node = (tradeView(ctx, g.playerTag).nodes.find((n) => n.id === nodeId) || {}).name || 'the market';
+          say(kind === 'raid' ? 'Letters of marque' : 'The lanes guarded',
+            (kind === 'raid' ? 'The squadron sails to take prizes in the waters of ' : 'The squadron sails to guard the lanes of ')
+            + node + (res.stationName ? ', riding off ' + res.stationName : '') + '.'
+            + (kind === 'raid' ? ' Raiding a court we are at peace with costs its goodwill every month.' : ''), 'good');
+        }
+        return true;
+      } catch (e) { warnOnce('setFleetMission', e); return false; }
     },
     moveFleet(fleetId, provId) {
       try {
@@ -2955,6 +2980,8 @@ export function gameActions(ctx) {
           return;
         }
         if (!isCoastal(ctx, provId | 0)) { say('No harbor there', 'Fleets sail port to port — pick a coastal province.', 'bad'); return; }
+        // a hand on the tiller ends a trade mission (SPEC §292)
+        if (f.mission) { f.mission = null; touchTrade(g); }
         issueFleetMove(ctx, f, provId | 0);
       } catch (e) { warnOnce('moveFleet', 'moveFleet failed', e); }
     },
@@ -4438,6 +4465,7 @@ export function reviveGame(saved) {
   if (!saved.airwings) saved.airwings = {}; // pre-air-power saves
   if (!Number.isFinite(saved.nextWingId)) saved.nextWingId = 1;
   if (!Array.isArray(saved.merchantVoyages)) saved.merchantVoyages = []; // pre-§58 saves
+  migrateTradeState(saved); // pre-§292: hulls at the shipyards become merchants
   if (!Number.isFinite(saved.nextRecruitId)) saved.nextRecruitId = 1;
   if (!Array.isArray(saved.pendingCommands)) saved.pendingCommands = [];
   if (!Number.isFinite(saved.nextCommandId)) saved.nextCommandId = 1;

@@ -3,9 +3,10 @@
 
 import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, levyOf, forceLimitOf, changeOwnerCore, resolveDisplayName, tagDef } from './military.js';
 import { POP_PER_DEV, addPopulation } from './population.js';
-import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
-import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
+import { blockadedBy, isCoastal } from './navy.js';
+import { tradeIncomeOf } from './trade.js';
 import { TRADE_ROUTES } from '../data/trade.js';
+import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
 import { genUpkeepMult } from '../data/tech.js';
 // The works of one's own (SPEC §213): the development line every program
 // still in the shops bills monthly. Pure data, so no cycle.
@@ -129,9 +130,19 @@ function ownIncome(ctx, tag) {
 
 // Returns {tax, prod, mult, base, income, tributeIn, tributeOut, maint,
 // interest, net} for a tag (monthly figures).
-// The routes pay whoever holds their stops — nothing from an occupied,
-// besieged, or (sea routes) blockaded harbor; the chokepoint pays double.
+// Trade (SPEC §292): what the court collects in the markets of the world, and
+// takes from them by raiding, plus the tolls of the old roads, all after its
+// trade efficiency and any embargo on it.
 export function tradeIncome(ctx, tag) {
+  return Math.round((tradeIncomeOf(ctx, tag) + tollIncome(ctx, tag)) * 100) / 100;
+}
+
+// The tolls (SPEC §20, §292): the routes of §20 pay a share of what they used
+// to to whoever holds their stops: nothing from an occupied or besieged stop
+// or a blockaded harbor on a sea route, double at the chokepoint. They are
+// what Petra and Palmyra lived on, and what the markets of §292 do not pay.
+export const TOLL_SHARE = 0.5;
+export function tollIncome(ctx, tag) {
   let sum = 0;
   for (const r of TRADE_ROUTES) {
     const share = r.value / r.stops.length;
@@ -144,20 +155,8 @@ export function tradeIncome(ctx, tag) {
       sum += share * (r.chokepoint === stop ? 2 : 1);
     }
   }
-  // A shipyard's civilian hulls earn at their home port. Occupation, siege and
-  // blockade halt the flow without deleting the long-lived investment.
-  for (let i = 1; i < ctx.game.provinces.length; i++) {
-    const p = ctx.game.provinces[i];
-    const ships = Math.max(0, Math.round(num(p && p.merchantShips)));
-    if (!p || p.owner !== tag || p.controller !== tag || p.siege || !ships) continue;
-    if (!hasBuilding(p, 'shipyard') || blockadedBy(ctx, i)) continue;
-    sum += ships * MERCHANT_SHIP_INCOME;
-  }
-  // Influence tech widens the caravans' margins (tradeMult, SPEC §22); closed
-  // markets narrow them (SPEC §100).
-  sum *= resolveTagMult(ctx, tag, 'tradeMult');
-  sum *= embargoTradeMult(ctx, tag);
-  return Math.round(sum * 100) / 100;
+  if (!sum) return 0;
+  return sum * TOLL_SHARE * resolveTagMult(ctx, tag, 'tradeMult') * embargoTradeMult(ctx, tag);
 }
 
 // The same domestic revenue funds both ends of tribute. Never recurse
@@ -165,6 +164,7 @@ export function tradeIncome(ctx, tag) {
 function domesticIncome(ctx, tag) {
   const out = ownIncome(ctx, tag);
   try { out.trade = tradeIncome(ctx, tag); } catch (e) { out.trade = 0; }
+  try { out.tolls = Math.min(out.trade, Math.round(tollIncome(ctx, tag) * 100) / 100); } catch (e) { out.tolls = 0; }
   out.income += out.trade;
   // The ascents (SPEC §169): three festivals a year and a half-shekel from
   // every community in the world. It arrives BEFORE the tribute share is
@@ -312,6 +312,9 @@ export function runMonthlyEconomy(ctx) {
       const bd = incomeBreakdown(ctx, tag);
       const opened = num(t.treasury);
       t.income = Math.round((bd.income + bd.tributeIn + (bd.offmapIn || 0)) * 100) / 100;
+      // The markets' share of it (SPEC §292): the AI budgets its army on the
+      // steadier part of its income (ai.js aiRecruit).
+      t.marketTrade = Math.round((num(bd.trade) - num(bd.tolls)) * 100) / 100;
       t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, the works, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
       // The court consumes what the country cannot justify holding (SPEC §101).
@@ -369,7 +372,9 @@ export function explainIncome(ctx, tag) {
     if (Math.abs(bd.mult - 1) > 0.001) {
       rows.push({ label: 'National modifiers', value: r2(bd.base * (bd.mult - 1)) });
     }
-    if (bd.trade > 0) rows.push({ label: 'Trade routes', value: r2(bd.trade) });
+    // Trade (SPEC §292): the markets, and the tolls of the old roads.
+    if (bd.trade - num(bd.tolls) > 0.005) rows.push({ label: 'Trade', value: r2(bd.trade - num(bd.tolls)) });
+    if (num(bd.tolls) > 0) rows.push({ label: 'Tolls', value: r2(bd.tolls) });
     if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
     if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
     if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });

@@ -22,7 +22,8 @@ import { monthlyDiaspora } from './diaspora.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI, runTacticalAI } from './ai.js';
 import { aiMarchGuard, aiDangerWatch } from './ai_war.js';
-import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
+import { fleetsDaily, monthlyNavy } from './navy.js';
+import { merchantsDaily, tradeMonthly } from './trade.js';
 import { monthlyRecruitment } from './recruitment.js';
 import { monthlyArms, monthlyPrograms } from './arms.js';
 import { monthlyAid } from './aid.js';
@@ -114,6 +115,7 @@ function monthlyBlock(ctx) {
   safe('attrition', () => monthlyAttrition(ctx));
   safe('garrisons', () => monthlyGarrisons(ctx));
   safe('navy', () => monthlyNavy(ctx));
+  safe('trade', () => tradeMonthly(ctx)); // raiders take prizes; privateering in peace costs goodwill (SPEC §292)
   safe('unrest', () => monthlyUnrest(ctx)); // includes revolt progression & rebel spawns
   safe('pretenders', () => monthlyPretenders(ctx)); // a claim in the field bleeds the throne (SPEC §87)
   safe('risings', () => monthlyRisings(ctx)); // and a band nobody answers burns out (SPEC §112)
@@ -175,7 +177,7 @@ export function tickDay(ctx) {
       safe('move', () => moveArmiesDaily(ctx));
       safe('fleets', () => fleetsDaily(ctx));
     }
-    safe('merchants', () => merchantVoyagesDaily(ctx));
+    safe('merchants', () => merchantsDaily(ctx)); // merchants on the road to their markets (SPEC §292)
     if (!truce) {
       safe('battles', () => tickBattles(ctx));
       safe('sieges', () => tickSieges(ctx));

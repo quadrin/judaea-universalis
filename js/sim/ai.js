@@ -17,6 +17,7 @@ import {
   establishRuleTerms, applyEstablishRule, reservesTerms, callReservesCore, buildingFace, isHumanChair,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
+import { aiTrade } from './trade.js';
 import { deference } from './standing.js';
 import { institutionMult } from './institutions.js';
 import { attentionThreat } from './weather.js';
@@ -99,7 +100,11 @@ function aiRecruit(ctx, tag, hints, fraction) {
   }
   // 0.65 of income may go to upkeep — the rest is headroom for the day war
   // occupation halves the tax rolls (tech-boosted incomes made 0.75 too greedy).
-  const affordable = Math.max(3, Math.floor((num(t.income) * 0.65) / maintPerReg));
+  // Half of what the markets pay counts (SPEC §292): a raider, a rival's
+  // merchant or a lost market town can take it in a month, and an army sized
+  // to it is an army the treasury cannot keep when it goes.
+  const steady = num(t.income) - 0.5 * Math.max(0, num(t.marketTrade));
+  const affordable = Math.max(3, Math.floor((steady * 0.65) / maintPerReg));
   let desired = num(hints && hints.targetRegiments, 20);
   // The establishment grows with the realm (SPEC §21 extended): the bookmark
   // hint is a floor frozen at start, not a ceiling — a court that has doubled
@@ -452,6 +457,9 @@ function runTagAI(ctx, tag) {
   // sailing even after a peace or under a scripted lull — passivity plans
   // nothing NEW, and peace turns the fleets for home inside the module.
   try { aiNavalOperation(ctx, tag, hasAiPassive(ctx, tag)); } catch (e) { warnOnce('naval:' + tag, 'naval operation failed for', tag, e); }
+  // Trade (SPEC §292): merchants built and posted, squadrons set to guard the
+  // lanes, raid the enemy's, or hunt the raiders in our own.
+  try { aiTrade(ctx, tag, { passive: hasAiPassive(ctx, tag) }); } catch (e) { warnOnce('trade:' + tag, 'trade AI failed for', tag, e); }
   // A court at peace holds its garrisons and waits — unless rebels hold its
   // towns or march on its land (SPEC §284): the planner hunts them exactly as
   // it would a foreign army, because an occupied province is lost income and

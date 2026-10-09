@@ -163,11 +163,10 @@ const RISING_LABELS = {
       </div>
       <div class="pp-recruit-queue hidden" data-ref="recruitQueue"></div>
       <div class="pp-merchant hidden" data-ref="merchantBlock">
-        <div class="pp-build-title">${icon('ship', 'icon-sm')} Merchant Marine</div>
+        <div class="pp-build-title">${icon('coins', 'icon-sm')} <span data-ref="marketTitle">The Market</span></div>
         <div class="pp-merchant-status" data-ref="merchantStatus"></div>
-        <button class="btn pp-recruit-btn" data-ref="merchantShip"></button>
-        <div class="pp-merchant-send" data-ref="merchantSend"></div>
-        <div class="pp-merchant-send" data-ref="merchantTrade"></div>
+        <button class="btn pp-recruit-btn hidden" data-ref="merchantShip"></button>
+        <button class="btn pp-recruit-btn hidden" data-ref="merchantCaravan"></button>
       </div>
       <div class="pp-air hidden" data-ref="airBlock">
         <div class="pp-build-title">${icon('plane', 'icon-sm')} The Airfield</div>
@@ -319,26 +318,15 @@ const RISING_LABELS = {
       try { actions.buildShip(provId); } catch (e) { warnOnce('buildShip', e); }
       refresh();
     });
-    refs.merchantShip.addEventListener('click', () => {
-      if (!actions || typeof actions.commissionMerchantShip !== 'function'
-          || refs.merchantShip.classList.contains('disabled')) return;
-      try { actions.commissionMerchantShip(provId); } catch (e) { warnOnce('merchantShip', e); }
-      refresh();
-    });
-    refs.merchantSend.addEventListener('click', (e) => {
-      const b = e.target instanceof Element ? e.target.closest('[data-send-to]') : null;
-      if (!b || b.classList.contains('disabled') || !actions
-          || typeof actions.sendMerchantShip !== 'function') return;
-      try { actions.sendMerchantShip(provId, b.dataset.sendTo | 0); } catch (err) { warnOnce('merchantSend', err); }
-      refresh();
-    });
-    refs.merchantTrade.addEventListener('click', (e) => {
-      const b = e.target instanceof Element ? e.target.closest('[data-trade-to]') : null;
-      if (!b || b.classList.contains('disabled') || !actions
-          || typeof actions.sendTradeRun !== 'function') return;
-      try { actions.sendTradeRun(provId, b.dataset.tradeTo | 0); } catch (err) { warnOnce('merchantTrade', err); }
-      refresh();
-    });
+    // Fit out a merchant here (SPEC §292): a ship at a shipyard harbor, a
+    // caravan at a market town or the capital.
+    for (const [ref, kind] of [['merchantShip', 'ship'], ['merchantCaravan', 'caravan']]) {
+      refs[ref].addEventListener('click', () => {
+        if (!actions || typeof actions.buildMerchant !== 'function' || refs[ref].classList.contains('disabled')) return;
+        try { actions.buildMerchant(provId, kind); } catch (e) { warnOnce('buildMerchant', e); }
+        refresh();
+      });
+    }
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
     refs.recruitCav.addEventListener('click', () => tryRecruit('cav', refs.recruitCav));
     refs.recruitArt.addEventListener('click', () => tryRecruit('art', refs.recruitArt));
@@ -938,51 +926,38 @@ const RISING_LABELS = {
     }).join(''));
   }
 
+  // The province's market (SPEC §292): which node it trades in, what that
+  // node is worth, our share of it, and the merchants that can be fitted
+  // out here.
   function refreshMerchant() {
     let info = null;
-    if (actions && typeof actions.getMerchantShipInfo === 'function') {
-      try { info = actions.getMerchantShipInfo(provId); } catch (e) { warnOnce('merchantInfo', e); info = null; }
+    if (actions && typeof actions.getProvinceTrade === 'function') {
+      try { info = actions.getProvinceTrade(provId); } catch (e) { warnOnce('provTrade', e); info = null; }
     }
-    refs.merchantBlock.classList.toggle('hidden', !info || !info.visible);
-    if (!info || !info.visible) return;
-    const activeIncome = (info.count * info.incomeEach).toFixed(2).replace(/\.00$/, '');
-    const inbound = info.inbound ? ' · ' + info.inbound + ' inbound' : '';
-    setText(refs.merchantStatus, info.count + ' / ' + info.cap + ' merchant ships' + inbound + ' · +' + activeIncome + ' trade/month');
-    setHtml(refs.merchantShip, `${icon('ship')} Commission merchantman — ${info.cost} ${icon('coins', 'icon-xs')}`);
-    refs.merchantShip.classList.toggle('disabled', !info.can);
-    refs.merchantShip.dataset.tt = info.can
-      ? `Commission a civilian merchant ship. Each earns ${info.incomeEach} talents a month while this harbor is controlled, unsieged and unblocked.`
-      : (info.why || 'No merchantman can be fitted out now.');
-    // Send a hull to another of our shipyard harbors (SPEC §58).
-    let dests = [];
-    if (info.count > 0 && actions && typeof actions.getMerchantDestinations === 'function') {
-      try { dests = actions.getMerchantDestinations(provId) || []; } catch (e) { warnOnce('merchantDest', e); dests = []; }
+    refs.merchantBlock.classList.toggle('hidden', !info || !info.node);
+    if (!info || !info.node) return;
+    const n = info.node;
+    setText(refs.marketTitle, 'The Market of ' + n.name + (info.home ? ' (our home)' : ''));
+    const pct = (x) => Math.round(x * 100) + '%';
+    const parts = ['Worth ' + n.value.toFixed(1) + ' a month', 'our share ' + pct(n.share)];
+    if (n.income > 0.05) parts.push(n.collecting ? 'we collect ' + n.income.toFixed(1) : 'we take ' + n.income.toFixed(1));
+    else if (n.steering > 0.05 && n.steerTo) parts.push('we steer ' + n.steering.toFixed(1) + ' on to ' + (n.toNames[n.to.indexOf(n.steerTo)] || ''));
+    if (n.raidedBy && n.raidedBy.length) parts.push('raiders in its waters');
+    setText(refs.merchantStatus, parts.join(' · '));
+    refs.merchantStatus.dataset.tt = n.name + (info.isCenter ? ' (this is its market town)' : '') + ': ' + n.blurb
+      + '\nIts own goods ' + n.local.toFixed(1) + ' a month, and ' + n.incoming.toFixed(1) + ' flowing in from upstream.'
+      + (n.toNames.length ? '\nWhat nobody collects here flows on to ' + n.toNames.join(' and ') + '.' : '\nThe roads end here: whoever holds power here collects it all.')
+      + '\nThe Trade tab of the realm panel posts merchants and sets the squadrons\' trade missions.';
+    for (const [ref, b, label, cost] of [['merchantShip', info.ship, 'Fit out a merchant ship', 'ship'], ['merchantCaravan', info.caravan, 'Make ready a caravan', 'caravan']]) {
+      refs[ref].classList.toggle('hidden', !b);
+      if (!b) continue;
+      setHtml(refs[ref], `${icon(cost === 'ship' ? 'ship' : 'amphora')} ${label} (${b.have} / ${b.cap}) — ${b.cost} ${icon('coins', 'icon-xs')}`);
+      refs[ref].classList.toggle('disabled', !b.can);
+      refs[ref].dataset.tt = b.can
+        ? (cost === 'ship' ? 'A merchant ship sails to any market on the sea' : 'A caravan travels overland to any market a road reaches')
+          + ', and gives us trade power there while it stays: it collects our share, or steers that market\'s trade toward us.'
+        : b.why;
     }
-    refs.merchantSend.classList.toggle('hidden', !dests.length);
-    setHtml(refs.merchantSend, dests.map((d) => {
-      const full = d.free <= 0;
-      const tt = full
-        ? `Every berth at ${esc(d.provName)} is claimed (${d.count} docked${d.inbound ? ', ' + d.inbound + ' inbound' : ''}).`
-        : `Send one merchantman to ${esc(d.provName)} — about ${d.days} days at sea, earning nothing until she docks (${d.count + d.inbound} / ${d.cap} berths claimed).`;
-      return `<button class="pp-build-btn${full ? ' disabled' : ''}" data-send-to="${d.prov}" data-tt="${esc(tt)}">` +
-        `${icon('ship', 'icon-sm')}<span>Send to ${esc(d.provName)} · ${d.days}d</span></button>`;
-    }).join(''));
-    // Trade runs abroad (v6.1): the foreign markets, open or not — the closed
-    // ones stay visible so the opinion gate is learnable.
-    let trades = [];
-    if (info.count > 0 && actions && typeof actions.getTradeRunDestinations === 'function') {
-      try { trades = actions.getTradeRunDestinations(provId) || []; } catch (e) { warnOnce('tradeDest', e); trades = []; }
-    }
-    refs.merchantTrade.classList.toggle('hidden', !trades.length);
-    setHtml(refs.merchantTrade, trades.map((d) => {
-      const tt = d.can
-        ? `A round trip to ${esc(d.provName)} (${esc(d.hostName)}, opinion ${d.opinion >= 0 ? '+' : ''}${d.opinion}): `
-          + `about ${d.days} days out and back, a month trading in their market, and ~${d.payout} talents landed when she ties up at home. `
-          + `War with ${esc(d.hostName)} while she trades would see ship and cargo seized.`
-        : d.why;
-      return `<button class="pp-build-btn${d.can ? '' : ' disabled'}" data-trade-to="${d.prov}" data-tt="${esc(tt)}">` +
-        `${icon('coins', 'icon-sm')}<span>Trade run: ${esc(d.provName)} · ${d.days}d · ~${d.payout} ${icon('coins', 'icon-xs')}</span></button>`;
-    }).join(''));
   }
 
   function refreshDiplomacy(p, g) {

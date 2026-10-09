@@ -3772,6 +3772,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 #nation-panel[data-tab='missions'] [data-tab]:not([data-tab='missions']),
 #nation-panel[data-tab='court'] [data-tab]:not([data-tab='court']),
 #nation-panel[data-tab='tech'] [data-tab]:not([data-tab='tech']),
+#nation-panel[data-tab='trade'] [data-tab]:not([data-tab='trade']),
 #nation-panel[data-tab='war'] [data-tab]:not([data-tab='war']),
 #nation-panel[data-tab='faith'] [data-tab]:not([data-tab='faith']),
 #nation-panel[data-tab='world'] [data-tab]:not([data-tab='world']) { display: none !important; }
@@ -4008,3 +4009,36 @@ html.ju-reduce-motion *, html.ju-reduce-motion *::before, html.ju-reduce-motion 
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
 }
+
+/* ============================================================
+   Trade (SPEC §292): the realm panel's Trade tab
+   ============================================================ */
+.np-tr-sum { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; margin: 2px 0 8px; }
+.np-tr-sum .icon { vertical-align: -2px; }
+.np-tr-build { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.np-tr-head {
+  font-variant: small-caps; letter-spacing: 0.06em; font-size: 12.5px; font-weight: 600;
+  color: var(--ink-soft); margin: 10px 0 3px; border-bottom: 1px dotted rgba(85, 69, 46, 0.35);
+}
+.np-tr-none { font-size: 12px; font-style: italic; color: var(--ink-soft); padding: 2px 0; }
+.np-tr-m, .np-tr-t {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 12.5px; padding: 3px 0; border-bottom: 1px solid rgba(85, 69, 46, 0.12);
+}
+.np-tr-mk i, .np-tr-tk i { color: var(--ink-soft); font-size: 11.5px; }
+.np-tr-acts { display: inline-flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.np-tr-btn {
+  font-size: 11.5px; padding: 2px 7px; border-radius: 3px; color: var(--parch);
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood-light)); border: 1px solid var(--gold-dim);
+  white-space: nowrap;
+}
+.np-tr-btn:hover { border-color: var(--gold); filter: brightness(1.15); }
+.np-tr-btn.disabled { opacity: 0.45; cursor: default; }
+.np-tr-sel { font-family: inherit; font-size: 11.5px; max-width: 120px; background: var(--parch-hi); border: 1px solid rgba(43, 32, 21, 0.4); border-radius: 3px; }
+.np-tr-pick { margin: 2px 0 6px 18px; padding-left: 8px; border-left: 2px solid var(--gold-dim); }
+.np-tr-row { display: grid; grid-template-columns: 1fr 52px 48px 56px; gap: 6px; font-size: 12.5px; padding: 2px 0; }
+.np-tr-row > span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.np-tr-th { color: var(--ink-soft); font-size: 11px; font-variant: small-caps; letter-spacing: 0.05em; }
+.np-tr-node { color: var(--ink); text-decoration: underline dotted; text-underline-offset: 2px; font-size: 12.5px; padding: 0; }
+.np-tr-node:hover { color: var(--red-deep); }
+#nation-panel .np-tr-row .pos { color: var(--green); }

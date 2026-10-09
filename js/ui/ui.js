@@ -18,7 +18,7 @@ import { armGenName } from '../data/units.js';
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
   { id: 'diplomatic', ico: icon('dove'), name: 'Diplomatic — friends, foes, truces and claims, seen from your throne' },
-  { id: 'trade', ico: icon('coins'), name: 'Trade — the routes, their stops, and the chokepoints that pay double' },
+  { id: 'trade', ico: icon('coins'), name: 'Trade — the markets, what each is worth, and where its goods flow' },
   { id: 'terrain', ico: icon('mountain'), name: 'Terrain' },
   { id: 'religion', ico: icon('altar'), name: 'Religion' },
   { id: 'culture', ico: icon('amphora'), name: 'Culture' },
@@ -186,6 +186,7 @@ export function initUI(staticCtx) {
     onProvinceClick(id) { setSelectedProv(id | 0); },
   });
   const outliner = createOutliner(els.outliner, {
+    onTradeClick() { setSelectedProv(0); nationPanel.open(null, 'trade'); },
     onPeaceClick(warId) { openPeaceDialog(warId); },
     onWarClick(warId) { openWarOverview(warId); },
     onArmyClick(id, shift) {

@@ -28,7 +28,7 @@ export function armyCompositionHtml(a) {
 }
 
 export function createOutliner(el, {
-  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick,
+  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick, onTradeClick,
 }) {
   let ctx = null;
   let actions = null;
@@ -102,6 +102,8 @@ export function createOutliner(el, {
       if (!fa.classList.contains('disabled')) runArmyAction('hireAdmiral', Number(fa.dataset.fleetAdmiral));
       return;
     }
+    // The merchants' line opens the Trade tab (SPEC §292).
+    if (e.target.closest('[data-trade-open]')) { if (onTradeClick) onTradeClick(); return; }
     const fg = e.target.closest('[data-fleet-merge]');
     if (fg) {
       if (!fg.classList.contains('disabled')) runArmyAction('mergeAllFleets', Number(fg.dataset.fleetMerge));
@@ -305,16 +307,21 @@ export function createOutliner(el, {
           </div>`;
       }
     }
-    if (navy && navy.merchantCount > 0) {
-      const atSea = (navy.voyages || []).length;
-      const inactive = Math.max(0, navy.merchantCount - (navy.merchantActive || 0) - atSea);
-      const tt = `${navy.merchantCount} civilian ship${navy.merchantCount === 1 ? '' : 's'} in the merchant marine`
-        + (atSea ? `\n${atSea} at sea: ` + navy.voyages.map((v) => `${v.fromName} → ${v.toName} (${v.daysLeft}d)`).join(', ') : '')
-        + (inactive ? `\n${inactive} idle under occupation, siege or blockade` : (atSea ? '' : '\nEvery home port is trading'));
-      html += `<div class="ol-sec">Merchant Marine <span class="ol-count">${navy.merchantCount}</span></div>
-        <div class="ol-row ol-merchant" data-tt="${esc(tt)}">
-          <span class="ol-name">${icon('ship', 'icon-row')} Civilian shipping</span>
-          <span class="ol-sub">${navy.merchantActive || 0} active${atSea ? ' · ' + atSea + ' at sea' : ''}</span>
+    // The merchants (SPEC §292): how many we keep, how many serve at a
+    // market now, how many are on the road. A click opens the Trade tab, so
+    // the line is there before the first merchant too.
+    if (navy) {
+      const n = navy.merchantCount || 0;
+      const out = navy.merchantsOut || 0;
+      const idle = Math.max(0, n - (navy.merchantActive || 0) - out);
+      const tt = (n ? `${n} merchant${n === 1 ? '' : 's'}: ${navy.merchantActive || 0} at work in the markets`
+        + (out ? `, ${out} on the road` : '') + (idle ? `, ${idle} waiting at home for orders` : '') + '.'
+        : 'No merchants yet. Fit one out to collect in a market abroad, or to steer its trade toward us.')
+        + '\nClick for the Trade tab.';
+      html += `<div class="ol-sec">Merchants <span class="ol-count">${n}</span></div>
+        <div class="ol-row ol-merchant" data-trade-open="1" data-tt="${esc(tt)}">
+          <span class="ol-name">${icon('coins', 'icon-row')} Trade</span>
+          <span class="ol-sub">${n ? (navy.merchantActive || 0) + ' at work' + (out ? ' · ' + out + ' on the road' : '') + (idle ? ' · ' + idle + ' idle' : '') : 'none yet'}</span>
         </div>`;
     }
 

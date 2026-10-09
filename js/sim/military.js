@@ -3441,7 +3441,7 @@ const WAR_GOALS = {
   succession: { cap: 25, rate: 1, grace: 6 },
 };
 
-function capitalProvince(ctx, tag) {
+export function capitalProvince(ctx, tag) {
   const t = ctx.game.tags[tag];
   const def = tagDef(ctx, tag);
   const name = (t && t.dynamicCapital) || def.capital;
