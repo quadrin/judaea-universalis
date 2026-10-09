@@ -107,7 +107,7 @@ button {
 
 /* Shared parchment */
 .parchment,
-#province-panel, #nation-panel, .ev-card, .go-card, .toast {
+#province-panel, #nation-panel, #fleet-panel, .ev-card, .go-card, .toast {
   background:
     repeating-linear-gradient(0deg, rgba(120, 90, 40, 0.05) 0 3px, transparent 3px 6px),
     repeating-linear-gradient(90deg, rgba(120, 90, 40, 0.04) 0 4px, transparent 4px 9px),
@@ -251,12 +251,12 @@ button {
 
 /* --------------------------------------------------------- gold panels --- */
 .gold-frame,
-#province-panel, #nation-panel, #outliner, .ev-card, .go-card {
+#province-panel, #nation-panel, #fleet-panel, #outliner, .ev-card, .go-card {
   border: 1px solid var(--gold);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.15);
   position: relative;
 }
-#province-panel::before, #nation-panel::before, .ev-card::before, .go-card::before {
+#province-panel::before, #nation-panel::before, #fleet-panel::before, .ev-card::before, .go-card::before {
   content: '';
   position: absolute;
   top: 3px; left: 3px;
@@ -265,7 +265,7 @@ button {
   border-left: 2px solid var(--gold);
   pointer-events: none;
 }
-#province-panel::after, #nation-panel::after, .ev-card::after, .go-card::after {
+#province-panel::after, #nation-panel::after, #fleet-panel::after, .ev-card::after, .go-card::after {
   content: '';
   position: absolute;
   bottom: 3px; right: 3px;
@@ -316,6 +316,30 @@ button {
   padding: 0 0 12px;
   font-size: 13.5px;
 }
+
+/* The fleet panel (SPEC §294) takes the same berth for a selected squadron. */
+#fleet-panel {
+  position: absolute;
+  top: 56px;
+  left: 10px;
+  width: 300px;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
+  border-radius: 4px;
+  padding: 0 0 12px;
+  font-size: 13.5px;
+}
+.fp-sub { padding: 0 14px 6px; color: var(--text-dim); font-size: 12px; }
+.fp-rows { padding: 2px 14px 6px; }
+.fp-row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid rgba(201, 162, 39, 0.12); }
+.fp-row .pp-k { color: var(--text-dim); }
+.fp-row .pp-v { text-align: right; }
+.fp-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 6px 14px 0; }
+.fp-acts .btn { padding: 5px 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.fp-acts .btn .icon { width: 13px; height: 13px; }
+.fp-acts .btn.disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Nation (realm) panel shares the province panel's berth; the phone media
    block below turns both into bottom sheets (so this must stay above it). */
@@ -631,6 +655,11 @@ button {
    and the mix stay readable instead of being squeezed to an ellipsis. */
 .ol-army.sel { flex-wrap: wrap; }
 .ol-army.sel .ol-acts { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 4px; margin-top: 2px; }
+/* A selected squadron's orders take their own line too (SPEC §294); its row
+   names the squadron, and the harbor (or where it sails) rides beside. */
+.ol-fleet.sel { flex-wrap: wrap; }
+.ol-fleet.sel .ol-acts { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 4px; margin-top: 2px; }
+.ol-fleet .ol-sub { font-size: 11px; max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ol-sub { color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .ol-sub.pos { color: #8fbf7a; }
 .ol-sub.neg { color: #e06a5a; }
@@ -1963,7 +1992,7 @@ html, body {
   .tb-date { font-size: 12px; letter-spacing: 0.02em; }
 
   /* province & nation panels -> bottom sheets: full width, inner scroll */
-  #province-panel, #nation-panel {
+  #province-panel, #nation-panel, #fleet-panel {
     top: auto;
     left: 0;
     right: 0;
@@ -1982,13 +2011,13 @@ html, body {
   }
   #nation-panel { max-height: 70vh; max-height: 70dvh; } /* denser panel gets more room */
   #province-panel::before, #province-panel::after,
-  #nation-panel::before, #nation-panel::after { content: none; } /* no corner accents on sheets */
+  #nation-panel::before, #nation-panel::after, #fleet-panel::before, #fleet-panel::after { content: none; } /* no corner accents on sheets */
   /* a long value (three communities, "22 provinces · 183 dev") used to wrap
      back under its own label; on a sheet the row stacks instead */
   #province-panel .pp-row, #nation-panel .pp-row { flex-wrap: wrap; row-gap: 1px; }
   #province-panel .pp-row .pp-v, #nation-panel .pp-row .pp-v { text-align: right; }
   #province-panel .pp-row .pp-k, #nation-panel .pp-row .pp-k { flex: 1 0 42%; }
-  #province-panel .pp-head, #nation-panel .pp-head { position: relative; padding-top: 13px; }
+  #province-panel .pp-head, #nation-panel .pp-head, #fleet-panel .pp-head { position: relative; padding-top: 13px; }
   #province-panel .pp-head::after, #nation-panel .pp-head::after { /* grab handle: swipe down here to close */
     content: '';
     position: absolute;
@@ -3597,7 +3626,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
    width to spare instead, so the panels stand on the left and the map keeps
    its right half whole (SPEC §103). */
 @media (pointer: coarse) and (max-width: 900px) and (orientation: landscape) {
-  #province-panel, #nation-panel {
+  #province-panel, #nation-panel, #fleet-panel {
     top: calc(46px + env(safe-area-inset-top));
     bottom: 0;
     left: 0;

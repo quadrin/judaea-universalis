@@ -314,6 +314,17 @@ export function navalStrengthOf(ctx, tag, opts) {
   return s;
 }
 
+// A day number for the sea fights (months of 31 days: only differences of a
+// few days are ever taken).
+function seaDay(g) {
+  const d = g.date || {};
+  return num(d.y) * 372 + num(d.m) * 31 + num(d.d);
+}
+export function seaFightsLive(g) {
+  const today = seaDay(g);
+  return Object.values(g.seaFights || {}).filter((sf) => sf && today - num(sf.day) <= 2);
+}
+
 // Daily: fleets sail, cargo follows, rival squadrons fight where they meet.
 export function fleetsDaily(ctx) {
   const g = ctx.game;
@@ -348,7 +359,15 @@ export function fleetsDaily(ctx) {
     // cargo rides along
     for (const a of Object.values(g.armies)) if (a && a.aboard === f.id) a.prov = f.prov;
   }
-  // sea battles: hostile squadrons off the same shore trade broadsides daily
+  // sea battles: hostile squadrons off the same shore trade broadsides daily.
+  // Each fight is kept on g.seaFights by its anchor (SPEC §294) so the map
+  // can draw it; a fight with no exchange for three days is over.
+  const today = seaDay(g);
+  if (!g.seaFights || typeof g.seaFights !== 'object') g.seaFights = {};
+  for (const k of Object.keys(g.seaFights)) {
+    const sf = g.seaFights[k];
+    if (!sf || today - num(sf.day) > 3) delete g.seaFights[k];
+  }
   const byProv = new Map();
   for (const f of Object.values(g.fleets || {})) {
     if (!f || f.ships <= 0) continue;
@@ -371,6 +390,16 @@ export function fleetsDaily(ctx) {
         const lossA = Math.max(0, Math.round(B.ships * 0.12 * nmB * (1 + 0.15 * Math.max(0, rollB - rollA))));
         A.ships = Math.max(0, A.ships - lossA);
         B.ships = Math.max(0, B.ships - lossB);
+        const prev = g.seaFights[A.prov];
+        const same = prev && ((prev.a === A.tag && prev.b === B.tag) || (prev.a === B.tag && prev.b === A.tag));
+        const flip = same && prev.a === B.tag;
+        g.seaFights[A.prov] = {
+          prov: A.prov, a: flip ? B.tag : A.tag, b: flip ? A.tag : B.tag,
+          shipsA: flip ? B.ships : A.ships, shipsB: flip ? A.ships : B.ships,
+          lostA: (same ? num(prev.lostA) : 0) + (flip ? lossB : lossA),
+          lostB: (same ? num(prev.lostB) : 0) + (flip ? lossA : lossB),
+          since: same ? prev.since : today, day: today,
+        };
         const player = g.playerTag;
         if ((A.tag === player || B.tag === player) && (lossA || lossB)) {
           const p = ctx.byId(A.prov);

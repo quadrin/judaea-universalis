@@ -4,6 +4,7 @@
 
 import { traceSupply } from '../sim/supply.js';
 import { createSeaRoutes, pointAt, slice } from './searoutes.js';
+import { seaFightsLive } from '../sim/navy.js';
 // The land roster (SPEC §191): every banner wears the face of the arm that
 // leads it, at the pattern it was raised to.
 import { dominantArm, unitGlyphKey, unitGlyphPath } from '../data/units.js';
@@ -32,6 +33,10 @@ const SWORDS_PATH = new Path2D(
   'M-5.6 -5.6L3.4 3.4M2 4.8L4.8 2M4.1 4.1L6 6' +
   'M5.6 -5.6L-3.4 3.4M-2 4.8L-4.8 2M-4.1 4.1L-6 6'
 );
+// A warship's ensign glyph (24-unit box, the UI's ship icon): mast, two
+// sails, hull. And an anchor, for a squadron laid up in ordinary (SPEC §293).
+const ENSIGN_SHIP_PATH = new Path2D('M12 4v11M12 5.2 6.5 8v5H12M12 6l5 2.4V13h-5M3.8 15h16.4l-2.5 4H7Z');
+const ENSIGN_ANCHOR_PATH = new Path2D('M12 3a1.7 1.7 0 1 0 0.01 0M12 6.3v13.4M8.4 9.2h7.2M5 13.4c.4 3.6 3.3 6.2 7 6.3 3.7-.1 6.6-2.7 7-6.3');
 // Siege tower: crenellated body, door, ground line.
 const TOWER_PATH = new Path2D(
   'M-3.5 4.5V-3.5h7V4.5' +
@@ -134,6 +139,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     const vw = camera.viewport.w;
     const vh = camera.viewport.h;
     for (const a of armies) {
+      if (a.aboard != null) continue; // at sea: it rides its ship's ensign
       const c = armyMapPos(a);
       if (!c) continue;
       const hopKey = (!a.inBattle && Array.isArray(a.path) && a.path.length)
@@ -202,9 +208,41 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const n = perProv.get(fleet.prov) || 0;
       perProv.set(fleet.prov, n + 1);
       const [sx, sy] = camera.mapToScreen(off.x, off.y);
-      out.push({ fleet, x: sx + n * 10 * sc, y: sy + n * 7 * sc, sc, heading: pos ? pos.heading : 0, route, s: 0, moving: false });
+      out.push({ fleet, x: sx + n * 10 * sc, y: sy + n * 7 * sc, sc, heading: pos ? pos.heading : 0, route, s: 0, moving: false, stack: n });
+    }
+    // The troops aboard (an army at sea rides its ship, not the shore it left)
+    // and the ensign each warship flies: hulls, and the men it carries.
+    const aboard = new Map();
+    for (const a of Object.values(game.armies || {})) {
+      if (!a || a.aboard == null) continue;
+      let e = aboard.get(a.aboard);
+      if (!e) { e = { men: 0, armies: [], army: a }; aboard.set(a.aboard, e); }
+      e.men += a.men || 0;
+      e.armies.push(a);
+      if ((a.men || 0) > (e.army.men || 0)) e.army = a;
+    }
+    for (const m of out) {
+      m.aboard = aboard.get(m.fleet.id) || null;
+      m.chip = ensignRect(m);
     }
     return out;
+  }
+  // Where a warship's ensign flies: above the hull, centred, as wide as its
+  // count and, if troops are aboard, their number.
+  function ensignRect(m) {
+    const s = Math.min(1.35, Math.max(1, m.sc * 0.85));
+    const h = 17 * s;
+    x2.save();
+    x2.font = 'bold ' + Math.round(11 * s) + 'px Georgia, serif';
+    const cnt = String(m.fleet.ships);
+    let w = 21 * s + x2.measureText(cnt).width + 6 * s;
+    let troopsW = 0;
+    if (m.aboard) troopsW = (GLYPH_PX + 7) * s + x2.measureText(fmtMen(m.aboard.men)).width + 5 * s;
+    x2.restore();
+    w += troopsW;
+    // squadrons at one anchor fly their ensigns one above the other
+    const lift = (m.stack | 0) * (h + 3 * s) + (m.stack | 0) * 7 * m.sc;
+    return { x: m.x - w / 2, y: m.y - 21 * m.sc - h - 3 * s - lift, w, h, s, troopsW, cnt };
   }
 
   // A fleet's course (SPEC §290): the rest of its water route, a dark trace
@@ -389,6 +427,57 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       x2.arc(sx + Math.cos(ang) * r, sy + Math.sin(ang) * r, 1.5 * (1 - p * 0.5), 0, Math.PI * 2);
       x2.fill();
     }
+  }
+
+  // A sea fight (SPEC §294): where hostile squadrons trade broadsides, a
+  // ring of fire and spray on the water under them, and a crossed-swords
+  // disc beside the anchor with each side's hulls in its colour.
+  function drawSeaFight(game, sf, camera, timeMs) {
+    const off = (geom.offshore && geom.offshore[sf.prov]) || geom.centroids[sf.prov];
+    if (!off) return;
+    const [ax, ay] = camera.mapToScreen(off.x, off.y);
+    const sc = shipScale(camera);
+    const t = stillMotion() ? 0 : (timeMs || 0) * 0.001;
+    // the water churns under the ships
+    const rp = (t % 1.6) / 1.6;
+    x2.save();
+    x2.strokeStyle = `rgba(250,236,200,${((1 - rp) * 0.6).toFixed(3)})`;
+    x2.lineWidth = 2;
+    x2.beginPath();
+    x2.ellipse(ax, ay + 3 * sc, (18 + rp * 18) * sc, (7 + rp * 7) * sc, 0, 0, Math.PI * 2);
+    x2.stroke();
+    x2.restore();
+    // the disc, left of the anchor (the squadrons stack to the right)
+    const sx = ax - 30 * sc;
+    const sy = ay - 4 * sc;
+    drawBattle(sx, sy, timeMs);
+    // each side's hulls, under the disc
+    const ca = tagColor(game, sf.a);
+    const cb = tagColor(game, sf.b);
+    const txt = String(sf.shipsA) + '  ' + String(sf.shipsB);
+    x2.save();
+    x2.font = 'bold 10px Georgia, serif';
+    const w = x2.measureText(txt).width + 22;
+    const bx = sx - w / 2;
+    const by = sy + 15;
+    x2.fillStyle = 'rgba(20,15,9,0.86)';
+    x2.strokeStyle = 'rgba(201,162,39,0.8)';
+    x2.lineWidth = 1;
+    x2.beginPath();
+    x2.rect(bx, by, w, 14);
+    x2.fill();
+    x2.stroke();
+    x2.fillStyle = css(ca);
+    x2.fillRect(bx + 3, by + 3, 6, 8);
+    x2.fillStyle = css(cb);
+    x2.fillRect(bx + w - 9, by + 3, 6, 8);
+    x2.fillStyle = '#efe4c8';
+    x2.textAlign = 'center';
+    x2.textBaseline = 'middle';
+    x2.fillText(txt, sx, by + 7.5);
+    x2.restore();
+    shipLog.push({ kind: 'seafight', prov: sf.prov, x: sx, y: sy, a: sf.a, b: sf.b, shipsA: sf.shipsA, shipsB: sf.shipsB });
+    labelObstacles.push({ x: bx, y: sy - 14, w, h: 44 });
   }
 
   // The land wears its works (SPEC §29): tiny structure glyphs under the
@@ -1383,6 +1472,104 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.restore();
   }
 
+  // A warship's ensign (the naval banner): a short staff down to the
+  // masthead, a plate in the court's colour with a ship and the count of
+  // hulls, and, if an army is aboard, its face and its men on a darker end.
+  // Gold-rimmed when the squadron (or an army aboard) is selected; grey with
+  // an anchor when it is laid up in ordinary. Merchant ships fly none, so a
+  // squadron of war is never mistaken for a trader.
+  function drawEnsign(game, m, col) {
+    const f = m.fleet;
+    const r = m.chip;
+    const s = r.s;
+    const ui = game.ui || {};
+    const selIds = [ui.selectedArmy].concat(Array.isArray(ui.selectedArmies) ? ui.selectedArmies : []);
+    const selected = ui.selectedFleet === f.id || (m.aboard && m.aboard.armies.some((a) => selIds.indexOf(a.id) >= 0));
+    const laid = !!f.laidUp;
+    const base = laid ? [128, 120, 104] : col;
+    const rad = 3 * s;
+    const plate = () => {
+      x2.beginPath();
+      x2.moveTo(r.x + rad, r.y);
+      x2.lineTo(r.x + r.w - rad, r.y);
+      x2.quadraticCurveTo(r.x + r.w, r.y, r.x + r.w, r.y + rad);
+      x2.lineTo(r.x + r.w, r.y + r.h - rad);
+      x2.quadraticCurveTo(r.x + r.w, r.y + r.h, r.x + r.w - rad, r.y + r.h);
+      x2.lineTo(r.x + rad, r.y + r.h);
+      x2.quadraticCurveTo(r.x, r.y + r.h, r.x, r.y + r.h - rad);
+      x2.lineTo(r.x, r.y + rad);
+      x2.quadraticCurveTo(r.x, r.y, r.x + rad, r.y);
+      x2.closePath();
+    };
+    x2.save();
+    if (laid) x2.globalAlpha = 0.75;
+    // the staff, down to the masthead
+    x2.strokeStyle = 'rgba(30,22,10,0.85)';
+    x2.lineWidth = 1.4;
+    x2.beginPath();
+    x2.moveTo(m.x, r.y + r.h);
+    x2.lineTo(m.x, m.y - 13 * m.sc);
+    x2.stroke();
+    if (selected) {
+      plate();
+      x2.strokeStyle = '#e7c34c';
+      x2.lineWidth = 4;
+      x2.lineJoin = 'round';
+      x2.stroke();
+    }
+    plate();
+    const grad = x2.createLinearGradient(0, r.y, 0, r.y + r.h);
+    grad.addColorStop(0, css(base.map((v) => Math.min(255, v + 26))));
+    grad.addColorStop(1, css(base.map((v) => Math.max(0, v - 22))));
+    x2.fillStyle = grad;
+    x2.fill();
+    // the troops' end, darker
+    if (r.troopsW > 0) {
+      x2.save();
+      plate();
+      x2.clip();
+      x2.fillStyle = 'rgba(10,8,4,0.38)';
+      x2.fillRect(r.x + r.w - r.troopsW, r.y, r.troopsW, r.h);
+      x2.restore();
+    }
+    plate();
+    x2.strokeStyle = 'rgba(15,10,5,0.85)';
+    x2.lineWidth = 1;
+    x2.stroke();
+    // the ship (or the anchor), then the hulls
+    const gs = (13 * s) / 24;
+    x2.save();
+    x2.translate(r.x + 4 * s, r.y + (r.h - 13 * s) / 2);
+    x2.scale(gs, gs);
+    x2.lineJoin = 'round';
+    x2.lineCap = 'round';
+    x2.lineWidth = 2.6;
+    x2.strokeStyle = 'rgba(12,8,4,0.55)';
+    x2.stroke(laid ? ENSIGN_ANCHOR_PATH : ENSIGN_SHIP_PATH);
+    x2.lineWidth = 1.8;
+    x2.strokeStyle = 'rgba(255,252,244,0.95)';
+    x2.stroke(laid ? ENSIGN_ANCHOR_PATH : ENSIGN_SHIP_PATH);
+    x2.restore();
+    x2.fillStyle = '#fff';
+    x2.font = 'bold ' + Math.round(11 * s) + 'px Georgia, serif';
+    x2.textAlign = 'left';
+    x2.textBaseline = 'middle';
+    x2.shadowColor = 'rgba(0,0,0,0.6)';
+    x2.shadowBlur = 2;
+    x2.fillText(r.cnt, r.x + 20 * s, r.y + r.h / 2 + 0.5);
+    if (r.troopsW > 0) {
+      const tx = r.x + r.w - r.troopsW;
+      x2.fillText(fmtMen(m.aboard.men), tx + (GLYPH_PX + 5) * s, r.y + r.h / 2 + 0.5);
+      x2.shadowBlur = 0;
+      x2.save();
+      x2.translate(tx + 3 * s, r.y + (r.h - GLYPH_PX * s) / 2);
+      x2.scale(s, s);
+      drawUnitGlyph({ army: m.aboard.army, armies: m.aboard.armies }, 0, 0);
+      x2.restore();
+    }
+    x2.restore();
+  }
+
   // Army standard: pole + swallow-tailed pennant in the tag color. The cloth
   // ripples while marching (and breathes gently at rest); the hit box is
   // unchanged from the old rounded-rect chips, so picking is unaffected.
@@ -1707,6 +1894,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const fleetMarks = fleetMarkerList(game, camera);
       for (const m of fleetMarks) if (m.route) drawFleetCourse(game, camera, m, timeMs);
       drawMerchants(game, camera, timeMs);
+      for (const sf of seaFightsLive(game)) drawSeaFight(game, sf, camera, timeMs);
       const still = stillMotion();
       const tSea = still ? 0 : (timeMs || 0);
       for (const m of fleetMarks) {
@@ -1734,8 +1922,10 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         drawWarshipGlyph(f, col);
         if (m.moving) bowWave(tSea, still, 15);
         x2.restore();
-        shipLog.push({ kind: 'fleet', id: f.id, x: m.x, y: m.y, s: m.s, moving: m.moving, heading: m.heading, laidUp: !!f.laidUp });
-        shipBadge(m.x + 15 * m.sc, m.y - 11 * m.sc, String(f.ships), m.sc);
+        shipLog.push({ kind: 'fleet', id: f.id, x: m.x, y: m.y, s: m.s, moving: m.moving, heading: m.heading, laidUp: !!f.laidUp,
+          chip: m.chip, aboard: m.aboard ? m.aboard.men : 0 });
+        drawEnsign(game, m, col);
+        labelObstacles.push({ x: m.chip.x, y: m.chip.y, w: m.chip.w, h: m.chip.h });
       }
 
       // army chips on top
@@ -1804,6 +1994,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         const hh = (FLEET_H / 2) * m.sc;
         if (sx >= m.x - hw - pad && sx <= m.x + hw + pad
             && sy >= m.y - hh - pad && sy <= m.y + hh + pad) return m.fleet.id;
+        // …and its ensign (SPEC §294)
+        const c = m.chip;
+        if (c && sx >= c.x - pad && sx <= c.x + c.w + pad && sy >= c.y - pad && sy <= c.y + c.h + pad) return m.fleet.id;
       }
     } catch (e) {
       warnOnce('hitf-throw', 'hitTestFleet failed', e);

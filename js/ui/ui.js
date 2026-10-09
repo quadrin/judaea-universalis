@@ -8,6 +8,7 @@ import { createTopbar } from './topbar.js';
 import { createProvincePanel } from './province_panel.js';
 import { createNationPanel } from './nation_panel.js';
 import { createOutliner } from './outliner.js';
+import { createFleetPanel } from './fleet_panel.js';
 import { createEventModal, createGameoverModal } from './modals.js';
 import { createWiki } from './wiki.js';
 import { createSavesPanel } from './saves.js';
@@ -57,6 +58,7 @@ export function initUI(staticCtx) {
   const els = {
     topbar: $('topbar'),
     panel: $('province-panel'),
+    fleet: $('fleet-panel'),
     nation: $('nation-panel'),
     outliner: $('outliner'),
     mapmodeBar: $('mapmode-bar'),
@@ -145,7 +147,8 @@ export function initUI(staticCtx) {
   function toggleNationPanel() {
     // Open on a foreign court? The flag brings you home instead of closing.
     if (nationPanel.isOpen() && !nationPanel.viewing()) { nationPanel.close(); return; }
-    setSelectedProv(0); // the two left panels share the same berth
+    setSelectedProv(0); // the left panels share the same berth
+    fleetPanel.close();
     nationPanel.open();
   }
   // The Compendium (SPEC §71): the title screen's library — it reads the
@@ -170,11 +173,31 @@ export function initUI(staticCtx) {
     onToolsClick: () => toggleTools(),
     onSettingsClick: () => settings.toggle(),
     // A ringing tech bell (SPEC §286) opens our own court on Technology.
-    onTechClick: () => { setSelectedProv(0); nationPanel.open(null, 'tech'); },
+    onTechClick: () => { setSelectedProv(0); fleetPanel.close(); nationPanel.open(null, 'tech'); },
     // A ready mission's bell (SPEC §291) opens our own court on Missions.
-    onMissionClick: () => { setSelectedProv(0); nationPanel.open(null, 'missions'); },
+    onMissionClick: () => { setSelectedProv(0); fleetPanel.close(); nationPanel.open(null, 'missions'); },
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
+  // The fleet panel (SPEC §294) takes the same berth while a squadron of
+  // ours is selected; deselecting it, or opening a province or the realm,
+  // gives the berth back.
+  const fleetPanel = createFleetPanel(els.fleet, {
+    DEFINES,
+    onClose: () => { clearSelectedUnits(); },
+    onTradeClick: () => { nationPanel.open(null, 'trade'); fleetPanel.close(); },
+  });
+  function syncFleetPanel() {
+    const g = state.ctx && state.ctx.game;
+    if (!g || !els.fleet) return;
+    const id = g.ui.selectedFleet;
+    const f = id != null && g.fleets ? g.fleets[id] : null;
+    const own = !!f && f.tag === g.playerTag;
+    if (own && (!fleetPanel.isOpen() || fleetPanel.fleet() !== id)) {
+      if (g.ui.selectedProv) { g.ui.selectedProv = 0; bus.emit('select', 0); panel.close(); }
+      if (nationPanel.isOpen()) nationPanel.close();
+      fleetPanel.open(id);
+    } else if (!own && fleetPanel.isOpen()) fleetPanel.close();
+  }
   const nationPanel = createNationPanel(els.nation, {
     DEFINES,
     onClose: () => nationPanel.close(),
@@ -186,7 +209,7 @@ export function initUI(staticCtx) {
     onProvinceClick(id) { setSelectedProv(id | 0); },
   });
   const outliner = createOutliner(els.outliner, {
-    onTradeClick() { setSelectedProv(0); nationPanel.open(null, 'trade'); },
+    onTradeClick() { setSelectedProv(0); fleetPanel.close(); nationPanel.open(null, 'trade'); },
     onPeaceClick(warId) { openPeaceDialog(warId); },
     onWarClick(warId) { openWarOverview(warId); },
     onArmyClick(id, shift) {
@@ -856,7 +879,8 @@ export function initUI(staticCtx) {
     closeLedger();
     closeWarOverview();
     closeBattleWindow();
-    setSelectedProv(0); // the two left panels share the same berth
+    setSelectedProv(0); // the left panels share the same berth
+    fleetPanel.close();
     nationPanel.open(tag);
   }, true);
 
@@ -1283,7 +1307,7 @@ export function initUI(staticCtx) {
     id = id | 0;
     g.ui.selectedProv = id;
     bus.emit('select', id);
-    if (id > 0) { nationPanel.close(); panel.open(id); }
+    if (id > 0) { nationPanel.close(); fleetPanel.close(); panel.open(id); }
     else panel.close();
   }
 
@@ -1298,6 +1322,7 @@ export function initUI(staticCtx) {
     g.ui.selectedArmies = id == null ? [] : [id];
     bus.emit('selectArmy', g.ui.selectedArmy);
     outliner.refresh(true);
+    syncFleetPanel();
   }
 
   function setSelectedFleet(id) {
@@ -1311,6 +1336,7 @@ export function initUI(staticCtx) {
       bus.emit('selectArmy', null);
     }
     outliner.refresh(true);
+    syncFleetPanel();
   }
 
   function setSelectedWing(id) {
@@ -1324,6 +1350,7 @@ export function initUI(staticCtx) {
       bus.emit('selectArmy', null);
     }
     outliner.refresh(true);
+    syncFleetPanel();
   }
 
   function clearSelectedUnits() {
@@ -1335,6 +1362,7 @@ export function initUI(staticCtx) {
     g.ui.selectedWing = null;
     bus.emit('selectArmy', null);
     outliner.refresh(true);
+    syncFleetPanel();
   }
 
   // Banner click on a stack: every army under the standard is selected at once,
@@ -1348,6 +1376,7 @@ export function initUI(staticCtx) {
     g.ui.selectedArmy = ids[0];
     bus.emit('selectArmy', g.ui.selectedArmy);
     outliner.refresh(true);
+    syncFleetPanel();
   }
 
   // Shift+click: grow/shrink the group. The last-added army is the primary
@@ -1369,6 +1398,7 @@ export function initUI(staticCtx) {
     }
     bus.emit('selectArmy', g.ui.selectedArmy);
     outliner.refresh(true);
+    syncFleetPanel();
   }
 
   function onMapClick(payload) {
@@ -1778,6 +1808,7 @@ export function initUI(staticCtx) {
 
     topbar.bind(ctx, actions);
     panel.bind(ctx, actions);
+    fleetPanel.bind(ctx, actions);
     nationPanel.bind(ctx, actions);
     outliner.bind(ctx, actions);
     eventModal.bind(ctx, actions);
@@ -1805,6 +1836,7 @@ export function initUI(staticCtx) {
       topbar.refresh();
       outliner.refresh();
       panel.refresh();
+      fleetPanel.refresh();
       nationPanel.refresh();
       updatePill();
       refreshBattleWindow();
@@ -1812,7 +1844,7 @@ export function initUI(staticCtx) {
     bus.on('pause', safe('pause', () => { topbar.refresh(); panel.refresh(); }));
     bus.on('speed', safe('speed', () => topbar.refresh()));
     bus.on('actionTaken', safe('actionTaken', () => {
-      topbar.refresh(); panel.refresh(); outliner.refresh(true); nationPanel.refresh(); updatePill();
+      topbar.refresh(); panel.refresh(); fleetPanel.refresh(); outliner.refresh(true); nationPanel.refresh(); updatePill();
     }));
     // A card answered anywhere comes off this table too (SPEC §216): world
     // history and a foreign court's notice are dealt to every chair, and the

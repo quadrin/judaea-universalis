@@ -48,6 +48,7 @@ import {
   mergeFleetsInfo, mergeableFleetsAt, mergeFleetsCore,
   fleetIdleWhy, fleetUpkeep, layUpInfo, layUpCore,
 } from './navy.js';
+import { TRADE_NODE_BY_ID } from '../data/trade_nodes.js';
 import { migrateTradeState, tradeView, merchantTargets, provinceTrade, buildSites, buildMerchantCore, buildMerchantInfo, sendMerchantCore as sendTradeMerchantCore, recallMerchantCore, setFleetMissionCore, merchantsOf, touchTrade } from './trade.js';
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
@@ -2815,7 +2816,10 @@ export function gameActions(ctx) {
               admiral: f.admiral ? { name: f.admiral.name, maneuver: num(f.admiral.maneuver) } : null,
               canHireAdmiral: !f.admiral && num(g.tags[me].points && g.tags[me].points.mar) >= 50,
               canMerge: gi.can, mergeCount: gi.count, mergeShips: gi.ships, whyMerge: gi.why || '',
-              mission: f.mission ? { kind: f.mission.kind, node: f.mission.node } : null,
+              mission: f.mission ? { kind: f.mission.kind, node: f.mission.node, nodeName: (TRADE_NODE_BY_ID[f.mission.node] || {}).name || '' } : null,
+              // the fleet panel (SPEC §294): where it is bound, who is aboard
+              destName: f.path && f.path.length ? ((ctx.byId(f.path[f.path.length - 1]) || {}).name || '') : '',
+              aboard: aboard.map((a) => ({ id: a.id, name: a.name, men: num(a.men) })),
               // laid up in ordinary (SPEC §293)
               laidUp: !!f.laidUp, recommission: Math.ceil(num(f.recommission)),
               upkeep: Math.round(fleetUpkeep(ctx, f) * 100) / 100,

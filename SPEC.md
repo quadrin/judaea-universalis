@@ -21269,3 +21269,60 @@ Byzantium) pay for their hulls on the ledger now, as they always paid off it.
   Mothball button; the Defense tab's Walls list with its upkeep and Man
   button; the outliner's anchor button lays a squadron up and recommissions
   it; the ledger's Fortresses and Naval maintenance lines; no page errors.
+
+## §294 — The fleets read at a glance
+
+Four things about the fleets were hard to read. A warship and a merchant
+ship were both a hull with a small dark count beside it. A selected fleet
+had only the outliner's row of unlabelled icons, and every fleet in Joppa
+was listed as "Joppa". A sea battle was a notice and nothing on the map. And
+an army that embarked kept its banner on the shore it had left, while its
+ship sailed away without it.
+
+**The ensign.** Every warship flies an ensign above its hull: a short staff
+down to the masthead and a plate in its court's colour with a ship and its
+hull count. A merchant ship flies none, so the two are never confused. The
+ensign is gold-rimmed when the squadron is selected (or an army aboard it
+is), and grey with an anchor while the squadron is laid up in ordinary
+(§293). A click on the ensign selects the squadron, as a click on the hull
+does.
+
+**The army aboard rides its ship.** An army aboard a fleet has no banner on
+land. Its men, with the face of the arm that leads it, ride on a darker end
+of the ensign of the ship that carries it, and move with the ship.
+
+**Sea fights on the map.** Where hostile squadrons trade broadsides,
+`fleetsDaily` keeps the fight on `g.seaFights` by its anchor: the two
+courts in a stable order, each side's hulls now, the hulls each has lost,
+and since when. The map draws a ring of churned water under the ships and a
+battle disc beside the anchor with each side's hulls in its colour, while
+broadsides were traded in the last two days. Three days after the last, the
+fight is gone from the save. The notice stays.
+
+**The fleet panel.** Selecting a squadron of ours (on the map or in the
+outliner) opens the fleet panel in the province panel's berth: its flag and
+name, its hulls and pattern, where it is (at anchor, under sail to a named
+harbor with the days left, laid up, signing on crews), its admiral, the
+troops aboard by name, its upkeep, and its trade mission. Its orders are
+labelled buttons that say why when they cannot be given: Embark troops,
+Land troops, Merge here, Hire admiral, Refit, Lay up or Recommission, and
+Trade mission (the Trade tab). Escape, or the ✕, deselects the squadron and
+closes the panel; opening a province or the realm panel gives the berth
+back. The outliner names each squadron, with its harbor (or where it sails)
+beside the name, and a selected squadron's buttons take a line of their
+own.
+
+- **Regression contract**: `smoke204.mjs` in 66 CE — a Judaean and a
+  Nabataean squadron at Caesarea fight and the fight is kept with its sides,
+  hulls and losses; a second day keeps the sides' order and adds the losses;
+  parted, the fight shows for two days, then not, and after three is gone
+  from the save; squadrons at peace do not fight; getNavy gives where a
+  squadron is bound, who is aboard, and its mission's market by name; a save
+  keeps a live fight. `uitest60.mjs` in the Great Revolt — a squadron at
+  Joppa flies an ensign above its hull and a merchant ship beside it flies
+  none; marines on the shore embark and leave the shore, and ride the
+  ensign; the outliner selects the squadron and the fleet panel names it,
+  where it is, the marines, the upkeep (2.5) and labelled orders; the
+  outliner names it; Land troops, then Lay up, from the panel, and the panel
+  says so; Recommission; Escape closes it; a Roman squadron at Joppa at war
+  draws a battle disc with both sides' hulls. No page errors.

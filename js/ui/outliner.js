@@ -310,7 +310,7 @@ export function createOutliner(el, {
             : (f.whyLayUp || 'The squadron cannot be laid up now');
         html += `
           <div class="ol-row ol-fleet${sel ? ' sel' : ''}" data-fleet="${f.id}" data-tt="${esc(tt)}">
-            <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.provName)}</span>
+            <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.name)}</span>
             <span class="ol-men">${f.ships}</span>
             ${sel ? `<span class="ol-acts">`
     + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('shield')}</button>` : '')
@@ -319,9 +319,10 @@ export function createOutliner(el, {
     + `<button class="ol-act${f.canHireAdmiral ? '' : ' disabled'}" data-fleet-admiral="${f.id}" data-tt="${esc(admTT)}">${icon('helmet')}</button>`
     + `<button class="ol-act${f.canModernize ? '' : ' disabled'}" data-fleet-modernize="${f.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>`
     + `<button class="ol-act${f.laidUp || f.canLayUp ? '' : ' disabled'}${f.laidUp ? ' on' : ''}" data-fleet-layup="${f.id}" data-on="${f.laidUp ? '0' : '1'}" data-tt="${esc(layTT)}">${icon('anchor')}</button>`
-    + `</span>` : f.laidUp ? `<span class="ol-sub">${icon('anchor', 'icon-row')} laid up</span>`
-      : f.recommission ? `<span class="ol-sub">crews ${f.recommission}d</span>`
-        : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}
+    + `</span>` : `<span class="ol-sub">${f.laidUp ? icon('anchor', 'icon-row') + ' laid up · ' + esc(f.provName)
+      : f.recommission ? 'crews ' + f.recommission + 'd · ' + esc(f.provName)
+        : f.sailing ? '→ ' + esc(f.destName || f.provName)
+          : esc(f.provName)}${f.aboardMen ? ' · ' + fmtMen(f.aboardMen) : ''}</span>`}
           </div>`;
       }
     }

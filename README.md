@@ -68,6 +68,13 @@ of ours can be laid up in ordinary (the anchor button in the outliner): a
 quarter of the upkeep, but it cannot sail, fights at half strength, and is
 lost if the harbor falls; recommissioning takes 30 days (SPEC §293).
 
+**Fleets.** A warship flies an ensign in its court's colour with its hull
+count (a merchant ship flies none), and an army aboard rides on it instead
+of standing on the shore it left. A sea fight shows on the map where it is
+fought, with each side's hulls. Selecting a squadron opens the fleet panel:
+where it is, its admiral, the troops aboard, its upkeep, and labelled orders
+(embark, land, merge, admiral, refit, lay up, trade mission) (SPEC §294).
+
 **The score.** Ten composed songs now join the generative score, each age with
 its own for peace and for war: *Song of the Well*, *The Hill Country*, *By the
 Rivers*, *The Hammer*, *Watchfires on the Walls*, *Lamps of Tiberias*, *The
