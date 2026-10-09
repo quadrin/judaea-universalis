@@ -21116,7 +21116,7 @@ court in debt spiral / bankrupt, counted over seeds):
 | 597 BCE | 0 → 0 | 0 → 0 | |
 | 167 BCE | 0 → 0 | 4 → 5 | |
 | 67 BCE | 0 → 0 | 0 → 0 | Rome 44 → 57 |
-| 40 BCE | 2 → 2 | 4 → 6 | Parthia 11 → 19 |
+| 40 BCE | 2 → 2 | 4 → 6 | Parthia 11 → 19; at 20 seeds 9 → 12 |
 | 66 CE | 6 → 6 | 10 → 10 | Adiabene no longer bleeds |
 | 132 CE | 1 → 1 | 9 → 7 | |
 | 351 CE | 0 → 0 | 10 → 9 | |
@@ -21124,7 +21124,10 @@ court in debt spiral / bankrupt, counted over seeds):
 | 614 CE | 2 → 0 | 4 → 1 | |
 | 1948 | 10 → 10 | 10 → 10 | Egypt 14 → 1 net, Israel 8 → 4 |
 
-Accepted: trade moves wealth toward the ends of the roads and the courts on
+Accepted: Herod in 40 BCE (a Roman client living on the tolls of the
+incense road, which now pay half) is bankrupt in three more runs of twenty;
+a player who posts a merchant takes part of it back. Trade
+moves wealth toward the ends of the roads and the courts on
 the lanes (Rome, Parthia, the Sasanians, Himyar, Aksum), and away from
 courts whose income was a merchant marine. 1948 Egypt loses most of its net
 because the old Suez hulls are gone and the canal's market is shared with
