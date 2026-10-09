@@ -171,6 +171,8 @@ export function initUI(staticCtx) {
     onSettingsClick: () => settings.toggle(),
     // A ringing tech bell (SPEC §286) opens our own court on Technology.
     onTechClick: () => { setSelectedProv(0); nationPanel.open(null, 'tech'); },
+    // A ready mission's bell (SPEC §291) opens our own court on Missions.
+    onMissionClick: () => { setSelectedProv(0); nationPanel.open(null, 'missions'); },
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const nationPanel = createNationPanel(els.nation, {
@@ -1584,7 +1586,7 @@ export function initUI(staticCtx) {
       + toolTile('loadsave', 'Campaigns', 'amphora', 'Load a saved game')
       + toolTile('music', st.music ? 'Music on' : 'Music off', 'note', 'The score')
       + toolTile('sound', st.sound ? 'Sound on' : 'Sound off', 'speaker', 'Effects')
-      + toolTile('settings', 'Settings', 'sliders', 'Volume, songs, game');
+      + toolTile('settings', 'Settings', 'gear', 'Volume, songs, game');
     body.querySelectorAll('.tools-tile').forEach((b) => {
       b.classList.toggle('off',
         (b.dataset.tool === 'music' && !st.music) || (b.dataset.tool === 'sound' && !st.sound));

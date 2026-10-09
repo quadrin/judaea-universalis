@@ -151,14 +151,14 @@ export function createSettingsPanel({ getSongs } = {}) {
     const body = el.querySelector('[data-ref="stBody"]');
     const toast = getSetting('toastSecs');
     body.innerHTML = `
-      <div class="st-sec">
+      <div class="st-sec st-sound">
         <div class="peace-sec">Sound</div>
         ${toggle('sound', 'Sound', soundOn(), 'Every sound in the game. Off is silence.')}
         ${slider('master', 'Main volume', 'The whole mix: the music and the effects together.')}
         ${slider('sfx', 'Effects volume', 'Battles, sieges, bells, the war horn, the quill.')}
         ${toggle('clicks', 'Button clicks', !!getSetting('clicks'), 'A soft tick under every button you press.')}
       </div>
-      <div class="st-sec">
+      <div class="st-sec st-music">
         <div class="peace-sec">Music</div>
         ${toggle('music', 'Music', musicOn(), 'The score. The effects stay on when it is off.')}
         ${slider('music', 'Music volume', 'The score only.')}
@@ -169,7 +169,7 @@ export function createSettingsPanel({ getSongs } = {}) {
         <div class="st-now"><span data-ref="stNow">${esc(nowPlaying())}</span>
           <button class="btn st-next" data-act="next" data-tt="Go to the next song now">${icon('play')}<span>Next song</span></button></div>
       </div>
-      <div class="st-sec">
+      <div class="st-sec st-game">
         <div class="peace-sec">Game</div>
         ${toggle('autosave', 'Yearly autosave', !!getSetting('autosave'), 'Each January the campaign saves itself to the autosave row. Your own saves are not touched.')}
         <div class="st-row" data-tt="How long a notice stays on the screen.">
@@ -178,7 +178,7 @@ export function createSettingsPanel({ getSongs } = {}) {
             `<button class="st-seg-btn${s === toast ? ' on' : ''}" data-toast="${s}">${l}</button>`).join('')}</span>
         </div>
       </div>
-      <div class="st-sec">
+      <div class="st-sec st-display">
         <div class="peace-sec">Display</div>
         ${toggle('reduceMotion', 'Reduce motion', !!getSetting('reduceMotion'), 'Stops the bells, pulses and slides of the interface. Your system setting does this too.')}
       </div>`;

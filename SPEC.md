@@ -20933,3 +20933,39 @@ moving, because where a ship is, is information.
   in the Dardanelles, which the raster closes; it bends with the coasts. A fleet under way is drawn out at
   sea, and a click there selects it. Under reduce motion a ship at anchor
   stops rolling and the fleet is still under way. No page errors.
+
+## §291 — The settings fit the window, a gear, and the mission bell
+
+**The settings card ran off a short window.** It was centred on the whole
+screen, so on a laptop window 500 pixels high its top ran up into the topbar
+and its last rows ran off the bottom, with nothing to show that it scrolled.
+The card now hangs below the topbar (below both rows on a portrait phone),
+ends inside the window, and keeps its title and its Defaults and Close
+buttons in place; only the body between them scrolls, with a scrollbar
+drawn so it shows. A window at least 860 pixels wide lays the four sections
+out in two columns (Sound and Music, then Game and Display), and a window
+under 620 pixels high tightens the rows. The card's own entry animation
+keeps it centred while it fades in.
+
+**The settings button is a gear**, eight teeth round a hub, in the topbar and
+on the tools sheet. It was three faders.
+
+**The topbar's date stays on one line.** In a narrow window it broke into
+three ("1 / June / 66 CE"); now the bar scrolls instead.
+
+**A mission ready to claim rings a bell beside the flag.** Since §229 a
+mission whose terms are met waits for the player's hand, and only the
+Missions tab said so. Now a red bell, like the tech bells of §286 and a size
+larger, rides high beside the court's flag while any mission is ready. It
+rings when it appears and again each time another mission becomes ready,
+names the ready missions in its tooltip, and opens the realm panel on
+Missions. It goes when the last one is claimed, or lost (§229: the terms
+must still hold when claimed).
+
+- **Regression contract**: `uitest57.mjs`. The settings button is a gear (a
+  hub and a toothed rim). In a 940×500 window the card starts below the
+  topbar, ends inside the window, shows Defaults and Close, and stands in two
+  columns. With no mission ready there is no bell; with one, the bell shows,
+  rings, names it, and sits beside the flag; it rings once and rests; a
+  second ready mission rings it again; a click opens Missions; with none
+  ready it goes. No page errors.

@@ -2,10 +2,11 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick, onToolsClick, onTechClick, onSettingsClick }) {
+export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick, onToolsClick, onTechClick, onSettingsClick, onMissionClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
+  let lastReady = []; // mission ids the bell has already rung for
 
   function setText(node, s) {
     if (node && node.textContent !== s) node.textContent = s;
@@ -14,6 +15,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
   function bind(c, a) {
     ctx = c;
     actions = a;
+    lastReady = []; // a loaded campaign's ready missions ring once
     build();
     refresh();
   }
@@ -30,6 +32,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     const dispTag = (typeof def.abbr === 'string' && def.abbr) || tag;
     el.innerHTML = `
       <button class="tb-flag" data-ref="flagBtn" data-tt="${esc(dispName)} — the realm panel" aria-label="Open the realm panel">${flagChip(tag, DEFINES, 28, false, ctx.game)}<span class="tb-flag-tag">${esc(dispTag)}</span></button>
+      <button class="tb-bell tb-mbell hidden" data-ref="missionBell" aria-label="A mission is ready to claim">${icon('bell')}</button>
       <div class="tb-break" aria-hidden="true"></div>
       <div class="tb-item" data-ref="treasuryWrap">
         <span class="tb-ico">${icon('coins')}</span><span class="tb-v" data-ref="treasury">0</span>
@@ -60,7 +63,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
         <button class="tb-save" data-ref="ledger" data-tt="The ledger of nations (L)">${icon('scroll')}</button>
         <button class="tb-save" data-ref="save" data-tt="Save the campaign">${icon('quill')}</button>
         <button class="tb-save" data-ref="loadsave" data-tt="Saved campaigns — load one">${icon('amphora')}</button>
-        <button class="tb-save" data-ref="settings" data-tt="Settings — sound, music and the game (O)" aria-label="Open the settings">${icon('sliders')}</button>
+        <button class="tb-save" data-ref="settings" data-tt="Settings — sound, music and the game (O)" aria-label="Open the settings">${icon('gear')}</button>
         <button class="tb-more" data-ref="more" data-tt="The campaign's tools — chronicle, ledger, saves, sound" aria-label="Open the tools menu">${icon('menu')}</button>
         <button class="tb-pause" data-ref="pause" data-tt="Pause / resume (Space)">${icon('play')}</button>
         <span class="tb-pips" data-ref="pips"></span>
@@ -104,6 +107,12 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
       });
       refs[k + 'Bell'].addEventListener('animationend', () => refs[k + 'Bell'].classList.remove('ring'));
     }
+    // A mission is ready (SPEC §291): the bell beside the flag opens Missions.
+    refs.missionBell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (onMissionClick) { try { onMissionClick(); } catch (err) { warnOnce('missionClick', err); } }
+    });
+    refs.missionBell.addEventListener('animationend', () => refs.missionBell.classList.remove('ring'));
     refs.buyMp.addEventListener('click', () => {
       try { actions.callReserves(); } catch (e) { warnOnce('buyMp', e); }
       refresh();
@@ -227,6 +236,36 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
         bell.dataset.tt = `${row.name} ${row.level + 1}${row.nextName ? ' — ' + row.nextName : ''} is ready`
           + ` — it costs ${row.cost}, you have ${row.have}.\nClick to open Technology.`;
       }
+    }
+    // The mission bell (SPEC §291): a red bell beside the court's flag while
+    // an accomplishment waits to be claimed. It rings each time a new one is
+    // ready, not only the first, and goes when the last is claimed.
+    const ready = Array.isArray(t.missionReady) ? t.missionReady.map(String) : [];
+    const mb = refs.missionBell;
+    if (!ready.length) {
+      mb.classList.add('hidden');
+      mb.classList.remove('ring');
+      lastReady = [];
+    } else {
+      const fresh = ready.some((id) => lastReady.indexOf(id) < 0);
+      mb.classList.remove('hidden');
+      if (fresh) {
+        mb.classList.remove('ring');
+        void mb.offsetWidth; // restart the ring
+        mb.classList.add('ring');
+        let names = ready;
+        if (actions && typeof actions.getMissions === 'function') {
+          try {
+            const byId = {};
+            for (const m of actions.getMissions() || []) byId[String(m.id)] = m.name;
+            names = ready.map((id) => byId[id] || id);
+          } catch (e) { warnOnce('missionNames', e); }
+        }
+        mb.dataset.tt = (ready.length === 1 ? 'A mission is accomplished: ' : ready.length + ' missions are accomplished: ')
+          + names.join(', ') + '.\nClaim the reward in Missions — click to open it.';
+        mb.setAttribute('aria-label', ready.length === 1 ? 'A mission is ready to claim' : ready.length + ' missions are ready to claim');
+      }
+      lastReady = ready;
     }
     refs.buyStab.classList.toggle('afford', (pts.gov || 0) >= 75 && (t.stability || 0) < 3);
     refs.buyMp.classList.toggle('afford', (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0));
