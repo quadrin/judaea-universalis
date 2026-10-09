@@ -106,6 +106,7 @@ async function boot() {
 
   const staticCtx = { DEFINES, MAP_DATA, geom, bus, renderer, camera, overlay, labels };
   window._camera = camera; // debug/test handle
+  window._overlay = overlay; // its ships() says where each hull was drawn (SPEC §290)
   window._renderer = renderer;
   const ui = initUI(staticCtx);
 

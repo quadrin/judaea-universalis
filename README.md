@@ -40,6 +40,12 @@ volumes, the button clicks, the song, the yearly autosave, how long notices
 stay, and reduce motion (SPEC §289). They are kept in this browser, not in
 the save.
 
+**Ships at sea.** Merchantmen and fleets sail where they are going: along
+the water, around capes and through straits, a little further each moment,
+turned to their course and trailing a wake (SPEC §290). A fleet's order line
+follows the same water to a ring at its harbor. The traders are a corbita
+before 300, a lateen trader after it, and a steamer in 1948.
+
 **The score.** Ten composed songs now join the generative score, each age with
 its own for peace and for war: *Song of the Well*, *The Hill Country*, *By the
 Rivers*, *The Hammer*, *Watchfires on the Walls*, *Lamps of Tiberias*, *The

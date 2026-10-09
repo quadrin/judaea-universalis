@@ -20763,7 +20763,7 @@ not also pause the campaign.
 - *Display*: Reduce motion, which stills every CSS animation and transition
   of the interface (`html.ju-reduce-motion`). The operating system's own
   switch still does this where an animation declares it. The map's canvas is
-  not CSS, and this does not touch it.
+  not CSS; of what it draws, the ships honour both switches (§290).
 - *Defaults* puts every setting back, the two switches included.
 
 The settings live in `js/ui/settings.js`, in one key (`ju_settings`) in this
@@ -20845,3 +20845,91 @@ has no audio files.
   marks the page; the Music switch is the old music button; a Short notice is
   gone by 5.1 s; Defaults resets; at 390 px the tools sheet opens the window
   and it fits; no page errors.
+
+## §290 — Ships sail on the water
+
+A merchantman on a voyage was drawn on the straight line between its two
+harbors, and moved once a day: Joppa to Alexandria hugged the Nile delta, and
+a longer run crossed Sinai, Crete or the Peloponnese. A fleet under way did
+not move at all. It sat at its anchor for the whole voyage and appeared at
+the other harbor on the day it landed. Its order line was a faint dash in
+its own colour, straight across the land. And the trader itself was a round
+tub under a big square sail, the size of a warship, its count drawn over
+whatever rode beside it.
+
+**The water.** `computeGeometry` already finds the open sea; it now keeps a
+coarse copy of it, `geom.seaGrid` (20-pixel cells, sampled one pixel in
+sixteen). `nav` is a cell that is mostly sea, and `wet` any cell with sea in
+it; `fine` is a 10-pixel grid of cells that are sea in every sample.
+`js/map/searoutes.js` finds a ship's way between two harbors on `nav` (A*,
+eight directions, no slipping diagonally between two land cells, a cell
+beside the coast at 1.6 times the cost so the route keeps to open water).
+When no way exists it tries `wet` with every cell that is not `nav` at eight
+times the cost, so the route takes as few shallows as it can: a strait too
+narrow for `nav`, such as Messina or the Dardanelles (which this raster
+closes). It pulls the path taut (each point is the farthest one still in
+plain sight of the last) and rounds the corners twice. A taut run or a
+rounded corner is kept only if every sample of it, and the water 4 pixels to
+each side, is sea on the `fine` grid, so a straight run does not cut the
+land corner of a mostly-sea cell. Routes
+start and end exactly on the harbors' anchors. They are cached per pair, the
+way back is the way out reversed, and a new map profile empties the cache.
+With no water between two harbors (the Red Sea and the Mediterranean), or
+no grid (the headless harnesses), the route is the old straight line. The
+sim is not touched: voyages still take the days `seaHopDays` and
+`merchantHopDays` give them.
+
+**The voyage.** A merchantman and a fleet under way are drawn on their route
+at the day's true point: they leave on the first tick after the order and
+make their anchor on the tick that lands them, with the frame loop's
+sub-day fraction in between, so the picture never jumps. A ship faces its
+course. It is mirrored when it sails west, tilted a little with the course,
+and rolls on the swell. It leaves a wake (the last stretch of the route
+behind the stern, narrow and bright at the hull, wide and fading behind)
+and has a curl of white at the bow. A fleet waiting to leave faces the way
+it will go. Clicking a fleet at sea selects it where it is drawn.
+
+**The course.** A fleet's order line is the rest of its route: a dark trace
+under a parchment dash that runs toward the harbor, and a ring in the
+fleet's colour where it will anchor. It is legible on any sea and any coast.
+Another court's courses are drawn at 40%.
+
+**The ships.** Ships grow with the zoom, as the province works do (×1 to
+×2.4). A ship's count is a small dark pill with a gold rim beside it, never
+over the hull. A selected fleet has a gold ring on the water instead of a
+yellow box. The merchant marine is drawn smaller than the warships (×0.82),
+in three hulls for three ages, none of them a ship of war:
+
+- before 300, a corbita: a swan-neck stern, a square mainsail of cream
+  canvas with the terracotta stripe, and a small artemon over the bow;
+- from 300, a lateen trader: one long yard, high end aft, and a triangular
+  sail;
+- from 1800, a tramp steamer: a black hull with a red boot-top, a white
+  house, a buff funnel and smoke that streams astern.
+
+Merchantmen at their harbors ride beside the fleets' anchor, along the
+coast, with a count; a trader dwelling in a foreign harbor rides on the
+other side. The sails billow, the steamer's smoke drifts, and the dashes of
+a course run toward the harbor. All of this stands still under reduce
+motion (the system's or the settings', §289). The voyage itself keeps
+moving, because where a ship is, is information.
+
+`window._overlay.ships()` lists where each ship was drawn on the last frame
+(harbor, voyage, fleet), for the tests.
+
+- **Regression contract**: `smoke201.mjs` runs the route finder on a made-up
+  sea with a peninsula. The route starts and ends on the anchors, no point of
+  it is on land, it rounds the peninsula's tip and is longer than the
+  straight line, the heading follows the course (south, east, north), the way
+  back is the way out reversed, and both are cached. A strait too narrow for
+  open water is sailed through the shallows. With no water, or no grid, the
+  route is the straight line. A new grid gives a new route. A cape whose tip
+  only the fine grid sees is rounded below its tip. `uitest56.mjs` in the
+  Great Revolt: a merchantman from Joppa to Alexandria waits in the harbor
+  for a day, then is drawn on open water every day of the voyage, a little
+  further each day, facing west. Alexandria to Byzantion is at least 95%
+  open water, and all of it is water except within 25 px of an anchor
+  (Byzantion's falls on land, between the Golden Horn and the Bosphorus) and
+  in the Dardanelles, which the raster closes; it bends with the coasts. A fleet under way is drawn out at
+  sea, and a click there selects it. Under reduce motion a ship at anchor
+  stops rolling and the fleet is still under way. No page errors.
