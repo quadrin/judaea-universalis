@@ -1075,11 +1075,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // is what normally writes this, does not run for one.
     if (!self) readyClaims = 0;
     readyTech = 0;
+    // One getTech() a pass (smoke132): the tab's bell and the ladders read
+    // the same answer.
+    let techInfo = null;
     if (self && actions && typeof actions.getTech === 'function') {
       try {
-        const info = actions.getTech();
-        readyTech = info && info.rows ? info.rows.filter((r) => r.canBuy).length : 0;
-      } catch (e) { warnOnce('np-readyTech', e); }
+        techInfo = actions.getTech();
+        readyTech = techInfo && techInfo.rows ? techInfo.rows.filter((r) => r.canBuy).length : 0;
+      } catch (e) { warnOnce('np-getTech', e); }
     }
     refs.decisionsBlock.classList.toggle('hidden', !self);
     if (!self) refs.chapterBlock.classList.add('hidden');
@@ -1098,7 +1101,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshSchools(self);
     refreshForeignCourt(tag, self);
     refreshDiplomacy(g, t, tag, self);
-    refreshTech(t, self);
+    refreshTech(t, self, techInfo);
     refreshPrograms(self);
     refreshHostState(self);
     refreshForts(self);
@@ -2038,7 +2041,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // and asking the sim twice a refresh for the same object to fill two
   // sections would be a fetch per tab rather than a fetch per pass.
   const TECH_ICONS = { gov: 'scales', infl: 'scroll', mar: 'swords' };
-  function refreshTech(t, self) {
+  function refreshTech(t, self, fetched) {
     if (!refs.tech) return;
     if (!self) {
       const th = t.tech || {};
@@ -2059,10 +2062,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + '</div>');
       return;
     }
+    // the pass's one getTech() answer, fetched in refresh() for the bell too
     let info = null;
-    if (actions && typeof actions.getTech === 'function') {
-      try { info = actions.getTech(); } catch (e) { warnOnce('np-getTech', e); }
-    }
+    if (fetched) info = fetched;
     if (!info) { setHtml(refs.tech, ''); setPatterns(''); return; }
     let html = '';
     if (info.instPct > 0) {

@@ -10343,13 +10343,15 @@ asking, opened from the ledger). Five rules, each priced:
 - **The package is sized to the donor's own purse.** A quarter of the
   donor's monthly books (income, tribute, and the §180 stipend), floored
   at 5 and capped at 25, frozen into the row at grant time. Washington's
-  stipend prices its package at 15 a month for a year; the European
-  fragments — thin by §173's levy design — floor out at 5. The plain 1948
+  stipend prices its package at 15 a month for a year; Moscow's fragment —
+  thin by §173's levy design — floors out at 5 (London did too until the
+  markets of §292, which give it the customs of Aden, Khartoum and Cyprus:
+  its package now rides those books, at 11). The plain 1948
   fact that the United States outweighs every court of the age (§180) is
   therefore not a rule here; it is arithmetic. And the purse must be real:
   a donor grants only from net its books actually clear or a war chest
-  that covers the whole package, so a warm Kremlin with an empty chest
-  refuses until it has saved something to give.
+  that covers the whole package, so a warm donor whose books are eaten
+  and whose chest is empty refuses until it has saved something to give.
 - **A grant is a §24 subsidy row** wearing an `aid` marker — the ledger
   lines, both panels' treaty rows, the monthly countdown, the deep-debt
   default and the revive path all come free, and the money balances by
@@ -21128,7 +21130,10 @@ court in debt spiral / bankrupt, counted over seeds):
 
 Accepted: Herod in 40 BCE (a Roman client living on the tolls of the
 incense road, which now pay half) is bankrupt in three more runs of twenty;
-a player who posts a merchant takes part of it back. Trade
+a player who posts a merchant takes part of it back. In 1948 London
+collects the customs of the markets whose towns it holds (Aden, Khartoum,
+Cyprus): its trade rises from 6 to 30 a month and its aid package (§186)
+from 5 to 11; Moscow's fragment collects 6 on the Black Sea. Trade
 moves wealth toward the ends of the roads and the courts on
 the lanes (Rome, Parthia, the Sasanians, Himyar, Aksum), and away from
 courts whose income was a merchant marine. 1948 Egypt loses most of its net
