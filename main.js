@@ -18,6 +18,7 @@ import {
 import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
+import { getSetting } from './js/ui/settings.js';
 import { createLobby } from './js/ui/lobby.js';
 import {
   remapGuestChairs, resolveSnapshotChair, restoreHostChair, runUnderChair,
@@ -105,6 +106,7 @@ async function boot() {
 
   const staticCtx = { DEFINES, MAP_DATA, geom, bus, renderer, camera, overlay, labels };
   window._camera = camera; // debug/test handle
+  window._overlay = overlay; // its ships() says where each hull was drawn (SPEC §290)
   window._renderer = renderer;
   const ui = initUI(staticCtx);
 
@@ -659,7 +661,9 @@ async function boot() {
   }
   bus.on('saveRequest', () => { doSave(false).catch((e) => console.warn('[save]', e)); });
   // Yearly autosave. Fire-and-forget: a slow shelf must never stall the tick.
+  // The player may turn it off (SPEC §289).
   bus.on('month', ({ date }) => {
+    if (!getSetting('autosave')) return;
     if (date && date.m === 1) doSave(true).catch((e) => console.warn('[autosave]', e));
   });
 

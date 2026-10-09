@@ -3,6 +3,7 @@
 // so everything lands on the same screen points as the GL map underneath.
 
 import { traceSupply } from '../sim/supply.js';
+import { createSeaRoutes, pointAt, slice } from './searoutes.js';
 // The land roster (SPEC §191): every banner wears the face of the arm that
 // leads it, at the pattern it was raised to.
 import { dominantArm, unitGlyphKey, unitGlyphPath } from '../data/units.js';
@@ -172,20 +173,79 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   // Fleets and wings use the same marker geometry for drawing and picking.
   // Air wings are individual counters (rather than an aggregate structure
   // ornament), so two squadrons at one field can be selected independently.
+  // A fleet under way (SPEC §290) is placed on its water route by the day's
+  // progress, and faces its course; one at anchor rides at the offshore
+  // point, staggered when it shares it.
   function fleetMarkerList(game, camera) {
     const perProv = new Map();
     const out = [];
+    const sc = shipScale(camera);
     const fleets = Object.values(game.fleets || {}).filter((f) => f && f.ships > 0)
       .sort((a, b) => a.id - b.id);
     for (const fleet of fleets) {
+      let route = null;
+      let pos = null;
+      if (Array.isArray(fleet.path) && fleet.path.length) {
+        route = routes.route(fleet.prov, fleet.path[0]);
+        if (route) {
+          const f = fleet.moveDaysLeft > 0 && fleet.hopTotal > 0 ? sailFrac(fleet.hopTotal, fleet.moveDaysLeft) : 0;
+          pos = pointAt(route, f, 18);
+        }
+      }
+      if (pos && pos.s > 0) {
+        const [sx, sy] = camera.mapToScreen(pos.x, pos.y);
+        out.push({ fleet, x: sx, y: sy, sc, heading: pos.heading, route, s: pos.s, moving: pos.s < route.len });
+        continue;
+      }
       const off = (geom.offshore && geom.offshore[fleet.prov]) || geom.centroids[fleet.prov];
       if (!off) continue;
       const n = perProv.get(fleet.prov) || 0;
       perProv.set(fleet.prov, n + 1);
       const [sx, sy] = camera.mapToScreen(off.x, off.y);
-      out.push({ fleet, x: sx + n * 10, y: sy + n * 7 });
+      out.push({ fleet, x: sx + n * 10 * sc, y: sy + n * 7 * sc, sc, heading: pos ? pos.heading : 0, route, s: 0, moving: false });
     }
     return out;
+  }
+
+  // A fleet's course (SPEC §290): the rest of its water route, a dark trace
+  // under a parchment dash that runs toward the harbor, and a ring in the
+  // fleet's colour where it will drop anchor. Legible on any sea and any
+  // coast; another court's courses are drawn faint.
+  function drawFleetCourse(game, camera, m, timeMs) {
+    const r = m.route;
+    const z = camera.zoom || 1;
+    const pts = slice(r, m.s, r.len, 6 / z);
+    if (pts.length < 2) return;
+    const scr = pts.map((p) => camera.mapToScreen(p.x, p.y));
+    const trace = () => {
+      x2.beginPath();
+      x2.moveTo(scr[0][0], scr[0][1]);
+      for (let k = 1; k < scr.length; k++) x2.lineTo(scr[k][0], scr[k][1]);
+    };
+    x2.save();
+    x2.globalAlpha = m.fleet.tag === game.playerTag ? 1 : 0.4;
+    x2.lineCap = 'round';
+    x2.lineJoin = 'round';
+    trace();
+    x2.strokeStyle = 'rgba(10,8,4,0.5)';
+    x2.lineWidth = 4;
+    x2.stroke();
+    trace();
+    x2.strokeStyle = 'rgba(236,226,200,0.92)';
+    x2.lineWidth = 1.8;
+    x2.setLineDash([7, 6]);
+    x2.lineDashOffset = stillMotion() ? 0 : -(((timeMs || 0) * 0.02) % 13);
+    x2.stroke();
+    x2.setLineDash([]);
+    const end = scr[scr.length - 1];
+    x2.beginPath();
+    x2.arc(end[0], end[1], 4.5, 0, Math.PI * 2);
+    x2.fillStyle = css(tagColor(game, m.fleet.tag), 0.95);
+    x2.fill();
+    x2.strokeStyle = 'rgba(236,226,200,0.95)';
+    x2.lineWidth = 1.4;
+    x2.stroke();
+    x2.restore();
   }
 
   function wingMarkerList(game, camera) {
@@ -568,118 +628,354 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  // Merchantmen ride at their harbors (retextured v6.1): a corbita in
-  // miniature — planked round belly, upswept stern post, steering oar, and a
-  // bellied working sail with a terracotta stripe. Clearly not a ship of the
-  // line: no banner, no ram. Under sail she trails a small wake.
-  function drawMerchantTub(mx, my, n, underSail) {
+  // ---------------------------------------------------------- ships at sea --
+  // SPEC §290. A hull on a voyage is drawn where it is: on the water route
+  // between its two harbors (searoutes.js), a fraction of the way that grows
+  // through the day, turned to its course, trailing a wake. It leaves on the
+  // first tick after the order and makes its anchor on the tick that lands
+  // it, so the picture and the sim's daily arrival agree.
+  const routes = createSeaRoutes(geom);
+  function sailFrac(total, left) {
+    if (!(total > 1)) return 0;
+    return Math.min(1, Math.max(0, (total - left - 1 + curDayFrac) / (total - 1)));
+  }
+  // The ornament (the swell, the canvas, the smoke, the dashes) stands still
+  // under reduce motion, the system's switch or the settings' one (SPEC
+  // §289). The voyage itself still moves: where a ship is, is information.
+  const reduceMql = (typeof window !== 'undefined' && typeof window.matchMedia === 'function')
+    ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  function stillMotion() {
+    return !!((reduceMql && reduceMql.matches)
+      || (typeof document !== 'undefined' && document.documentElement
+        && document.documentElement.classList.contains('ju-reduce-motion')));
+  }
+  // Ships grow with the zoom, as the province works do.
+  function shipScale(camera) { return Math.min(2.4, Math.max(1, 0.9 + 0.22 * camera.zoom)); }
+  // Where each ship was drawn this frame, for the tests (window._overlay.ships()).
+  let shipLog = [];
+
+  // Set x2 up to draw one ship at (sx, sy): facing its course (mirrored when
+  // it sails west), tilted a little with it, rolling on the swell. Every ship
+  // glyph faces east (+x) with its waterline near y = 2. Caller restores.
+  function shipFrame(sx, sy, heading, sc, phase, t) {
+    const dir = Math.cos(heading) < 0 ? -1 : 1;
+    let tilt = dir > 0 ? heading : heading - Math.PI;
+    while (tilt > Math.PI) tilt -= 2 * Math.PI;
+    while (tilt < -Math.PI) tilt += 2 * Math.PI;
+    tilt = Math.max(-0.3, Math.min(0.3, tilt));
+    const bob = Math.sin(t * 0.0016 + phase) * 1.1;
+    const roll = Math.sin(t * 0.0011 + phase * 1.7) * 0.045;
+    x2.translate(sx, sy + bob);
+    x2.rotate(tilt + roll);
+    x2.scale(dir * sc, sc);
+    return bob;
+  }
+
+  // The wake: the last stretch of the route behind the stern, narrow and
+  // bright at the hull, wide and fading where the water closes over it.
+  function drawWake(r, s, camera, sc) {
+    const z = camera.zoom || 1;
+    const stern = 10 * sc / z;
+    const len = 38 * sc / z;
+    const pts = slice(r, s - stern - len, s - stern, 3 / z);
+    if (pts.length < 2) return;
+    const scr = pts.map((p) => camera.mapToScreen(p.x, p.y));
     x2.save();
-    x2.translate(mx, my);
-    x2.globalAlpha = 0.95;
-    x2.lineJoin = 'round';
-    if (underSail) { // a whisper of wake astern
-      x2.strokeStyle = 'rgba(226,236,238,0.4)';
-      x2.lineWidth = 1.2;
+    x2.lineCap = 'round';
+    for (let k = 1; k < scr.length; k++) {
+      const f = k / (scr.length - 1); // 0 at the tail, 1 at the stern
+      x2.strokeStyle = 'rgba(226,236,238,' + (0.04 + 0.42 * f).toFixed(3) + ')';
+      x2.lineWidth = (1 + 3.4 * (1 - f)) * sc * 0.75;
       x2.beginPath();
-      x2.moveTo(-8, 3); x2.quadraticCurveTo(-12, 4.5, -15, 3.5);
-      x2.moveTo(-8, 5); x2.quadraticCurveTo(-11, 6.5, -14, 6);
+      x2.moveTo(scr[k - 1][0], scr[k - 1][1]);
+      x2.lineTo(scr[k][0], scr[k][1]);
       x2.stroke();
-    }
-    // hull: dark planking below, a lighter strake at the gunwale
-    x2.fillStyle = 'rgba(74,50,28,0.98)';
-    x2.strokeStyle = 'rgba(20,12,6,0.8)';
-    x2.lineWidth = 0.8;
-    x2.beginPath();
-    x2.moveTo(-8, -1);
-    x2.quadraticCurveTo(-9, -4, -7.5, -5.5); // upswept stern post
-    x2.lineTo(-6.5, -1.5);
-    x2.lineTo(7, -1.5);
-    x2.quadraticCurveTo(8.6, -2.2, 8.2, -0.6); // short bow
-    x2.quadraticCurveTo(6, 5.4, 0, 5.4);
-    x2.quadraticCurveTo(-6, 5.4, -8, -1);
-    x2.closePath();
-    x2.fill();
-    x2.stroke();
-    x2.strokeStyle = 'rgba(196,158,104,0.85)'; // gunwale strake
-    x2.lineWidth = 1;
-    x2.beginPath();
-    x2.moveTo(-6.8, -0.4); x2.quadraticCurveTo(0, 0.8, 7.6, -0.4);
-    x2.stroke();
-    x2.strokeStyle = 'rgba(30,18,8,0.55)'; // a plank line in the belly
-    x2.lineWidth = 0.6;
-    x2.beginPath();
-    x2.moveTo(-5.5, 2.2); x2.quadraticCurveTo(0, 3.6, 5.8, 2.2);
-    x2.stroke();
-    // steering oar aft
-    x2.strokeStyle = 'rgba(20,12,6,0.8)';
-    x2.lineWidth = 0.9;
-    x2.beginPath();
-    x2.moveTo(-7, -1); x2.lineTo(-9.5, 3.5);
-    x2.stroke();
-    // mast and yard
-    x2.beginPath();
-    x2.moveTo(0.5, -1.5); x2.lineTo(0.5, -10);
-    x2.moveTo(-4.5, -9); x2.lineTo(5.5, -9);
-    x2.stroke();
-    // the working sail: cream canvas bellied to leeward, terracotta stripe
-    x2.fillStyle = 'rgba(236,226,200,0.97)';
-    x2.strokeStyle = 'rgba(20,12,6,0.6)';
-    x2.lineWidth = 0.7;
-    x2.beginPath();
-    x2.moveTo(-4.2, -8.6);
-    x2.lineTo(5.2, -8.6);
-    x2.quadraticCurveTo(7.4, -5, 5.6, -2);
-    x2.quadraticCurveTo(0.5, -3.6, -3.4, -2);
-    x2.quadraticCurveTo(-5.6, -5.4, -4.2, -8.6);
-    x2.closePath();
-    x2.fill();
-    x2.stroke();
-    x2.fillStyle = 'rgba(178,96,58,0.85)'; // the stripe every harbor knows
-    x2.beginPath();
-    x2.moveTo(-4.6, -6.6);
-    x2.quadraticCurveTo(0.8, -5.2, 6.5, -6.6);
-    x2.lineTo(6.2, -5);
-    x2.quadraticCurveTo(0.8, -3.7, -4.4, -5);
-    x2.closePath();
-    x2.fill();
-    if (n > 1) {
-      x2.fillStyle = '#fff';
-      x2.font = 'bold 8px Georgia, serif';
-      x2.textAlign = 'center';
-      x2.textBaseline = 'middle';
-      x2.shadowColor = 'rgba(0,0,0,0.7)';
-      x2.shadowBlur = 2;
-      x2.fillText(String(n), 11, 2);
-      x2.shadowBlur = 0;
     }
     x2.restore();
   }
 
-  function drawMerchants(game, camera) {
+  // The bow wave, in the ship's own frame: a curl of white at the stem.
+  function bowWave(t, still, x) {
+    const p = still ? 0.5 : 0.5 + 0.5 * Math.sin(t * 0.009);
+    x2.strokeStyle = 'rgba(236,244,246,' + (0.5 + 0.35 * p).toFixed(2) + ')';
+    x2.lineWidth = 1;
+    x2.beginPath();
+    x2.moveTo(x - 2.6, 3.2);
+    x2.quadraticCurveTo(x + 1 + p, 3, x + 1.6 + p, 0.4);
+    x2.stroke();
+  }
+
+  // A count beside a ship: a small dark pill with a gold rim, never on the hull.
+  function shipBadge(x, y, txt, sc) {
+    const fs = Math.round(9 * Math.min(1.35, sc));
+    x2.save();
+    x2.font = 'bold ' + fs + 'px Georgia, serif';
+    const h = fs + 4;
+    const w = Math.max(h, x2.measureText(txt).width + 7);
+    const r = h / 2;
+    x2.beginPath();
+    x2.moveTo(x - w / 2 + r, y - r);
+    x2.lineTo(x + w / 2 - r, y - r);
+    x2.arc(x + w / 2 - r, y, r, -Math.PI / 2, Math.PI / 2);
+    x2.lineTo(x - w / 2 + r, y + r);
+    x2.arc(x - w / 2 + r, y, r, Math.PI / 2, Math.PI * 1.5);
+    x2.closePath();
+    x2.fillStyle = 'rgba(20,15,9,0.86)';
+    x2.fill();
+    x2.strokeStyle = 'rgba(201,162,39,0.8)';
+    x2.lineWidth = 1;
+    x2.stroke();
+    x2.fillStyle = '#efe4c8';
+    x2.textAlign = 'center';
+    x2.textBaseline = 'middle';
+    x2.fillText(txt, x, y + 0.5);
+    x2.restore();
+  }
+
+  // ------------------------------------------------- the merchant marine --
+  // Three hulls for three ages, all clearly not ships of war: no ram, no
+  // banner, cream canvas. Before 300 a corbita (the swan-neck stern, the
+  // square main and the little artemon over the bow); to the age of steam a
+  // lateen trader; after 1800 a tramp steamer with its smoke astern.
+  const SHIP_INK = 'rgba(20,12,6,0.85)';
+  const CANVAS = 'rgba(238,228,204,0.98)';
+  const CANVAS_EDGE = 'rgba(40,26,12,0.6)';
+  function merchantEra(game) {
+    const y = game && game.date ? game.date.y : 0;
+    return y >= 1800 ? 'steam' : y >= 300 ? 'lateen' : 'corbita';
+  }
+  function hullWale(stern, bow) {
+    x2.strokeStyle = 'rgba(206,170,112,0.9)'; // a wale of lighter timber
+    x2.lineWidth = 0.9;
+    x2.beginPath();
+    x2.moveTo(stern, -1.1); x2.quadraticCurveTo(0, -0.1, bow, -1.4);
+    x2.stroke();
+    x2.strokeStyle = 'rgba(28,18,10,0.6)'; // the water line
+    x2.lineWidth = 0.6;
+    x2.beginPath();
+    x2.moveTo(stern + 1.2, 1.4); x2.quadraticCurveTo(0, 2.2, bow - 1, 0.9);
+    x2.stroke();
+  }
+  function drawCorbita(b) {
+    x2.lineJoin = 'round';
+    x2.strokeStyle = 'rgba(30,20,10,0.5)'; // the stays, under the canvas
+    x2.lineWidth = 0.45;
+    x2.beginPath();
+    x2.moveTo(1, -17); x2.lineTo(12.4, -1.6);
+    x2.moveTo(1, -17); x2.lineTo(-9.5, -3.2);
+    x2.stroke();
+    x2.fillStyle = 'rgba(92,60,32,0.98)';
+    x2.strokeStyle = SHIP_INK;
+    x2.lineWidth = 0.7;
+    x2.beginPath();
+    x2.moveTo(-10.5, -1.6);
+    x2.quadraticCurveTo(-13.2, -3.4, -12.2, -6.6); // the swan's neck, rising aft
+    x2.quadraticCurveTo(-11.6, -8.4, -9.9, -7.6);  // its head, turned in
+    x2.quadraticCurveTo(-11.2, -6.4, -10.3, -3.4);
+    x2.lineTo(-9, -2.2);
+    x2.quadraticCurveTo(0, -1.2, 9.5, -2.4);       // the sheer
+    x2.quadraticCurveTo(12, -2.8, 12.6, -1.2);     // the cutwater
+    x2.quadraticCurveTo(11, 2.6, 6, 3.2);
+    x2.lineTo(-6, 3.2);
+    x2.quadraticCurveTo(-10, 2.8, -10.5, -1.6);
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    hullWale(-9.2, 10.6);
+    x2.strokeStyle = SHIP_INK;
+    x2.lineWidth = 0.9;
+    x2.beginPath();
+    x2.moveTo(-8.6, -2); x2.lineTo(-11.4, 3.6);    // steering oar
+    x2.moveTo(1, -1.6); x2.lineTo(1, -17.2);       // mast
+    x2.moveTo(-5.8, -15.4); x2.lineTo(7.8, -15.4); // yard
+    x2.moveTo(9, -2.2); x2.lineTo(13.6, -9.6);     // the artemon's spar
+    x2.stroke();
+    // the mainsail, its foot bellying with the wind
+    x2.fillStyle = CANVAS;
+    x2.strokeStyle = CANVAS_EDGE;
+    x2.lineWidth = 0.6;
+    x2.beginPath();
+    x2.moveTo(-5.4, -15);
+    x2.lineTo(7.4, -15);
+    x2.quadraticCurveTo(8.6 + b * 0.4, -9.5, 7.2, -4.6);
+    x2.quadraticCurveTo(1, -2.8 + b * 0.7, -5.2, -4.6);
+    x2.quadraticCurveTo(-6.4 - b * 0.4, -9.5, -5.4, -15);
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    x2.fillStyle = 'rgba(176,92,56,0.88)';         // the stripe every harbor knows
+    x2.fillRect(-5.7, -12.2, 13.6, 1.6);
+    x2.fillStyle = CANVAS;                          // the artemon
+    x2.strokeStyle = CANVAS_EDGE;
+    x2.beginPath();
+    x2.moveTo(11.2, -8.6); x2.lineTo(14, -9.4);
+    x2.quadraticCurveTo(14.9 + b * 0.3, -6.6, 14, -4.6);
+    x2.lineTo(11.6, -4.2);
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+  }
+  function drawLateener(b) {
+    x2.lineJoin = 'round';
+    x2.fillStyle = 'rgba(86,58,32,0.98)';
+    x2.strokeStyle = SHIP_INK;
+    x2.lineWidth = 0.7;
+    x2.beginPath();
+    x2.moveTo(-11, -3.8);                           // the stern post
+    x2.lineTo(-10, -1.8);
+    x2.quadraticCurveTo(0, -0.8, 10, -2.2);
+    x2.lineTo(12.8, -4.4);                          // the stem, rising
+    x2.quadraticCurveTo(12.4, 1.6, 6, 3.2);
+    x2.lineTo(-6, 3.2);
+    x2.quadraticCurveTo(-10.4, 2.6, -11, -3.8);
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    hullWale(-9.6, 10.4);
+    x2.strokeStyle = SHIP_INK;
+    x2.lineWidth = 0.9;
+    x2.beginPath();
+    x2.moveTo(-9.4, -2); x2.lineTo(-11.8, 3.4);    // steering oar
+    x2.moveTo(2.4, -1.4); x2.lineTo(3.6, -14.5);   // the mast, raked forward
+    x2.moveTo(12.2, -3.4); x2.lineTo(-9.8, -19.4); // the long yard, high end aft
+    x2.stroke();
+    x2.fillStyle = CANVAS;
+    x2.strokeStyle = CANVAS_EDGE;
+    x2.lineWidth = 0.6;
+    x2.beginPath();
+    x2.moveTo(11.6, -3.9);
+    x2.lineTo(-9.2, -18.8);
+    x2.quadraticCurveTo(-8.4 - b * 0.6, -9.5, -6.8, -2.8); // the leech, bellied
+    x2.quadraticCurveTo(2.4, -1.6 - b * 0.4, 11.6, -3.9);  // the foot
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    x2.strokeStyle = 'rgba(176,92,56,0.85)';       // a stripe along the yard
+    x2.lineWidth = 1.2;
+    x2.beginPath();
+    x2.moveTo(4.6, -6); x2.lineTo(-6.4, -14);
+    x2.stroke();
+  }
+  function drawSteamer(t, still) {
+    for (let k = 0; k < 4; k++) {                  // smoke, streaming astern
+      const ph = still ? k / 4 : (t * 0.00035 + k / 4) % 1;
+      x2.fillStyle = 'rgba(70,70,74,' + (0.42 * (1 - ph)).toFixed(3) + ')';
+      x2.beginPath();
+      x2.arc(-2.2 - ph * 13, -12.5 - ph * 4.5, 1.4 + ph * 2.6, 0, Math.PI * 2);
+      x2.fill();
+    }
+    x2.lineJoin = 'round';
+    x2.fillStyle = 'rgba(34,32,32,0.98)';          // the black hull, a raked stem
+    x2.strokeStyle = 'rgba(8,8,8,0.9)';
+    x2.lineWidth = 0.6;
+    x2.beginPath();
+    x2.moveTo(-12, -2.6);
+    x2.lineTo(11.6, -2.6);
+    x2.lineTo(13.4, -3.6);
+    x2.lineTo(11.4, 2.2);
+    x2.lineTo(-10.6, 2.2);
+    x2.quadraticCurveTo(-12.6, 1.4, -12, -2.6);   // the counter stern
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    x2.fillStyle = 'rgba(150,48,40,0.95)';         // the red boot-top at the water
+    x2.fillRect(-10.8, 1, 22.2, 1.1);
+    x2.fillStyle = 'rgba(232,228,216,0.98)';       // the white house and bridge
+    x2.fillRect(-6.5, -6.2, 8.5, 3.6);
+    x2.fillRect(-1, -8.2, 3, 2);
+    x2.strokeStyle = 'rgba(40,40,40,0.6)';
+    x2.lineWidth = 0.5;
+    x2.strokeRect(-6.5, -6.2, 8.5, 3.6);
+    x2.fillStyle = 'rgba(196,160,96,0.98)';        // a buff funnel, black-topped
+    x2.fillRect(-3.4, -11, 2.4, 4.8);
+    x2.fillStyle = 'rgba(20,20,20,0.95)';
+    x2.fillRect(-3.4, -12, 2.4, 1.2);
+    x2.strokeStyle = 'rgba(30,30,30,0.85)';        // masts and a cargo derrick
+    x2.lineWidth = 0.7;
+    x2.beginPath();
+    x2.moveTo(7.5, -2.6); x2.lineTo(7.5, -12);
+    x2.moveTo(-9.4, -2.6); x2.lineTo(-9.4, -10);
+    x2.moveTo(7.5, -10.5); x2.lineTo(11, -4);
+    x2.stroke();
+  }
+  function drawMerchantShip(era, t, still, underWay, phase) {
+    const b = still ? 0 : Math.sin(t * 0.0031 + phase);
+    if (era === 'steam') drawSteamer(t, still);
+    else if (era === 'lateen') drawLateener(b);
+    else drawCorbita(b);
+    if (underWay) bowWave(t, still, 13);
+  }
+
+  // Where merchantmen ride: beside the fleets' anchor, along the coast (side
+  // 1 for our own berths, -1 for a trader in someone else's roads).
+  function harborSlot(id, camera, sc, side) {
+    const a = geom.offshore && geom.offshore[id];
+    const c = geom.centroids && geom.centroids[id];
+    const anchor = a || c;
+    if (!anchor) return null;
+    let nx = 0;
+    let ny = 1;
+    if (a && c) {
+      const dx = a.x - c.x;
+      const dy = a.y - c.y;
+      const L = Math.hypot(dx, dy);
+      if (L > 0.5) { nx = dx / L; ny = dy / L; }
+    }
+    const [sx, sy] = camera.mapToScreen(anchor.x, anchor.y);
+    const d = 21 * sc;
+    return { x: sx - ny * d * side + nx * 3 * sc, y: sy + nx * d * side + ny * 3 * sc };
+  }
+
+  function drawMerchants(game, camera, timeMs) {
     if (camera.zoom < 0.7) return;
+    const still = stillMotion();
+    const t = still ? 0 : (timeMs || 0);
+    const sc = shipScale(camera) * 0.82;
+    const era = merchantEra(game);
+    const vw = camera.viewport.w;
+    const vh = camera.viewport.h;
+    const out = (x, y) => x < -60 || y < -60 || x > vw + 60 || y > vh + 60;
+    // At their harbors: one hull, and a count when there are more.
     for (let i = 1; i < game.provinces.length; i++) {
       const p = game.provinces[i];
       const n = p && (p.merchantShips | 0);
       if (!n) continue;
-      const anchor = (geom.offshore && geom.offshore[i]) || geom.centroids[i];
-      if (!anchor) continue;
-      const [sx, sy] = camera.mapToScreen(anchor.x, anchor.y);
-      const mx = sx + 16, my = sy + 14; // clear of the war fleet stagger
-      if (mx < -40 || my < -40 || mx > camera.viewport.w + 40 || my > camera.viewport.h + 40) continue;
-      drawMerchantTub(mx, my, n);
+      const slot = harborSlot(i, camera, sc, 1);
+      if (!slot || out(slot.x, slot.y)) continue;
+      x2.save();
+      const bob = shipFrame(slot.x, slot.y, 0, sc, i, t);
+      drawMerchantShip(era, t, still, false, i);
+      x2.restore();
+      shipLog.push({ kind: 'harbor', prov: i, x: slot.x, y: slot.y + bob });
+      if (n > 1) shipBadge(slot.x + 13 * sc, slot.y - 12 * sc, String(n), sc);
     }
-    // Hulls under sail (SPEC §58): the same tub, alone on open water,
-    // interpolated along its from→to line by voyage progress.
-    for (const v of game.merchantVoyages || []) {
+    // Under way (SPEC §58, §290): along the water, at the day's true point.
+    const voyages = game.merchantVoyages || [];
+    for (let k = 0; k < voyages.length; k++) {
+      const v = voyages[k];
       if (!v || !(v.daysTotal > 0)) continue;
-      const a = (geom.offshore && geom.offshore[v.from]) || geom.centroids[v.from];
-      const b = (geom.offshore && geom.offshore[v.to]) || geom.centroids[v.to];
-      if (!a || !b) continue;
-      const t = Math.min(1, Math.max(0, 1 - v.daysLeft / v.daysTotal));
-      const [sx, sy] = camera.mapToScreen(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
-      if (sx < -40 || sy < -40 || sx > camera.viewport.w + 40 || sy > camera.viewport.h + 40) continue;
-      // A dwelling trader sits in the foreign roads (from === to): no wake.
-      drawMerchantTub(sx, sy, 1, v.from !== v.to);
+      if (v.from === v.to) {
+        // trading a month in their roads: riding at anchor, no wake
+        const slot = harborSlot(v.to, camera, sc, -1);
+        if (!slot || out(slot.x, slot.y)) continue;
+        x2.save();
+        shipFrame(slot.x, slot.y, Math.PI, sc, k + 7, t);
+        drawMerchantShip(era, t, still, false, k);
+        x2.restore();
+        continue;
+      }
+      const r = routes.route(v.from, v.to);
+      if (!r) continue;
+      const pos = pointAt(r, sailFrac(v.daysTotal, v.daysLeft), 18);
+      const [sx, sy] = camera.mapToScreen(pos.x, pos.y);
+      if (out(sx, sy)) continue;
+      const underWay = pos.s > 0 && pos.s < r.len;
+      if (underWay) drawWake(r, pos.s, camera, sc);
+      x2.save();
+      shipFrame(sx, sy, pos.heading, sc, k + 3, t);
+      drawMerchantShip(era, t, still, underWay, k);
+      x2.restore();
+      shipLog.push({ kind: 'voyage', index: k, x: sx, y: sy, mx: pos.x, my: pos.y, s: pos.s, len: r.len, heading: pos.heading });
     }
   }
 
@@ -1106,6 +1402,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   let labelObstacles = [];
   function draw(game, camera, timeMs, dayFrac) {
     labelObstacles = [];
+    shipLog = [];
     try {
       const { cw, ch, dpr } = syncSize();
       x2.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1190,53 +1487,40 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         if (onScreen(sx, sy)) drawBattle(sx, sy, timeMs);
       }
 
-      // fleets: hull-and-sail chips riding at the offshore anchors
-      for (const marker of fleetMarkerList(game, camera)) {
-        const f = marker.fleet;
-        const sx = marker.x, sy = marker.y;
-        if (!onScreen(sx, sy)) continue;
+      // the sea (SPEC §290): fleets' courses, then the merchant marine, then
+      // the warships over them — each on its route, turned to its course
+      const fleetMarks = fleetMarkerList(game, camera);
+      for (const m of fleetMarks) if (m.route) drawFleetCourse(game, camera, m, timeMs);
+      drawMerchants(game, camera, timeMs);
+      const still = stillMotion();
+      const tSea = still ? 0 : (timeMs || 0);
+      for (const m of fleetMarks) {
+        const f = m.fleet;
+        if (!onScreen(m.x, m.y)) continue;
         const col = tagColor(game, f.tag);
-        const sel = game.ui && game.ui.selectedFleet === f.id;
-        const bob = Math.sin((timeMs || 0) * 0.0016 + f.id) * 1.5;
-        x2.save();
-        x2.translate(sx, sy + bob);
-        if (sel) {
+        if (m.moving) drawWake(m.route, m.s, camera, m.sc);
+        if (game.ui && game.ui.selectedFleet === f.id) {
+          // selected: a gold ring on the water around the hull
+          x2.save();
           x2.strokeStyle = '#e7c34c';
-          x2.lineWidth = 2.5;
-          x2.strokeRect(-16, -14, 32, 24);
+          x2.lineWidth = 2;
+          x2.shadowColor = 'rgba(231,195,76,0.8)';
+          x2.shadowBlur = 6;
+          x2.beginPath();
+          x2.ellipse(m.x, m.y + 3 * m.sc, 19 * m.sc, 7.5 * m.sc, 0, 0, Math.PI * 2);
+          x2.stroke();
+          x2.restore();
         }
+        x2.save();
+        shipFrame(m.x, m.y, m.heading, m.sc, f.id, tSea);
         // The warship wears its age (v5.5): a ram-bowed galley for the oared
         // patterns, a tall-rigged hull for sail, a grey destroyer for oil.
         drawWarshipGlyph(f, col);
-        // ship count
-        x2.fillStyle = '#fff';
-        x2.font = 'bold 10px Georgia, serif';
-        x2.textAlign = 'center';
-        x2.textBaseline = 'middle';
-        x2.shadowColor = 'rgba(0,0,0,0.7)';
-        x2.shadowBlur = 2;
-        x2.fillText(String(f.ships), 0, 6);
-        x2.shadowBlur = 0;
+        if (m.moving) bowWave(tSea, still, 15);
         x2.restore();
-        // sailing line
-        if (f.path && f.path.length) {
-          const dst = (geom.offshore && geom.offshore[f.path[0]]) || geom.centroids[f.path[0]];
-          if (dst) {
-            const [dx, dy] = camera.mapToScreen(dst.x, dst.y);
-            x2.strokeStyle = css(col, 0.5);
-            x2.lineWidth = 2;
-            x2.setLineDash([6, 6]);
-            x2.beginPath();
-            x2.moveTo(sx, sy);
-            x2.lineTo(dx, dy);
-            x2.stroke();
-            x2.setLineDash([]);
-          }
-        }
+        shipLog.push({ kind: 'fleet', id: f.id, x: m.x, y: m.y, s: m.s, moving: m.moving, heading: m.heading });
+        shipBadge(m.x + 15 * m.sc, m.y - 11 * m.sc, String(f.ships), m.sc);
       }
-
-      // the merchant marine, riding small at its harbors (v5.5)
-      drawMerchants(game, camera);
 
       // army chips on top
       const chips = chipList(game, camera);
@@ -1298,8 +1582,11 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       for (let i = markers.length - 1; i >= 0; i--) {
         const m = markers[i];
         // v5.5: foreign fleets are pickable too — ui.js decides select vs inspect.
-        if (sx >= m.x - FLEET_W / 2 - pad && sx <= m.x + FLEET_W / 2 + pad
-            && sy >= m.y - FLEET_H / 2 - pad && sy <= m.y + FLEET_H / 2 + pad) return m.fleet.id;
+        // The box grows with the ship (SPEC §290) and follows it at sea.
+        const hw = (FLEET_W / 2) * m.sc;
+        const hh = (FLEET_H / 2) * m.sc;
+        if (sx >= m.x - hw - pad && sx <= m.x + hw + pad
+            && sy >= m.y - hh - pad && sy <= m.y + hh + pad) return m.fleet.id;
       }
     } catch (e) {
       warnOnce('hitf-throw', 'hitTestFleet failed', e);
@@ -1335,5 +1622,5 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  return { draw, labelObstacles: () => labelObstacles, hitTestArmy, hitTestStack, hitTestFleet, hitTestWing, hitTestBattle, addRaidFx };
+  return { draw, labelObstacles: () => labelObstacles, ships: () => shipLog.slice(), hitTestArmy, hitTestStack, hitTestFleet, hitTestWing, hitTestBattle, addRaidFx };
 }

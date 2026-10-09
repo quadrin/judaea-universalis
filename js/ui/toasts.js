@@ -1,6 +1,7 @@
 // js/ui/toasts.js — notification toasts (SPEC §8.2, bus 'notify').
 import { esc, warnOnce } from './format.js';
 import { icon } from './icons.js';
+import { getSetting } from './settings.js';
 
 // `murmur` is the dateline's own type (SPEC §272): the world saying something
 // the player does not have to act on. It is styled down and it goes away
@@ -10,7 +11,6 @@ import { icon } from './icons.js';
 const TYPES = { info: 1, war: 1, good: 1, bad: 1, murmur: 1 };
 const TYPE_ICONS = { info: 'scroll', war: 'swords', good: 'laurel', bad: 'shieldCrack', murmur: 'lamp' };
 const MAX_TOASTS = 6;
-const LIFE_MS = 6000;
 const MURMUR_LIFE_MS = 4200;
 const FADE_MS = 550;
 
@@ -33,7 +33,10 @@ export function createToasts(container, { onProvClick } = {}) {
       div.classList.add('toast-out');
       setTimeout(() => div.remove(), FADE_MS);
     };
-    const timer = setTimeout(remove, kind === 'murmur' ? MURMUR_LIFE_MS : LIFE_MS);
+    // A notice stays as long as the player asked (SPEC §289); a murmur keeps
+    // its shorter life unless that is longer than the notice's.
+    const life = (getSetting('toastSecs') || 6) * 1000;
+    const timer = setTimeout(remove, kind === 'murmur' ? Math.min(MURMUR_LIFE_MS, life) : life);
 
     div.addEventListener('click', () => {
       if (provName && onProvClick) {

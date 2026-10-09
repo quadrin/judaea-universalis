@@ -225,6 +225,7 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
   // where fleets ride and blockades sit.
   const coastal = new Array(N + 1).fill(false);
   const offshore = new Array(N + 1).fill(null);
+  let seaGrid = null;
   if (idArray && idArray.length >= W * H) {
     // Open sea = an id-0 component that RUNS OFF THE FRAME and is bigger than
     // any lake — OR a landlocked body big enough to be an inland SEA. A pond
@@ -276,6 +277,45 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
         for (let k = 0; k < n; k++) sea[comp[k]] = 1;
       }
     }
+    // SPEC §290: a coarse copy of the open sea, for the routes ships are drawn
+    // along (js/map/searoutes.js). One sample in sixteen pixels is plenty at
+    // cells of 20 pixels. `nav` is a cell that is mostly sea, where the route
+    // keeps off the coast; `wet` is any cell with sea in it, the fallback for
+    // a strait too narrow for `nav`. `fine` (10-pixel cells, sea in every
+    // sample) is what a drawn line is checked against, so the route's
+    // straight runs do not cut the land corner of a mostly-sea cell.
+    {
+      const CELL = 20;
+      const FINE = 10;
+      const STEP = 4;
+      const gw = Math.ceil(W / CELL);
+      const gh = Math.ceil(H / CELL);
+      const fw = Math.ceil(W / FINE);
+      const fh = Math.ceil(H / FINE);
+      const wetN = new Uint16Array(gw * gh);
+      const allN = new Uint16Array(gw * gh);
+      const fineDry = new Uint8Array(fw * fh);
+      for (let y = 0; y < H; y += STEP) {
+        const row = y * W;
+        const base = ((y / CELL) | 0) * gw;
+        const fbase = ((y / FINE) | 0) * fw;
+        for (let x = 0; x < W; x += STEP) {
+          const k = base + ((x / CELL) | 0);
+          allN[k]++;
+          if (sea[row + x]) wetN[k]++;
+          else fineDry[fbase + ((x / FINE) | 0)] = 1;
+        }
+      }
+      const nav = new Uint8Array(gw * gh);
+      const wet = new Uint8Array(gw * gh);
+      for (let k = 0; k < gw * gh; k++) {
+        wet[k] = wetN[k] > 0 ? 1 : 0;
+        nav[k] = wetN[k] * 10 >= allN[k] * 6 && allN[k] > 0 ? 1 : 0;
+      }
+      const fineSea = new Uint8Array(fw * fh);
+      for (let k = 0; k < fw * fh; k++) fineSea[k] = fineDry[k] ? 0 : 1;
+      seaGrid = { cell: CELL, gw, gh, nav, wet, fine: { cell: FINE, gw: fw, gh: fh, sea: fineSea } };
+    }
     const offX = new Float64Array(N + 1);
     const offY = new Float64Array(N + 1);
     const offN = new Int32Array(N + 1);
@@ -316,5 +356,5 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
     offshore[i] = offshore[target] || null;
   }
 
-  return { neighbors, centroids, areas, bbox, coastal, offshore };
+  return { neighbors, centroids, areas, bbox, coastal, offshore, seaGrid };
 }

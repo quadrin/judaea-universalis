@@ -34,6 +34,29 @@ after that: the first visit saves every file of the game in the browser
 own. Saves stay on the device. Only the optional cloud and online multiplayer
 need the network.
 
+**Settings.** The faders button in the topbar (or **O**, or the Settings tile
+on a phone's tools sheet) opens the settings: the main, effects and music
+volumes, the button clicks, the song, the yearly autosave, how long notices
+stay, and reduce motion (SPEC §289). They are kept in this browser, not in
+the save.
+
+**Ships at sea.** Merchantmen and fleets sail where they are going: along
+the water, around capes and through straits, a little further each moment,
+turned to their course and trailing a wake (SPEC §290). A fleet's order line
+follows the same water to a ring at its harbor. The traders are a corbita
+before 300, a lateen trader after it, and a steamer in 1948.
+
+**The score.** Ten composed songs now join the generative score, each age with
+its own for peace and for war: *Song of the Well*, *The Hill Country*, *By the
+Rivers*, *The Hammer*, *Watchfires on the Walls*, *Lamps of Tiberias*, *The
+Wedding at Sepphoris*, *The Banner of the Return*, *Dawn over the Negev* and
+*The Road to Jerusalem*. They are notes, not recordings — the game plays them
+live. To hear them outside the game:
+
+```sh
+JU_PW_DIR=/opt/node22/lib node tools/render_songs.mjs songs-out   # WAV, and MP3 with ffmpeg
+```
+
 ## Map readability and balance coverage
 
 **The enemy now fights for the war score** (SPEC §284). The old field AI

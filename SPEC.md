@@ -20740,3 +20740,196 @@ with no connection could not boot — the first `import` failed.
   fetches, so it alone would pass a worker that cached nothing). A reload and
   a new tab boot to the carousel, a campaign starts and its days run, with no
   page errors. Against the old worker the offline reload never boots.
+
+## §289 — Settings, and the score's songs
+
+There was nowhere to turn anything down. Sound was one switch and music
+another (a pair of floating buttons, and two tiles on the phone's tools
+sheet); an effect and a song were always at the level `sound.js` chose.
+
+**The settings window.** A faders button in the topbar, the **O** key, or a
+Settings tile on the tools sheet opens a parchment card in four sections.
+Escape closes it, like every other window. While it is open the game's own
+keys (Space, 1–5, N, L, C, H) stand down, so Space on a focused switch does
+not also pause the campaign.
+
+- *Sound*: the Sound switch (the old mute), the main volume, the effects
+  volume, and Button clicks (the soft tick under every button).
+- *Music*: the Music switch (the old music button), the music volume, the
+  song (automatic, every song shuffled, or one song), what is playing now,
+  and Next song.
+- *Game*: the yearly autosave on or off, and how long a notice stays (short
+  4 s, normal 6 s, long 10 s; a murmur, §272, never stays longer than 4.2 s).
+- *Display*: Reduce motion, which stills every CSS animation and transition
+  of the interface (`html.ju-reduce-motion`). The operating system's own
+  switch still does this where an animation declares it. The map's canvas is
+  not CSS; of what it draws, the ships honour both switches (§290).
+- *Defaults* puts every setting back, the two switches included.
+
+The settings live in `js/ui/settings.js`, in one key (`ju_settings`) in this
+browser. A save does not carry them, and a multiplayer table never sees them.
+A bad or missing value falls back to its default. Readers ask the store when
+they need a value (`getSetting`) and are told of a change (`onSettingChange`),
+so a slider moved mid-campaign is heard on the next note. The two old
+switches keep their own keys (`ju_muted`, `ju_music`).
+
+**The mix.** `sound.js` now has an effects bus (with its own reverb send)
+between the effects and the master, and the score's reverb send follows the
+music level, so a silenced score leaves no tail. A slider's 0–100 is squared
+into a gain. The master is 0.22 × main, the effects bus × effects, the score
+0.55 × music.
+
+**The songs.** Ten original compositions, written for this game, join the
+generative score (§27, §51). They are data (`js/data/songs.js`): a key, a
+mode, a meter and a tempo; melodies in scale degrees and harmonies in
+semitones, bar by bar; and a form that arranges them — which voice plays
+which part at which octave, with harp or oud arpeggios, a bass, a strings
+pad and a drum pattern. `js/ui/song_engine.js` turns a song into timed events
+and plays them on a band of eight voices made, like every other sound in the
+game, of oscillators, filtered noise and envelopes: kinnor, halil (flute),
+reed, oud, horns, strings, choir and shofar, with doum, tek, snare and the big
+drum.
+
+| Song | Age | Mood | Mode |
+|---|---|---|---|
+| Song of the Well | Kings and Prophets, Second Temple | peace | D Dorian |
+| The Hill Country | Kings and Prophets, Second Temple | peace | G Adonai Malakh, 3/4 |
+| By the Rivers | Kings and Prophets, Second Temple, Rabbis and Emperors | peace, war | A minor, 3/4 |
+| The Hammer | Second Temple | war, battle | D Freygish |
+| Watchfires on the Walls | Kings and Prophets, Second Temple | war, battle | A Dorian |
+| Lamps of Tiberias | Rabbis and Emperors | peace | D Misheberakh |
+| The Wedding at Sepphoris | Rabbis and Emperors, Second Temple, the State | peace | A Freygish, 3+3+2 |
+| The Banner of the Return | Rabbis and Emperors | war, battle | D minor |
+| Dawn over the Negev | the State | peace | D Adonai Malakh |
+| The Road to Jerusalem | the State | war, battle | A minor hora |
+
+The ages go by bookmark: 931, 732 and 597 BCE are Kings and Prophets; 167,
+67 and 40 BCE and 66 CE the Second Temple; 132, 351, 529 and 614 CE Rabbis
+and Emperors; 1948 the State. Every age has a song for peace, for war and
+for battle.
+
+- **Automatic** (the default): the open score plays for 25–40 s, then a song
+  of this age written for this mood, not one of the last three. Between songs
+  the open score returns for 35–70 s. A peace song gives way, with a short
+  fade, when the war or the battle comes; a war song plays out after the
+  peace is signed. A song from another age gives way when the campaign
+  changes.
+- **Every song, shuffled**, or **one song**: the songs follow each other with
+  five seconds of the open score between them.
+- While a song plays, the open score rests and its pad steps aside. Muted or
+  silenced, the song keeps its time: what fell behind is dropped, not
+  crammed in.
+- `window._sound.music.state()` names the song (`song`, `age`, `songIn`);
+  `songs()` is the catalogue; `next()` skips; `window._sound.levels()` reads
+  the three live gains.
+
+**Hearing them outside the game.** `tools/render_songs.mjs` renders each song
+through the same engine in an OfflineAudioContext in Chromium, writes a
+44.1 kHz WAV at the game's own level, and, with ffmpeg on the PATH, an MP3
+brought to −16 LUFS. Nothing it writes is part of the game; the game still
+has no audio files.
+
+- **Regression contract**: `smoke200.mjs` — every song's notation is sound
+  (every bar holds the meter, every melody is as long as its harmony, every
+  voice and drum pattern exists), and the checker catches a short bar, a
+  short melody and a missing instrument; every timeline is in order, one to
+  three minutes long and in range; every bookmark is in the age table, and
+  every age has a song for peace, war and battle; every event of every song
+  plays on a stand-in audio context and every source that starts, stops; the
+  settings store keeps a good value, repairs a bad one, tells its listeners
+  once per change and resets. `uitest55.mjs` — the topbar button and the O
+  key open the window and Escape closes it; the main, effects and music
+  sliders move the live gains and are stored; a chosen song plays and the
+  window names it; automatic plays a Second Temple war song in the Great
+  Revolt and Next song changes it; the switches are stored and reduce motion
+  marks the page; the Music switch is the old music button; a Short notice is
+  gone by 5.1 s; Defaults resets; at 390 px the tools sheet opens the window
+  and it fits; no page errors.
+
+## §290 — Ships sail on the water
+
+A merchantman on a voyage was drawn on the straight line between its two
+harbors, and moved once a day: Joppa to Alexandria hugged the Nile delta, and
+a longer run crossed Sinai, Crete or the Peloponnese. A fleet under way did
+not move at all. It sat at its anchor for the whole voyage and appeared at
+the other harbor on the day it landed. Its order line was a faint dash in
+its own colour, straight across the land. And the trader itself was a round
+tub under a big square sail, the size of a warship, its count drawn over
+whatever rode beside it.
+
+**The water.** `computeGeometry` already finds the open sea; it now keeps a
+coarse copy of it, `geom.seaGrid` (20-pixel cells, sampled one pixel in
+sixteen). `nav` is a cell that is mostly sea, and `wet` any cell with sea in
+it; `fine` is a 10-pixel grid of cells that are sea in every sample.
+`js/map/searoutes.js` finds a ship's way between two harbors on `nav` (A*,
+eight directions, no slipping diagonally between two land cells, a cell
+beside the coast at 1.6 times the cost so the route keeps to open water).
+When no way exists it tries `wet` with every cell that is not `nav` at eight
+times the cost, so the route takes as few shallows as it can: a strait too
+narrow for `nav`, such as Messina or the Dardanelles (which this raster
+closes). It pulls the path taut (each point is the farthest one still in
+plain sight of the last) and rounds the corners twice. A taut run or a
+rounded corner is kept only if every sample of it, and the water 4 pixels to
+each side, is sea on the `fine` grid, so a straight run does not cut the
+land corner of a mostly-sea cell. Routes
+start and end exactly on the harbors' anchors. They are cached per pair, the
+way back is the way out reversed, and a new map profile empties the cache.
+With no water between two harbors (the Red Sea and the Mediterranean), or
+no grid (the headless harnesses), the route is the old straight line. The
+sim is not touched: voyages still take the days `seaHopDays` and
+`merchantHopDays` give them.
+
+**The voyage.** A merchantman and a fleet under way are drawn on their route
+at the day's true point: they leave on the first tick after the order and
+make their anchor on the tick that lands them, with the frame loop's
+sub-day fraction in between, so the picture never jumps. A ship faces its
+course. It is mirrored when it sails west, tilted a little with the course,
+and rolls on the swell. It leaves a wake (the last stretch of the route
+behind the stern, narrow and bright at the hull, wide and fading behind)
+and has a curl of white at the bow. A fleet waiting to leave faces the way
+it will go. Clicking a fleet at sea selects it where it is drawn.
+
+**The course.** A fleet's order line is the rest of its route: a dark trace
+under a parchment dash that runs toward the harbor, and a ring in the
+fleet's colour where it will anchor. It is legible on any sea and any coast.
+Another court's courses are drawn at 40%.
+
+**The ships.** Ships grow with the zoom, as the province works do (×1 to
+×2.4). A ship's count is a small dark pill with a gold rim beside it, never
+over the hull. A selected fleet has a gold ring on the water instead of a
+yellow box. The merchant marine is drawn smaller than the warships (×0.82),
+in three hulls for three ages, none of them a ship of war:
+
+- before 300, a corbita: a swan-neck stern, a square mainsail of cream
+  canvas with the terracotta stripe, and a small artemon over the bow;
+- from 300, a lateen trader: one long yard, high end aft, and a triangular
+  sail;
+- from 1800, a tramp steamer: a black hull with a red boot-top, a white
+  house, a buff funnel and smoke that streams astern.
+
+Merchantmen at their harbors ride beside the fleets' anchor, along the
+coast, with a count; a trader dwelling in a foreign harbor rides on the
+other side. The sails billow, the steamer's smoke drifts, and the dashes of
+a course run toward the harbor. All of this stands still under reduce
+motion (the system's or the settings', §289). The voyage itself keeps
+moving, because where a ship is, is information.
+
+`window._overlay.ships()` lists where each ship was drawn on the last frame
+(harbor, voyage, fleet), for the tests.
+
+- **Regression contract**: `smoke201.mjs` runs the route finder on a made-up
+  sea with a peninsula. The route starts and ends on the anchors, no point of
+  it is on land, it rounds the peninsula's tip and is longer than the
+  straight line, the heading follows the course (south, east, north), the way
+  back is the way out reversed, and both are cached. A strait too narrow for
+  open water is sailed through the shallows. With no water, or no grid, the
+  route is the straight line. A new grid gives a new route. A cape whose tip
+  only the fine grid sees is rounded below its tip. `uitest56.mjs` in the
+  Great Revolt: a merchantman from Joppa to Alexandria waits in the harbor
+  for a day, then is drawn on open water every day of the voyage, a little
+  further each day, facing west. Alexandria to Byzantion is at least 95%
+  open water, and all of it is water except within 25 px of an anchor
+  (Byzantion's falls on land, between the Golden Horn and the Bosphorus) and
+  in the Dardanelles, which the raster closes; it bends with the coasts. A fleet under way is drawn out at
+  sea, and a click there selects it. Under reduce motion a ship at anchor
+  stops rolling and the fleet is still under way. No page errors.
