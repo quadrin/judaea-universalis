@@ -374,12 +374,17 @@ function merchantSpot(ctx, m) {
 }
 
 // The overland road for a caravan: a breadth-first walk over the land
-// adjacency, the provinces it passes, or null if no road joins them.
-function landPath(ctx, fromId, toId) {
-  if (fromId === toId) return [fromId];
-  const nb = ctx.geom && ctx.geom.neighbors;
-  if (!nb) return [fromId, toId];
-  const prev = new Map([[fromId, 0]]);
+// adjacency, the provinces it passes, or null if no road joins them. The
+// land does not change in a game, so one walk from a town serves every
+// road out of it (the AI asks for 27 at a time, one per market).
+const _walks = new WeakMap(); // geom -> Map(from -> Map(province -> the one before it))
+function walkFrom(ctx, fromId) {
+  const nb = ctx.geom.neighbors;
+  let per = _walks.get(ctx.geom);
+  if (!per) { per = new Map(); _walks.set(ctx.geom, per); }
+  let prev = per.get(fromId);
+  if (prev) return prev;
+  prev = new Map([[fromId, 0]]);
   let frontier = [fromId];
   while (frontier.length) {
     const next = [];
@@ -387,17 +392,23 @@ function landPath(ctx, fromId, toId) {
       for (const n of nb[id] || []) {
         if (prev.has(n) || !ctx.byId(n)) continue;
         prev.set(n, id);
-        if (n === toId) {
-          const out = [toId];
-          for (let c = id; c; c = prev.get(c)) out.push(c);
-          return out.reverse();
-        }
         next.push(n);
       }
     }
     frontier = next;
   }
-  return null;
+  per.set(fromId, prev);
+  return prev;
+}
+function landPath(ctx, fromId, toId) {
+  if (fromId === toId) return [fromId];
+  const nb = ctx.geom && ctx.geom.neighbors;
+  if (!nb) return [fromId, toId];
+  const prev = walkFrom(ctx, fromId);
+  if (!prev.has(toId)) return null;
+  const out = [];
+  for (let c = toId; c; c = prev.get(c)) out.push(c);
+  return out.reverse();
 }
 function pathLen(ctx, path) {
   let len = 0;
