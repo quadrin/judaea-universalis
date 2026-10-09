@@ -1149,7 +1149,14 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         tradeLog.push({ kind: 'lane', from: n.id, to, amt, w, pts: scr.length });
       }
     }
-    // the market labels
+    x2.restore();
+  }
+  // The market labels go over the army banners: in the trade map they are what
+  // the map is for, and a host camped in Joppa must not hide Joppa's worth.
+  function drawTradeLabels(camera) {
+    if (!tradeView || !Array.isArray(tradeView.nodes)) return;
+    const nodes = tradeView.nodes;
+    x2.save();
     for (const n of nodes) {
       const c = n.centerId && geom.centroids[n.centerId];
       if (!c) continue;
@@ -1727,6 +1734,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const chips = chipList(game, camera);
       labelObstacles.push(...chips.map(c => ({ x: c.x - 3, y: c.y - 2, w: c.w + 6, h: c.h + 4 })));
       for (const chp of chips) drawChip(game, chp, timeMs);
+      drawTradeLabels(camera); // the trade map mode only (SPEC §292)
 
       // bombing raids fly above everything (SPEC §30)
       drawRaids(camera, timeMs);

@@ -2191,9 +2191,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + (noAdm ? ` <span class="peace-dim">— ${noAdm} without an admiral</span>` : ''));
     }
     if (navy.merchantCount) {
-      line('Civilian hulls (SPEC §58): they pay a trade income from your shipyard harbors and are not warships.',
-        `Merchantmen: <b>${navy.merchantCount}</b>`
-        + (navy.merchantActive ? ` <span class="peace-dim">— ${navy.merchantActive} berthed and earning</span>` : ''));
+      line('Merchant ships and caravans (SPEC §292): sent to the markets to collect our share there or steer it home. They are not warships. The Trade tab sends them.',
+        `Merchants: <b>${navy.merchantCount}</b>`
+        + (navy.merchantActive ? ` <span class="peace-dim">— ${navy.merchantActive} at work in the markets</span>` : ''));
     }
     if (wings.length) {
       const led = wings.filter((w) => w && w.leader).length;
