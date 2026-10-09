@@ -504,11 +504,12 @@ export function initSound(bus, getGame) {
   };
   const CHORD_BEATS = 8;
   const MUSIC_LVL = 0.55;   // into master (which already sits at ~0.22)
-  // The two halves of the score, matched by ear and by meter (SPEC §295): the
-  // band of a song is fuller than the open score's few voices, so it sits a
-  // little lower and the hand-over keeps one loudness.
+  // The two halves of the score, matched on the music bus's meter (SPEC §295):
+  // the open score reads about −46 dB; a song's fuller band read some 7 dB
+  // over it at full level, so it plays at 0.45 and the hand-over keeps one
+  // loudness (the songs land within about 2 dB of the score).
   const SCORE_LVL = 1;
-  const SONG_LVL = 0.62;
+  const SONG_LVL = 0.45;
   const FADE_IN = 2.5;      // seconds for a song to come up
   const SCORE_OUT = 0.7;    // time constant of the score stepping aside
   const SCORE_IN = 1.4;     // …and of its return after a song

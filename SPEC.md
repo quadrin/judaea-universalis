@@ -21345,8 +21345,12 @@ songs crossfade instead of overlapping:
 - when a song ends, the open score returns gently (time constant 1.4 s) for
   the gap before the next one; a song that follows another at once (the next
   song, a new choice in the settings, a song going to war) keeps the score out;
-- the songs sit at the open score's loudness: their bus plays at
-  `SONG_LVL`, measured against the score on the music bus's own meter.
+- the songs sit at the open score's loudness. Measured on the music bus's
+  own meter (an analyser, `music.meter()`), the open score reads about
+  −46 dB and a song at full level read some 7 dB over it — which is the
+  "overpowered" the player heard. The songs' bus now plays at `SONG_LVL`
+  0.45: Song of the Well, The Hill Country, By the Rivers, The Wedding, The
+  Hammer and The Road land between −44 and −48 dB.
 
 **Every song goes to war.** War used to change the music only in the
 automatic setting, and only by ending the song of peace and waiting for a
