@@ -92,11 +92,12 @@ ok(ms.song && ms.song.id === 'hammer', 'The Hammer is playing: ' + JSON.stringif
 await page.waitForTimeout(1500);
 const now = await page.locator('#settings-modal [data-ref="stNow"]').textContent();
 ok(/The Hammer/.test(now), 'the window says what is playing: ' + now);
-// The Hammer opens on the shofar — two long calls a bar — so give it time.
+// The Hammer opens on the shofar (two long calls a bar), and a loaded
+// machine schedules late: wait for six notes rather than a fixed time.
 const notes0 = ms.notes;
-await page.waitForTimeout(6000);
+await page.waitForFunction((n) => window._sound.music.state().notes > n + 6, notes0, { timeout: 20000 }).catch(() => {});
 ms = await page.evaluate(() => window._sound.music.state());
-ok(ms.notes > notes0 + 6, `its notes are scheduled (${ms.notes - notes0} in 6 s)`);
+ok(ms.notes > notes0 + 6, `its notes are scheduled (${ms.notes - notes0} so far)`);
 const groups = await page.locator('#settings-modal select[data-set="song"] optgroup').evaluateAll((g) => g.map((x) => x.label));
 ok(groups.length === 4, 'the songs are listed by age: ' + groups.join(', '));
 
@@ -134,6 +135,8 @@ await page.locator('#settings-modal [data-toggle="music"]').click();
 
 console.log('== a short notice is short ==');
 await page.keyboard.press('Escape');
+// paused, so no other notice of the campaign pushes this one out
+await page.evaluate(() => { window._ctx.game.paused = true; document.getElementById('toast-container').innerHTML = ''; });
 await page.evaluate(() => window._ctx.bus.emit('notify', { title: 'Test notice', text: 'gone in four', type: 'info' }));
 await page.waitForTimeout(1500);
 const up = await page.evaluate(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('gone in four')));
