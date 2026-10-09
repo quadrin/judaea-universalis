@@ -86,8 +86,9 @@ function completeLand(ctx, p, order) {
 function completeShip(ctx, p, order) {
   const g = ctx.game;
   if (!hasBuilding(p, 'shipyard')) return { ok: false, stall: true, why: 'the shipyard is unavailable' };
+  // a new hull joins a squadron in commission, never one laid up (SPEC §293)
   let fleet = Object.values(g.fleets || {}).find((f) => f && f.tag === order.tag && f.prov === p.id
-    && !(f.path && f.path.length) && num(f.gen) === num(order.gen));
+    && !(f.path && f.path.length) && num(f.gen) === num(order.gen) && !f.laidUp && !(num(f.recommission) > 0));
   if (!fleet) {
     if (!g.fleets) g.fleets = {};
     if (!Number.isFinite(g.nextFleetId)) g.nextFleetId = 1;

@@ -9,7 +9,8 @@
 //               class of adjacent provinces differs — so country borders stay correct in
 //               every mapmode and after conquests, without extra API surface.
 
-import { tradeIndex } from '../data/trade.js';
+import { TRADE_NODES } from '../data/trade_nodes.js';
+import { nodeOfProv, nodeCenterId } from '../sim/trade.js';
 import { largestMinorityFaith } from '../sim/population.js';
 import { dominantEstate, seatsFor } from '../sim/estates.js';
 import { communityOf, openAt, shutBy } from '../data/diaspora.js';
@@ -79,6 +80,24 @@ function warnOnce(key, ...msg) {
   warned.add(key);
   console.warn('[mapmodes]', ...msg);
 }
+
+// One muted color per market (SPEC §292), spread round the wheel by the
+// golden angle so neighbors differ.
+const NODE_COLOR = (() => {
+  const out = {};
+  TRADE_NODES.forEach((n, i) => {
+    const h = (i * 137.508) % 360;
+    const s = 0.38;
+    const v = 0.78;
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+    const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x]
+      : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    out[n.id] = [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+  });
+  return out;
+})();
 
 function lerp3(a, b, t) {
   return [
@@ -163,7 +182,12 @@ export function computeMapmodeColors(ctx, mode) {
   const flags = new Uint8Array(N + 1);
 
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
-  const tradeIdx = mode === 'trade' ? tradeIndex() : null;
+  const centers = new Set();
+  if (mode === 'trade') {
+    for (const n of TRADE_NODES) {
+      try { const c = nodeCenterId(ctx, n.id); if (c) centers.add(c); } catch (e) { /* a bare ctx */ }
+    }
+  }
   // Owner class rides lookA's ALPHA byte (renderer contract, SPEC §173:
   // differing classes draw the country border; 255 is WASTE). It was a 5-bit
   // field in the flags byte until v5.4's catalog outgrew 31 keys, and then
@@ -257,18 +281,16 @@ export function computeMapmodeColors(ctx, mode) {
         break;
       }
       case 'trade': {
-        // Routes glow in their own colors over muted parchment; chokepoints
-        // shine brighter. Occupied/besieged stops show the stripes.
-        const stops = tradeIdx.get(p.name);
-        if (stops && stops.length) {
-          const best = stops.find((x) => x.isChokepoint) || stops[0];
-          cA = best.isChokepoint ? lerp3(best.route.color, [255, 240, 190], 0.35) : best.route.color;
-          if (p.controller !== p.owner || p.siege) {
-            cB = [120, 120, 120];
-            fl |= 1;
-          }
-        } else {
-          cA = [196, 188, 168];
+        // Each market in its own color (SPEC §292); our own provinces lighter,
+        // each market town brightest; occupied or besieged land striped.
+        let nid = null;
+        try { nid = nodeOfProv(ctx, id); } catch (e) { nid = null; }
+        const base = (nid && NODE_COLOR[nid]) || [196, 188, 168];
+        cA = centers.has(id) ? lerp3(base, [255, 240, 190], 0.55)
+          : p.owner && p.owner === game.playerTag ? lerp3(base, [255, 248, 225], 0.3) : base;
+        if (p.controller !== p.owner || p.siege) {
+          cB = [120, 120, 120];
+          fl |= 1;
         }
         break;
       }

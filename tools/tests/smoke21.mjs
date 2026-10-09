@@ -1,5 +1,5 @@
 // Headless smoke test — army demobilization, peace-aware canonical events,
-// era-gated works, and civilian merchant shipping.
+// era-gated works, and merchant ships fitted out at a shipyard (SPEC §292).
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -109,10 +109,15 @@ console.log('== ancient construction hides future tech and supports merchant por
   if (!port.buildings.includes('shipyard')) port.buildings.push('shipyard');
   game.tags.JUD.treasury = 100;
   const before = tradeIncome(ctx, 'JUD');
-  const mi = actions.getMerchantShipInfo(port.id);
-  ok(mi.visible && mi.can && mi.count === 0, 'the completed shipyard opens its civilian fitting-out yard');
-  ok(actions.commissionMerchantShip(port.id) && port.merchantShips === 1, 'a merchant ship can be commissioned and persists at its home port');
-  ok(tradeIncome(ctx, 'JUD') > before, 'the active merchantman adds monthly trade income');
+  const mi = actions.getBuildMerchant(port.id, 'ship');
+  ok(mi.can && mi.have === 0, 'the completed shipyard can fit out a merchant ship: ' + mi.why);
+  ok(actions.buildMerchant(port.id, 'ship') && game.merchants.length === 1 && game.merchants[0].home === port.id,
+    'a merchant ship is fitted out and waits at its home port');
+  ok(game.tags.JUD.treasury === 100 - mi.cost, 'she costs ' + mi.cost + ' talents');
+  const m = game.merchants[0];
+  ok(actions.sendMerchant(m.id, 'judaea', 'collect') && m.state === 'posted',
+    'sent to collect in the market of her own port, she serves at once');
+  ok(tradeIncome(ctx, 'JUD') > before, 'the posted merchant adds trade income: ' + before.toFixed(2) + ' → ' + tradeIncome(ctx, 'JUD').toFixed(2));
 
   game.tags.JUD.tech.mar = 19;
   ok(actions.getBuildInfo(port.id).options.some((row) => row.key === 'airfield'),

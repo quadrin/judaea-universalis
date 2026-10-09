@@ -1,6 +1,6 @@
 // UI verification — v5.5: the map as bombsight and the unit inspector.
 // A selected wing raids by clicking a target in range; clicking an enemy
-// banner opens the field-glasses inspector; warships and merchantmen render.
+// banner opens the field-glasses inspector; warships and merchant ships render.
 import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp/pw') + '/');
 const { chromium } = require('playwright');
@@ -127,16 +127,19 @@ const after = await page.evaluate((r) => ({
 ok(after.cd > 0 || after.cd === -1, 'the sortie flew: the wing is rearming (or was lost to flak): cd=' + after.cd);
 ok(after.cd === -1 || after.stillSelected, 'a surviving wing stays selected for the next sortie');
 
-console.log('== ships of the line and the merchant marine ==');
+console.log('== ships of the line and merchant ships ==');
 await page.evaluate(() => {
   const g = window._ctx.game;
-  // Stage a destroyer flotilla and a merchant harbor for the render pass.
+  // Stage a destroyer flotilla and two merchant ships at rest (SPEC §292).
   const isrCoast = g.provinces.find((p) => p && p.owner === 'ISR' && window._ctx.geom.coastal && window._ctx.geom.coastal[p.id]);
   const prov = isrCoast ? isrCoast.id : 5;
   const fid = g.nextFleetId++;
   g.fleets[fid] = { id: fid, tag: 'ISR', prov, ships: 4, gen: 5 };
   const p = g.provinces[prov];
-  if (p) p.merchantShips = 3;
+  if (p) {
+    if (!Array.isArray(g.merchants)) g.merchants = [];
+    for (let k = 0; k < 2; k++) g.merchants.push({ id: g.nextMerchantId++, tag: 'ISR', kind: 'ship', home: prov, at: prov, state: 'home', node: null, order: null, steerTo: null });
+  }
   const c = window._ctx.geom.centroids[prov];
   window._camera.centerOn(c.x, c.y, 2.4);
 });

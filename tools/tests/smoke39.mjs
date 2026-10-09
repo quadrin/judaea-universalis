@@ -1,15 +1,20 @@
-// Headless regression — trade runs (v6.1): merchantmen abroad. The opinion
-// gate, the round trip (out → a month in the foreign market → home), the
-// lump-sum payout on the home berth, wartime seizure in the host's harbor,
-// and the home-berth reservation across the whole trip.
+// Headless regression — SPEC §292, the navy in trade (it replaced the trade
+// runs of v6.1 that this file held): a raider takes its share of a market
+// before anyone else; a guard adds power; a raider at war may take a posted
+// merchant ship, less often when the lanes are guarded; raiding a court at
+// peace costs its goodwill; a squadron serves only at anchor in the node, and
+// a raider rides off a harbor its enemy does not hold. Also, from v6.1/v6.2:
+// an ordered air strike flies only when time moves, and every player-facing
+// scripted event offers a real choice.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
 const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
 const { initGame, makeCtx, gameActions, simHelpers } = await import(R + '/js/sim/init.js');
-const navy = await import(R + '/js/sim/navy.js');
+const trade = await import(R + '/js/sim/trade.js');
 const mil = await import(R + '/js/sim/military.js');
+const num = (v) => Number(v) || 0;
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -37,118 +42,91 @@ function boot() {
   for (const k of Object.keys(game.tags)) if (game.tags[k]) game.tags[k].atWarWith = [];
   return { game, ctx, actions: gameActions(ctx) };
 }
-// A working harbor pair: Joppa (ours) and Alexandria (theirs).
-function harbors(ctx) {
-  const home = ctx.prov('Joppa');
-  const far = ctx.prov('Alexandria');
-  home.owner = 'JUD'; home.controller = 'JUD';
-  home.buildings = ['shipyard'];
-  home.merchantShips = 1;
-  far.buildings = far.buildings && far.buildings.includes('shipyard') ? far.buildings : (far.buildings || []).concat('shipyard');
-  return { home, far };
+function fleet(ctx, tag, provName, ships, mission) {
+  const f = simHelpers.spawnFleet(ctx, tag, provName, ships, { name: tag + ' test squadron' });
+  f.mission = mission || null;
+  trade.touchTrade(ctx.game);
+  return f;
 }
-function runDays(ctx, days) {
-  for (let d = 0; d < days; d++) navy.merchantVoyagesDaily(ctx);
-}
+const node = (ctx, id) => trade.computeTrade(ctx).nodes[id];
 
-console.log('== the opinion gate ==');
+console.log('== a raider takes its share first; a guard adds power ==');
 {
   const { game, ctx } = boot();
-  const { home, far } = harbors(ctx);
-  const host = far.owner;
-  game.tags[host].opinion = { JUD: 0 };
-  let st = navy.tradeHarborStatus(ctx, 'JUD', far.id);
-  ok(!st.can && /opinion/.test(st.why), 'a cool court keeps its market shut: ' + st.why);
-  const dests = navy.tradeRunDestinations(ctx, 'JUD', home.id);
-  const row = dests.find((d) => d.prov === far.id);
-  ok(!!row && !row.can, 'the closed market is still listed (the gate is learnable)');
-  game.tags[host].opinion.JUD = 40;
-  st = navy.tradeHarborStatus(ctx, 'JUD', far.id);
-  ok(st.can, 'at +40 opinion the market opens');
-  const res = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
-  ok(res.ok && res.payout > 0, `the run books: ~${res.payout} talents promised over ${res.days}d out`);
-  ok(home.merchantShips === 0, 'the hull leaves its home berth');
-  ok(navy.merchantBerthsFree(ctx, home.id) === navy.MERCHANT_SHIP_CAP - 1,
-    'the home berth stays reserved for her return');
+  const before = node(ctx, 'egypt');
+  const v0 = before.value;
+  const romBefore = trade.tradeIncomeOf(ctx, 'ROM');
+  ok(before.totalRaid === 0 && v0 > 0, 'Alexandria is worth ' + v0.toFixed(2) + ' a month and nobody raids it');
+  const raider = fleet(ctx, 'JUD', 'Alexandria', 6, { kind: 'raid', node: 'egypt' });
+  const N = node(ctx, 'egypt');
+  ok(N.raid.JUD > 0 && N.stolen.JUD > 0, 'a Judaean raider off Alexandria takes ' + N.stolen.JUD.toFixed(2));
+  let rest = 0;
+  for (const k in N.collected) rest += N.collected[k];
+  for (const k in N.steer) rest += N.steer[k].amount;
+  ok(Math.abs(rest + N.stolen.JUD - N.value) < 1e-6, 'what the raider takes, the market loses: nothing made, nothing lost');
+  ok(trade.tradeIncomeOf(ctx, 'ROM') < romBefore, 'Rome takes less from the lanes it no longer has to itself');
+  raider.path = [ctx.prov('Joppa').id];
+  ok(!trade.fleetMissionActive(ctx, raider), 'a squadron under way serves nowhere');
+  raider.path = [];
+  raider.prov = ctx.prov('Joppa').id;
+  ok(!trade.fleetMissionActive(ctx, raider), 'nor one at anchor outside its node');
+  raider.mission = null;
+  const p0 = num(node(ctx, 'egypt').power.JUD);
+  raider.prov = ctx.prov('Alexandria').id;
+  raider.mission = { kind: 'protect', node: 'egypt' };
+  trade.touchTrade(game);
+  const p1 = num(node(ctx, 'egypt').power.JUD);
+  ok(p1 > p0 + 6, 'six hulls guarding the lanes add their power: ' + p0.toFixed(1) + ' → ' + p1.toFixed(1));
 }
 
-console.log('== the round trip pays a lump sum ==');
+console.log('== raiding at peace costs goodwill ==');
 {
   const { game, ctx } = boot();
-  const { home, far } = harbors(ctx);
-  game.tags[far.owner].opinion = { JUD: 40 };
-  const res = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
-  const before = Number(game.tags.JUD.treasury) || 0;
-  runDays(ctx, res.days); // out
-  const v = game.merchantVoyages[0];
-  ok(v && v.leg === 'dwell' && v.from === far.id && v.to === far.id,
-    'she rides in the foreign roads to trade');
-  runDays(ctx, navy.TRADE_RUN.dwellDays); // the market month
-  ok(game.merchantVoyages[0] && game.merchantVoyages[0].leg === 'home', 'the hold full, she turns for home');
-  runDays(ctx, game.merchantVoyages[0].daysTotal + 1);
-  ok(game.merchantVoyages.length === 0 && home.merchantShips === 1, 'she ties up at her own berth again');
-  const after = Number(game.tags.JUD.treasury) || 0;
-  ok(Math.round(after - before) === res.payout, `the cargo sells as one sum: +${Math.round(after - before)} talents`);
+  fleet(ctx, 'JUD', 'Alexandria', 4, { kind: 'raid', node: 'egypt' });
+  const op0 = num((game.tags.ROM.opinion || {}).JUD);
+  trade.tradeMonthly(ctx);
+  const op1 = num((game.tags.ROM.opinion || {}).JUD);
+  ok(op1 < op0, 'Rome thinks less of the court that robs its lanes: ' + op0 + ' → ' + op1);
 }
 
-console.log('== a glutted market buys nothing more (anti-money-press) ==');
+console.log('== a raider at war takes prizes; a guard makes it harder ==');
 {
   const { game, ctx } = boot();
-  const { home, far } = harbors(ctx);
-  game.tags[far.owner].opinion = { JUD: 40 };
-  home.merchantShips = 2;
-  const first = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
-  ok(first.ok, 'the first run books');
-  const second = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
-  ok(!second.ok && /glutted/.test(second.why), 'the second is refused: ' + second.why);
-  // The run at sea owns its market: it still docks and trades despite the glut.
-  runDays(ctx, first.days);
-  ok(game.merchantVoyages[0] && game.merchantVoyages[0].leg === 'dwell',
-    'the booked run itself is not turned away by its own glut');
-  // Six months on, the buyers are hungry again.
-  game.date.m += navy.TRADE_RUN.saturationMonths;
-  while (game.date.m > 12) { game.date.m -= 12; game.date.y += 1; }
-  const third = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
-  ok(third.ok, 'after ' + navy.TRADE_RUN.saturationMonths + ' months the market reopens');
+  mil.declareWar(ctx, 'JUD', 'ROM', 'Test War');
+  game.tags.ROM.treasury = 500;
+  const alex = ctx.prov('Alexandria');
+  alex.buildings = (alex.buildings || []).concat('shipyard');
+  const m = trade.buildMerchantCore(ctx, 'ROM', alex.id, 'ship').merchant;
+  ok(!!m && trade.sendMerchantCore(ctx, 'ROM', m.id, 'egypt', 'collect').ok && m.state === 'posted', 'a Roman merchant ship collects at Alexandria');
+  fleet(ctx, 'JUD', 'Alexandria', 6, { kind: 'raid', node: 'egypt' });
+  const odds = [];
+  const realChance = ctx.rng.chance;
+  ctx.rng.chance = (p) => { odds.push(p); return false; };
+  trade.tradeMonthly(ctx);
+  fleet(ctx, 'ROM', 'Alexandria', 10, { kind: 'protect', node: 'egypt' });
+  trade.tradeMonthly(ctx);
+  ok(odds.length === 2 && odds[0] > 0 && odds[1] < odds[0] && odds[0] <= trade.TRADE.captureMax,
+    'the odds of a prize: ' + odds.map((p) => p.toFixed(3)).join(' unguarded, ') + ' guarded');
+  ctx.rng.chance = () => true;
+  trade.tradeMonthly(ctx);
+  ctx.rng.chance = realChance;
+  ok(!game.merchants.includes(m), 'and when the dice fall, the ship is taken');
 }
 
-console.log('== the margin follows the haul ==');
-{
-  const { ctx } = boot();
-  const { home, far } = harbors(ctx);
-  const near = navy.tradeRunPayout(ctx, 'JUD', far.id, far.id); // zero-distance floor
-  const real = navy.tradeRunPayout(ctx, 'JUD', far.id, home.id);
-  ok(real > near, `a real haul outearns a doorstep shuttle (${real} vs ${near})`);
-}
-
-console.log('== war in the host harbor seizes ship and cargo ==');
+console.log('== a raider rides off a harbor its enemy does not hold ==');
 {
   const { game, ctx } = boot();
-  const { home, far } = harbors(ctx);
-  const host = far.owner;
-  game.tags[host].opinion = { JUD: 40 };
-  const res = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
-  runDays(ctx, res.days); // she is trading now
-  ok(game.merchantVoyages[0] && game.merchantVoyages[0].leg === 'dwell', 'trading when the war comes');
-  mil.declareWar(ctx, 'JUD', host, 'Test War');
-  runDays(ctx, 1);
-  ok(game.merchantVoyages.length === 0 && home.merchantShips === 0, 'the hull is seized — never comes home');
-}
-
-console.log('== a market that closes mid-passage sends her home empty ==');
-{
-  const { game, ctx } = boot();
-  const { home, far } = harbors(ctx);
-  game.tags[far.owner].opinion = { JUD: 40 };
-  const res = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
-  game.tags[far.owner].opinion.JUD = -50; // the court turns cold while she sails
-  const before = Number(game.tags.JUD.treasury) || 0;
-  runDays(ctx, res.days + 1);
-  const v = game.merchantVoyages[0];
-  ok(v && v.leg === 'home' && v.payout === 0, 'refused at the quay, she turns for home empty');
-  runDays(ctx, v.daysTotal + 1);
-  ok(home.merchantShips === 1 && Math.round((Number(game.tags.JUD.treasury) || 0) - before) === 0,
-    'home safe, hold empty, not a talent landed');
+  mil.declareWar(ctx, 'ROM', 'JUD', 'Test War');
+  const ours = game.provinces.filter((p) => p && p.owner === 'JUD' && trade.nodeOfProv(ctx, p.id) === 'judaea');
+  const station = trade.missionStation(ctx, 'judaea', ctx.prov('Caesarea Maritima').id, 'ROM');
+  const st = ctx.byId(station);
+  ok(ours.length > 0 && !!st && st.owner !== 'JUD' && trade.nodeOfProv(ctx, station) === 'judaea',
+    'a Roman raider in the waters of Judaea rides off ' + (st && st.name) + ', not a Judaean port');
+  ok(trade.missionStation(ctx, 'judaea', station, null) === trade.nodeCenterId(ctx, 'judaea'), 'a guard rides off the market town, Joppa');
+  const f = fleet(ctx, 'ROM', 'Caesarea Maritima', 3, null);
+  const res = trade.setFleetMissionCore(ctx, 'ROM', f.id, 'raid', 'judaea');
+  ok(res.ok && f.mission && f.mission.kind === 'raid', 'the order is given: ' + (res.why || res.stationName));
+  ok(!trade.setFleetMissionCore(ctx, 'JUD', f.id, 'raid', 'judaea').ok, 'no court orders another\'s squadron');
 }
 
 console.log('== an ordered strike flies only when time moves (v6.2) ==');

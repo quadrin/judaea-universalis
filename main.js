@@ -116,7 +116,19 @@ async function boot() {
   let mapmode = 'political';
   let colorsDirty = true;
 
-  bus.on('mapmode', (m) => { mapmode = m; colorsDirty = true; });
+  // The trade map mode draws the markets and their lanes over the map (SPEC
+  // §292): the overlay is handed our view of the world's trade when the mode
+  // opens, each month, and after any order of ours.
+  function refreshTradeView() {
+    let v = null;
+    if (mapmode === 'trade' && actions && typeof actions.getTrade === 'function') {
+      try { v = actions.getTrade(); } catch (e) { console.warn('[trade view]', e); }
+    }
+    overlay.setTradeView(v);
+  }
+  bus.on('mapmode', (m) => { mapmode = m; colorsDirty = true; refreshTradeView(); });
+  bus.on('month', () => { if (mapmode === 'trade') { colorsDirty = true; refreshTradeView(); } });
+  bus.on('actionTaken', () => { if (mapmode === 'trade') refreshTradeView(); });
   // Bombing raids play out on the overlay (SPEC §30), in the raider's color.
   bus.on('airRaid', (p) => {
     if (!p || !ctx) return;
@@ -238,6 +250,7 @@ async function boot() {
     colorsDirty = true;
     window._ctx = ctx; // debug handles
     window._actions = actions;
+    refreshTradeView(); // a new campaign's markets, if the trade map is open
   }
 
   // ------------------------------------------------------------ multiplayer --

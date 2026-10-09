@@ -1,6 +1,6 @@
 // UI verification — SPEC §290: ships are drawn moving across the water.
 //
-// A merchantman bound from Joppa to Alexandria is drawn on open sea at every
+// A merchant ship (SPEC §292) bound from Joppa to Alexandria is drawn on open sea at every
 // day of the voyage, a little further along each day, turned to its course.
 // A long route (Alexandria to Byzantion) stays on water the whole way. A
 // fleet under way is drawn on its route, not at its anchor, and a click on
@@ -60,10 +60,12 @@ const seaAt = (pts) => page.evaluate((list) => {
   });
 }, pts);
 
-console.log('== a merchantman sails from Joppa to Alexandria ==');
+console.log('== a merchant ship sails from Joppa to Alexandria ==');
 await page.evaluate(({ J, A }) => {
   const ctx = window._ctx;
-  ctx.game.merchantVoyages = [{ tag: ctx.game.playerTag, from: J, to: A, daysLeft: 16, daysTotal: 16 }];
+  ctx.game.merchants = [{ id: 1, tag: ctx.game.playerTag, kind: 'ship', home: J, at: J, state: 'out', node: 'egypt', order: 'collect',
+    steerTo: null, from: J, to: A, path: null, daysLeft: 16, daysTotal: 16 }];
+  ctx.game.nextMerchantId = 2;
   const a = ctx.geom.offshore[J];
   const b = ctx.geom.offshore[A];
   window._camera.centerOn((a.x + b.x) / 2, (a.y + b.y) / 2, 1.0);
@@ -71,7 +73,7 @@ await page.evaluate(({ J, A }) => {
 await page.waitForTimeout(900);
 const track = [];
 for (let left = 16; left >= 1; left--) {
-  await page.evaluate((l) => { window._ctx.game.merchantVoyages[0].daysLeft = l; }, left);
+  await page.evaluate((l) => { window._ctx.game.merchants[0].daysLeft = l; }, left);
   await page.waitForTimeout(120);
   const v = await page.evaluate(() => window._overlay.ships().find((x) => x.kind === 'voyage'));
   if (v) track.push(v);
@@ -124,7 +126,7 @@ const fleet = await page.evaluate(({ J, A }) => {
   g.fleets[id] = { ...JSON.parse(JSON.stringify(base)), id, tag: g.playerTag, prov: J, ships: 4, gen: 1,
     admiral: null, path: [A], hopTotal: 16, moveDaysLeft: 9, name: 'Test squadron' };
   g.ui.selectedFleet = null;
-  g.merchantVoyages = [];
+  g.merchants = [];
   return id;
 }, ids);
 await page.waitForTimeout(300);
@@ -154,7 +156,8 @@ const bobs = async () => {
   return Math.max(...ys) - Math.min(...ys);
 };
 await page.evaluate((J) => {
-  window._ctx.game.provinces[J].merchantShips = 2;
+  const g = window._ctx.game;
+  for (let k = 0; k < 2; k++) g.merchants.push({ id: g.nextMerchantId++, tag: g.playerTag, kind: 'ship', home: J, at: J, state: 'home', node: null, order: null, steerTo: null });
   const a = window._ctx.geom.offshore[J];
   window._camera.centerOn(a.x, a.y, 3);
 }, ids.J);

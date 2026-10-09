@@ -82,10 +82,18 @@ console.log('== the bar is their regard, and the purse is real ==');
   game.tags.ISR.points.infl = 25;
   ok(aid.aidRequestGate(ctx, 'ISR', 'USA') === '', 'regard and influence together open the door');
   ok(aid.aidAmount(ctx, 'USA') === 15, 'Washington\'s package rides the stipend: a quarter of 60');
-  ok(aid.aidAmount(ctx, 'UK') === DEFINES.AID.amountFloor, 'London\'s thin on-map books floor out');
-  // The purse must be real: Moscow's fragment nets almost nothing and its
-  // chest opens empty, so even a warm Kremlin has nothing to vote.
+  // Since the markets (SPEC §292) London collects at Aden, Khartoum and
+  // Cyprus and its package is a quarter of real books; Moscow's on-map
+  // fragment (Baku, Batumi, the Black Sea coast) is still thin and floors out.
+  ok(aid.aidAmount(ctx, 'UK') > DEFINES.AID.amountFloor, 'London\'s package rides its books: ' + aid.aidAmount(ctx, 'UK'));
+  ok(aid.aidAmount(ctx, 'SOV') === DEFINES.AID.amountFloor, 'Moscow\'s thin on-map books floor out');
+  // The purse must be real: a donor whose books clear less than the package
+  // and whose chest is empty has nothing to vote, however warm. Moscow, with
+  // its fragment's books eaten by debt, is that donor.
   game.tags.SOV.opinion.ISR = 80;
+  game.tags.SOV.treasury = 0;
+  game.tags.SOV.loans = 0;
+  while (eco.incomeBreakdown(ctx, 'SOV').net >= aid.aidAmount(ctx, 'SOV') && game.tags.SOV.loans < 20) game.tags.SOV.loans++;
   ok(/books cannot carry it/.test(aid.aidRequestGate(ctx, 'ISR', 'SOV')), 'a warm donor with empty books refuses');
   game.tags.SOV.treasury = 200;
   ok(aid.aidRequestGate(ctx, 'ISR', 'SOV') === '', 'a saved-up chest that covers the package grants');

@@ -2109,6 +2109,7 @@ export const DEFINES = {
     supportLimitBase: 12,              // regiments supportable in any province before attrition
     supportLimitPerDev: 1.5,           // extra supported regiments per total dev point
     fortGarrisonPerLevel: 1000,        // garrison men per fort level
+    fortUpkeepPerLevel: 0.3,           // talents/month per fort level, while not mothballed (SPEC §293)
     siegePerFortLevel: 12,             // baseline days of siege work per fort level (progress divisor)
     unrestRevoltThreshold: 5,          // unrest above this accumulates revoltProgress
     revoltFireAt: 100,                 // revoltProgress at which rebels rise

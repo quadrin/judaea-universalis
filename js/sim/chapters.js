@@ -17,7 +17,8 @@
 
 import { num, clamp, devTotal, liveGrudge, reconciled, thawProgress, tagDef, mechanicOn } from './military.js';
 import { factionDefs } from './factions.js';
-import { isCoastal, merchantShipsOf } from './navy.js';
+import { isCoastal } from './navy.js';
+import { merchantsOf, merchantCap } from './trade.js';
 import { lean, axisOf, doctrineEpithet } from './doctrine.js';
 
 const warned = new Set();
@@ -321,11 +322,13 @@ function makeDiplomatic(ctx, tag, seq, deadline) {
   const hasCoast = coastalControlled(ctx, tag) > 0;
   const hasClients = Object.values(g.tags).some((e) => e && e.alive && e.overlord === tag);
   if (hasCoast && seq % 2 === 0) {
-    const hulls = Math.min(6, 2 + seq);
+    // merchant ships at work in the markets (SPEC §292), never more than the
+    // court may keep
+    const hulls = Math.max(1, Math.min(merchantCap(ctx, tag), 2 + Math.floor(seq / 2)));
     const income = Math.max(Math.round(num(t.income) * (1.2 + 0.1 * seq)), Math.round(num(t.income)) + 5);
     return obj('diplomatic', 'trade',
       'Mistress of the Sea',
-      'Keep ' + hulls + ' merchant hulls in the water and lift the realm\'s income to '
+      'Keep ' + hulls + ' merchant ship' + (hulls === 1 ? '' : 's') + ' at work in the markets of the sea and lift the realm\'s income to '
         + income + ' talents a month, held half a year.',
       { hulls, income }, 1, 6, deadline);
   }
@@ -537,8 +540,7 @@ function evalObjective(ctx, tag, o) {
       return { have, met: have >= o.need };
     }
     case 'trade': {
-      const hulls = merchantShipsOf(ctx, tag).reduce((s, r) => s + r.count, 0)
-        + (g.merchantVoyages || []).filter((v) => v && v.tag === tag).length;
+      const hulls = merchantsOf(ctx, tag).filter((m) => m.kind === 'ship' && m.state === 'posted').length;
       const met = hulls >= num(P.hulls, 1) && num(t.income) >= num(P.income, 0);
       return { have: hulls, met };
     }

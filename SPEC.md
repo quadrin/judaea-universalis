@@ -10343,13 +10343,15 @@ asking, opened from the ledger). Five rules, each priced:
 - **The package is sized to the donor's own purse.** A quarter of the
   donor's monthly books (income, tribute, and the §180 stipend), floored
   at 5 and capped at 25, frozen into the row at grant time. Washington's
-  stipend prices its package at 15 a month for a year; the European
-  fragments — thin by §173's levy design — floor out at 5. The plain 1948
+  stipend prices its package at 15 a month for a year; Moscow's fragment —
+  thin by §173's levy design — floors out at 5 (London did too until the
+  markets of §292, which give it the customs of Aden, Khartoum and Cyprus:
+  its package now rides those books, at 11). The plain 1948
   fact that the United States outweighs every court of the age (§180) is
   therefore not a rule here; it is arithmetic. And the purse must be real:
   a donor grants only from net its books actually clear or a war chest
-  that covers the whole package, so a warm Kremlin with an empty chest
-  refuses until it has saved something to give.
+  that covers the whole package, so a warm donor whose books are eaten
+  and whose chest is empty refuses until it has saved something to give.
 - **A grant is a §24 subsidy row** wearing an `aid` marker — the ledger
   lines, both panels' treaty rows, the monthly countdown, the deep-debt
   default and the revive path all come free, and the money balances by
@@ -19743,7 +19745,9 @@ months of every twelve, somebody was waiting for the weather.
   and gated so 1948 hears only its own voice; the dateline's bands and
   shape; two centuries of ambient passes with the seeded stream unmoved and
   the chronicle unflooded; an all-AI table hearing nothing; three chapters
-  played ten years each and actually hearing the world; and the wiring proved
+  played ten years each and actually hearing the world (1948, with only four
+  modern cards, sampled over three seeds since §292: each hears the weather,
+  and between them at least half of the four); and the wiring proved
   on the live board — the same march through grain country taking longer in
   Tevet than in Nisan through the sim's own `hopDays`, and the same crossing
   taking longer through `seaHopDays`. And the whole weather pool fired
@@ -20933,3 +20937,392 @@ moving, because where a ship is, is information.
   in the Dardanelles, which the raster closes; it bends with the coasts. A fleet under way is drawn out at
   sea, and a click there selects it. Under reduce motion a ship at anchor
   stops rolling and the fleet is still under way. No page errors.
+
+## §291 — The settings fit the window, a gear, and the mission bell
+
+**The settings card ran off a short window.** It was centred on the whole
+screen, so on a laptop window 500 pixels high its top ran up into the topbar
+and its last rows ran off the bottom, with nothing to show that it scrolled.
+The card now hangs below the topbar (below both rows on a portrait phone),
+ends inside the window, and keeps its title and its Defaults and Close
+buttons in place; only the body between them scrolls, with a scrollbar
+drawn so it shows. A window at least 860 pixels wide lays the four sections
+out in two columns (Sound and Music, then Game and Display), and a window
+under 620 pixels high tightens the rows. The card's own entry animation
+keeps it centred while it fades in.
+
+**The settings button is a gear**, eight teeth round a hub, in the topbar and
+on the tools sheet. It was three faders.
+
+**The topbar's date stays on one line.** In a narrow window it broke into
+three ("1 / June / 66 CE"); now the bar scrolls instead.
+
+**A mission ready to claim rings a bell beside the flag.** Since §229 a
+mission whose terms are met waits for the player's hand, and only the
+Missions tab said so. Now a red bell, like the tech bells of §286 and a size
+larger, rides high beside the court's flag while any mission is ready. It
+rings when it appears and again each time another mission becomes ready,
+names the ready missions in its tooltip, and opens the realm panel on
+Missions. It goes when the last one is claimed, or lost (§229: the terms
+must still hold when claimed).
+
+- **Regression contract**: `uitest57.mjs`. The settings button is a gear (a
+  hub and a toothed rim). In a 940×500 window the card starts below the
+  topbar, ends inside the window, shows Defaults and Close, and stands in two
+  columns. With no mission ready there is no bell; with one, the bell shows,
+  rings, names it, and sits beside the flag; it rings once and rests; a
+  second ready mission rings it again; a click opens Missions; with none
+  ready it goes. No page errors.
+
+## §292 — Markets, merchants and the lanes
+
+Trade was five routes (§20) whose stops paid whoever held them, plus a
+merchant marine (§58): hulls berthed at a shipyard that earned a flat
+sum while their port was open, and trade runs (§60) that sailed to a
+foreign harbor for a month and came home with a lump. Nothing in it was a
+choice the player made more than once, and nothing in it gave a warship a
+reason to leave port. This section replaces the merchant marine and the trade
+runs with EU4's model: markets, power, collecting and steering, merchants
+that are sent, and fleets that guard or raid. All of the sim is in
+`js/sim/trade.js` and `js/data/trade_nodes.js`, DOM-free.
+
+**The markets.** `TRADE_NODES` is 27 markets (nodes), each with a market town
+(its center), the nodes downstream of it (`to`), and the provinces placed in
+it by hand. Every other province joins the node whose town is nearest; all
+415 provinces of the map are in one node. The sources, east and south, also
+take goods from beyond the map (`offmap`, talents a month): Transoxiana 5,
+Charax 8, Arabia Felix 10, Adulis 4, Meroe 2. A node is found by the base
+map's name, so a chapter's label (1948's Tel Aviv-Jaffa) does not move it.
+Where a chapter folds the town into a larger province (§232), that province
+is the town if it is in the same node (1948's Spain for Gades); if it is in
+another node, the node has no town (1948's Soviet Union holds Merv): its
+goods still flow, but no merchant goes there and nobody keeps its customs.
+
+**The ages.** Where the roads end moves with the centuries. `AGE_LANES`
+rewires a few lanes per age, and each chapter has one:
+
+| age | chapters | the end of the roads |
+|---|---|---|
+| tyre | 931, 732, 597 BCE | Tyre: Phoenicia's sea |
+| rome | 167 BCE – 132 CE | Rome |
+| byzantion | 351, 529, 614 CE | Byzantion |
+| suez | 1948 | Egypt (the Canal) |
+
+`tradeGraph(age)` gives the lanes, the order to run the nodes (upstream
+first; there are no cycles), what each node can reach, and the end (sink).
+
+**The value.** A node's value each month is its own goods plus what flows in.
+Its own goods are, for each province in it, production development × 0.2
+(EU4's goods per point) × the price of its good × 0.1 (`valueScale`,
+calibrated against the old route values), plus its offmap goods × 0.7.
+
+**The power.** Every court with power in a node holds that share of it:
+
+- a province it owns and controls, not besieged: development × 0.2, +1 for a
+  harbor, +2 for a market, +1 for a shipyard, +5 for the market town, all
+  halved while a hostile squadron blockades the port;
+- a merchant posted there: +8;
+- a squadron guarding the node: +2 per ship × its strength (`fleetPowerOf`).
+
+**Collecting and steering.** A court collects its share, as money, in its home
+node (the node of its capital), in a node whose market town it holds (the
+customs house; not while the town is besieged), and in a node where it has a
+merchant set to collect. At the end of the roads everyone collects. Anywhere
+else its share is steered downstream: down the lane toward its home node if
+home is downstream, down the lane a merchant set to steer names, or else
+evenly down every lane. What nobody holds runs on evenly. Each merchant
+steering a lane adds 5% to what flows down it (25% at most). A node's value
+is split exactly: what is collected, steered and stolen is all of it, and
+what a node takes in is exactly what upstream sends it.
+
+**Raiders.** A squadron raiding a node takes its share first: raid power is
++2 per ship × its strength, and a raider takes value × its raid power / (all
+power + all raid power). The rest is shared as above. A raider at war with
+the court of a merchant ship posted in the node may take it: each month the
+chance is (hostile raid power / (hostile raid power + friendly guard power +
+20)) × 0.3. Raiding a court at peace costs 4 of its opinion of the raider
+each month.
+
+**What it pays.** `tradeIncome` = the markets × the court's trade efficiency
+(`tradeMult`) × any embargo on it (§100), + the tolls. The five routes of §20
+still pay their stops, at half (`TOLL_SHARE` 0.5): they are what Petra and
+Palmyra lived on, and the markets do not pay for them. The ledger has a
+Trade line and a Tolls line. `computeTrade` is cached per game, day and
+`g.tradeRev`; every order bumps the revision (`touchTrade`).
+
+**Merchants.** A court keeps 2 merchants, and one more for every three
+markets and shipyards it holds, 6 at most. A merchant ship (30 talents) is
+fitted out at a shipyard harbor of ours that is not besieged or blockaded;
+a caravan (20) at a market town of ours or the capital. It waits there until
+it is sent to a node, to collect or to steer down one of the node's lanes. A
+ship sails only between harbors (`merchantHopDays`); a caravan goes
+overland, on the shortest road over the land (3 days + its length / 16 px,
+90 at most). On the road it serves nowhere and takes no new orders. A new
+order at its own post takes effect at once. Recalled, it goes home; if home
+is lost, a ship goes to another shipyard harbor or any harbor of ours, a
+caravan to the capital, and with nowhere left it is lost.
+
+**Squadrons.** A squadron is given a mission in a node: guard (`protect`) or
+raid. It sails to the node's market town (a guard) or to the node's harbor
+nearest it that no enemy of its own holds (a raider, so that working the
+lanes is not by itself a blockade of the enemy's port), and serves while it
+rides at anchor in the node. Moving the fleet by hand ends the mission. The
+truce of §261 holds on the water too.
+
+**The AI.** A court builds at most one merchant every six months, and only
+while its income covers its expenses: at peace a ship (with 120 talents to
+spare) or else a caravan at its capital; at war only a caravan, with 300 to
+spare, because a merchant ship in a war is a prize. It posts each idle
+merchant where one more merchant collects the most (or, upstream of home,
+steers home, when that is worth more), with the days on the road counted
+against it, and reconsiders every January. Its squadrons, unless a naval
+invasion has them (§82): at war, hunt hostile raiders in the nodes it
+collects in, then raid the richest node an enemy collects in; at peace,
+stop raiding, and send a spare squadron to guard home. AI recruiting counts
+only half of a court's market trade as steady income (`t.marketTrade`),
+because the markets move with every war; without this, small courts that
+did well in trade recruited past what they could keep (the 614 harness
+spiral).
+
+**The Trade tab.** The realm panel has a Trade tab: what we take a month,
+home, where the roads end, merchants n / cap; buttons to fit out a ship or a
+caravan at each site; each merchant with where it is and Send… (the ten
+best markets it can reach, each with Collect +x a month and a → button for
+each lane) and Recall; our markets (worth, our share, what we take, with
+the powers there in the tooltip); and our squadrons, each with a market,
+Guard, Raid and Stand down. The province panel shows the province's market
+and its buttons to fit out a merchant there. The outliner has a Merchants
+line (always, so the tab can be found before the first merchant) that opens
+the tab.
+
+**The trade map.** The trade map mode colours each node in its own colour
+(a golden-angle palette), our provinces lighter, the market towns
+brightest, occupied ground striped. Over it each market town has a label
+with the market's worth and a gold bar of our share (home outlined in red),
+and each lane is an arrow as thick as the trade it carries, along the sea
+route when both towns are on the sea. Merchant ships on the road sail their
+route (§290); caravans walk their road; merchants at rest are drawn at
+their harbor or town with a count. `window._overlay.trade()` lists the
+labels and lanes drawn on the last frame.
+
+**Old saves.** A save from before this section has hulls at shipyards
+(`p.merchantShips`) and voyages: each becomes an idle merchant ship at its
+harbor (`migrateTradeState`, on revive). The voyages and the market gluts of
+v6.1 are dropped.
+
+**Balance.** The all-AI harness, 6 years, 10 seeds, before → after (player
+court in debt spiral / bankrupt, counted over seeds):
+
+| chapter | spiral | bankrupt | note |
+|---|---|---|---|
+| 931 BCE | 0 → 0 | 0 → 0 | Tyre +6 net |
+| 732 BCE | 0 → 0 | 1 → 2 | Assyria 43 → 30; KSH, ELA no longer bleed |
+| 597 BCE | 0 → 0 | 0 → 0 | |
+| 167 BCE | 0 → 0 | 4 → 5 | |
+| 67 BCE | 0 → 0 | 0 → 0 | Rome 44 → 57 |
+| 40 BCE | 2 → 2 | 4 → 6 | Parthia 11 → 19; at 20 seeds 9 → 12 |
+| 66 CE | 6 → 6 | 10 → 10 | Adiabene no longer bleeds |
+| 132 CE | 1 → 1 | 9 → 7 | |
+| 351 CE | 0 → 0 | 10 → 9 | |
+| 529 CE | 3 → 3 | 9 → 10 | |
+| 614 CE | 2 → 0 | 4 → 1 | |
+| 1948 | 10 → 10 | 10 → 10 | Egypt 14 → 1 net, Israel 8 → 4 |
+
+Accepted: Herod in 40 BCE (a Roman client living on the tolls of the
+incense road, which now pay half) is bankrupt in three more runs of twenty;
+a player who posts a merchant takes part of it back. In 1948 London
+collects the customs of the markets whose towns it holds (Aden, Khartoum,
+Cyprus): its trade rises from 6 to 30 a month and its aid package (§186)
+from 5 to 11; Moscow's fragment collects 6 on the Black Sea. Trade
+moves wealth toward the ends of the roads and the courts on
+the lanes (Rome, Parthia, the Sasanians, Himyar, Aksum), and away from
+courts whose income was a merchant marine. 1948 Egypt loses most of its net
+because the old Suez hulls are gone and the canal's market is shared with
+Britain; it is still solvent. New AI bleeding flags: Commagene (67 BCE) 6 →
+10 seeds, Moab (597 BCE) 1 → 4; many more went away (Kush, Elam, Ammon,
+Adiabene).
+
+- **Regression contract**: `smoke202.mjs` — the graph of every age (every
+  node run once, every lane downstream, every road reaches the end, the right
+  end); every chapter has an age; every province in one market, every market
+  with provinces, every town in its own market, and 1948's folded towns;
+  nothing made and nothing lost in 931, 66, 529 and 1948 (each node splits
+  its value exactly, takes in what upstream sends, and the courts earn what
+  is collected and stolen); Rome collects at home (Antioch in 66) and at the
+  end of the roads; the customs of Alexandria, not while besieged; every
+  other share steered, home where home is downstream; a merchant steering
+  Tyre's lane to Alexandria, with its 5%; the ledger's Trade line and trade
+  = markets + tolls; the Trade tab's view; a merchant and its order survive
+  a save; 18 months of all-AI 66 CE leave merchants of several courts on
+  valid orders, under every cap, valid squadron missions, and the flow still
+  exact. `smoke21.mjs` — a shipyard fits out a merchant ship (30 talents),
+  posted at home it adds trade income. `smoke37.mjs` — the cap; a ship sails
+  to Alexandria, serves nowhere on the way, takes no new orders, collects on
+  arrival; nowhere to steer from the end of the roads (Egypt, 1948); steering
+  from the Aegean; a new order at its post at once; recalled, it docks at
+  home; a caravan from the capital with a road to Damascus; a ship cannot
+  sail inland; a fallen home port sends it to another harbor, and with none
+  it is lost; old saves' hulls and voyages become idle merchant ships.
+  `smoke39.mjs` — a raider takes its share first and the market loses
+  exactly that; a squadron serves only at anchor in its node; a guard adds
+  power; raiding at peace costs opinion; at war a raider's odds of a prize,
+  lower under guard, and the ship taken; a raider rides off a harbor its
+  enemy does not hold, a guard off the market town; no court orders
+  another's squadron. `uitest58.mjs` in the Great Revolt — the outliner's
+  Merchants line opens Trade; the summary and our markets; a caravan made
+  ready and sent from the tab, on the road and said so; drawn further along
+  its road each day; a squadron guards and stands down from the tab; the
+  trade map labels the markets with home marked and draws the lanes; the
+  political map draws none. `uitest20.mjs` (the province panel's market
+  block fits out a ship), `uitest28.mjs` and `uitest56.mjs` (§290's ships,
+  now merchants) were moved to the new merchants. No page errors.
+
+## §293 — The walls and the fleet cost money, and both can be put away
+
+A fort cost nothing to keep. A warship cost 0.5 a month, but that was taken
+out of the treasury by `monthlyNavy`, out of sight: it was not in the
+ledger, not in the month's balance the topbar shows, not in `t.expenses`
+that the AI and the bankruptcy crisis read, and not in the AI's recruiting
+budget. An army cost its upkeep (0.35 a regiment, ×3 for the part over the
+force limit) and could be stood down (§21), but there was no way to keep a
+fort or a fleet and pay less for it. EU4 has both levers: forts cost
+maintenance and can be mothballed.
+
+**Forts cost money.** Every fort level costs `fortUpkeepPerLevel` (0.3) a
+month while its owner holds it. The ledger has a Fortresses line. In 66 CE
+Judaea's four forts (ten levels) cost 3 a month, against a balance of about
+5.
+
+**The fleet is on the ledger.** Naval maintenance (0.5 a ship, ×1.5 for an
+oil-fired pattern, §52) is a line of the ledger, part of the month's
+balance and of `t.expenses`. `monthlyNavy` only lets hulls rot past −150.
+
+**Mothballing a fort.** A fort of ours, held and not under siege, can be
+mothballed from the province panel or from the Defense tab's new Walls list
+(border forts first, each with its level, garrison and upkeep). A mothballed
+fort costs nothing, and its walls do not hold: `effectiveFort` is 0, so a
+siege takes it like an open town (about ten days), and the AI's war
+planner sees no fort there. Its garrison goes home, a third a month. Manned
+again, it costs its upkeep and its walls hold at once, but the garrison
+grows back at the usual 5% a month: a fort manned the week the enemy comes
+is a fort with nobody in it. The tower on the map is drawn faded.
+
+**Laying a squadron up in ordinary.** A squadron at anchor in a harbor of
+ours, with nobody aboard and no enemy squadron off the harbor, can be laid
+up (the anchor button on its outliner row). It costs a quarter of its
+upkeep. It cannot sail, carry troops, take a trade mission or merge; it
+fights at half strength if an enemy squadron finds it; and if the harbor
+falls, it is lost with it. Recommissioned, it signs on crews for 30 days at
+the full upkeep, fighting at three quarters, and then sails. A new hull
+from the yard joins a squadron in commission, never one laid up. It is drawn
+faded on the map.
+
+**The AI.** `aiUpkeep` runs before recruiting. At war, or with rebels on its
+land, a court mans every fort and recommissions every squadron. At peace it
+mothballs every fort that faces no other court (its own provinces, its
+clients and its overlord around it), except the capital's. A court in the
+red (income under expenses, treasury under 50) mothballs its border forts
+too and lays up its idle squadrons in harbor. Back in surplus (treasury
+over 150), it recommissions a squadron when the month's surplus is three
+times the upkeep it adds. Recruiting pays the fleet and the walls first:
+the regiments may cost 0.65 of steady income less the naval and fort
+upkeep.
+
+**Balance.** The all-AI harness, 6 years, 10 seeds, the trade commit (§292)
+→ this section (player court in debt spiral / bankrupt, counted over seeds;
+lowest treasury on average):
+
+| chapter | spiral | bankrupt | lowest treasury | note |
+|---|---|---|---|---|
+| 931 BCE | 0 → 0 | 0 → 0 | 89 → 89 | |
+| 732 BCE | 0 → 0 | 2 → 2 | −76 → −61 | Moab and Ammon survive more often |
+| 597 BCE | 0 → 0 | 0 → 0 | 50 → 51 | |
+| 167 BCE | 0 → 0 | 5 → 3 | −37 → −21 | |
+| 67 BCE | 0 → 0 | 0 → 0 | −68 → −35 | |
+| 40 BCE | 2 → 3 | 6 → 9 | −112 → −142 | 20 seeds: 12 → 13 bankrupt, −112 → −108 |
+| 66 CE | 6 → 6 | 10 → 9 | −220 → −202 | Rome 125 → 111 net (its fleet on the ledger) |
+| 132 CE | 1 → 1 | 7 → 7 | −118 → −118 | |
+| 351 CE | 0 → 0 | 9 → 9 | −92 → −94 | |
+| 529 CE | 3 → 3 | 10 → 10 | −150 → −151 | |
+| 614 CE | 0 → 0 | 1 → 1 | −38 → −18 | Byzantium 147 → 127 net |
+| 1948 | 10 → 10 | 10 → 10 | −595 → −568 | Israel, Iraq, Germany no longer bleed |
+
+The 40 BCE line was checked again at 20 seeds, where the difference is one
+run in twenty: noise, not a cost of the walls. The big fleets (Rome,
+Byzantium) pay for their hulls on the ledger now, as they always paid off it.
+
+- **Regression contract**: `smoke203.mjs` in 66 CE — Judaea's ten fort levels
+  cost 3 and Rome's fourteen ships 7 on the ledger; the treasury moves by the
+  month's balance with the fleet in it, and `t.expenses` holds both.
+  Machaerus mothballed: it saves 0.6, its walls do not hold and stay, the
+  garrison goes home to nobody, three Nabataean regiments take it in ten
+  days, nobody mans or mothballs it under siege, and the enemy's hold is not
+  ours to man; manned again its walls hold and its garrison grows back
+  slowly; Rome's fort is not ours. A squadron of four laid up at Joppa: from
+  2 a month to 0.5; it cannot sail, embark or guard the lanes; it fights at
+  half; recommissioned it waits 30 days at full upkeep and then sails; not
+  with troops aboard, not in a harbor not ours; laid up and Joppa falls, it
+  is lost. The AI: Rome at peace mothballs its interior forts and not its
+  capital or a border fort; in the red the rest and its idle squadrons; back
+  in surplus they are recommissioned; at war everything is manned. A save
+  keeps it. `uitest59.mjs` in the Great Revolt — the province panel's
+  Mothball button; the Defense tab's Walls list with its upkeep and Man
+  button; the outliner's anchor button lays a squadron up and recommissions
+  it; the ledger's Fortresses and Naval maintenance lines; no page errors.
+
+## §294 — The fleets read at a glance
+
+Four things about the fleets were hard to read. A warship and a merchant
+ship were both a hull with a small dark count beside it. A selected fleet
+had only the outliner's row of unlabelled icons, and every fleet in Joppa
+was listed as "Joppa". A sea battle was a notice and nothing on the map. And
+an army that embarked kept its banner on the shore it had left, while its
+ship sailed away without it.
+
+**The ensign.** Every warship flies an ensign above its hull: a short staff
+down to the masthead and a plate in its court's colour with a ship and its
+hull count. A merchant ship flies none, so the two are never confused. The
+ensign is gold-rimmed when the squadron is selected (or an army aboard it
+is), and grey with an anchor while the squadron is laid up in ordinary
+(§293). A click on the ensign selects the squadron, as a click on the hull
+does.
+
+**The army aboard rides its ship.** An army aboard a fleet has no banner on
+land. Its men, with the face of the arm that leads it, ride on a darker end
+of the ensign of the ship that carries it, and move with the ship.
+
+**Sea fights on the map.** Where hostile squadrons trade broadsides,
+`fleetsDaily` keeps the fight on `g.seaFights` by its anchor: the two
+courts in a stable order, each side's hulls now, the hulls each has lost,
+and since when. The map draws a ring of churned water under the ships and a
+battle disc beside the anchor with each side's hulls in its colour, while
+broadsides were traded in the last two days. Three days after the last, the
+fight is gone from the save. The notice stays.
+
+**The fleet panel.** Selecting a squadron of ours (on the map or in the
+outliner) opens the fleet panel in the province panel's berth: its flag and
+name, its hulls and pattern, where it is (at anchor, under sail to a named
+harbor with the days left, laid up, signing on crews), its admiral, the
+troops aboard by name, its upkeep, and its trade mission. Its orders are
+labelled buttons that say why when they cannot be given: Embark troops,
+Land troops, Merge here, Hire admiral, Refit, Lay up or Recommission, and
+Trade mission (the Trade tab). Escape, or the ✕, deselects the squadron and
+closes the panel; opening a province or the realm panel gives the berth
+back. The outliner names each squadron, with its harbor (or where it sails)
+beside the name, and a selected squadron's buttons take a line of their
+own.
+
+- **Regression contract**: `smoke204.mjs` in 66 CE — a Judaean and a
+  Nabataean squadron at Caesarea fight and the fight is kept with its sides,
+  hulls and losses; a second day keeps the sides' order and adds the losses;
+  parted, the fight shows for two days, then not, and after three is gone
+  from the save; squadrons at peace do not fight; getNavy gives where a
+  squadron is bound, who is aboard, and its mission's market by name; a save
+  keeps a live fight. `uitest60.mjs` in the Great Revolt — a squadron at
+  Joppa flies an ensign above its hull and a merchant ship beside it flies
+  none; marines on the shore embark and leave the shore, and ride the
+  ensign; the outliner selects the squadron and the fleet panel names it,
+  where it is, the marines, the upkeep (2.5) and labelled orders; the
+  outliner names it; Land troops, then Lay up, from the panel, and the panel
+  says so; Recommission; Escape closes it; a Roman squadron at Joppa at war
+  draws a battle disc with both sides' hulls. No page errors.

@@ -35,7 +35,7 @@
 import {
   num, clamp, devTotal, regCount, armiesOf, isHostile, sameSide, canEnter,
   hopDays, genSpeed, armSpeedOf, splitArmyCore, mergeInto, sideStats, airNet, airPips, armorPips, armPips,
-  warGoalInfo, sideComponents, tagDef, ceasefireHolds, isHumanChair, battleScoreFor, resolveTagMult,
+  warGoalInfo, sideComponents, tagDef, ceasefireHolds, isHumanChair, battleScoreFor, resolveTagMult, effectiveFort,
 } from './military.js';
 import { doctrinePips } from '../data/tech.js';
 import { MOUNTED_TERRAIN } from '../data/units.js';
@@ -442,7 +442,7 @@ function warAgainst(wars, tag, other) {
   return null;
 }
 function siegeDays(ctx, p, regs, byTag) {
-  const fort = p.fort | 0;
+  const fort = effectiveFort(p);
   if (fort <= 0) return 10;
   const need = Math.max(1, Math.ceil(num(p.garrison) / 1000));
   if (regs < need) return Infinity;
@@ -618,7 +618,7 @@ function planBattle(ctx, W, task, free) {
 function planSiege(ctx, W, task, free) {
   const p = ctx.byId(task.prov);
   if (!p) return null;
-  const need = (p.fort | 0) > 0 ? Math.max(1, Math.ceil(num(p.garrison) / 1000)) : 1;
+  const need = effectiveFort(p) > 0 ? Math.max(1, Math.ceil(num(p.garrison) / 1000)) : 1;
   // Only fight for the province here if its defenders are beatable.
   const standing = W.hostilesAt.get(task.prov) || [];
   const cands = byArrival(W, free, task.prov, HORIZON);
@@ -705,7 +705,7 @@ function evade(ctx, W, army) {
     const terr = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
     const score = (safe ? 40 : 0) + Math.min(first, 20) + menOf(friends.concat(mineThere)) / 1000
       + (p.owner === W.tag ? 12 : 0) + (terr ? num(terr.defBonus, 0) * 4 : 0)
-      + ((p.fort | 0) > 0 ? 3 : 0) - days * 0.8;
+      + (effectiveFort(p) > 0 ? 3 : 0) - days * 0.8;
     if (score > bestScore) { bestScore = score; best = id; }
   }
   if (best) return marchTo(ctx, army, best, tr);
@@ -713,7 +713,7 @@ function evade(ctx, W, army) {
   let fort = 0, fd = Infinity;
   for (const [id, days] of tr.dist) {
     const p = ctx.byId(id);
-    if (p && p.controller === W.tag && (p.fort | 0) > 0 && days < fd) { fd = days; fort = id; }
+    if (p && p.controller === W.tag && effectiveFort(p) > 0 && days < fd) { fd = days; fort = id; }
   }
   if (fort && fort !== army.prov) return marchTo(ctx, army, fort, tr);
   return false;
@@ -764,7 +764,7 @@ function idleOrders(ctx, W, army) {
       if (Number.isFinite(r)) closeness = Math.max(closeness, 30 - r);
     }
     const terr = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
-    const score = closeness * 0.5 + devTotal(p) * 0.15 + (p.fort | 0) * 1.5
+    const score = closeness * 0.5 + devTotal(p) * 0.15 + effectiveFort(p) * 1.5
       + (terr ? num(terr.defBonus, 0) * 2 : 0) - days * 0.4;
     if (score > bestScore) { bestScore = score; target = id; }
   }

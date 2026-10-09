@@ -34,7 +34,7 @@ after that: the first visit saves every file of the game in the browser
 own. Saves stay on the device. Only the optional cloud and online multiplayer
 need the network.
 
-**Settings.** The faders button in the topbar (or **O**, or the Settings tile
+**Settings.** The gear in the topbar (or **O**, or the Settings tile
 on a phone's tools sheet) opens the settings: the main, effects and music
 volumes, the button clicks, the song, the yearly autosave, how long notices
 stay, and reduce motion (SPEC §289). They are kept in this browser, not in
@@ -45,6 +45,35 @@ the water, around capes and through straits, a little further each moment,
 turned to their course and trailing a wake (SPEC §290). A fleet's order line
 follows the same water to a ring at its harbor. The traders are a corbita
 before 300, a lateen trader after it, and a steamer in 1948.
+
+**Trade, as in EU4.** Every province belongs to one of 27 markets, from
+Merv and Charax to Rome. A market is worth what its provinces produce, plus
+what flows into it from upstream, and every court with trade power there
+(its provinces, its merchants, its warships) holds a share. A court collects
+its share in its home market and wherever it posts a merchant to collect;
+everywhere else its share is steered downstream, toward home. The roads end
+at Tyre, Rome, Byzantion or Suez, by age. Merchant ships are fitted out at a
+shipyard harbor and caravans at a market town or the capital; send them from
+the Trade tab of the realm panel (or the Merchants line of the outliner) to
+collect or to steer. Warships guard a market's lanes or raid them, and a
+raider at war can take the enemy's merchant ships. The trade map mode shows
+each market, what it is worth, and the lanes as arrows (SPEC §292).
+
+**Upkeep.** Armies, fleets and forts all cost money every month, and the
+ledger shows each (Army maintenance, Naval maintenance, Fortresses). A fort
+can be mothballed (the province panel, or the Walls list in the Defense tab):
+it costs nothing, but a siege takes it like an open town, and when it is
+manned again its garrison takes months to grow back. A squadron in a harbor
+of ours can be laid up in ordinary (the anchor button in the outliner): a
+quarter of the upkeep, but it cannot sail, fights at half strength, and is
+lost if the harbor falls; recommissioning takes 30 days (SPEC §293).
+
+**Fleets.** A warship flies an ensign in its court's colour with its hull
+count (a merchant ship flies none), and an army aboard rides on it instead
+of standing on the shore it left. A sea fight shows on the map where it is
+fought, with each side's hulls. Selecting a squadron opens the fleet panel:
+where it is, its admiral, the troops aboard, its upkeep, and labelled orders
+(embark, land, merge, admiral, refit, lay up, trade mission) (SPEC §294).
 
 **The score.** Ten composed songs now join the generative score, each age with
 its own for peace and for war: *Song of the Well*, *The Hill Country*, *By the
@@ -848,7 +877,8 @@ static site, the zero dependencies, or the missing build step changes.
   instead of firing after their war has already ended.
 - Coastal provinces can build shipyards and commission a five-berth merchant
   marine. Civilian hulls earn trade while their home port is controlled, open,
-  and unblocked. Future infrastructure stays out of earlier building lists
+  and unblocked. (Since SPEC §292 the shipyard fits out merchant ships that
+  are sent to the markets instead.) Future infrastructure stays out of earlier building lists
   until the required technology exists.
 - The 1948 chapter no longer freezes at Rhodes: the armed armistice suppresses
   random border wars while the Arab League's 1950 joint-defense treaty builds

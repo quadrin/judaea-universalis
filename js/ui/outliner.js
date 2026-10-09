@@ -28,7 +28,7 @@ export function armyCompositionHtml(a) {
 }
 
 export function createOutliner(el, {
-  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick,
+  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick, onTradeClick,
 }) {
   let ctx = null;
   let actions = null;
@@ -102,9 +102,20 @@ export function createOutliner(el, {
       if (!fa.classList.contains('disabled')) runArmyAction('hireAdmiral', Number(fa.dataset.fleetAdmiral));
       return;
     }
+    // The merchants' line opens the Trade tab (SPEC §292).
+    if (e.target.closest('[data-trade-open]')) { if (onTradeClick) onTradeClick(); return; }
     const fg = e.target.closest('[data-fleet-merge]');
     if (fg) {
       if (!fg.classList.contains('disabled')) runArmyAction('mergeAllFleets', Number(fg.dataset.fleetMerge));
+      return;
+    }
+    // Lay the squadron up in ordinary, or recommission it (SPEC §293).
+    const flu = e.target.closest('[data-fleet-layup]');
+    if (flu) {
+      if (!flu.classList.contains('disabled') && actions && typeof actions.layUpFleet === 'function') {
+        try { actions.layUpFleet(Number(flu.dataset.fleetLayup), flu.dataset.on === '1'); } catch (err) { warnOnce('layUpFleet', err); }
+        refresh(true);
+      }
       return;
     }
     const fm = e.target.closest('[data-fleet-modernize]');
@@ -275,7 +286,8 @@ export function createOutliner(el, {
         const sel = g.ui && g.ui.selectedFleet === f.id;
         const adm = f.admiral ? `\nAdmiral: ${f.admiral.name} (seamanship ${f.admiral.maneuver})` : '';
         const tt = `${f.name} — ${f.ships} ships of ${f.genName || 'the old pattern'} (${fmtMen(f.capacity)} capacity)${adm}\n`
-          + (f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
+          + (f.laidUp ? 'Laid up in ordinary at ' + f.provName : f.recommission ? 'Signing on crews at ' + f.provName + ', ' + f.recommission + ' days more' : f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
+          + (Number.isFinite(f.upkeep) ? `\nUpkeep ${f.upkeep.toFixed(1)} talents a month` : '')
           + (f.aboardMen ? `\nCarrying ${fmtMen(f.aboardMen)} men` : '')
           + '\nSelect, then right-click a coastal province to sail.';
         const admTT = f.canHireAdmiral
@@ -291,9 +303,14 @@ export function createOutliner(el, {
             + `(${f.mergeCount} fleet${f.mergeCount === 1 ? '' : 's'}, ${f.mergeShips} `
             + `hull${f.mergeShips === 1 ? '' : 's'}) — a mixed line fights at its oldest pattern`
           : (f.whyMerge || 'No other squadron of ours rides at this anchor');
+        const layTT = f.laidUp
+          ? `Recommission: sign on crews (30 days), and the squadron costs its full upkeep again (+${(f.layUpSave || 0).toFixed(1)} a month)`
+          : f.canLayUp
+            ? `Lay up in ordinary: crews paid off, a quarter of the upkeep (save ${(f.layUpSave || 0).toFixed(1)} a month). It cannot sail, fights at half strength if found, and is lost if the harbor falls`
+            : (f.whyLayUp || 'The squadron cannot be laid up now');
         html += `
           <div class="ol-row ol-fleet${sel ? ' sel' : ''}" data-fleet="${f.id}" data-tt="${esc(tt)}">
-            <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.provName)}</span>
+            <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.name)}</span>
             <span class="ol-men">${f.ships}</span>
             ${sel ? `<span class="ol-acts">`
     + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('shield')}</button>` : '')
@@ -301,20 +318,29 @@ export function createOutliner(el, {
     + `<button class="ol-act${f.canMerge ? '' : ' disabled'}" data-fleet-merge="${f.id}" data-tt="${esc(mergeTT)}">${icon('ship')}</button>`
     + `<button class="ol-act${f.canHireAdmiral ? '' : ' disabled'}" data-fleet-admiral="${f.id}" data-tt="${esc(admTT)}">${icon('helmet')}</button>`
     + `<button class="ol-act${f.canModernize ? '' : ' disabled'}" data-fleet-modernize="${f.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>`
-    + `</span>` : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}
+    + `<button class="ol-act${f.laidUp || f.canLayUp ? '' : ' disabled'}${f.laidUp ? ' on' : ''}" data-fleet-layup="${f.id}" data-on="${f.laidUp ? '0' : '1'}" data-tt="${esc(layTT)}">${icon('anchor')}</button>`
+    + `</span>` : `<span class="ol-sub">${f.laidUp ? icon('anchor', 'icon-row') + ' laid up · ' + esc(f.provName)
+      : f.recommission ? 'crews ' + f.recommission + 'd · ' + esc(f.provName)
+        : f.sailing ? '→ ' + esc(f.destName || f.provName)
+          : esc(f.provName)}${f.aboardMen ? ' · ' + fmtMen(f.aboardMen) : ''}</span>`}
           </div>`;
       }
     }
-    if (navy && navy.merchantCount > 0) {
-      const atSea = (navy.voyages || []).length;
-      const inactive = Math.max(0, navy.merchantCount - (navy.merchantActive || 0) - atSea);
-      const tt = `${navy.merchantCount} civilian ship${navy.merchantCount === 1 ? '' : 's'} in the merchant marine`
-        + (atSea ? `\n${atSea} at sea: ` + navy.voyages.map((v) => `${v.fromName} → ${v.toName} (${v.daysLeft}d)`).join(', ') : '')
-        + (inactive ? `\n${inactive} idle under occupation, siege or blockade` : (atSea ? '' : '\nEvery home port is trading'));
-      html += `<div class="ol-sec">Merchant Marine <span class="ol-count">${navy.merchantCount}</span></div>
-        <div class="ol-row ol-merchant" data-tt="${esc(tt)}">
-          <span class="ol-name">${icon('ship', 'icon-row')} Civilian shipping</span>
-          <span class="ol-sub">${navy.merchantActive || 0} active${atSea ? ' · ' + atSea + ' at sea' : ''}</span>
+    // The merchants (SPEC §292): how many we keep, how many serve at a
+    // market now, how many are on the road. A click opens the Trade tab, so
+    // the line is there before the first merchant too.
+    if (navy) {
+      const n = navy.merchantCount || 0;
+      const out = navy.merchantsOut || 0;
+      const idle = Math.max(0, n - (navy.merchantActive || 0) - out);
+      const tt = (n ? `${n} merchant${n === 1 ? '' : 's'}: ${navy.merchantActive || 0} at work in the markets`
+        + (out ? `, ${out} on the road` : '') + (idle ? `, ${idle} waiting at home for orders` : '') + '.'
+        : 'No merchants yet. Fit one out to collect in a market abroad, or to steer its trade toward us.')
+        + '\nClick for the Trade tab.';
+      html += `<div class="ol-sec">Merchants <span class="ol-count">${n}</span></div>
+        <div class="ol-row ol-merchant" data-trade-open="1" data-tt="${esc(tt)}">
+          <span class="ol-name">${icon('coins', 'icon-row')} Trade</span>
+          <span class="ol-sub">${n ? (navy.merchantActive || 0) + ' at work' + (out ? ' · ' + out + ' on the road' : '') + (idle ? ' · ' + idle + ' idle' : '') : 'none yet'}</span>
         </div>`;
     }
 

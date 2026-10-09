@@ -107,7 +107,7 @@ button {
 
 /* Shared parchment */
 .parchment,
-#province-panel, #nation-panel, .ev-card, .go-card, .toast {
+#province-panel, #nation-panel, #fleet-panel, .ev-card, .go-card, .toast {
   background:
     repeating-linear-gradient(0deg, rgba(120, 90, 40, 0.05) 0 3px, transparent 3px 6px),
     repeating-linear-gradient(90deg, rgba(120, 90, 40, 0.04) 0 4px, transparent 4px 9px),
@@ -180,6 +180,9 @@ button {
   cursor: pointer;
 }
 .tb-bell svg { width: 11px; height: 11px; stroke-width: 2.6; }
+/* The mission bell (SPEC §291) rides high beside the flag, a size larger. */
+.tb-mbell { width: 18px; height: 18px; margin-left: -10px; align-self: flex-start; margin-top: 5px; position: relative; z-index: 1; }
+.tb-mbell svg { width: 12px; height: 12px; }
 .tb-bell:hover { filter: brightness(1.25); }
 .tb-bell.ring { animation: tb-bell-ring 0.9s ease-out 1; transform-origin: 50% 20%; }
 @keyframes tb-bell-ring {
@@ -210,6 +213,7 @@ button {
   letter-spacing: 0.08em;
   color: var(--parch);
   font-size: 15px;
+  white-space: nowrap; /* a narrow window scrolls the bar; the date never breaks (SPEC §291) */
 }
 .tb-date.paused { color: var(--text-dim); }
 /* A cease-fire month (SPEC §261): the clock still runs, the war does not. */
@@ -247,12 +251,12 @@ button {
 
 /* --------------------------------------------------------- gold panels --- */
 .gold-frame,
-#province-panel, #nation-panel, #outliner, .ev-card, .go-card {
+#province-panel, #nation-panel, #fleet-panel, #outliner, .ev-card, .go-card {
   border: 1px solid var(--gold);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.15);
   position: relative;
 }
-#province-panel::before, #nation-panel::before, .ev-card::before, .go-card::before {
+#province-panel::before, #nation-panel::before, #fleet-panel::before, .ev-card::before, .go-card::before {
   content: '';
   position: absolute;
   top: 3px; left: 3px;
@@ -261,7 +265,7 @@ button {
   border-left: 2px solid var(--gold);
   pointer-events: none;
 }
-#province-panel::after, #nation-panel::after, .ev-card::after, .go-card::after {
+#province-panel::after, #nation-panel::after, #fleet-panel::after, .ev-card::after, .go-card::after {
   content: '';
   position: absolute;
   bottom: 3px; right: 3px;
@@ -312,6 +316,30 @@ button {
   padding: 0 0 12px;
   font-size: 13.5px;
 }
+
+/* The fleet panel (SPEC §294) takes the same berth for a selected squadron. */
+#fleet-panel {
+  position: absolute;
+  top: 56px;
+  left: 10px;
+  width: 300px;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
+  border-radius: 4px;
+  padding: 0 0 12px;
+  font-size: 13.5px;
+}
+.fp-sub { padding: 0 14px 6px; color: var(--text-dim); font-size: 12px; }
+.fp-rows { padding: 2px 14px 6px; }
+.fp-row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid rgba(201, 162, 39, 0.12); }
+.fp-row .pp-k { color: var(--text-dim); }
+.fp-row .pp-v { text-align: right; }
+.fp-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 6px 14px 0; }
+.fp-acts .btn { padding: 5px 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.fp-acts .btn .icon { width: 13px; height: 13px; }
+.fp-acts .btn.disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Nation (realm) panel shares the province panel's berth; the phone media
    block below turns both into bottom sheets (so this must stay above it). */
@@ -627,6 +655,11 @@ button {
    and the mix stay readable instead of being squeezed to an ellipsis. */
 .ol-army.sel { flex-wrap: wrap; }
 .ol-army.sel .ol-acts { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 4px; margin-top: 2px; }
+/* A selected squadron's orders take their own line too (SPEC §294); its row
+   names the squadron, and the harbor (or where it sails) rides beside. */
+.ol-fleet.sel { flex-wrap: wrap; }
+.ol-fleet.sel .ol-acts { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 4px; margin-top: 2px; }
+.ol-fleet .ol-sub { font-size: 11px; max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ol-sub { color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .ol-sub.pos { color: #8fbf7a; }
 .ol-sub.neg { color: #e06a5a; }
@@ -1819,6 +1852,14 @@ button {
   font-size: 12.5px;
 }
 .pp-assault .icon { width: 13px; height: 13px; }
+/* province panel — mothball or man the fort (SPEC §293) */
+.pp-mothball {
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px 6px;
+  font-size: 12px;
+}
+.pp-mothballed { color: var(--text-dim, #a89a7c); font-size: 11px; }
 
 /* outliner — mini action buttons on the selected army row */
 .ol-acts { display: inline-flex; gap: 3px; margin-left: 1px; flex: none; }
@@ -1841,6 +1882,11 @@ button {
   color: var(--text-light);
   filter: none;
 }
+/* the realm panel's walls (SPEC §293) */
+.np-fort-mb .np-tr-mk { opacity: 0.6; }
+.np-fort-cost { min-width: 34px; text-align: right; color: var(--text-dim); font-size: 11.5px; }
+/* a squadron laid up in ordinary (SPEC §293): the anchor button lit */
+.ol-act.on { color: var(--gold-bright); border-color: var(--gold); background: rgba(201, 162, 39, 0.18); }
 .ol-disband { color: #d98779; border-color: rgba(196, 86, 70, 0.35); }
 .ol-disband:hover { color: #ffb1a3; border-color: #cf6654; }
 
@@ -1946,7 +1992,7 @@ html, body {
   .tb-date { font-size: 12px; letter-spacing: 0.02em; }
 
   /* province & nation panels -> bottom sheets: full width, inner scroll */
-  #province-panel, #nation-panel {
+  #province-panel, #nation-panel, #fleet-panel {
     top: auto;
     left: 0;
     right: 0;
@@ -1965,13 +2011,13 @@ html, body {
   }
   #nation-panel { max-height: 70vh; max-height: 70dvh; } /* denser panel gets more room */
   #province-panel::before, #province-panel::after,
-  #nation-panel::before, #nation-panel::after { content: none; } /* no corner accents on sheets */
+  #nation-panel::before, #nation-panel::after, #fleet-panel::before, #fleet-panel::after { content: none; } /* no corner accents on sheets */
   /* a long value (three communities, "22 provinces · 183 dev") used to wrap
      back under its own label; on a sheet the row stacks instead */
   #province-panel .pp-row, #nation-panel .pp-row { flex-wrap: wrap; row-gap: 1px; }
   #province-panel .pp-row .pp-v, #nation-panel .pp-row .pp-v { text-align: right; }
   #province-panel .pp-row .pp-k, #nation-panel .pp-row .pp-k { flex: 1 0 42%; }
-  #province-panel .pp-head, #nation-panel .pp-head { position: relative; padding-top: 13px; }
+  #province-panel .pp-head, #nation-panel .pp-head, #fleet-panel .pp-head { position: relative; padding-top: 13px; }
   #province-panel .pp-head::after, #nation-panel .pp-head::after { /* grab handle: swipe down here to close */
     content: '';
     position: absolute;
@@ -3580,7 +3626,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
    width to spare instead, so the panels stand on the left and the map keeps
    its right half whole (SPEC §103). */
 @media (pointer: coarse) and (max-width: 900px) and (orientation: landscape) {
-  #province-panel, #nation-panel {
+  #province-panel, #nation-panel, #fleet-panel {
     top: calc(46px + env(safe-area-inset-top));
     bottom: 0;
     left: 0;
@@ -3768,6 +3814,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 #nation-panel[data-tab='missions'] [data-tab]:not([data-tab='missions']),
 #nation-panel[data-tab='court'] [data-tab]:not([data-tab='court']),
 #nation-panel[data-tab='tech'] [data-tab]:not([data-tab='tech']),
+#nation-panel[data-tab='trade'] [data-tab]:not([data-tab='trade']),
 #nation-panel[data-tab='war'] [data-tab]:not([data-tab='war']),
 #nation-panel[data-tab='faith'] [data-tab]:not([data-tab='faith']),
 #nation-panel[data-tab='world'] [data-tab]:not([data-tab='world']) { display: none !important; }
@@ -3847,14 +3894,63 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
    ============================================================ */
 #settings-modal { position: fixed; inset: 0; z-index: 10000; pointer-events: auto; }
 #settings-modal.hidden { display: none; }
-.st-card {
+/* The card hangs below the topbar, never over it (SPEC §291): the title and
+   the Defaults/Close row stay put, and only the body between them scrolls,
+   with a scrollbar that shows it does. */
+#settings-modal .st-card {
+  top: 56px;
+  transform: translateX(-50%);
   width: min(460px, calc(100vw - 24px));
-  max-height: calc(100vh - 32px);
-  max-height: calc(100dvh - 32px);
-  overflow-y: auto;
+  max-height: calc(100vh - 68px);
+  max-height: calc(100dvh - 68px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   color: var(--ink);
 }
-.st-sec + .st-sec { margin-top: 4px; }
+#settings-modal .st-card { animation: st-in 0.2s ease-out; }
+@keyframes st-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%); }
+}
+.st-card .peace-title { flex: none; }
+.st-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin-right: -8px;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(85, 69, 46, 0.55) rgba(85, 69, 46, 0.1);
+}
+.st-body::-webkit-scrollbar { width: 8px; }
+.st-body::-webkit-scrollbar-track { background: rgba(85, 69, 46, 0.1); border-radius: 4px; }
+.st-body::-webkit-scrollbar-thumb { background: rgba(85, 69, 46, 0.55); border: 0; border-radius: 4px; }
+.st-body { display: grid; grid-template-columns: 1fr; grid-template-areas: "sound" "music" "game" "display"; align-content: start; }
+.st-sound { grid-area: sound; }
+.st-music { grid-area: music; }
+.st-game { grid-area: game; }
+.st-display { grid-area: display; }
+/* A wide screen gets two columns, so the whole card fits a short window. */
+@media (min-width: 860px) {
+  #settings-modal .st-card { width: min(820px, calc(100vw - 32px)); }
+  .st-body { grid-template-columns: 1fr 1fr; grid-template-areas: "sound music" "game display"; column-gap: 34px; }
+}
+/* A short window tightens the rows. */
+@media (max-height: 620px) {
+  .st-row { min-height: 30px; }
+  .st-card .peace-title { margin-bottom: 4px; padding-bottom: 4px; font-size: 18px; }
+  .st-card .peace-sec { margin-top: 6px; }
+  #settings-modal .st-card { padding-top: 14px; padding-bottom: 14px; }
+}
+/* A portrait phone's topbar is two rows: hang the card below both. */
+@media (max-width: 620px) and (orientation: portrait),
+       (pointer: coarse) and (max-width: 900px) and (orientation: portrait) {
+  #settings-modal .st-card {
+    top: calc(84px + env(safe-area-inset-top));
+    max-height: calc(100dvh - 96px - env(safe-area-inset-top));
+  }
+}
 .st-row {
   display: grid;
   grid-template-columns: 9.5em 1fr auto;
@@ -3937,7 +4033,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .st-seg-btn + .st-seg-btn { border-left: 1px solid rgba(43, 32, 21, 0.3); }
 .st-seg-btn.on { color: var(--parch); background: linear-gradient(180deg, var(--wood-hi), var(--wood-light)); }
-.st-foot { display: flex; gap: 8px; margin-top: 12px; }
+.st-foot { display: flex; gap: 8px; margin-top: 12px; flex: none; }
 .st-foot .btn { flex: 1; margin-top: 0; }
 @media (pointer: coarse) {
   .st-row { min-height: 44px; }
@@ -3955,3 +4051,36 @@ html.ju-reduce-motion *, html.ju-reduce-motion *::before, html.ju-reduce-motion 
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
 }
+
+/* ============================================================
+   Trade (SPEC §292): the realm panel's Trade tab
+   ============================================================ */
+.np-tr-sum { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; margin: 2px 0 8px; }
+.np-tr-sum .icon { vertical-align: -2px; }
+.np-tr-build { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.np-tr-head {
+  font-variant: small-caps; letter-spacing: 0.06em; font-size: 12.5px; font-weight: 600;
+  color: var(--ink-soft); margin: 10px 0 3px; border-bottom: 1px dotted rgba(85, 69, 46, 0.35);
+}
+.np-tr-none { font-size: 12px; font-style: italic; color: var(--ink-soft); padding: 2px 0; }
+.np-tr-m, .np-tr-t {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 12.5px; padding: 3px 0; border-bottom: 1px solid rgba(85, 69, 46, 0.12);
+}
+.np-tr-mk i, .np-tr-tk i { color: var(--ink-soft); font-size: 11.5px; }
+.np-tr-acts { display: inline-flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.np-tr-btn {
+  font-size: 11.5px; padding: 2px 7px; border-radius: 3px; color: var(--parch);
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood-light)); border: 1px solid var(--gold-dim);
+  white-space: nowrap;
+}
+.np-tr-btn:hover { border-color: var(--gold); filter: brightness(1.15); }
+.np-tr-btn.disabled { opacity: 0.45; cursor: default; }
+.np-tr-sel { font-family: inherit; font-size: 11.5px; max-width: 120px; background: var(--parch-hi); border: 1px solid rgba(43, 32, 21, 0.4); border-radius: 3px; }
+.np-tr-pick { margin: 2px 0 6px 18px; padding-left: 8px; border-left: 2px solid var(--gold-dim); }
+.np-tr-row { display: grid; grid-template-columns: 1fr 52px 48px 56px; gap: 6px; font-size: 12.5px; padding: 2px 0; }
+.np-tr-row > span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.np-tr-th { color: var(--ink-soft); font-size: 11px; font-variant: small-caps; letter-spacing: 0.05em; }
+.np-tr-node { color: var(--ink); text-decoration: underline dotted; text-underline-offset: 2px; font-size: 12.5px; padding: 0; }
+.np-tr-node:hover { color: var(--red-deep); }
+#nation-panel .np-tr-row .pos { color: var(--green); }

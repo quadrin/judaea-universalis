@@ -23,7 +23,7 @@
 import {
   num, clamp, armiesOf, armiesInProv, regCount, isHostile, sameSide, canEnter,
   issueMove, findPath, bfsDistances, hasBuilding, devTotal, disciplineOf,
-  engageIfNeeded, splitArmyCore, tagDef, ceasefireHolds,
+  engageIfNeeded, splitArmyCore, tagDef, ceasefireHolds, effectiveFort,
 } from './military.js';
 import {
   isCoastal, seaHopDays, buildShipCore, issueFleetMove, embarkCore,
@@ -116,7 +116,7 @@ function pickBeachhead(ctx, tag, enemy, portId) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.controller !== enemy || !isCoastal(ctx, i)) continue;
     if (!canEnter(ctx, tag, i)) continue;
-    const score = (p.fort | 0) * 10
+    const score = effectiveFort(p) * 10
       + hostileStackStrength(ctx, tag, i) / 800
       + num(p.garrison) / 800
       + navalStrengthOf(ctx, tag, { hostile: true, at: i }) * 4 // never land into a waiting squadron

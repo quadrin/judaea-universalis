@@ -73,6 +73,9 @@ const TABS = [
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'What history asks of this realm: the chapter it is living through, and the mission tree branch by branch with what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, their favor and their ground, the advisors, what is brewing, and the decisions in your gift.' },
   { id: 'tech', label: 'Technology', term: 'tabTech', tt: 'The ladders and the silver that buys them: treasury, debt, the three levels, the world’s way of doing things, and the ideas of the age those rungs unlock.' },
+  // The markets (SPEC §292): our share of the world's trade, the merchants we
+  // post to collect it or steer it home, and the squadrons on the lanes.
+  { id: 'trade', label: 'Trade', term: 'tabTrade', tt: 'The markets of the world: what each is worth, our share, the merchants we post to collect or steer it, and the squadrons that guard or raid the lanes.' },
   // Defense in every chapter (SPEC §245). This tab used to be the Host, with
   // 1948 alone re-dressing it — the one tab whose two names said the same
   // thing, where the other four re-dressings (Crown/State, Court/Cabinet,
@@ -221,6 +224,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-decisions" data-ref="decisions"></div>
       </div>
 
+      <!-- ── TRADE (SPEC §292) ─────────────────────────────────────────── -->
+      <div class="pp-build hidden" data-ref="tradeBlock" data-tab="trade">
+        <div class="pp-build-title">Trade</div>
+        <div class="np-trade" data-ref="trade"></div>
+      </div>
+
       <!-- ── THE TECHNOLOGY ────────────────────────────────────────────── -->
       <div class="pp-grid" data-tab="tech">
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
@@ -278,6 +287,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
              shipped). No backticks in here — this whole block is a template
              literal, and one closes it. -->
         <div class="np-bulk" data-ref="hostActs"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="fortsBlock" data-tab="war">
+        <div class="pp-build-title" data-tt="Every fort costs its upkeep each month. A mothballed fort costs nothing, but nobody mans it: a siege takes it like an open town, and when it is manned again the garrison grows back month by month.">The Walls</div>
+        <div class="np-forts" data-ref="forts"></div>
       </div>
       <!-- What wants orders (SPEC §246). §244 gave this tab a report and three
            bulk levers, and a report is not a choice: every line was a count
@@ -340,6 +353,58 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.dataset.tab = tab;
 
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
+    // The Trade tab's own levers (SPEC §292), on the block itself: none of
+    // them carries data-act, so the panel's delegation below passes them by.
+    refs.trade.addEventListener('click', (e) => {
+      const t = e.target instanceof Element ? e.target : null;
+      if (!t || !actions) return;
+      const b = t.closest('[data-tr-build],[data-tr-pick],[data-tr-send],[data-tr-recall],[data-tr-mission],[data-tr-node]');
+      if (!b || b.classList.contains('disabled')) return;
+      e.stopPropagation();
+      try {
+        if (b.dataset.trBuild) {
+          const [prov, kind] = b.dataset.trBuild.split('|');
+          actions.buildMerchant(prov | 0, kind);
+        } else if (b.dataset.trPick) {
+          const id = b.dataset.trPick | 0;
+          tradePick = tradePick === id ? 0 : id;
+        } else if (b.dataset.trSend) {
+          const [mid, node, order, to] = b.dataset.trSend.split('|');
+          if (actions.sendMerchant(mid | 0, node, order, to || null)) tradePick = 0;
+        } else if (b.dataset.trRecall) {
+          actions.recallMerchant(b.dataset.trRecall | 0);
+        } else if (b.dataset.trMission) {
+          const [fid, kind] = b.dataset.trMission.split('|');
+          const sel = refs.trade.querySelector(`[data-tr-fsel="${fid}"]`);
+          actions.setFleetMission(fid | 0, kind || null, sel ? sel.value : null);
+        } else if (b.dataset.trNode) {
+          if (onProvinceClick && (b.dataset.trNode | 0)) onProvinceClick(b.dataset.trNode | 0);
+          return;
+        }
+      } catch (err) { warnOnce('np-trade-click', err); }
+      refresh();
+    });
+    // The walls (SPEC §293): mothball a fort, man it, or find it on the map.
+    refs.forts.addEventListener('click', (e) => {
+      const t = e.target instanceof Element ? e.target : null;
+      if (!t || !actions) return;
+      const b = t.closest('[data-fort-mb],[data-fort-go]');
+      if (!b || b.classList.contains('disabled')) return;
+      e.stopPropagation();
+      try {
+        if (b.dataset.fortGo) {
+          if (onProvinceClick) onProvinceClick(b.dataset.fortGo | 0);
+          return;
+        }
+        const [prov, on] = b.dataset.fortMb.split('|');
+        actions.mothballFort(prov | 0, on === '1');
+      } catch (err) { warnOnce('np-forts-click', err); }
+      refresh();
+    });
+    refs.trade.addEventListener('change', (e) => {
+      const sel = e.target instanceof Element ? e.target.closest('[data-tr-fsel]') : null;
+      if (sel) fleetPick[sel.dataset.trFsel] = sel.value;
+    });
     // A medallion is a grid cell, not a <button> — the tree's whole layout is
     // grid-column/grid-row on divs. So a claimable one carries role/tabindex
     // and this turns the two keys a role="button" promises into the click the
@@ -1010,11 +1075,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // is what normally writes this, does not run for one.
     if (!self) readyClaims = 0;
     readyTech = 0;
+    // One getTech() a pass (smoke132): the tab's bell and the ladders read
+    // the same answer.
+    let techInfo = null;
     if (self && actions && typeof actions.getTech === 'function') {
       try {
-        const info = actions.getTech();
-        readyTech = info && info.rows ? info.rows.filter((r) => r.canBuy).length : 0;
-      } catch (e) { warnOnce('np-readyTech', e); }
+        techInfo = actions.getTech();
+        readyTech = techInfo && techInfo.rows ? techInfo.rows.filter((r) => r.canBuy).length : 0;
+      } catch (e) { warnOnce('np-getTech', e); }
     }
     refs.decisionsBlock.classList.toggle('hidden', !self);
     if (!self) refs.chapterBlock.classList.add('hidden');
@@ -1033,11 +1101,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshSchools(self);
     refreshForeignCourt(tag, self);
     refreshDiplomacy(g, t, tag, self);
-    refreshTech(t, self);
+    refreshTech(t, self, techInfo);
     refreshPrograms(self);
     refreshHostState(self);
+    refreshForts(self);
     refreshOrders(self);
     refreshLedger(self);
+    refreshTrade(self);
     refreshReforms(t, self);
     refreshEraIdeas(t, self);
     // Both halves of the age block have had their say; the block itself is
@@ -1971,7 +2041,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // and asking the sim twice a refresh for the same object to fill two
   // sections would be a fetch per tab rather than a fetch per pass.
   const TECH_ICONS = { gov: 'scales', infl: 'scroll', mar: 'swords' };
-  function refreshTech(t, self) {
+  function refreshTech(t, self, fetched) {
     if (!refs.tech) return;
     if (!self) {
       const th = t.tech || {};
@@ -1992,10 +2062,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + '</div>');
       return;
     }
+    // the pass's one getTech() answer, fetched in refresh() for the bell too
     let info = null;
-    if (actions && typeof actions.getTech === 'function') {
-      try { info = actions.getTech(); } catch (e) { warnOnce('np-getTech', e); }
-    }
+    if (fetched) info = fetched;
     if (!info) { setHtml(refs.tech, ''); setPatterns(''); return; }
     let html = '';
     if (info.instPct > 0) {
@@ -2146,9 +2215,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + (noAdm ? ` <span class="peace-dim">— ${noAdm} without an admiral</span>` : ''));
     }
     if (navy.merchantCount) {
-      line('Civilian hulls (SPEC §58): they pay a trade income from your shipyard harbors and are not warships.',
-        `Merchantmen: <b>${navy.merchantCount}</b>`
-        + (navy.merchantActive ? ` <span class="peace-dim">— ${navy.merchantActive} berthed and earning</span>` : ''));
+      line('Merchant ships and caravans (SPEC §292): sent to the markets to collect our share there or steer it home. They are not warships. The Trade tab sends them.',
+        `Merchants: <b>${navy.merchantCount}</b>`
+        + (navy.merchantActive ? ` <span class="peace-dim">— ${navy.merchantActive} at work in the markets</span>` : ''));
     }
     if (wings.length) {
       const led = wings.filter((w) => w && w.leader).length;
@@ -2470,6 +2539,133 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `<span class="np-led-k">${esc(r.label)}</span>`
         + `<span class="np-led-v ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}</span></div>`;
     }).join(''));
+  }
+
+  // ---- Trade (SPEC §292) -------------------------------------------------
+  // Which merchant's destination list is open (its id), or 0; and the market
+  // each squadron's select was last set to, kept across the daily redraw.
+  let tradePick = 0;
+  const fleetPick = {};
+  // The walls (SPEC §293): every fort of ours, border forts first, with what
+  // it costs and a button to mothball it or man it again.
+  function refreshForts(self) {
+    if (!refs.fortsBlock) return;
+    let forts = [];
+    if (self && actions && typeof actions.getForts === 'function') {
+      try { forts = actions.getForts() || []; } catch (e) { warnOnce('np-forts', e); }
+    }
+    refs.fortsBlock.classList.toggle('hidden', !forts.length);
+    if (!forts.length) { setHtml(refs.forts, ''); return; }
+    const cost = forts.reduce((s, f) => s + (f.mothballed ? 0 : f.upkeep), 0);
+    const mb = forts.filter((f) => f.mothballed).length;
+    let h = `<div class="np-tr-sum"><span>${icon('tower', 'icon-sm')} <b>${forts.length}</b> ${forts.length === 1 ? 'fort' : 'forts'}</span>`
+      + `<span>upkeep <b>${cost.toFixed(1)}</b> a month</span>${mb ? `<span>${mb} mothballed</span>` : ''}</div>`;
+    for (const f of forts) {
+      const where = f.capital ? 'the capital' : f.border ? 'faces another court' : 'inside the realm';
+      const state = !f.held ? 'held by the enemy' : f.siege ? 'under siege' : f.mothballed ? 'mothballed' : fmtMen(f.garrison) + ' / ' + fmtMen(f.maxGarrison);
+      const tt = f.name + ', fort ' + f.fort + ' (' + where + '). '
+        + (f.mothballed ? 'Mothballed: it costs nothing and will not hold against a siege.' : 'Manned: ' + f.upkeep.toFixed(1) + ' talents a month.')
+        + (f.can ? '' : '\n' + f.why);
+      const btn = f.mothballed
+        ? `<button class="np-tr-btn${f.can ? '' : ' disabled'}" data-fort-mb="${f.prov}|0" data-tt="${esc(f.can ? 'Man the walls again: ' + f.upkeep.toFixed(1) + ' talents a month. The garrison grows back month by month.' : f.why)}">Man</button>`
+        : `<button class="np-tr-btn${f.can ? '' : ' disabled'}" data-fort-mb="${f.prov}|1" data-tt="${esc(f.can ? 'Mothball: save ' + f.upkeep.toFixed(1) + ' talents a month. Nobody mans it, and a siege takes it like an open town.' : f.why)}">Mothball</button>`;
+      h += `<div class="np-tr-m${f.mothballed ? ' np-fort-mb' : ''}" data-tt="${esc(tt)}"><span class="np-tr-mk"><button class="np-tr-node" data-fort-go="${f.prov}">${esc(f.name)}</button> `
+        + `${icon('tower', 'icon-pip').repeat(Math.min(5, f.fort))} <i>${esc(state)}${f.border || f.capital ? '' : ' · interior'}</i></span>`
+        + `<span class="np-tr-acts"><span class="np-fort-cost">${f.mothballed ? '—' : '−' + f.upkeep.toFixed(1)}</span>${btn}</span></div>`;
+    }
+    setHtml(refs.forts, h);
+  }
+
+  function refreshTrade(self) {
+    if (!refs.tradeBlock) return;
+    let v = null;
+    if (self && actions && typeof actions.getTrade === 'function') {
+      try { v = actions.getTrade(); } catch (e) { warnOnce('np-trade', e); }
+    }
+    refs.tradeBlock.classList.toggle('hidden', !v);
+    if (!v) return;
+    const pct = (x) => Math.round(x * 100) + '%';
+    const money = (x) => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(1);
+    const byId = Object.fromEntries(v.nodes.map((n) => [n.id, n]));
+    let h = `<div class="np-tr-sum" data-tt="${esc('What our court collects in the markets of the world each month, after our trade efficiency (×' + v.mult.toFixed(2) + '). The tolls of the old roads are a line of their own in the ledger.')}">`
+      + `<span>${icon('coins', 'icon-sm')} <b>${money(v.income)}</b> a month</span>`
+      + `<span data-tt="${esc('Our home market: the node of our capital. We collect our share here without a merchant.')}">${icon('temple', 'icon-sm')} home <b>${esc(v.homeName || '—')}</b></span>`
+      + `<span data-tt="${esc('Where every road of this age ends. Whoever holds power there collects all of it.')}">roads end at ${esc(v.ends.join(', '))}</span>`
+      + `<span data-tt="${esc('Merchants we keep: two, and one more for every three markets and shipyards we hold, six at most.')}">merchants <b>${v.merchants.length} / ${v.cap}</b></span></div>`;
+    // fit out
+    let sites = [];
+    if (typeof actions.getMerchantSites === 'function') {
+      try { sites = actions.getMerchantSites() || []; } catch (e) { warnOnce('np-trade-sites', e); }
+    }
+    if (sites.length) {
+      h += '<div class="np-tr-build">' + sites.slice(0, 6).map((b) => {
+        const tt = b.can ? (b.kind === 'ship' ? 'A merchant ship, fitted out at ' : 'A caravan, made ready at ') + b.name + '. It waits there until you send it to a market.' : b.why;
+        return `<button class="pp-build-btn${b.can ? '' : ' disabled'}" data-tr-build="${b.prov}|${b.kind}" data-tt="${esc(tt)}">`
+          + `${icon(b.kind === 'ship' ? 'ship' : 'amphora')}<span>${b.kind === 'ship' ? 'Ship' : 'Caravan'} at ${esc(b.name)} · ${b.cost}</span></button>`;
+      }).join('') + '</div>';
+    }
+    // merchants
+    h += '<div class="np-tr-head">Merchants</div>';
+    if (!v.merchants.length) h += '<div class="np-tr-none">None yet. Fit out a merchant ship at a shipyard harbor, or a caravan at a market town or the capital.</div>';
+    for (const m of v.merchants) {
+      const kind = m.kind === 'ship' ? 'Merchant ship' : 'Caravan';
+      const where = m.state === 'home' ? 'waiting at ' + m.homeName
+        : m.state === 'back' ? 'coming home to ' + m.homeName + ', ' + m.daysLeft + ' days'
+          : m.state === 'out' ? 'bound for ' + m.nodeName + ', ' + m.daysLeft + ' days'
+            : (m.order === 'steer' ? 'at ' + m.nodeName + ', steering to ' + m.steerName : 'collecting at ' + m.nodeName);
+      const busy = m.state === 'out' || m.state === 'back';
+      h += `<div class="np-tr-m"><span class="np-tr-mk">${icon(m.kind === 'ship' ? 'ship' : 'amphora', 'icon-sm')} ${kind} <i>${esc(where)}</i></span>`
+        + `<span class="np-tr-acts">`
+        + `<button class="np-tr-btn${busy ? ' disabled' : ''}" data-tr-pick="${m.id}" data-tt="${esc(busy ? 'On the road. Send it on when it arrives.' : 'Choose a market for this merchant, and whether it collects there or steers trade toward us.')}">${tradePick === m.id ? 'Close' : 'Send…'}</button>`
+        + (m.state === 'posted' ? `<button class="np-tr-btn" data-tr-recall="${m.id}" data-tt="Bring the merchant home. It serves nowhere on the road.">Recall</button>` : '')
+        + '</span></div>';
+      if (tradePick === m.id && !busy) {
+        let targets = [];
+        try { targets = actions.getMerchantTargets(m.id) || []; } catch (e) { warnOnce('np-trade-targets', e); }
+        const reach = targets.filter((n) => n.reachable).sort((a, b) => b.merchantGain - a.merchantGain).slice(0, 10);
+        h += '<div class="np-tr-pick">' + (reach.length ? reach.map((n) => {
+          const steer = n.to.map((to, i) => {
+            const homeward = v.home && (to === v.home || (byId[to] && byId[to].home));
+            return `<button class="np-tr-btn" data-tr-send="${m.id}|${n.id}|steer|${to}" data-tt="${esc('Steer: our merchant adds its power here and pushes our share of ' + n.name + '\'s trade on to ' + n.toNames[i] + (homeward ? ', our home market' : '') + '. Value steered by a merchant grows a little on the way.')}">→ ${esc(n.toNames[i])}</button>`;
+          }).join('');
+          return `<div class="np-tr-t"><span class="np-tr-tk"><b>${esc(n.name)}</b>${n.home ? ' ★' : ''} <i>${n.value.toFixed(1)} · ${pct(n.share)}${n.days ? ' · ' + n.days + 'd' : ''}</i></span>`
+            + `<span class="np-tr-acts"><button class="np-tr-btn" data-tr-send="${m.id}|${n.id}|collect|" data-tt="${esc('Collect at ' + n.name + ': about ' + money(n.merchantGain) + ' a month more for us (worth ' + n.value.toFixed(1) + ', our share ' + pct(n.share) + ').')}">Collect ${money(n.merchantGain)}</button>${steer}</span></div>`;
+        }).join('') : '<div class="np-tr-none">No market this merchant can reach.</div>') + '</div>';
+      }
+    }
+    // markets where we have a stake
+    const ours = v.nodes.filter((n) => n.myPower > 0 || n.income > 0.01 || n.merchants || n.home)
+      .sort((a, b) => b.income - a.income || b.share - a.share);
+    h += '<div class="np-tr-head">Our markets</div>';
+    h += '<div class="np-tr-row np-tr-th"><span>Market</span><span>Worth</span><span>Share</span><span>We take</span></div>';
+    for (const n of ours) {
+      const mode = n.collecting ? 'collecting' : n.steerTo ? 'steering to ' + (n.toNames[n.to.indexOf(n.steerTo)] || '') : 'passing on';
+      const tt = n.name + ': ' + n.blurb + '\nWorth ' + n.value.toFixed(1) + ' a month (' + n.local.toFixed(1) + ' its own, ' + n.incoming.toFixed(1) + ' from upstream).'
+        + '\nOur power ' + n.myPower.toFixed(1) + ' of ' + n.totalPower.toFixed(1) + ' (' + pct(n.share) + '); we are ' + mode + '.'
+        + (n.top.length ? '\nThe powers here: ' + n.top.map((x) => x.name + ' ' + pct(x.share)).join(', ') + '.' : '')
+        + (n.raidedBy.length ? '\nRaiders work its waters.' : '');
+      h += `<div class="np-tr-row" data-tt="${esc(tt)}"><span><button class="np-tr-node" data-tr-node="${n.centerId}">${esc(n.name)}</button>${n.home ? ' ★' : ''}${n.raidedBy.length ? ' ' + icon('alert', 'icon-xs') : ''}</span>`
+        + `<span>${n.value.toFixed(1)}</span><span>${pct(n.share)}</span><span class="${n.income > 0.05 ? 'pos' : ''}">${n.income > 0.05 ? money(n.income) : '—'}</span></div>`;
+    }
+    // squadrons
+    if (v.fleets.length) {
+      h += '<div class="np-tr-head">Squadrons on the lanes</div>';
+      const seaNodes = v.nodes.filter((n) => n.sea || n.myPower > 0).sort((a, b) => a.name.localeCompare(b.name));
+      for (const f of v.fleets) {
+        const cur = fleetPick[f.id] || (f.mission ? f.mission.node : (f.node || v.home || ''));
+        const status = f.mission
+          ? (f.mission.kind === 'raid' ? 'raiding ' : 'guarding ') + f.mission.nodeName + (f.active ? '' : ' (on the way)')
+          : 'no trade mission';
+        h += `<div class="np-tr-m"><span class="np-tr-mk">${icon('ship', 'icon-sm')} ${esc(f.name)} (${f.ships}) <i>${esc(status)}</i></span>`
+          + '<span class="np-tr-acts">'
+          + `<select class="np-tr-sel" data-tr-fsel="${f.id}">${seaNodes.map((n) => `<option value="${esc(n.id)}"${n.id === cur ? ' selected' : ''}>${esc(n.name)}</option>`).join('')}</select>`
+          + `<button class="np-tr-btn" data-tr-mission="${f.id}|protect" data-tt="Guard the lanes of this market: each warship adds trade power here, and keeps our merchant ships from raiders.">Guard</button>`
+          + `<button class="np-tr-btn" data-tr-mission="${f.id}|raid" data-tt="Raid this market: the squadron takes a share of its trade before anyone collects. At war it may take the enemy's merchant ships; at peace every court it robs thinks less of us each month.">Raid</button>`
+          + (f.mission ? `<button class="np-tr-btn" data-tr-mission="${f.id}|" data-tt="End the trade mission.">Stand down</button>` : '')
+          + '</span></div>';
+      }
+    }
+    setHtml(refs.trade, h);
   }
 
   // The reform trees (SPEC §20/§198), rendered on Crown in every bookmark:

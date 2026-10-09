@@ -216,6 +216,11 @@ export const ICONS = {
     '<path d="M7 17.5V9h8M15 9V5h3M15 9l4 4"/>' +
     '<path d="M10 17.5v-5M13 17.5v-5"/>',
   // Merchantman: square sail over a broad civilian hull
+  // Laid up in ordinary (SPEC §293): an anchor, ring, stock and flukes.
+  anchor:
+    '<circle cx="12" cy="4.6" r="1.7"/>' +
+    '<path d="M12 6.3v13.4M8.4 9.2h7.2"/>' +
+    '<path d="M5 13.4c.4 3.6 3.3 6.2 7 6.3 3.7-.1 6.6-2.7 7-6.3M5 13.4l-1.4 1.6M5 13.4l2 .5M19 13.4l1.4 1.6M19 13.4l-2 .5"/>',
   ship:
     '<path d="M12 4v11M12 5.2 6.5 8v5H12M12 6l5 2.4V13h-5"/>' +
     '<path d="M3.8 15h16.4l-2.5 4H7Z"/>' +
@@ -269,13 +274,12 @@ export const ICONS = {
     '<path d="M9 9.4l9-1.8"/>' +
     '<ellipse cx="7" cy="17.8" rx="2.4" ry="1.9"/>' +
     '<ellipse cx="16" cy="15.8" rx="2.4" ry="1.9"/>',
-  // Settings (SPEC §289): three faders, each at its own height — the mixing
-  // desk reads as "adjust" at 15px where a cog would be a blot.
-  sliders:
-    '<path d="M6 4.5v15M12 4.5v15M18 4.5v15"/>' +
-    '<rect x="4" y="13" width="4" height="2.6" rx="0.8"/>' +
-    '<rect x="10" y="7.2" width="4" height="2.6" rx="0.8"/>' +
-    '<rect x="16" y="11" width="4" height="2.6" rx="0.8"/>',
+  // Settings (SPEC §289, §291): a gear — eight teeth round a hub. Asked for
+  // by name over the faders it replaced, because a gear is where every game
+  // keeps its settings.
+  gear:
+    '<path d="M10.21 5.34 L10.61 2.70 L13.39 2.70 L13.79 5.34 L15.45 6.02 L17.59 4.44 L19.56 6.41 L17.98 8.55 L18.66 10.21 L21.30 10.61 L21.30 13.39 L18.66 13.79 L17.98 15.45 L19.56 17.59 L17.59 19.56 L15.45 17.98 L13.79 18.66 L13.39 21.30 L10.61 21.30 L10.21 18.66 L8.55 17.98 L6.41 19.56 L4.44 17.59 L6.02 15.45 L5.34 13.79 L2.70 13.39 L2.70 10.61 L5.34 10.21 L6.02 8.55 L4.44 6.41 L6.41 4.44 L8.55 6.02Z"/>' +
+    '<circle cx="12" cy="12" r="3.1"/>',
   // Effects: a speaker with two waves.
   speaker:
     '<path d="M4.5 9.5h3.2L12 6v12l-4.3-3.5H4.5Z"/>' +
