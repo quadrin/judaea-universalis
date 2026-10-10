@@ -132,6 +132,7 @@ export function createSettingsPanel({ getSongs } = {}) {
     for (const s of list) if (!ages.includes(s.age)) ages.push(s.age);
     return opt('auto', 'By the age and the hour (automatic)')
       + opt('shuffle', 'Every song, shuffled')
+      + opt('score', 'The open score only, no songs')
       + ages.map((a) => `<optgroup label="${esc(a)}">`
         + list.filter((s) => s.age === a).map((s) => opt(s.id, s.title)).join('')
         + '</optgroup>').join('');
@@ -144,7 +145,8 @@ export function createSettingsPanel({ getSongs } = {}) {
     if (!st || !st.started) return 'The score begins with your first click.';
     if (!st.on) return 'The music is off.';
     if (st.song) return 'Now playing: ' + st.song.title + (st.song.blurb ? ' — ' + st.song.blurb : '');
-    return 'Now playing: the open score, between songs.';
+    if (st.scoreOn) return 'Now playing: the open score.';
+    return 'Between songs: the next one is coming.';
   }
 
   function render() {
@@ -162,12 +164,12 @@ export function createSettingsPanel({ getSongs } = {}) {
         <div class="peace-sec">Music</div>
         ${toggle('music', 'Music', musicOn(), 'The score. The effects stay on when it is off.')}
         ${slider('music', 'Music volume', 'The score only.')}
-        <label class="st-row st-row-wide" data-tt="Automatic plays the songs of the current age, chosen by peace, war and battle, with the open score between them. Pick a song to hear only that song.">
+        <label class="st-row st-row-wide" data-tt="Automatic plays the songs of the current age one after another, chosen by peace and war. Pick a song to hear only that song, or the open score to hear the score and no songs.">
           <span class="st-label">Song</span>
           <select class="st-select" data-set="song" aria-label="Song">${songOptions()}</select>
         </label>
         <div class="st-now"><span data-ref="stNow">${esc(nowPlaying())}</span>
-          <button class="btn st-next" data-act="next" data-tt="Go to the next song now">${icon('play')}<span>Next song</span></button></div>
+          <button class="btn st-next${getSetting('song') === 'score' ? ' disabled' : ''}" data-act="next" data-tt="Go to the next song now"${getSetting('song') === 'score' ? ' disabled' : ''}>${icon('play')}<span>Next song</span></button></div>
       </div>
       <div class="st-sec st-game">
         <div class="peace-sec">Game</div>
@@ -219,6 +221,8 @@ export function createSettingsPanel({ getSongs } = {}) {
       const t = e.target;
       if (t instanceof HTMLSelectElement && t.dataset.set === 'song') {
         setSetting('song', t.value);
+        const nx = el.querySelector('[data-act="next"]');
+        if (nx) { nx.disabled = t.value === 'score'; nx.classList.toggle('disabled', t.value === 'score'); }
         setTimeout(refreshNow, 60);
       } else if (t instanceof HTMLInputElement && t.dataset.set === 'sfx') {
         // let go of the effects slider: hear the level you chose

@@ -167,7 +167,7 @@ export function buildTimeline(song) {
   }
   events.sort((a, b) => a.t - b.t);
   // The last chord rings a little past the bar line.
-  return { events, duration: beat0 * spb + 2.5, sections };
+  return { events, duration: beat0 * spb + 2.5, sections, beats: beat0 };
 }
 
 // ---------------------------------------------------------------- the band --

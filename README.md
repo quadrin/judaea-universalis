@@ -80,10 +80,14 @@ its own for peace and for war: *Song of the Well*, *The Hill Country*, *By the
 Rivers*, *The Hammer*, *Watchfires on the Walls*, *Lamps of Tiberias*, *The
 Wedding at Sepphoris*, *The Banner of the Return*, *Dawn over the Negev* and
 *The Road to Jerusalem*. They are notes, not recordings — the game plays them
-live. A campaign opens on a song, and the open score steps aside while a song
-plays. Every song of peace has a war version of the same tune (Freygish or
-the minor, quicker, horns and drums): when war comes, the song playing turns
-into it (SPEC §295). To hear them outside the game:
+live. One music plays at a time: the title screen has the open score; a
+campaign's music is its songs, one after another with a breath of silence
+between, and the open score fades out before the first song begins (SPEC
+§296). The settings offer "The open score only" for the score and no songs.
+Every song of peace has a war version of the same tune (Freygish or the
+minor, quicker, horns and drums): when war comes, the war band takes up the
+song playing on its next bar line (SPEC §295, §296). To hear them outside
+the game:
 
 ```sh
 JU_PW_DIR=/opt/node22/lib node tools/render_songs.mjs songs-out   # WAV, and MP3 with ffmpeg
