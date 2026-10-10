@@ -11,6 +11,10 @@
 //     context without a throw, and every source that starts also stops;
 //   - the settings store gives defaults with no storage, repairs a bad value,
 //     keeps what it is given, and tells its listeners.
+//   - SPEC §295: every song of peace has a war version: sound notation, the
+//     same tune note for note in a war mode, quicker, open fifths on the same
+//     roots moved into the war mode, a march under every section with a tune;
+//     a war song is its own war version; the band plays every note of them.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 
 // A localStorage before the store loads: one good value, one bad, one junk.
@@ -20,7 +24,7 @@ globalThis.localStorage = {
   setItem: (k, v) => { mem.set(k, String(v)); },
 };
 
-const { SONGS, SONG_AGES, songAgeOf, songCatalogue } = await import(R + '/js/data/songs.js');
+const { SONGS, SONG_AGES, songAgeOf, songCatalogue, warVersionOf, isWarSong, peaceVersionOf, MODES } = await import(R + '/js/data/songs.js');
 const eng = await import(R + '/js/ui/song_engine.js');
 const st = await import(R + '/js/ui/settings.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
@@ -81,6 +85,50 @@ const cat = songCatalogue();
 ok(cat.length === SONGS.length && cat.every((c) => c.title && c.age && Object.values(SONG_AGES).includes(c.age)),
   'the catalogue names every song and its age');
 
+console.log('== the war versions (SPEC §295) ==');
+const WARS = SONGS.map((x) => warVersionOf(x));
+for (const s of SONGS) {
+  const w = warVersionOf(s);
+  if (!s.moods.includes('peace')) {
+    ok(w === s && isWarSong(s), `${s.id} is a war song, its own war version`);
+    continue;
+  }
+  const errs = eng.validateSong(w);
+  ok(w !== s && w.isWar && isWarSong(w) && !isWarSong(s) && peaceVersionOf(w) === s && w.id === s.id + '-war' && errs.length === 0,
+    `${s.id} has a war version, "${w.title}"` + (errs.length ? ': ' + errs.slice(0, 2).join('; ') : ''));
+  // the same tune: every melody keeps its notes, beats and degrees
+  const same = Object.keys(s.parts).every((k) => !s.parts[k].m || s.parts[k].m === w.parts[k].m);
+  ok(same && ['freygish', 'minor'].includes(w.mode) && w.bpm > s.bpm, `  the same tune, in ${w.mode}, at ${w.bpm} against ${s.bpm}`);
+  // open fifths on the same roots, moved into the war mode
+  let fifths = true;
+  let rooted = true;
+  for (const k of Object.keys(s.parts)) {
+    if (!s.parts[k].c) continue;
+    const a = eng.parseChords(s.parts[k].c).chords;
+    const b = eng.parseChords(w.parts[k].c).chords;
+    if (a.length !== b.length) { rooted = false; continue; }
+    a.forEach((c, i) => {
+      if (b[i].kind !== 'p' || b[i].len !== c.len) fifths = false;
+      const pc = ((c.off % 12) + 12) % 12;
+      const deg = MODES[s.mode].indexOf(pc);
+      if (deg >= 0 && ((b[i].off % 12) + 12) % 12 !== MODES[w.mode][deg]) rooted = false;
+    });
+  }
+  ok(fifths && rooted, '  open fifths on the same roots, moved by scale degree');
+  const tl = eng.buildTimeline(w);
+  const tuneSecs = w.form.filter((x) => (x.m || []).length);
+  ok(tuneSecs.every((x) => x.drum && w.drums[x.drum]) && w.form.every((x) => x.drum),
+    '  a march under every section, the edges tolling');
+  ok(tl.duration >= 60 && tl.duration <= 180 && tl.sections.length === w.form.length,
+    `  ${tl.duration.toFixed(0)} s, ${tl.sections.length} sections`);
+}
+for (const age of Object.keys(SONG_AGES)) {
+  const n = WARS.filter((x) => x.ages.includes(age)).length;
+  const peace = SONGS.filter((x) => x.ages.includes(age) && x.moods.includes('peace')).length;
+  ok(n >= peace + 1, `${SONG_AGES[age]} has ${n} pieces for war`);
+}
+ok(songCatalogue().filter((c) => c.warTitle).length === SONGS.filter((x) => x.war).length, 'the catalogue names each war version');
+
 console.log('== the band plays every note ==');
 {
   let started = 0;
@@ -112,7 +160,7 @@ console.log('== the band plays every note ==');
   const verb = eng.makeReverb(ac, out);
   const play = eng.createSongVoices(ac, out, verb, eng.makeNoise(ac));
   let threw = null;
-  for (const s of SONGS) {
+  for (const s of SONGS.concat(WARS.filter((w) => w.isWar))) {
     for (const ev of eng.buildTimeline(s).events) {
       try { play(ev, ev.t + 0.1); } catch (e) { threw = s.id + ': ' + e.message; break; }
     }

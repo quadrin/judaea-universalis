@@ -2,6 +2,9 @@
 //
 //   JU_PW_DIR=/opt/node22/lib node tools/render_songs.mjs [outDir] [songId ...]
 //
+// The war versions (SPEC §295) render too, as `<id>-war`: name one to render
+// it alone (`well-war`), or every song and every war version is rendered.
+//
 // The songs are notes and voices, not recordings: the game plays them live.
 // This renders each one through the same engine (js/ui/song_engine.js) into
 // an OfflineAudioContext in Chromium, faster than real time, and writes a
@@ -41,15 +44,25 @@ await mkdir(outDir, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.JU_CHROMIUM || '/opt/pw-browsers/chromium' });
 const page = await browser.newPage();
 await page.goto(base + '/');
-const ids = await page.evaluate(async () => (await import('/js/data/songs.js')).SONGS.map((s) => s.id));
+const ids = await page.evaluate(async () => {
+  const m = await import('/js/data/songs.js');
+  const out = [];
+  for (const s of m.SONGS) {
+    out.push(s.id);
+    const w = m.warVersionOf(s);
+    if (w && w !== s) out.push(w.id);
+  }
+  return out;
+});
 
 for (const id of ids) {
   if (only.length && !only.includes(id)) continue;
   const t0 = Date.now();
   const out = await page.evaluate(async (songId) => {
-    const { SONGS } = await import('/js/data/songs.js');
+    const { SONGS, warVersionOf } = await import('/js/data/songs.js');
     const eng = await import('/js/ui/song_engine.js');
-    const song = SONGS.find((s) => s.id === songId);
+    const song = SONGS.find((s) => s.id === songId)
+      || SONGS.map((s) => warVersionOf(s)).find((s) => s.id === songId);
     const tl = eng.buildTimeline(song);
     const sr = 44100;
     const ac = new OfflineAudioContext(2, Math.ceil((tl.duration + 1) * sr), sr);

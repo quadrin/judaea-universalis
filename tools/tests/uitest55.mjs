@@ -108,7 +108,9 @@ await page.waitForTimeout(2500);
 await page.waitForFunction(() => !!window._sound.music.state().song, null, { timeout: 8000 }).catch(() => {});
 ms = await page.evaluate(() => window._sound.music.state());
 ok(ms.age === 'temple', 'the Great Revolt is an age of the Second Temple: ' + ms.age);
-ok(ms.song && ['hammer', 'watchfires', 'rivers'].includes(ms.song.id), 'a Second Temple war song: ' + JSON.stringify(ms.song));
+// at war every song of the age plays in its war version (SPEC §295)
+ok(ms.song && ms.song.war && ['well', 'hills', 'rivers', 'hammer', 'watchfires', 'wedding'].includes(ms.song.base),
+  'a Second Temple piece for war: ' + JSON.stringify(ms.song));
 const first = ms.song && ms.song.id;
 await page.locator('#settings-modal [data-act="next"]').click();
 await page.waitForFunction((id) => {
@@ -137,12 +139,21 @@ console.log('== a short notice is short ==');
 await page.keyboard.press('Escape');
 // paused, so no other notice of the campaign pushes this one out
 await page.evaluate(() => { window._ctx.game.paused = true; document.getElementById('toast-container').innerHTML = ''; });
-await page.evaluate(() => window._ctx.bus.emit('notify', { title: 'Test notice', text: 'gone in four', type: 'info' }));
+// The notice's own timer is what the setting sets. The wall clock is not:
+// under SwiftShader one frame of the map can hold the page for 0.7 s, so a
+// 4 s timer fires at 8 s (the same before and after the songs, SPEC §295).
+const asked = await page.evaluate(() => {
+  const st = window.setTimeout;
+  const xs = [];
+  window.setTimeout = (f, ms, ...a) => { xs.push(ms); return st(f, ms, ...a); };
+  try { window._ctx.bus.emit('notify', { title: 'Test notice', text: 'gone in four', type: 'info' }); } finally { window.setTimeout = st; }
+  return xs;
+});
 await page.waitForTimeout(1500);
 const up = await page.evaluate(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('gone in four')));
-await page.waitForTimeout(3600);
-const gone = await page.evaluate(() => ![...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('gone in four')));
-ok(up && gone, 'a notice set to Short is up at 1.5 s and gone by 5.1 s');
+const gone = await page.waitForFunction(() => ![...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('gone in four')), null, { timeout: 20000 })
+  .then(() => true, () => false);
+ok(asked.includes(4000) && up && gone, 'a notice set to Short asks for 4 s, is up at 1.5 s, and goes: ' + JSON.stringify({ asked, up, gone }));
 
 console.log('== Defaults ==');
 await page.keyboard.press('o');

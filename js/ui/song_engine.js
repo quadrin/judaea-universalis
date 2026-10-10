@@ -110,12 +110,14 @@ export function buildTimeline(song) {
   const spb = 60 / song.bpm;
   const events = [];
   let beat0 = 0;
+  const sections = []; // when each section of the form begins, in seconds
   const bassOf = (off) => {
     let hz = (song.key / 2) * Math.pow(2, (((off % 12) + 12) % 12) / 12);
     if (hz > song.key * 0.75) hz /= 2;
     return hz;
   };
   for (const sec of song.form) {
+    sections.push(beat0 * spb);
     const { chords, beats } = parseChords(song.parts[sec.c].c);
     const level = sec.pad !== undefined ? sec.pad : 0.04;
     for (const ch of chords) {
@@ -165,7 +167,7 @@ export function buildTimeline(song) {
   }
   events.sort((a, b) => a.t - b.t);
   // The last chord rings a little past the bar line.
-  return { events, duration: beat0 * spb + 2.5 };
+  return { events, duration: beat0 * spb + 2.5, sections };
 }
 
 // ---------------------------------------------------------------- the band --
