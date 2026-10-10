@@ -53,6 +53,17 @@ export function createFleetPanel(el, { DEFINES, onClose, onTradeClick }) {
     return `<button class="btn${can ? '' : ' disabled'}" data-fp="${act}" data-tt="${esc(tt)}">${icon(ico)}<span>${esc(label)}</span></button>`;
   }
 
+  // Shift-click builds a group of squadrons (SPEC §299): this card shows the
+  // last one picked, and says how many sail together.
+  function groupRow(g) {
+    const ids = (g.ui && Array.isArray(g.ui.selectedFleets) ? g.ui.selectedFleets : [])
+      .filter((id) => g.fleets && g.fleets[id] && g.fleets[id].tag === g.playerTag);
+    if (ids.length < 2) return '';
+    const ships = ids.reduce((n, id) => n + (g.fleets[id].ships | 0), 0);
+    return row('Group', `${ids.length} squadrons · ${ships} ships`,
+      'Shift-click a squadron to add it to the group or drop it. A right-click, or a click on the map, sails them all; the buttons act on this one.');
+  }
+
   function refresh() {
     if (fleetId == null || !ctx || !actions || el.classList.contains('hidden')) return;
     let navy = null;
@@ -81,15 +92,16 @@ export function createFleetPanel(el, { DEFINES, onClose, onTradeClick }) {
       row('Upkeep', `${(f.upkeep || 0).toFixed(1)} a month${f.laidUp ? ' <span class="peace-dim">(laid up)</span>' : ''}`,
         'Every ship costs its upkeep each month (Naval maintenance in the ledger). A squadron laid up in ordinary costs a quarter.'),
       row('Trade', mission, 'A squadron can guard a market\'s lanes (more trade power for us) or raid them. Set it in the Trade tab.'),
+      groupRow(g),
     ].join(''));
     const idle = f.laidUp || f.recommission;
     const acts = [
-      btn('embarkFleet', 'shield', 'Embark troops', f.canEmbark && !idle,
+      btn('mergeAllFleets', 'shield', 'Merge here', f.canMerge,
+        f.canMerge ? `Bring the ${f.mergeCount} other squadron${f.mergeCount === 1 ? '' : 's'} at this anchor (${f.mergeShips} hulls) under this command.` : (f.whyMerge || 'No other squadron of ours here.')),
+      btn('embarkFleet', 'embark', 'Embark troops', f.canEmbark && !idle,
         idle ? 'The squadron cannot take troops aboard now.' : f.canEmbark ? 'Take our armies at this harbor aboard.' : 'No army of ours waits at this harbor.'),
       btn('disembarkFleet', 'retreat', 'Land troops', f.canDisembark,
         f.canDisembark ? 'Put the troops ashore here.' : 'Nobody aboard, or the squadron is at sea.'),
-      btn('mergeAllFleets', 'ship', 'Merge here', f.canMerge,
-        f.canMerge ? `Bring the ${f.mergeCount} other squadron${f.mergeCount === 1 ? '' : 's'} at this anchor (${f.mergeShips} hulls) under this command.` : (f.whyMerge || 'No other squadron of ours here.')),
       btn('hireAdmiral', 'helmet', f.admiral ? 'Admiral in post' : 'Hire admiral · 50', f.canHireAdmiral,
         f.admiral ? f.admiral.name + ' commands.' : f.canHireAdmiral ? 'Hire an admiral for 50 martial points.' : 'An admiral costs 50 martial points.'),
       btn('modernizeFleet', 'bricks', f.canModernize ? `Refit · ${f.modernizeCost}` : 'Refit', f.canModernize,

@@ -21614,3 +21614,49 @@ world; a strong client now can, by design.)
   at −40 "will not march", at −90 with the strength "may rise" in red; the
   province panel's status "Our client — may rise" with the share in its
   tooltip; no page errors.
+
+## §299 — The fleet's buttons, and a group of squadrons
+
+**The buttons.** On the selected squadron's row, Embark was drawn as the
+shield and Merge as the ship — while on the army row the shield means
+merge. The two are now the other way round, and Embark has its own glyph:
+
+- **Merge** (every other squadron of ours at this anchor into this one) is
+  the shield, the army row's merge, and comes first, on the left;
+- **Embark** (our armies at this harbor go aboard) is `embark`, a hull with
+  two soldiers on deck, a spear up and the gangplank they came by;
+- the fleet panel (§294) uses the same two glyphs, in the same order:
+  *Merge here*, then *Embark troops*.
+
+**A group of squadrons.** Armies could be gathered by shift-click (§264);
+squadrons could not. Now they can, the same way:
+
+- `g.ui.selectedFleets` holds the group (saves without it read as the one
+  selected squadron); `g.ui.selectedFleet` is its primary, the last one
+  added — the fleet panel shows it and its buttons act on it;
+- shift-click on a squadron (its outliner row, or its hull on the map; the
+  group mode on touch counts as shift) adds it, or drops it if it is in;
+  a plain click selects one squadron alone;
+- a right-click sails every squadron of the group to that harbor; with two
+  or more selected, a plain click on a province does the same (the army
+  group's habit). A click that is not a harbor is said once, not once per
+  squadron;
+- the outliner marks every row of the group (each with its buttons); the
+  map rings every hull of it; the fleet panel adds a *Group* row: "3
+  squadrons · 6 ships";
+- selecting an army, a stack or a wing empties the group; a squadron that
+  sinks or merges away leaves the rest of the group selected.
+
+- **Regression contract**: `uitest64.mjs` — the selected squadron's Embark
+  button carries the troop-boat glyph and its Merge button the shield, the
+  shield first and the troop boat second, and the fleet panel the same; shift-click on a second row makes a group of
+  two with the second primary, both rows marked and the third not, the
+  panel showing "2 squadrons · 4 ships"; a shift-click on the map adds the
+  third; a right-click puts all three under sail; shift-click drops the
+  third and the second is primary again; a plain click selects one alone
+  and the panel drops the group line; no page errors. `uitest17.mjs` (the
+  map orders for a fleet and a wing) now waits for the camera to stop
+  before each click, and sails to a harbor whose centre is its own cell on
+  the raster: on a loaded machine its right-click had landed on the
+  province the camera was still passing over ("No harbor there"), before
+  and after these changes alike.

@@ -226,6 +226,16 @@ export const ICONS = {
     '<path d="M3.8 15h16.4l-2.5 4H7Z"/>' +
     '<path d="M4 21c1.4-.8 2.8-.8 4.2 0 1.4.8 2.8.8 4.2 0 1.4-.8 2.8-.8 4.2 0 1.1.6 2.2.7 3.3.2"/>',
 
+  // Embark troops: two soldiers aboard a hull, one with his spear up, and the
+  // gangplank they came up by (the fleet's Embark, SPEC §294)
+  embark:
+    '<circle cx="8.6" cy="5.4" r="1.6"/><circle cx="13.6" cy="5.4" r="1.6"/>' +
+    '<path d="M6.5 14v-3.6a2.1 2.1 0 0 1 4.2 0V14M11.5 14v-3.6a2.1 2.1 0 0 1 4.2 0V14"/>' +
+    '<path d="M17.8 2.6V14"/>' +
+    '<path d="M3.6 14.2h16.8l-2.5 4.3H6.1Z"/>' +
+    '<path d="M1.6 11.4l3.4 2.8"/>' +
+    '<path d="M4 21.4c1.4-.8 2.8-.8 4.2 0 1.4.8 2.8.8 4.2 0 1.4-.8 2.8-.8 4.2 0 1.1.6 2.2.7 3.3.2"/>',
+
   // --- army actions (outliner) --------------------------------------------------
   // Split army: one column branching into two arrows
   split:

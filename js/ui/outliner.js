@@ -141,7 +141,7 @@ export function createOutliner(el, {
     }
     const fl = e.target.closest('[data-fleet]');
     if (fl) {
-      if (onFleetClick) onFleetClick(Number(fl.dataset.fleet));
+      if (onFleetClick) onFleetClick(Number(fl.dataset.fleet), !!e.shiftKey);
       return;
     }
     const bt = e.target.closest('[data-battle]');
@@ -303,7 +303,8 @@ export function createOutliner(el, {
     if (fleets.length) {
       html += `<div class="ol-sec">Fleets <span class="ol-count">${fleets.length}</span></div>`;
       for (const f of fleets) {
-        const sel = g.ui && g.ui.selectedFleet === f.id;
+        const sel = g.ui && (g.ui.selectedFleet === f.id
+          || (Array.isArray(g.ui.selectedFleets) && g.ui.selectedFleets.indexOf(f.id) >= 0));
         const adm = f.admiral ? `\nAdmiral: ${f.admiral.name} (seamanship ${f.admiral.maneuver})` : '';
         const tt = `${f.name} — ${f.ships} ships of ${f.genName || 'the old pattern'} (${fmtMen(f.capacity)} capacity)${adm}\n`
           + (f.laidUp ? 'Laid up in ordinary at ' + f.provName : f.recommission ? 'Signing on crews at ' + f.provName + ', ' + f.recommission + ' days more' : f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
@@ -333,9 +334,9 @@ export function createOutliner(el, {
             <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.name)}</span>
             <span class="ol-men">${f.ships}</span>
             ${sel ? `<span class="ol-acts">`
-    + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('shield')}</button>` : '')
+    + `<button class="ol-act${f.canMerge ? '' : ' disabled'}" data-fleet-merge="${f.id}" data-tt="${esc(mergeTT)}">${icon('shield')}</button>`
+    + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('embark')}</button>` : '')
     + (f.canDisembark ? `<button class="ol-act" data-fleet-disembark="${f.id}" data-tt="Put the carried armies ashore here">${icon('retreat')}</button>` : '')
-    + `<button class="ol-act${f.canMerge ? '' : ' disabled'}" data-fleet-merge="${f.id}" data-tt="${esc(mergeTT)}">${icon('ship')}</button>`
     + `<button class="ol-act${f.canHireAdmiral ? '' : ' disabled'}" data-fleet-admiral="${f.id}" data-tt="${esc(admTT)}">${icon('helmet')}</button>`
     + `<button class="ol-act${f.canModernize ? '' : ' disabled'}" data-fleet-modernize="${f.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>`
     + `<button class="ol-act${f.laidUp || f.canLayUp ? '' : ' disabled'}${f.laidUp ? ' on' : ''}" data-fleet-layup="${f.id}" data-on="${f.laidUp ? '0' : '1'}" data-tt="${esc(layTT)}">${icon('anchor')}</button>`
