@@ -21532,3 +21532,85 @@ host as a command like every other order.
   the foot as a new army of 3,000, listed in the outliner, and the army (one
   arm now) has no button; a selected army of one arm has none; no page
   errors.
+
+## §298 — A strong client chafes, and rises
+
+**What was missing.** A client kingdom's loyalty is its regard for its lord
+(§61): below −25 it stays home from the lord's wars, and at −75, with the
+strength to dare, it may rise in a war of independence. But nothing in the
+bond read the client's own size. §202's strain reads the lord's whole
+collection of collars and stops at −60 by design ("strain sours, it does
+not revolt"), and §260 warms every client back toward +50. A client grown as
+large as its lord sat at +50 forever and marched when called.
+
+**The rule** (`strongClientInfo` and `monthlyStrongClients` in
+`js/sim/military.js`; dials in `DEFINES.VASSALS`):
+
+- the client's **weight** is its development against its lord's (an
+  off-map lord weighs its def's own development, as in the standing score);
+- at half its lord's lands or less (`strongFreeShare` 0.5) a client is
+  content;
+- past that it **chafes**: the regard it settles at falls from the bond's
+  +50 by 250 per point of share past the half (`strongTargetPerShare`) — 75%
+  settles at −12, 80% at the war call (−25), and **a client as large as its
+  lord settles at the rising (−75)**; 150% settles at −200;
+- each month its regard sinks toward that point by 2 + 8 per point of share
+  past the half (at most 8 a month): 4 a month at 75%, 6 at 100%;
+- the bond's warmth (§260) lifts a strong client only to its settling point,
+  not to +50;
+- past its lord's size the rising roll (§61's 4% a month, once the regard
+  and the strength allow) grows by ×(1 + 2 per point past 1), at most ×3;
+- the client keeps `t.chafe = {by, ratio, target, rate, rise, told}` while
+  it chafes; it is dropped when it shrinks back or the collar comes off;
+- it runs monthly after the chancery and before the drift, wherever client
+  kingdoms exist (`mechanicOn(ctx, 'clientKingdoms')`; not in 1948).
+
+**What the lord can do.** Envoys (+30 to a client, every three months) and
+gifts hold the regard up for as long as they are paid for — a client of 80%,
+courted every three months, never falls to the war call. A union (§61)
+needs its devotion, which a strong client does not give. Or the lord lets it
+go (§219) before it goes.
+
+**What the player sees.**
+
+- A lord who is a player hears each stage once, as it is reached: "…
+  outgrows its collar" (its share and where it settles), "… will not march
+  for us", "… talks of independence". A client that slides back can warn
+  again.
+- The realm panel's **Client kingdoms** rows carry the client's lands as a
+  share of ours and its loyalty: *loyal*, *chafes −X/mo*, *will not march*,
+  *may rise* (or *despises us* without the strength to dare). The tooltip
+  says why: the share, the content half, its regard, where it settles, the
+  two thresholds, and what holds it.
+- The province panel's diplomacy status for our client reads *Our client
+  kingdom*, *Our client — chafes*, *— will not march* or *— may rise*, with
+  the same reasons in the tooltip; for our own lord it gives our share of
+  its lands and where our own regard settles.
+- `getClientLoyalty(tag)` answers it all for a client, and the diplomacy
+  card carries it as `clientLoyalty`.
+
+**The chapters.** Of the clients the chapters open with, one is strong:
+Himyar under Aksum in 529 (190% of Aksum's lands), which chafes from the
+first month and may rise — the history the chapter's Abraha card tells for
+533. All-AI runs (`node tools/autorun.mjs 25`, 3 seeds) are identical in
+every other chapter. In 529 over 12 seeds of 25 years there are about 1.5
+more wars a run; the first court's debt spirals go 10 → 8 and bankruptcies
+12 → 11; Himyar and Aksum are alive at the end of all twelve. (§61 and §202
+promised byte-identical runs because nothing reached −75 in an all-AI
+world; a strong client now can, by design.)
+
+- **Regression contract**: `smoke206.mjs` — content at half; at 75% it
+  settles near −12 and falls 4 a month; as large as its lord, −75 and 6 a
+  month; at 150%, −200, 8 (the cap) and the rising roll ×2; ×3 at most; a
+  monthly fall from 50 to 46 at 80%, to −25 and no further, the chafe kept
+  on the client; a small client keeps +50 and no chafe; the bond warms a
+  strong client only to its settling point; a player lord hears the three
+  stages once each, in order; envoys every three months hold an 80% client
+  above the war call; a client at 130%, left alone, rises in a war of
+  independence; `getClientLoyalty` and the diplomacy card read it; with
+  client kingdoms off, nothing chafes. `uitest63.mjs` — the notice "…
+  outgrows its collar" with the share; the realm panel's client row shows
+  90% and "chafes −5.2/mo" in the warning colour, its tooltip the reasons;
+  at −40 "will not march", at −90 with the strength "may rise" in red; the
+  province panel's status "Our client — may rise" with the share in its
+  tooltip; no page errors.

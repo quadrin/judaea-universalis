@@ -1006,7 +1006,14 @@ const RISING_LABELS = {
     let status = '—';
     let cls = '';
     if (d.atWarWithUs) { status = 'At war'; cls = 'neg'; }
-    else if (d.ourClient) { status = 'Our client kingdom'; cls = 'pos'; }
+    else if (d.ourClient) {
+      // How loyal it is, by its weight against ours (SPEC §298).
+      const lo = d.clientLoyalty;
+      if (lo && lo.stage === 'rising') { status = lo.strongEnough ? 'Our client — may rise' : 'Our client — despises us'; cls = 'neg'; }
+      else if (lo && lo.stage === 'stays home') { status = 'Our client — will not march'; cls = 'neg'; }
+      else if (lo && lo.stage === 'chafes') { status = 'Our client — chafes'; }
+      else { status = 'Our client kingdom'; cls = 'pos'; }
+    }
     else if (d.ourOverlord) { status = 'Our overlord'; }
     else if (d.allied) {
       // What the pact is worth on the day it is called (SPEC §260).
@@ -1058,6 +1065,25 @@ const RISING_LABELS = {
         + '\n――――――\nAn ally joins a war we START at ' + c.joinOpinion + ' regard and answers an attack '
         + 'on us at ' + c.defendOpinion + ' — and either way it must be in a state to march: no war of '
         + 'its own, not sick of war, a treasury out of the red, and men to send.';
+    } else if ((d.ourClient || d.ourOverlord) && d.clientLoyalty && refs.dipStatus.dataset) {
+      // A client's weight against its lord's, and where that settles its
+      // regard (SPEC §298) — read from either end of the collar.
+      const lo = d.clientLoyalty;
+      const weClient = !!d.ourOverlord;
+      const lines = [weClient
+        ? `Our lands are ${lo.pct}% of ${d.name}’s; a client is content up to ${Math.round(lo.freeShare * 100)}%.`
+        : `Their lands are ${lo.pct}% of ours; a client is content up to ${Math.round(lo.freeShare * 100)}%.`];
+      if (lo.chafes) {
+        lines.push(`Grown strong, ${weClient ? 'our court chafes' : 'it chafes'}: ${weClient ? 'our' : 'its'} regard falls ${lo.rate} a month toward ${lo.target}.`);
+      }
+      if (!weClient) {
+        lines.push(`Below ${lo.loyalOpinion} it stays home from our wars; at ${lo.revoltOpinion}, with the strength to dare, it may rise for its independence.`);
+        if (lo.atRising) lines.push(lo.strongEnough ? 'It has the strength to dare.' : 'It lacks the strength to dare — for now.');
+        if (lo.chafes) lines.push('Envoys and gifts hold its regard up; a union needs its devotion; or let it go.');
+      } else if (lo.chafes) {
+        lines.push('We may throw off the yoke when we choose.');
+      }
+      refs.dipStatus.dataset.tt = lines.join('\n');
     } else if (refs.dipStatus.dataset) {
       delete refs.dipStatus.dataset.tt;
     }

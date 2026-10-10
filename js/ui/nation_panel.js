@@ -1909,8 +1909,38 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (clients.length) {
       html += `<div class="np-dip-sec">Client kingdoms</div>`;
       for (const c of clients) {
-        html += `<div class="np-dip-row" data-tt="A client kingdom: pays ${self ? 'us' : 'them'} 15% of its income and follows ${self ? 'us' : 'them'} to war">`
-          + `${chip(c)}<span class="np-dip-name">${nameOf(c)}</span><span class="np-dip-ws">tributary</span></div>`;
+        // How loyal, and why (SPEC §298): its lands against ours, and where
+        // that settles its regard.
+        let lo = null;
+        if (actions && typeof actions.getClientLoyalty === 'function') {
+          try { lo = actions.getClientLoyalty(c); } catch (e) { lo = null; }
+        }
+        const base = `A client kingdom: pays ${self ? 'us' : 'them'} 15% of its income and follows ${self ? 'us' : 'them'} to war.`;
+        if (!lo) {
+          html += `<div class="np-dip-row" data-tt="${esc(base)}">`
+            + `${chip(c)}<span class="np-dip-name">${nameOf(c)}</span><span class="np-dip-ws">tributary</span></div>`;
+          continue;
+        }
+        const ours = self ? 'ours' : 'its lord’s';
+        const us = self ? 'us' : 'its lord';
+        const badge = lo.stage === 'rising' ? (lo.strongEnough ? 'may rise' : 'despises ' + us)
+          : lo.stage === 'stays home' ? 'will not march'
+            : lo.stage === 'chafes' ? `chafes −${lo.rate}/mo` : 'loyal';
+        const cls = lo.stage === 'loyal' ? 'pos' : lo.stage === 'chafes' ? 'warn' : 'neg';
+        const lines = [base,
+          `Its lands are ${lo.pct}% of ${ours}; a client is content up to ${Math.round(lo.freeShare * 100)}%.`,
+          `Its regard for ${us}: ${lo.opinion > 0 ? '+' : ''}${lo.opinion}.`];
+        if (lo.chafes) {
+          lines.push(`Grown strong, it chafes: its regard falls ${lo.rate} a month toward ${lo.target}.`
+            + (lo.target <= lo.revoltOpinion ? ' At this size it settles where a rising starts.' : ''));
+        }
+        lines.push(`Below ${lo.loyalOpinion} it stays home from ${self ? 'our' : 'its lord’s'} wars; at ${lo.revoltOpinion}, with the strength to dare, it may rise for its independence.`);
+        if (lo.atRising) lines.push(lo.strongEnough ? 'It has the strength to dare.' : 'It lacks the strength to dare — for now.');
+        if (self && lo.chafes) lines.push('Envoys and gifts hold its regard up; a union needs its devotion; or let it go.');
+        html += `<div class="np-dip-row np-client" data-client="${esc(c)}" data-tt="${esc(lines.join('\n'))}">`
+          + `${chip(c)}<span class="np-dip-name">${nameOf(c)}</span>`
+          + `<span class="np-dip-ws np-client-pct">${lo.pct}%</span>`
+          + `<span class="np-dip-ws ${cls}" data-ref="loyalty">${esc(badge)}</span></div>`;
       }
     }
     if (t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) {

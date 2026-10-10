@@ -395,7 +395,10 @@ static site, the zero dependencies, or the missing build step changes.
   a subjugation clause lands on you whatever your establishment can staff. Client kingdoms
   bring their own pressure on top — hold more collars than you can attend to, or collars that
   weigh too much of the realm, and every client's regard sinks toward a floor below what a
-  union needs, so a wide client empire can be held but not digested. And a state you freed at
+  union needs, so a wide client empire can be held but not digested. A single client that
+  grows strong chafes on its own: past half your development its regard sinks month by month,
+  and one as large as you settles where a rising starts — it stays home from your wars, then
+  rises in a war of independence unless envoys and gifts hold it (SPEC §298). And a state you freed at
   your own table will not kneel to the hand that freed it for a generation, which is what
   stopped "free four nations, collar them with their own gratitude, and eat them one by one"
   from being the cheapest expansion in the game. The 1948 chapter, whose diplomacy is blocs

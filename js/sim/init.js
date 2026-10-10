@@ -24,7 +24,7 @@ import {
   freeClientInfo, freeClientCore,
   independenceInfo, declareIndependenceCore,
   cedeProvinceInfo, cedeProvinceCore,
-  chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
+  chanceryOn, diploLoad, chanceryFullWhy, clientStrain, strongClientInfo, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, splitArmyByArmCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
   sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, settleScriptedPeace, GENERAL_NAMES, courtNamePool, engageIfNeeded,
@@ -1616,6 +1616,7 @@ export function gameActions(ctx) {
         })(),
         opinionOfUs, ourOpinion, allied, atWarWithUs, truceUntil,
         ourClient, ourOverlord, theirOverlord,
+        clientLoyalty: ourClient || ourOverlord ? clientLoyalty(ourClient ? tag : me) : null,
         theirOverlordName: theirOverlord && g.tags[theirOverlord] ? (g.tags[theirOverlord].name || theirOverlord) : '',
         cb,
         canImprove: !whyNotImprove, canGift: !whyNotGift, canAlly: !whyNotAlly, canBreak: allied,
@@ -1661,6 +1662,29 @@ export function gameActions(ctx) {
   };
 
   // Shared gating for the player army actions (split / hire / refit / disband).
+  // A client's loyalty to its lord (SPEC §298): its weight against the lord's,
+  // where that settles its regard, and how far it has gone — content,
+  // chafing, staying home from the lord's wars, or ready to rise (with the
+  // §61 strength test the rising itself makes).
+  const clientLoyalty = (tag) => {
+    const t = g.tags[tag];
+    if (!t || !t.alive || !t.overlord || !g.tags[t.overlord]) return null;
+    const V = ctx.DEFINES.VASSALS || {};
+    const s = strongClientInfo(ctx, tag);
+    const opinion = Math.round(opinionOf(ctx, tag, t.overlord));
+    const strength = (k) => armiesOf(ctx, k).reduce((n, a) => n + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+    const refuses = opinion < num(V.loyalOpinion, -25);
+    const atRising = opinion <= num(V.revoltOpinion, -75);
+    const strongEnough = strength(tag) >= strength(t.overlord) * num(V.revoltStrength, 0.4);
+    const stage = atRising ? 'rising' : refuses ? 'stays home' : s.on ? 'chafes' : 'loyal';
+    return {
+      tag, name: t.name || tag, lord: t.overlord, ratio: s.ratio, pct: Math.round(s.ratio * 100),
+      chafes: s.on, target: s.target, rate: s.rate, rise: s.rise, opinion,
+      refuses, atRising, strongEnough, mayRise: atRising && strongEnough, stage,
+      freeShare: num(V.strongFreeShare, 0.5), loyalOpinion: num(V.loyalOpinion, -25), revoltOpinion: num(V.revoltOpinion, -75),
+    };
+  };
+
   const armyActionInfo = (armyId) => {
     const out = {
       canSplit: false, whySplit: '', canSplitType: false, whySplitType: '', splitTypeArms: [],
@@ -2392,6 +2416,10 @@ export function gameActions(ctx) {
     // ---- diplomacy (frozen) -----------------------------------------------
     getDiplomacy(tag) {
       return getDip(tag);
+    },
+    // SPEC §298: how loyal a client is to its lord, and why.
+    getClientLoyalty(tag) {
+      try { return clientLoyalty(tag); } catch (e) { warnOnce('clientLoyalty', 'getClientLoyalty failed', e); return null; }
     },
     // The chancery (SPEC §202): what a court's establishment is spent on, how
     // much of it there is, and what the collars are costing it. Answered for

@@ -4,7 +4,7 @@ import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
   sweepAirfields, flyPendingRaids, monthlyIncorporation, monthlyClaimFabrications,
-  monthlyChancery, declaredRivals, ceasefireHolds, num,
+  monthlyChancery, monthlyStrongClients, declaredRivals, ceasefireHolds, num,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -143,6 +143,7 @@ function monthlyBlock(ctx) {
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
   safe('chancery', () => monthlyChancery(ctx)); // the establishment is paid for, and the collars chafe (SPEC §202)
+  safe('strongClients', () => monthlyStrongClients(ctx)); // …and a client grown strong despises the collar (SPEC §298)
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
   safe('programs', () => monthlyPrograms(ctx)); // …and the shops at home get a month older (SPEC §213)

@@ -2313,6 +2313,19 @@ export const DEFINES = {
     revoltOpinion: -75,          // at/below this a client may rise for independence
     revoltStrength: 0.4,         // rebel strength needed (with co-rebels), × the overlord's
     revoltChance: 0.04,          // monthly rising roll once every condition holds
+    // A strong client chafes (SPEC §298). A client is content while its lands
+    // are at most half its lord's. Past that, the regard it settles at falls
+    // from bondOpinion by strongTargetPerShare per point of the share — a
+    // client as large as its lord settles at revoltOpinion — and its regard
+    // sinks toward that, month by month, faster the larger it is. Envoys and
+    // gifts can hold it up for a price; nothing else in the bond does.
+    strongFreeShare: 0.5,        // its development against ours before it tells...
+    strongTargetPerShare: 250,   // ...and how far the settled regard falls per point past it
+    strongRateBase: 2,           // the monthly fall once it chafes...
+    strongRatePerShare: 8,       // ...plus this per point of share past the free half...
+    strongRateMax: 8,            // ...and never more than this a month
+    strongRisePerShare: 2,       // past its lord's size, the rising roll grows this much per point...
+    strongRiseMax: 3,            // ...to at most this many times the ordinary roll
     // Releasing a client state (SPEC §218): the other end of the same loop. A
     // crown may let go of a piece of its OWN realm on purpose and seat a crown
     // on it — the land governs itself and pays what a client pays, and it comes
