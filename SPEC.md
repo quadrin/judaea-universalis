@@ -21487,3 +21487,48 @@ between −46 and −56 dB, with no silent holes.
   song plays, automatic at war plays a Second Temple piece for war, Next
   song changes it.
 
+
+## §297 — Split an army by unit type
+
+The outliner could split an army in half (§191 keeps the mix proportional),
+but not by arm: a column of foot and horse could not send its horse ahead,
+nor leave its guns at a siege, without splitting by halves and merging back.
+
+**The button.** The selected army's row carries one small button at the end
+of its unit line (after the last count), drawn as one column branching into
+three. It shows when the army has two arms or more; an army of one arm, and
+a row not selected, carry none. Its tooltip names the arms ("3 × Drilled
+Spearmen, 4 × Noble Cavalry — each its own army").
+
+**The rule** (`splitArmyByArmCore` in `js/sim/military.js`, the action
+`splitArmyByType`):
+
+- every arm of the army marches as its own army;
+- the arm with the most regiments keeps the army — its name, its general and
+  its orders; a tie goes to the foot, then the horse;
+- every other arm becomes a fresh army in the same province, with no
+  general and no orders, named for its pattern ("Host of Jerusalem —
+  Drilled Spearmen"), with the army's morale and pattern, and its share of
+  the men by regiment; the kept arm has the rest, so the men add up;
+- an army in battle, in retreat, shattered, or aboard ship is not divided,
+  and says why. Aboard ship now refuses the half-split too: a detachment was
+  set down in the fleet's province, off the ship.
+- an army too hollow to give every arm one man is not divided.
+
+The action is not a query, so a multiplayer guest's click is sent to the
+host as a command like every other order.
+
+- **Regression contract**: `smoke205.mjs` — the actions name the arms and
+  offer the split; two arms: the larger keeps the name, the general and the
+  orders, the other stands as its own army in the same province with no
+  general, named for its pattern, the men by regiment, morale and pattern
+  kept; three arms with a tie: the foot keep the army, every army is one arm,
+  regiments and men add up; one arm, battle, retreat and ship refuse it with
+  a reason (ship refuses the half-split too); another court's army and a
+  hollow army are not divided. `uitest62.mjs` — no button with no row
+  selected; the selected army of foot and horse has the button inside its
+  unit line, after the last count, on the same line, and no other row has
+  one; the tooltip names both arms; a click leaves the horse in the army and
+  the foot as a new army of 3,000, listed in the outliner, and the army (one
+  arm now) has no button; a selected army of one arm has none; no page
+  errors.

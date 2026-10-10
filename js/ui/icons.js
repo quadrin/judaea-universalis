@@ -234,6 +234,14 @@ export const ICONS = {
     '<path d="M12 13.5c0-3 1.9-4.6 4.9-4.6h1.2"/>' +
     '<path d="M8.3 6.3 5.5 8.9l2.8 2.6"/>' +
     '<path d="M15.7 6.3l2.8 2.6-2.8 2.6"/>',
+  // Split by type (SPEC §297): one column branching into three, an arm each
+  splitType:
+    '<path d="M12 21v-7.5M12 13.5V4"/>' +
+    '<path d="M12 13.5c0-3-1.9-4.6-4.9-4.6H4.8"/>' +
+    '<path d="M12 13.5c0-3 1.9-4.6 4.9-4.6h2.3"/>' +
+    '<path d="M7.3 6.4 4.6 8.9l2.7 2.6"/>' +
+    '<path d="M16.7 6.4l2.7 2.5-2.7 2.6"/>' +
+    '<path d="M9.9 6.1 12 4l2.1 2.1"/>',
   // Hire general: crested helmet
   helmet:
     '<path d="M6.3 18.6v-6.2c0-3.6 2.4-5.9 5.7-5.9s5.7 2.3 5.7 5.9v6.2"/>' +

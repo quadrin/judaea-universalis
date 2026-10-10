@@ -651,6 +651,10 @@ button {
 .ol-arm { display: inline-flex; align-items: center; gap: 2px; }
 .ol-arm .icon-row { margin-right: 0; opacity: 0.75; }
 .ol-row.sel .ol-comp { color: var(--parch-dark); }
+/* split by type (SPEC §297): a small button at the end of the unit line */
+.ol-comp { align-items: center; }
+.ol-act.ol-split-type { width: 18px; height: 16px; margin-left: 2px; }
+.ol-act.ol-split-type .icon { width: 11px; height: 11px; }
 /* A selected army's orders sit on their own line under the row, so the name
    and the mix stay readable instead of being squeezed to an ellipsis. */
 .ol-army.sel { flex-wrap: wrap; }

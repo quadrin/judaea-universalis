@@ -13,7 +13,7 @@ import { ownWorksOf, selfSufficientWorks } from '../data/programs.js';
 // triangle they answer each other in. Pure data + pure functions.
 import {
   ARMS, ARM, armShares, armEdge, armEdgeText, dominantArm, unitBattleCue,
-  MOUNTED_TERRAIN,
+  MOUNTED_TERRAIN, armGenName,
 } from '../data/units.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // The month of the year (SPEC §272). seasons.js imports nothing from the sim
@@ -2475,6 +2475,48 @@ export function splitArmyCore(ctx, army) {
   g.armies[id] = det;
   engageIfNeeded(ctx, det);
   return id;
+}
+
+// Split by type (SPEC §297): every arm of the army marches as its own army.
+// The arm with the most regiments keeps the army — its name, its general, its
+// orders (a tie goes to the foot, then the horse). Every other arm becomes a
+// fresh, general-less army in the same province, named for its pattern
+// ("Zealots of Aphek — Light Horse"), with its share of the men by regiment
+// and the army's morale and pattern. Returns the new ids; [] when the army has
+// one arm only, or too few men to give every arm one.
+export function splitArmyByArmCore(ctx, army) {
+  const g = ctx.game;
+  if (!army || !g.armies[army.id]) return [];
+  const have = { inf: num(army.regiments.inf), cav: num(army.regiments.cav), art: num(army.regiments.art) };
+  const arms = ARMS.filter((k) => have[k] > 0);
+  if (arms.length < 2) return [];
+  const R = regCount(army);
+  const men0 = num(army.men);
+  if (arms.some((k) => Math.floor(men0 * have[k] / R) < 1)) return [];
+  const keep = arms.slice().sort((x, y) => (have[y] - have[x]) || (ARMS.indexOf(x) - ARMS.indexOf(y)))[0];
+  const ids = [];
+  for (const arm of arms) {
+    if (arm === keep) continue;
+    const men = Math.floor(men0 * have[arm] / R);
+    army.regiments[arm] = 0;
+    army.men = Math.max(0, num(army.men) - men);
+    const id = g.nextArmyId++;
+    const det = {
+      id, tag: army.tag,
+      name: (army.name || 'Army') + ' — ' + armGenName(num(army.gen, 0), arm),
+      prov: army.prov, path: [], moveDaysLeft: 0,
+      regiments: { inf: 0, cav: 0, art: 0, [arm]: have[arm] },
+      men,
+      morale: num(army.morale), maxMorale: num(army.maxMorale, 3),
+      general: null,
+      gen: num(army.gen, 0),
+      inBattle: false, retreating: false,
+    };
+    g.armies[id] = det;
+    engageIfNeeded(ctx, det);
+    ids.push(id);
+  }
+  return ids;
 }
 
 // ---------------------------------------------------------------- modernization (SPEC §22)

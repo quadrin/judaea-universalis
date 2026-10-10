@@ -25,7 +25,7 @@ import {
   independenceInfo, declareIndependenceCore,
   cedeProvinceInfo, cedeProvinceCore,
   chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
-  assaultInfo, doAssault, splitArmyCore, rollGeneral,
+  assaultInfo, doAssault, splitArmyCore, splitArmyByArmCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
   sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, settleScriptedPeace, GENERAL_NAMES, courtNamePool, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
@@ -1663,20 +1663,30 @@ export function gameActions(ctx) {
   // Shared gating for the player army actions (split / hire / refit / disband).
   const armyActionInfo = (armyId) => {
     const out = {
-      canSplit: false, whySplit: '', canHire: false, whyHire: '', hireCost: 50,
+      canSplit: false, whySplit: '', canSplitType: false, whySplitType: '', splitTypeArms: [],
+      canHire: false, whyHire: '', hireCost: 50,
       canModernize: false, whyModernize: '', modernizeCost: 0, genName: '', newGenName: '',
       canDisband: false, whyDisband: '', disbandReturn: 0,
     };
     const a = g.armies[armyId];
     if (!a || a.tag !== g.playerTag) {
-      out.whySplit = out.whyHire = out.whyModernize = out.whyDisband = 'That army does not answer to us.';
+      out.whySplit = out.whySplitType = out.whyHire = out.whyModernize = out.whyDisband = 'That army does not answer to us.';
       return out;
     }
-    if (a.inBattle) out.whySplit = a.name + ' is locked in battle.';
-    else if (a.retreating) out.whySplit = a.name + ' is retreating and cannot divide.';
-    else if (num(a.shatteredDays) > 0) out.whySplit = a.name + ' is shattered and must reform.';
-    else if (regCount(a) < 2) out.whySplit = 'At least two regiments are needed to split.';
+    // what stops any division: the fight, the rout, the ship's hold
+    let held = '';
+    if (a.inBattle) held = a.name + ' is locked in battle.';
+    else if (a.retreating) held = a.name + ' is retreating and cannot divide.';
+    else if (num(a.shatteredDays) > 0) held = a.name + ' is shattered and must reform.';
+    else if (a.aboard) held = a.name + ' is aboard ship and must land before it divides.';
+    out.whySplit = held || (regCount(a) < 2 ? 'At least two regiments are needed to split.' : '');
     out.canSplit = !out.whySplit;
+    // Split by type (SPEC §297): each arm its own army.
+    const regs = a.regiments || {};
+    out.splitTypeArms = ['inf', 'cav', 'art'].filter((k) => num(regs[k]) > 0)
+      .map((k) => ({ arm: k, regs: num(regs[k]), name: armGenName(num(a.gen, 0), k) }));
+    out.whySplitType = held || (out.splitTypeArms.length < 2 ? 'Only one kind of regiment: there is nothing to split by type.' : '');
+    out.canSplitType = !out.whySplitType;
     const t = g.tags[g.playerTag];
     if (!t || num(t.points && t.points.mar) < 50) out.whyHire = 'Not enough martial points (50 required).';
     out.canHire = !out.whyHire;
@@ -2338,6 +2348,18 @@ export function gameActions(ctx) {
         if (!nid) { say('Cannot split', a.name + ' is too depleted to divide.', 'bad'); return 0; }
         return nid;
       } catch (e) { warnOnce('split', 'splitArmy failed', e); return 0; }
+    },
+    // Split by type (SPEC §297): returns the new armies' ids.
+    splitArmyByType(armyId) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return [];
+        const st = armyActionInfo(armyId);
+        if (!st.canSplitType) { say('Cannot split', st.whySplitType, 'bad'); return []; }
+        const ids = splitArmyByArmCore(ctx, a);
+        if (!ids.length) { say('Cannot split', a.name + ' is too depleted to divide.', 'bad'); return []; }
+        return ids;
+      } catch (e) { warnOnce('splitType', 'splitArmyByType failed', e); return []; }
     },
     disbandArmy(armyId) {
       try {
