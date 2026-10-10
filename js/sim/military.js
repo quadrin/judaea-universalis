@@ -13,7 +13,7 @@ import { ownWorksOf, selfSufficientWorks } from '../data/programs.js';
 // triangle they answer each other in. Pure data + pure functions.
 import {
   ARMS, ARM, armShares, armEdge, armEdgeText, dominantArm, unitBattleCue,
-  MOUNTED_TERRAIN,
+  MOUNTED_TERRAIN, armGenName,
 } from '../data/units.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // The month of the year (SPEC §272). seasons.js imports nothing from the sim
@@ -2475,6 +2475,48 @@ export function splitArmyCore(ctx, army) {
   g.armies[id] = det;
   engageIfNeeded(ctx, det);
   return id;
+}
+
+// Split by type (SPEC §297): every arm of the army marches as its own army.
+// The arm with the most regiments keeps the army — its name, its general, its
+// orders (a tie goes to the foot, then the horse). Every other arm becomes a
+// fresh, general-less army in the same province, named for its pattern
+// ("Zealots of Aphek — Light Horse"), with its share of the men by regiment
+// and the army's morale and pattern. Returns the new ids; [] when the army has
+// one arm only, or too few men to give every arm one.
+export function splitArmyByArmCore(ctx, army) {
+  const g = ctx.game;
+  if (!army || !g.armies[army.id]) return [];
+  const have = { inf: num(army.regiments.inf), cav: num(army.regiments.cav), art: num(army.regiments.art) };
+  const arms = ARMS.filter((k) => have[k] > 0);
+  if (arms.length < 2) return [];
+  const R = regCount(army);
+  const men0 = num(army.men);
+  if (arms.some((k) => Math.floor(men0 * have[k] / R) < 1)) return [];
+  const keep = arms.slice().sort((x, y) => (have[y] - have[x]) || (ARMS.indexOf(x) - ARMS.indexOf(y)))[0];
+  const ids = [];
+  for (const arm of arms) {
+    if (arm === keep) continue;
+    const men = Math.floor(men0 * have[arm] / R);
+    army.regiments[arm] = 0;
+    army.men = Math.max(0, num(army.men) - men);
+    const id = g.nextArmyId++;
+    const det = {
+      id, tag: army.tag,
+      name: (army.name || 'Army') + ' — ' + armGenName(num(army.gen, 0), arm),
+      prov: army.prov, path: [], moveDaysLeft: 0,
+      regiments: { inf: 0, cav: 0, art: 0, [arm]: have[arm] },
+      men,
+      morale: num(army.morale), maxMorale: num(army.maxMorale, 3),
+      general: null,
+      gen: num(army.gen, 0),
+      inBattle: false, retreating: false,
+    };
+    g.armies[id] = det;
+    engageIfNeeded(ctx, det);
+    ids.push(id);
+  }
+  return ids;
 }
 
 // ---------------------------------------------------------------- modernization (SPEC §22)
@@ -5035,6 +5077,99 @@ export function clientStrain(ctx, lord, pre) {
     Math.round(out.strain * DIP(ctx, 'strainFloorPer', 10)));
   return out;
 }
+// A strong client chafes (SPEC §298): the client's own weight against its
+// lord's. The chancery's strain above reads the lord's whole collection and
+// stops short of a rising; this reads one client, and does not: a client as
+// large as its lord settles where a rising starts. An off-map lord weighs its
+// def's own development (SPEC §180), as it does in the standing score.
+export function strongClientInfo(ctx, client, devOf) {
+  const g = ctx.game;
+  const t = g.tags[client];
+  const lord = t && t.overlord;
+  const out = { on: false, lord: lord || null, ratio: 0, target: null, rate: 0, rise: 1 };
+  if (!lord || !g.tags[lord] || !mechanicOn(ctx, 'clientKingdoms')) return out;
+  const V = ctx.DEFINES.VASSALS || {};
+  const d = devOf || ((k) => devOfTag(ctx, k));
+  const om = tagDef(ctx, lord).offmap;
+  const lordDev = Math.max(1, d(lord) + (om ? num(om.dev, 0) : 0));
+  const ratio = d(client) / lordDev;
+  out.ratio = Math.round(ratio * 100) / 100;
+  const free = num(V.strongFreeShare, 0.5);
+  if (ratio <= free) return out;
+  const past = ratio - free;
+  out.on = true;
+  out.target = Math.max(-200, Math.round(num(V.bondOpinion, 50) - past * num(V.strongTargetPerShare, 250)));
+  out.rate = Math.round(Math.min(num(V.strongRateMax, 8),
+    num(V.strongRateBase, 2) + past * num(V.strongRatePerShare, 8)) * 10) / 10;
+  out.rise = Math.round(Math.min(num(V.strongRiseMax, 3),
+    1 + Math.max(0, ratio - 1) * num(V.strongRisePerShare, 2)) * 100) / 100;
+  return out;
+}
+// How far a client's regard has gone: 0 content or not chafing, 1 chafing,
+// 2 past the war call (it stays home), 3 at the rising.
+function chafeStage(ctx, client) {
+  const t = ctx.game.tags[client];
+  if (!t || !t.chafe) return 0;
+  const V = ctx.DEFINES.VASSALS || {};
+  const v = opinionOf(ctx, client, t.overlord);
+  return v <= num(V.revoltOpinion, -75) ? 3 : v < num(V.loyalOpinion, -25) ? 2 : 1;
+}
+// Monthly, before the ordinary drift: every strong client's regard sinks
+// toward where its weight settles it, and a lord who is a player hears each
+// stage once as it is reached.
+export function monthlyStrongClients(ctx) {
+  const g = ctx.game;
+  if (!mechanicOn(ctx, 'clientKingdoms')) return;
+  const dev = Object.create(null);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || !p.owner) continue;
+    dev[p.owner] = num(dev[p.owner]) + devTotal(p);
+  }
+  const devOf = (k) => num(dev[k]);
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || !t.alive) continue;
+    const lordTag = t.overlord;
+    const lord = lordTag && g.tags[lordTag];
+    if (!lord || !lord.alive) { if (t.chafe) delete t.chafe; continue; }
+    const s = strongClientInfo(ctx, k, devOf);
+    if (!s.on) { if (t.chafe) delete t.chafe; continue; }
+    const prev = t.chafe && t.chafe.by === lordTag ? t.chafe : null;
+    t.chafe = { by: lordTag, ratio: s.ratio, target: s.target, rate: s.rate, rise: s.rise, told: prev ? num(prev.told) : 0 };
+    if (!t.opinion) t.opinion = {};
+    const v = num(t.opinion[lordTag]);
+    if (v > s.target) t.opinion[lordTag] = clamp(Math.max(s.target, v - s.rate), -200, 200);
+    const stage = chafeStage(ctx, k);
+    if (stage < t.chafe.told) t.chafe.told = stage; // it can warn again if it slides back
+    if (stage > t.chafe.told) {
+      t.chafe.told = stage;
+      if (lordTag === g.playerTag && ctx.bus) {
+        const name = t.name || k;
+        const pct = Math.round(s.ratio * 100);
+        const now = Math.round(num(t.opinion[lordTag]));
+        ctx.bus.emit('notify', stage === 1 ? {
+          title: name + ' outgrows its collar',
+          text: name + '’s lands are ' + pct + '% of ours. A client that strong chafes: its regard for us falls '
+            + s.rate + ' a month toward ' + s.target + '. Envoys and gifts can hold it up; a client that sinks too far '
+            + 'stays home from our wars, and one that despises us rises.',
+          type: 'bad',
+        } : stage === 2 ? {
+          title: name + ' will not march for us',
+          text: name + '’s regard for us is ' + now + ': it will refuse our call to arms. Its lands are '
+            + pct + '% of ours, and it sinks toward ' + s.target + '.',
+          type: 'bad',
+        } : {
+          title: name + ' talks of independence',
+          text: name + '’s regard for us is ' + now + '. With the strength to dare, it may rise in a war of '
+            + 'independence any month' + (s.rise > 1 ? ', and a client this large is ' + s.rise + '× as ready to.' : '.'),
+          type: 'war',
+        });
+      }
+    }
+  }
+}
+
 // A court freed at OUR table does not kneel to the hand that freed it — not
 // while the people who saw it happen are alive (SPEC §202). Returns the months
 // still to run, or 0.

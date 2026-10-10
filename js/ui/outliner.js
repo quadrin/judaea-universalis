@@ -19,12 +19,13 @@ export function armyOrder(a, b) {
 // its pattern's face and its regiment count. A single-arm host shows one
 // pair; a mixed host shows the mix, which is the thing the roster used to
 // hide behind a tooltip.
-export function armyCompositionHtml(a) {
+// `tail`: what rides at the end of the line (the split-by-type button).
+export function armyCompositionHtml(a, tail) {
   const regs = (a && a.regiments) || {};
   const gen = (a && a.gen) | 0;
   const parts = ['inf', 'cav', 'art'].filter((k) => (regs[k] | 0) > 0)
     .map((k) => `<span class="ol-arm" data-arm="${k}">${unitIcon(gen, k, 'icon-row')}${regs[k] | 0}</span>`);
-  return `<span class="ol-comp">${parts.join('') || '<span class="ol-arm ol-arm-none">no regiments</span>'}</span>`;
+  return `<span class="ol-comp">${parts.join('') || '<span class="ol-arm ol-arm-none">no regiments</span>'}${tail || ''}</span>`;
 }
 
 export function createOutliner(el, {
@@ -56,6 +57,11 @@ export function createOutliner(el, {
     const sp = e.target.closest('[data-split]');
     if (sp) {
       if (!sp.classList.contains('disabled')) runArmyAction('splitArmy', Number(sp.dataset.split));
+      return;
+    }
+    const st = e.target.closest('[data-split-type]');
+    if (st) {
+      if (!st.classList.contains('disabled')) runArmyAction('splitArmyByType', Number(st.dataset.splitType));
       return;
     }
     const hg = e.target.closest('[data-hire]');
@@ -135,7 +141,7 @@ export function createOutliner(el, {
     }
     const fl = e.target.closest('[data-fleet]');
     if (fl) {
-      if (onFleetClick) onFleetClick(Number(fl.dataset.fleet));
+      if (onFleetClick) onFleetClick(Number(fl.dataset.fleet), !!e.shiftKey);
       return;
     }
     const bt = e.target.closest('[data-battle]');
@@ -157,12 +163,25 @@ export function createOutliner(el, {
     return (p && p.name) || ('#' + id);
   }
 
+  function armyActionsOf(a) {
+    if (!actions || typeof actions.getArmyActions !== 'function') return null;
+    try { return actions.getArmyActions(a.id); } catch (e) { warnOnce('getArmyActions', e); return null; }
+  }
+
+  // Split by type (SPEC §297): one small button at the end of the selected
+  // row's unit line, shown when the army has more than one arm.
+  function splitTypeHtml(a, aa) {
+    if (!aa || !Array.isArray(aa.splitTypeArms) || aa.splitTypeArms.length < 2) return '';
+    const parts = aa.splitTypeArms.map((x) => `${x.regs} × ${x.name}`).join(', ');
+    const tt = aa.canSplitType
+      ? `Split by unit type: ${parts} — each its own army. The largest keeps the name and the general.`
+      : (aa.whySplitType || 'This army cannot be split now');
+    return `<button class="ol-act ol-split-type${aa.canSplitType ? '' : ' disabled'}" data-split-type="${a.id}" data-tt="${esc(tt)}" aria-label="Split by unit type">${icon('splitType')}</button>`;
+  }
+
   // Mini split / hire-general buttons on the selected army row (v1.3).
   // Renders nothing unless the sim provides getArmyActions.
-  function armyActionsHtml(a) {
-    if (!actions || typeof actions.getArmyActions !== 'function') return '';
-    let aa = null;
-    try { aa = actions.getArmyActions(a.id); } catch (e) { warnOnce('getArmyActions', e); return ''; }
+  function armyActionsHtml(a, aa) {
     if (!aa) return '';
     const splitTT = aa.canSplit
       ? 'Split off half the regiments into a new army'
@@ -244,6 +263,7 @@ export function createOutliner(el, {
     for (const a of armies) {
       const sel = g.ui && (g.ui.selectedArmy === a.id
         || (Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.indexOf(a.id) >= 0));
+      const aa = sel ? armyActionsOf(a) : null;
       const moralePct = Math.max(0, Math.min(100, ((a.morale || 0) / Math.max(0.01, a.maxMorale || 1)) * 100));
       const regs = a.regiments || {};
       const gtr = a.general && Array.isArray(a.general.traits) && a.general.traits.length ? ', ' + a.general.traits.join(', ') : '';
@@ -267,10 +287,10 @@ export function createOutliner(el, {
       const tt = `${a.name || 'Army'} — at ${provName(g, a.prov)}\n${comp}${paceTxt}\nMorale: ${(a.morale || 0).toFixed(1)} / ${(a.maxMorale || 0).toFixed(1)}${gen}${flagsTxt}`;
       html += `
         <div class="ol-row ol-army${sel ? ' sel' : ''}${oos ? ' ol-oos' : ''}" data-army="${a.id}" data-tt="${esc(tt)}">
-          <span class="ol-name"><span class="ol-title">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${oos ? '<span class="ol-oos-badge">✂</span> ' : ''}${face} ${esc(a.name || ('Army ' + a.id))}</span>${armyCompositionHtml(a)}</span>
+          <span class="ol-name"><span class="ol-title">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${oos ? '<span class="ol-oos-badge">✂</span> ' : ''}${face} ${esc(a.name || ('Army ' + a.id))}</span>${armyCompositionHtml(a, aa ? splitTypeHtml(a, aa) : '')}</span>
           <span class="ol-men">${fmtMen(a.men)}</span>
           <span class="morale"><span class="morale-fill" style="width:${moralePct}%"></span></span>
-          ${sel ? armyActionsHtml(a) : ''}
+          ${sel ? armyActionsHtml(a, aa) : ''}
         </div>`;
     }
 
@@ -283,7 +303,8 @@ export function createOutliner(el, {
     if (fleets.length) {
       html += `<div class="ol-sec">Fleets <span class="ol-count">${fleets.length}</span></div>`;
       for (const f of fleets) {
-        const sel = g.ui && g.ui.selectedFleet === f.id;
+        const sel = g.ui && (g.ui.selectedFleet === f.id
+          || (Array.isArray(g.ui.selectedFleets) && g.ui.selectedFleets.indexOf(f.id) >= 0));
         const adm = f.admiral ? `\nAdmiral: ${f.admiral.name} (seamanship ${f.admiral.maneuver})` : '';
         const tt = `${f.name} — ${f.ships} ships of ${f.genName || 'the old pattern'} (${fmtMen(f.capacity)} capacity)${adm}\n`
           + (f.laidUp ? 'Laid up in ordinary at ' + f.provName : f.recommission ? 'Signing on crews at ' + f.provName + ', ' + f.recommission + ' days more' : f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
@@ -313,9 +334,9 @@ export function createOutliner(el, {
             <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.name)}</span>
             <span class="ol-men">${f.ships}</span>
             ${sel ? `<span class="ol-acts">`
-    + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('shield')}</button>` : '')
+    + `<button class="ol-act${f.canMerge ? '' : ' disabled'}" data-fleet-merge="${f.id}" data-tt="${esc(mergeTT)}">${icon('shield')}</button>`
+    + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('embark')}</button>` : '')
     + (f.canDisembark ? `<button class="ol-act" data-fleet-disembark="${f.id}" data-tt="Put the carried armies ashore here">${icon('retreat')}</button>` : '')
-    + `<button class="ol-act${f.canMerge ? '' : ' disabled'}" data-fleet-merge="${f.id}" data-tt="${esc(mergeTT)}">${icon('ship')}</button>`
     + `<button class="ol-act${f.canHireAdmiral ? '' : ' disabled'}" data-fleet-admiral="${f.id}" data-tt="${esc(admTT)}">${icon('helmet')}</button>`
     + `<button class="ol-act${f.canModernize ? '' : ' disabled'}" data-fleet-modernize="${f.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>`
     + `<button class="ol-act${f.laidUp || f.canLayUp ? '' : ' disabled'}${f.laidUp ? ' on' : ''}" data-fleet-layup="${f.id}" data-on="${f.laidUp ? '0' : '1'}" data-tt="${esc(layTT)}">${icon('anchor')}</button>`

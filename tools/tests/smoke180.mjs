@@ -105,7 +105,8 @@ console.log('== the roster: largest first, and what each column is made of ==');
   ok(/no regiments/.test(armyCompositionHtml({ regiments: {} })), 'an empty formation says so');
   const OL = readFileSync(R + '/js/ui/outliner.js', 'utf8');
   ok(/\.sort\(armyOrder\)/.test(OL), 'the outliner sorts its armies with it');
-  ok(/\$\{armyCompositionHtml\(a\)\}/.test(OL), '  and prints the composition in every army row');
+  // (the second argument is the split-by-type button on the selected row, SPEC §297)
+  ok(/\$\{armyCompositionHtml\(a[,)]/.test(OL), '  and prints the composition in every army row');
   ok(!/data-gather/.test(OL), '  and the gather button is gone');
 }
 

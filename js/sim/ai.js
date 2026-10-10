@@ -681,7 +681,9 @@ function vassalIndependence(ctx) {
     let ours = strength(k);
     for (const v of coRebels) ours += strength(v);
     if (ours < strength(lordTag) * num(V.revoltStrength, 0.4)) continue;
-    if (!ctx.rng.chance(num(V.revoltChance, 0.04))) continue;
+    // a client as large as its lord is readier to dare (SPEC §298)
+    const rise = t.chafe && t.chafe.by === lordTag ? Math.max(1, num(t.chafe.rise, 1)) : 1;
+    if (!ctx.rng.chance(Math.min(1, num(V.revoltChance, 0.04) * rise))) continue;
     // The bond breaks first — free courts declare, clients cannot.
     t.overlord = null;
     for (const v of coRebels) g.tags[v].overlord = null;

@@ -302,6 +302,11 @@ export function monthlyOpinionDrift(ctx) {
           : (t.overlord === other || (g.tags[other] && g.tags[other].overlord === tag))
             ? num(V.bondOpinion, 50)
             : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
+      // A strong client's bond settles lower, at its weight (SPEC §298): the
+      // collar does not warm it past where its size has carried it.
+      if (t.overlord === other && t.chafe && t.chafe.by === other && Number.isFinite(t.chafe.target)) {
+        target = Math.min(target, t.chafe.target);
+      }
       // A live arms pipeline anchors its supplier's regard (SPEC §181), the
       // way §57's pacts once floored a standing: purchasing missions, spares
       // contracts and attachés keep the door from swinging shut by pure

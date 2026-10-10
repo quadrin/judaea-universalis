@@ -651,6 +651,10 @@ button {
 .ol-arm { display: inline-flex; align-items: center; gap: 2px; }
 .ol-arm .icon-row { margin-right: 0; opacity: 0.75; }
 .ol-row.sel .ol-comp { color: var(--parch-dark); }
+/* split by type (SPEC §297): a small button at the end of the unit line */
+.ol-comp { align-items: center; }
+.ol-act.ol-split-type { width: 18px; height: 16px; margin-left: 2px; }
+.ol-act.ol-split-type .icon { width: 11px; height: 11px; }
 /* A selected army's orders sit on their own line under the row, so the name
    and the mix stay readable instead of being squeezed to an ellipsis. */
 .ol-army.sel { flex-wrap: wrap; }
@@ -2713,6 +2717,9 @@ html, body {
 .np-dip-ws { font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--ink-soft); }
 .np-dip-ws.pos { color: var(--green); }
 .np-dip-ws.neg { color: var(--red-deep); }
+/* a client's weight and loyalty (SPEC §298) */
+.np-dip-ws.warn { color: #b06a1c; }
+.np-client .np-client-pct { margin-right: 8px; color: var(--ink-soft); }
 .np-dip-none { padding: 3px 0; font-style: italic; font-size: 12.5px; color: var(--ink-soft); opacity: 0.9; }
 /* The line above a court-wide dispersion row (SPEC §261): who is being written
    to, and the reminder that each letter is still its own risk. */

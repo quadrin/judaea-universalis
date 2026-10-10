@@ -1484,7 +1484,8 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     const s = r.s;
     const ui = game.ui || {};
     const selIds = [ui.selectedArmy].concat(Array.isArray(ui.selectedArmies) ? ui.selectedArmies : []);
-    const selected = ui.selectedFleet === f.id || (m.aboard && m.aboard.armies.some((a) => selIds.indexOf(a.id) >= 0));
+    const selected = ui.selectedFleet === f.id || (Array.isArray(ui.selectedFleets) && ui.selectedFleets.indexOf(f.id) >= 0)
+      || (m.aboard && m.aboard.armies.some((a) => selIds.indexOf(a.id) >= 0));
     const laid = !!f.laidUp;
     const base = laid ? [128, 120, 104] : col;
     const rad = 3 * s;
@@ -1902,7 +1903,8 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         if (!onScreen(m.x, m.y)) continue;
         const col = tagColor(game, f.tag);
         if (m.moving) drawWake(m.route, m.s, camera, m.sc);
-        if (game.ui && game.ui.selectedFleet === f.id) {
+        if (game.ui && (game.ui.selectedFleet === f.id
+          || (Array.isArray(game.ui.selectedFleets) && game.ui.selectedFleets.indexOf(f.id) >= 0))) {
           // selected: a gold ring on the water around the hull
           x2.save();
           x2.strokeStyle = '#e7c34c';

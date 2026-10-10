@@ -21487,3 +21487,176 @@ between −46 and −56 dB, with no silent holes.
   song plays, automatic at war plays a Second Temple piece for war, Next
   song changes it.
 
+
+## §297 — Split an army by unit type
+
+The outliner could split an army in half (§191 keeps the mix proportional),
+but not by arm: a column of foot and horse could not send its horse ahead,
+nor leave its guns at a siege, without splitting by halves and merging back.
+
+**The button.** The selected army's row carries one small button at the end
+of its unit line (after the last count), drawn as one column branching into
+three. It shows when the army has two arms or more; an army of one arm, and
+a row not selected, carry none. Its tooltip names the arms ("3 × Drilled
+Spearmen, 4 × Noble Cavalry — each its own army").
+
+**The rule** (`splitArmyByArmCore` in `js/sim/military.js`, the action
+`splitArmyByType`):
+
+- every arm of the army marches as its own army;
+- the arm with the most regiments keeps the army — its name, its general and
+  its orders; a tie goes to the foot, then the horse;
+- every other arm becomes a fresh army in the same province, with no
+  general and no orders, named for its pattern ("Host of Jerusalem —
+  Drilled Spearmen"), with the army's morale and pattern, and its share of
+  the men by regiment; the kept arm has the rest, so the men add up;
+- an army in battle, in retreat, shattered, or aboard ship is not divided,
+  and says why. Aboard ship now refuses the half-split too: a detachment was
+  set down in the fleet's province, off the ship.
+- an army too hollow to give every arm one man is not divided.
+
+The action is not a query, so a multiplayer guest's click is sent to the
+host as a command like every other order.
+
+- **Regression contract**: `smoke205.mjs` — the actions name the arms and
+  offer the split; two arms: the larger keeps the name, the general and the
+  orders, the other stands as its own army in the same province with no
+  general, named for its pattern, the men by regiment, morale and pattern
+  kept; three arms with a tie: the foot keep the army, every army is one arm,
+  regiments and men add up; one arm, battle, retreat and ship refuse it with
+  a reason (ship refuses the half-split too); another court's army and a
+  hollow army are not divided. `uitest62.mjs` — no button with no row
+  selected; the selected army of foot and horse has the button inside its
+  unit line, after the last count, on the same line, and no other row has
+  one; the tooltip names both arms; a click leaves the horse in the army and
+  the foot as a new army of 3,000, listed in the outliner, and the army (one
+  arm now) has no button; a selected army of one arm has none; no page
+  errors.
+
+## §298 — A strong client chafes, and rises
+
+**What was missing.** A client kingdom's loyalty is its regard for its lord
+(§61): below −25 it stays home from the lord's wars, and at −75, with the
+strength to dare, it may rise in a war of independence. But nothing in the
+bond read the client's own size. §202's strain reads the lord's whole
+collection of collars and stops at −60 by design ("strain sours, it does
+not revolt"), and §260 warms every client back toward +50. A client grown as
+large as its lord sat at +50 forever and marched when called.
+
+**The rule** (`strongClientInfo` and `monthlyStrongClients` in
+`js/sim/military.js`; dials in `DEFINES.VASSALS`):
+
+- the client's **weight** is its development against its lord's (an
+  off-map lord weighs its def's own development, as in the standing score);
+- at half its lord's lands or less (`strongFreeShare` 0.5) a client is
+  content;
+- past that it **chafes**: the regard it settles at falls from the bond's
+  +50 by 250 per point of share past the half (`strongTargetPerShare`) — 75%
+  settles at −12, 80% at the war call (−25), and **a client as large as its
+  lord settles at the rising (−75)**; 150% settles at −200;
+- each month its regard sinks toward that point by 2 + 8 per point of share
+  past the half (at most 8 a month): 4 a month at 75%, 6 at 100%;
+- the bond's warmth (§260) lifts a strong client only to its settling point,
+  not to +50;
+- past its lord's size the rising roll (§61's 4% a month, once the regard
+  and the strength allow) grows by ×(1 + 2 per point past 1), at most ×3;
+- the client keeps `t.chafe = {by, ratio, target, rate, rise, told}` while
+  it chafes; it is dropped when it shrinks back or the collar comes off;
+- it runs monthly after the chancery and before the drift, wherever client
+  kingdoms exist (`mechanicOn(ctx, 'clientKingdoms')`; not in 1948).
+
+**What the lord can do.** Envoys (+30 to a client, every three months) and
+gifts hold the regard up for as long as they are paid for — a client of 80%,
+courted every three months, never falls to the war call. A union (§61)
+needs its devotion, which a strong client does not give. Or the lord lets it
+go (§219) before it goes.
+
+**What the player sees.**
+
+- A lord who is a player hears each stage once, as it is reached: "…
+  outgrows its collar" (its share and where it settles), "… will not march
+  for us", "… talks of independence". A client that slides back can warn
+  again.
+- The realm panel's **Client kingdoms** rows carry the client's lands as a
+  share of ours and its loyalty: *loyal*, *chafes −X/mo*, *will not march*,
+  *may rise* (or *despises us* without the strength to dare). The tooltip
+  says why: the share, the content half, its regard, where it settles, the
+  two thresholds, and what holds it.
+- The province panel's diplomacy status for our client reads *Our client
+  kingdom*, *Our client — chafes*, *— will not march* or *— may rise*, with
+  the same reasons in the tooltip; for our own lord it gives our share of
+  its lands and where our own regard settles.
+- `getClientLoyalty(tag)` answers it all for a client, and the diplomacy
+  card carries it as `clientLoyalty`.
+
+**The chapters.** Of the clients the chapters open with, one is strong:
+Himyar under Aksum in 529 (190% of Aksum's lands), which chafes from the
+first month and may rise — the history the chapter's Abraha card tells for
+533. All-AI runs (`node tools/autorun.mjs 25`, 3 seeds) are identical in
+every other chapter. In 529 over 12 seeds of 25 years there are about 1.5
+more wars a run; the first court's debt spirals go 10 → 8 and bankruptcies
+12 → 11; Himyar and Aksum are alive at the end of all twelve. (§61 and §202
+promised byte-identical runs because nothing reached −75 in an all-AI
+world; a strong client now can, by design.)
+
+- **Regression contract**: `smoke206.mjs` — content at half; at 75% it
+  settles near −12 and falls 4 a month; as large as its lord, −75 and 6 a
+  month; at 150%, −200, 8 (the cap) and the rising roll ×2; ×3 at most; a
+  monthly fall from 50 to 46 at 80%, to −25 and no further, the chafe kept
+  on the client; a small client keeps +50 and no chafe; the bond warms a
+  strong client only to its settling point; a player lord hears the three
+  stages once each, in order; envoys every three months hold an 80% client
+  above the war call; a client at 130%, left alone, rises in a war of
+  independence; `getClientLoyalty` and the diplomacy card read it; with
+  client kingdoms off, nothing chafes. `uitest63.mjs` — the notice "…
+  outgrows its collar" with the share; the realm panel's client row shows
+  90% and "chafes −5.2/mo" in the warning colour, its tooltip the reasons;
+  at −40 "will not march", at −90 with the strength "may rise" in red; the
+  province panel's status "Our client — may rise" with the share in its
+  tooltip; no page errors.
+
+## §299 — The fleet's buttons, and a group of squadrons
+
+**The buttons.** On the selected squadron's row, Embark was drawn as the
+shield and Merge as the ship — while on the army row the shield means
+merge. The two are now the other way round, and Embark has its own glyph:
+
+- **Merge** (every other squadron of ours at this anchor into this one) is
+  the shield, the army row's merge, and comes first, on the left;
+- **Embark** (our armies at this harbor go aboard) is `embark`, a hull with
+  two soldiers on deck, a spear up and the gangplank they came by;
+- the fleet panel (§294) uses the same two glyphs, in the same order:
+  *Merge here*, then *Embark troops*.
+
+**A group of squadrons.** Armies could be gathered by shift-click (§264);
+squadrons could not. Now they can, the same way:
+
+- `g.ui.selectedFleets` holds the group (saves without it read as the one
+  selected squadron); `g.ui.selectedFleet` is its primary, the last one
+  added — the fleet panel shows it and its buttons act on it;
+- shift-click on a squadron (its outliner row, or its hull on the map; the
+  group mode on touch counts as shift) adds it, or drops it if it is in;
+  a plain click selects one squadron alone;
+- a right-click sails every squadron of the group to that harbor; with two
+  or more selected, a plain click on a province does the same (the army
+  group's habit). A click that is not a harbor is said once, not once per
+  squadron;
+- the outliner marks every row of the group (each with its buttons); the
+  map rings every hull of it; the fleet panel adds a *Group* row: "3
+  squadrons · 6 ships";
+- selecting an army, a stack or a wing empties the group; a squadron that
+  sinks or merges away leaves the rest of the group selected.
+
+- **Regression contract**: `uitest64.mjs` — the selected squadron's Embark
+  button carries the troop-boat glyph and its Merge button the shield, the
+  shield first and the troop boat second, and the fleet panel the same; shift-click on a second row makes a group of
+  two with the second primary, both rows marked and the third not, the
+  panel showing "2 squadrons · 4 ships"; a shift-click on the map adds the
+  third; a right-click puts all three under sail; shift-click drops the
+  third and the second is primary again; a plain click selects one alone
+  and the panel drops the group line; no page errors. `uitest17.mjs` (the
+  map orders for a fleet and a wing) now waits for the camera to stop
+  before each click, and sails to a harbor whose centre is its own cell on
+  the raster: on a loaded machine its right-click had landed on the
+  province the camera was still passing over ("No harbor there"), before
+  and after these changes alike.

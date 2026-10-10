@@ -119,6 +119,20 @@ const fleetState = await page.evaluate(() => Object.values(window._ctx.game.flee
 ok(!!fleetState.admiral, 'an admiral takes the deck: ' + (fleetState.admiral && fleetState.admiral.name));
 ok(fleetState.gen === 5, 'the hull was laid down modern: gen ' + fleetState.gen);
 
+// The camera glides to its mark, and on a loaded machine a frame can take
+// most of a second: wait until two looks a second apart agree, or the click
+// lands on the province the camera was passing over.
+const settle = async () => {
+  await page.waitForTimeout(400);
+  await page.waitForFunction(() => {
+    const [x, y] = window._camera.mapToScreen(0, 0);
+    const k = x.toFixed(1) + ',' + y.toFixed(1);
+    const same = window.__camKey === k;
+    window.__camKey = k;
+    return same;
+  }, null, { polling: 1000, timeout: 30000 }).catch(() => {});
+};
+
 console.log('== fleets and wings answer map orders ==');
 const mapUnits = await page.evaluate(() => {
   const ctx = window._ctx;
@@ -129,7 +143,11 @@ const mapUnits = await page.evaluate(() => {
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p) continue;
-    if (!fleetDest && i !== fleet.prov && ctx.geom.coastal[i]) fleetDest = i;
+    // a harbor whose centre is its own on the raster: a folded profile's
+    // centroid can sit in a neighbour's cell, and the click would land there
+    const c = ctx.geom.centroids[i];
+    if (!fleetDest && i !== fleet.prov && ctx.geom.coastal[i] && c
+      && (!window._renderer.provIdAt || window._renderer.provIdAt(c.x, c.y) === i)) fleetDest = i;
     if (!wingDest && i !== wing.prov && p.owner === g.playerTag && p.controller === g.playerTag && !p.impassable) wingDest = i;
   }
   const dest = g.provinces[wingDest];
@@ -142,7 +160,7 @@ await page.evaluate((provId) => {
   const p = window._ctx.game.provinces[provId];
   window._camera.centerOn(p.x, p.y, 2.2);
 }, mapUnits.fleetProv);
-await page.waitForTimeout(900);
+await settle();
 const fleetPt = await page.evaluate((fleetId) => {
   const ctx = window._ctx;
   const f = ctx.game.fleets[fleetId];
@@ -161,7 +179,7 @@ await page.evaluate((provId) => {
   const p = window._ctx.game.provinces[provId];
   window._camera.centerOn(p.x, p.y, 2.2);
 }, mapUnits.fleetDest);
-await page.waitForTimeout(900);
+await settle();
 const fleetDestPt = await page.evaluate((provId) => {
   const c = window._ctx.geom.centroids[provId];
   const [x, y] = window._camera.mapToScreen(c.x, c.y);
@@ -177,7 +195,7 @@ await page.evaluate((provId) => {
   const p = window._ctx.game.provinces[provId];
   window._camera.centerOn(p.x, p.y, 2.2);
 }, mapUnits.wingProv);
-await page.waitForTimeout(900);
+await settle();
 const wingPt = await page.evaluate((wingId) => {
   const ctx = window._ctx;
   const w = ctx.game.airwings[wingId];
@@ -197,7 +215,7 @@ await page.evaluate((provId) => {
   const p = window._ctx.game.provinces[provId];
   window._camera.centerOn(p.x, p.y, 2.2);
 }, mapUnits.wingDest);
-await page.waitForTimeout(900);
+await settle();
 const wingDestPt = await page.evaluate((provId) => {
   const c = window._ctx.geom.centroids[provId];
   const [x, y] = window._camera.mapToScreen(c.x, c.y);

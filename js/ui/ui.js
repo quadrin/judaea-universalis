@@ -221,11 +221,13 @@ export function initUI(staticCtx) {
       const p = g.provinces[g.armies[id].prov];
       if (p && camera) camera.centerOn(p.x, p.y);
     },
-    onFleetClick(id) {
+    onFleetClick(id, shift) {
       const g = state.ctx && state.ctx.game;
       const f = g && g.fleets && g.fleets[id];
       if (!f || f.tag !== g.playerTag) return;
-      const next = g.ui.selectedFleet === id ? null : id;
+      // build the group without camera jumps (shift, or group mode on touch)
+      if (shift || groupMode) { toggleFleetInGroup(id); return; }
+      const next = g.ui.selectedFleet === id && fleetGroup(g).length <= 1 ? null : id;
       setSelectedFleet(next);
       if (next != null) setSelectedProv(0);
       const p = next != null && g.provinces[f.prov];
@@ -1316,6 +1318,7 @@ export function initUI(staticCtx) {
     if (!g) return;
     if (id != null) {
       g.ui.selectedFleet = null;
+      g.ui.selectedFleets = [];
       g.ui.selectedWing = null;
     }
     g.ui.selectedArmy = id == null ? null : id;
@@ -1329,6 +1332,7 @@ export function initUI(staticCtx) {
     const g = state.ctx && state.ctx.game;
     if (!g) return;
     g.ui.selectedFleet = id == null ? null : id;
+    g.ui.selectedFleets = id == null ? [] : [id];
     if (id != null) {
       g.ui.selectedWing = null;
       g.ui.selectedArmy = null;
@@ -1345,6 +1349,7 @@ export function initUI(staticCtx) {
     g.ui.selectedWing = id == null ? null : id;
     if (id != null) {
       g.ui.selectedFleet = null;
+      g.ui.selectedFleets = [];
       g.ui.selectedArmy = null;
       g.ui.selectedArmies = [];
       bus.emit('selectArmy', null);
@@ -1359,6 +1364,7 @@ export function initUI(staticCtx) {
     g.ui.selectedArmy = null;
     g.ui.selectedArmies = [];
     g.ui.selectedFleet = null;
+    g.ui.selectedFleets = [];
     g.ui.selectedWing = null;
     bus.emit('selectArmy', null);
     outliner.refresh(true);
@@ -1371,6 +1377,7 @@ export function initUI(staticCtx) {
     const g = state.ctx && state.ctx.game;
     if (!g || !ids.length) return;
     g.ui.selectedFleet = null;
+    g.ui.selectedFleets = [];
     g.ui.selectedWing = null;
     g.ui.selectedArmies = ids.slice();
     g.ui.selectedArmy = ids[0];
@@ -1385,6 +1392,7 @@ export function initUI(staticCtx) {
     const g = state.ctx && state.ctx.game;
     if (!g) return;
     g.ui.selectedFleet = null;
+    g.ui.selectedFleets = [];
     g.ui.selectedWing = null;
     if (!Array.isArray(g.ui.selectedArmies)) g.ui.selectedArmies = [];
     const grp = g.ui.selectedArmies;
@@ -1397,6 +1405,46 @@ export function initUI(staticCtx) {
       g.ui.selectedArmy = id;
     }
     bus.emit('selectArmy', g.ui.selectedArmy);
+    outliner.refresh(true);
+    syncFleetPanel();
+  }
+
+  // Shift+click on a squadron (SPEC §299): the fleets' half of the army
+  // group above. The last-added squadron is the primary (the fleet panel
+  // shows it, its buttons act on it); orders sail the whole group.
+  function toggleFleetInGroup(id) {
+    const g = state.ctx && state.ctx.game;
+    if (!g) return;
+    g.ui.selectedArmy = null;
+    g.ui.selectedArmies = [];
+    g.ui.selectedWing = null;
+    if (!Array.isArray(g.ui.selectedFleets)) g.ui.selectedFleets = g.ui.selectedFleet != null ? [g.ui.selectedFleet] : [];
+    const grp = g.ui.selectedFleets;
+    const at = grp.indexOf(id);
+    if (at >= 0) {
+      grp.splice(at, 1);
+      if (g.ui.selectedFleet === id) g.ui.selectedFleet = grp.length ? grp[grp.length - 1] : null;
+    } else {
+      grp.push(id);
+      g.ui.selectedFleet = id;
+    }
+    bus.emit('selectArmy', null);
+    outliner.refresh(true);
+    syncFleetPanel();
+    if (fleetPanel.isOpen()) fleetPanel.refresh(); // the group's count
+  }
+  // Our squadrons in the group that still sail under us.
+  function fleetGroup(g) {
+    const ids = Array.isArray(g.ui.selectedFleets) && g.ui.selectedFleets.length
+      ? g.ui.selectedFleets : (g.ui.selectedFleet != null ? [g.ui.selectedFleet] : []);
+    return ids.filter((id) => g.fleets && g.fleets[id] && g.fleets[id].tag === g.playerTag);
+  }
+  function sailGroup(ids, provId) {
+    if (!state.actions || typeof state.actions.moveFleet !== 'function') return;
+    // no harbor there: one squadron hears it, not the whole group
+    const geo = state.ctx && state.ctx.geom;
+    const port = !geo || !Array.isArray(geo.coastal) || !!geo.coastal[provId];
+    for (const id of (port ? ids : ids.slice(0, 1))) state.actions.moveFleet(id, provId);
     outliner.refresh(true);
     syncFleetPanel();
   }
@@ -1456,7 +1504,8 @@ export function initUI(staticCtx) {
     if (fleetId != null) {
       const f = g.fleets && g.fleets[fleetId];
       if (f && f.tag === g.playerTag) {
-        setSelectedFleet(fleetId);
+        if (grouping) toggleFleetInGroup(fleetId);
+        else setSelectedFleet(fleetId);
         setSelectedProv(0);
         return;
       }
@@ -1496,6 +1545,12 @@ export function initUI(staticCtx) {
       marchGroup(grp, provId);
       return;
     }
+    // …and a group of squadrons sails the same way (SPEC §299).
+    const fgrp = fleetGroup(g);
+    if (provId > 0 && fgrp.length >= 2) {
+      sailGroup(fgrp, provId);
+      return;
+    }
     if (provId > 0) {
       clearSelectedUnits();
       setSelectedProv(provId);
@@ -1511,8 +1566,7 @@ export function initUI(staticCtx) {
     const provId = payload ? payload.provId : 0;
     if (provId <= 0 || !state.actions) return;
     if (g.ui.selectedFleet != null && typeof state.actions.moveFleet === 'function') {
-      state.actions.moveFleet(g.ui.selectedFleet, provId);
-      outliner.refresh(true);
+      sailGroup(fleetGroup(g), provId);
       return;
     }
     if (g.ui.selectedWing != null && typeof state.actions.moveAirWing === 'function') {
@@ -1830,6 +1884,15 @@ export function initUI(staticCtx) {
         }
       } else if (g.ui.selectedArmy != null && (!g.armies || !g.armies[g.ui.selectedArmy])) {
         setSelectedArmy(null); // selected army died / merged away
+      }
+      if (Array.isArray(g.ui.selectedFleets) && g.ui.selectedFleets.some((id) => !g.fleets || !g.fleets[id])) {
+        // a squadron of the group sank or merged away: the rest stay selected
+        g.ui.selectedFleets = g.ui.selectedFleets.filter((id) => g.fleets && g.fleets[id]);
+        if (g.ui.selectedFleet != null && !g.ui.selectedFleets.includes(g.ui.selectedFleet)) {
+          g.ui.selectedFleet = g.ui.selectedFleets.length ? g.ui.selectedFleets[g.ui.selectedFleets.length - 1] : null;
+        }
+        outliner.refresh(true);
+        syncFleetPanel();
       }
       if (g.ui.selectedFleet != null && (!g.fleets || !g.fleets[g.ui.selectedFleet])) setSelectedFleet(null);
       if (g.ui.selectedWing != null && (!g.airwings || !g.airwings[g.ui.selectedWing])) setSelectedWing(null);

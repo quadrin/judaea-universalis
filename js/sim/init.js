@@ -24,8 +24,8 @@ import {
   freeClientInfo, freeClientCore,
   independenceInfo, declareIndependenceCore,
   cedeProvinceInfo, cedeProvinceCore,
-  chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
-  assaultInfo, doAssault, splitArmyCore, rollGeneral,
+  chanceryOn, diploLoad, chanceryFullWhy, clientStrain, strongClientInfo, freedCollarMonthsLeft, DIP,
+  assaultInfo, doAssault, splitArmyCore, splitArmyByArmCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
   sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, settleScriptedPeace, GENERAL_NAMES, courtNamePool, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
@@ -275,7 +275,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     ceasefire: null, // a truce ordered from outside the war, in force to an end month (SPEC §261)
     armsDeals: {}, // who feeds whose arsenal: { client: supplier } (SPEC §181)
     rngSeed, rngState: rngSeed,
-    ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null },
+    ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedFleets: [], selectedWing: null },
   };
 
   const srcProvs = (MAP_DATA && MAP_DATA.provinces) || [];
@@ -1616,6 +1616,7 @@ export function gameActions(ctx) {
         })(),
         opinionOfUs, ourOpinion, allied, atWarWithUs, truceUntil,
         ourClient, ourOverlord, theirOverlord,
+        clientLoyalty: ourClient || ourOverlord ? clientLoyalty(ourClient ? tag : me) : null,
         theirOverlordName: theirOverlord && g.tags[theirOverlord] ? (g.tags[theirOverlord].name || theirOverlord) : '',
         cb,
         canImprove: !whyNotImprove, canGift: !whyNotGift, canAlly: !whyNotAlly, canBreak: allied,
@@ -1661,22 +1662,55 @@ export function gameActions(ctx) {
   };
 
   // Shared gating for the player army actions (split / hire / refit / disband).
+  // A client's loyalty to its lord (SPEC §298): its weight against the lord's,
+  // where that settles its regard, and how far it has gone — content,
+  // chafing, staying home from the lord's wars, or ready to rise (with the
+  // §61 strength test the rising itself makes).
+  const clientLoyalty = (tag) => {
+    const t = g.tags[tag];
+    if (!t || !t.alive || !t.overlord || !g.tags[t.overlord]) return null;
+    const V = ctx.DEFINES.VASSALS || {};
+    const s = strongClientInfo(ctx, tag);
+    const opinion = Math.round(opinionOf(ctx, tag, t.overlord));
+    const strength = (k) => armiesOf(ctx, k).reduce((n, a) => n + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+    const refuses = opinion < num(V.loyalOpinion, -25);
+    const atRising = opinion <= num(V.revoltOpinion, -75);
+    const strongEnough = strength(tag) >= strength(t.overlord) * num(V.revoltStrength, 0.4);
+    const stage = atRising ? 'rising' : refuses ? 'stays home' : s.on ? 'chafes' : 'loyal';
+    return {
+      tag, name: t.name || tag, lord: t.overlord, ratio: s.ratio, pct: Math.round(s.ratio * 100),
+      chafes: s.on, target: s.target, rate: s.rate, rise: s.rise, opinion,
+      refuses, atRising, strongEnough, mayRise: atRising && strongEnough, stage,
+      freeShare: num(V.strongFreeShare, 0.5), loyalOpinion: num(V.loyalOpinion, -25), revoltOpinion: num(V.revoltOpinion, -75),
+    };
+  };
+
   const armyActionInfo = (armyId) => {
     const out = {
-      canSplit: false, whySplit: '', canHire: false, whyHire: '', hireCost: 50,
+      canSplit: false, whySplit: '', canSplitType: false, whySplitType: '', splitTypeArms: [],
+      canHire: false, whyHire: '', hireCost: 50,
       canModernize: false, whyModernize: '', modernizeCost: 0, genName: '', newGenName: '',
       canDisband: false, whyDisband: '', disbandReturn: 0,
     };
     const a = g.armies[armyId];
     if (!a || a.tag !== g.playerTag) {
-      out.whySplit = out.whyHire = out.whyModernize = out.whyDisband = 'That army does not answer to us.';
+      out.whySplit = out.whySplitType = out.whyHire = out.whyModernize = out.whyDisband = 'That army does not answer to us.';
       return out;
     }
-    if (a.inBattle) out.whySplit = a.name + ' is locked in battle.';
-    else if (a.retreating) out.whySplit = a.name + ' is retreating and cannot divide.';
-    else if (num(a.shatteredDays) > 0) out.whySplit = a.name + ' is shattered and must reform.';
-    else if (regCount(a) < 2) out.whySplit = 'At least two regiments are needed to split.';
+    // what stops any division: the fight, the rout, the ship's hold
+    let held = '';
+    if (a.inBattle) held = a.name + ' is locked in battle.';
+    else if (a.retreating) held = a.name + ' is retreating and cannot divide.';
+    else if (num(a.shatteredDays) > 0) held = a.name + ' is shattered and must reform.';
+    else if (a.aboard) held = a.name + ' is aboard ship and must land before it divides.';
+    out.whySplit = held || (regCount(a) < 2 ? 'At least two regiments are needed to split.' : '');
     out.canSplit = !out.whySplit;
+    // Split by type (SPEC §297): each arm its own army.
+    const regs = a.regiments || {};
+    out.splitTypeArms = ['inf', 'cav', 'art'].filter((k) => num(regs[k]) > 0)
+      .map((k) => ({ arm: k, regs: num(regs[k]), name: armGenName(num(a.gen, 0), k) }));
+    out.whySplitType = held || (out.splitTypeArms.length < 2 ? 'Only one kind of regiment: there is nothing to split by type.' : '');
+    out.canSplitType = !out.whySplitType;
     const t = g.tags[g.playerTag];
     if (!t || num(t.points && t.points.mar) < 50) out.whyHire = 'Not enough martial points (50 required).';
     out.canHire = !out.whyHire;
@@ -2339,6 +2373,18 @@ export function gameActions(ctx) {
         return nid;
       } catch (e) { warnOnce('split', 'splitArmy failed', e); return 0; }
     },
+    // Split by type (SPEC §297): returns the new armies' ids.
+    splitArmyByType(armyId) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return [];
+        const st = armyActionInfo(armyId);
+        if (!st.canSplitType) { say('Cannot split', st.whySplitType, 'bad'); return []; }
+        const ids = splitArmyByArmCore(ctx, a);
+        if (!ids.length) { say('Cannot split', a.name + ' is too depleted to divide.', 'bad'); return []; }
+        return ids;
+      } catch (e) { warnOnce('splitType', 'splitArmyByType failed', e); return []; }
+    },
     disbandArmy(armyId) {
       try {
         const a = g.armies[armyId];
@@ -2370,6 +2416,10 @@ export function gameActions(ctx) {
     // ---- diplomacy (frozen) -----------------------------------------------
     getDiplomacy(tag) {
       return getDip(tag);
+    },
+    // SPEC §298: how loyal a client is to its lord, and why.
+    getClientLoyalty(tag) {
+      try { return clientLoyalty(tag); } catch (e) { warnOnce('clientLoyalty', 'getClientLoyalty failed', e); return null; }
     },
     // The chancery (SPEC §202): what a court's establishment is spent on, how
     // much of it there is, and what the collars are costing it. Answered for
@@ -4547,6 +4597,7 @@ export function reviveGame(saved) {
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null };
   if (!Array.isArray(saved.ui.selectedArmies)) saved.ui.selectedArmies = [];
   if (saved.ui.selectedFleet === undefined) saved.ui.selectedFleet = null;
+  if (!Array.isArray(saved.ui.selectedFleets)) saved.ui.selectedFleets = saved.ui.selectedFleet != null ? [saved.ui.selectedFleet] : [];
   if (saved.ui.selectedWing === undefined) saved.ui.selectedWing = null;
   // pre-buildings/loans saves: default the new economy & military fields
   for (let i = 1; i < saved.provinces.length; i++) {
