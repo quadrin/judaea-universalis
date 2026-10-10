@@ -139,12 +139,21 @@ console.log('== a short notice is short ==');
 await page.keyboard.press('Escape');
 // paused, so no other notice of the campaign pushes this one out
 await page.evaluate(() => { window._ctx.game.paused = true; document.getElementById('toast-container').innerHTML = ''; });
-await page.evaluate(() => window._ctx.bus.emit('notify', { title: 'Test notice', text: 'gone in four', type: 'info' }));
+// The notice's own timer is what the setting sets. The wall clock is not:
+// under SwiftShader one frame of the map can hold the page for 0.7 s, so a
+// 4 s timer fires at 8 s (the same before and after the songs, SPEC §295).
+const asked = await page.evaluate(() => {
+  const st = window.setTimeout;
+  const xs = [];
+  window.setTimeout = (f, ms, ...a) => { xs.push(ms); return st(f, ms, ...a); };
+  try { window._ctx.bus.emit('notify', { title: 'Test notice', text: 'gone in four', type: 'info' }); } finally { window.setTimeout = st; }
+  return xs;
+});
 await page.waitForTimeout(1500);
 const up = await page.evaluate(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('gone in four')));
-await page.waitForTimeout(3600);
-const gone = await page.evaluate(() => ![...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('gone in four')));
-ok(up && gone, 'a notice set to Short is up at 1.5 s and gone by 5.1 s');
+const gone = await page.waitForFunction(() => ![...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('gone in four')), null, { timeout: 20000 })
+  .then(() => true, () => false);
+ok(asked.includes(4000) && up && gone, 'a notice set to Short asks for 4 s, is up at 1.5 s, and goes: ' + JSON.stringify({ asked, up, gone }));
 
 console.log('== Defaults ==');
 await page.keyboard.press('o');

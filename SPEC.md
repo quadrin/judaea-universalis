@@ -20846,8 +20846,10 @@ has no audio files.
   sliders move the live gains and are stored; a chosen song plays and the
   window names it; automatic plays a Second Temple war song in the Great
   Revolt and Next song changes it; the switches are stored and reduce motion
-  marks the page; the Music switch is the old music button; a Short notice is
-  gone by 5.1 s; Defaults resets; at 390 px the tools sheet opens the window
+  marks the page; the Music switch is the old music button; a Short notice
+  asks for a 4 s timer, is up at 1.5 s and then goes (the timer, not the
+  wall clock: under SwiftShader one frame can hold the page for 0.7 s);
+  Defaults resets; at 390 px the tools sheet opens the window
   and it fits; no page errors.
 
 ## §290 — Ships sail on the water
