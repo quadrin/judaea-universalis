@@ -15,6 +15,8 @@
 //     same tune note for note in a war mode, quicker, open fifths on the same
 //     roots moved into the war mode, a march under every section with a tune;
 //     a war song is its own war version; the band plays every note of them.
+//   - SPEC §296: a war version counts the same beats in the same meter as its
+//     song, section for section (the war band takes up the tune at a beat).
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 
 // A localStorage before the store loads: one good value, one bad, one junk.
@@ -121,6 +123,11 @@ for (const s of SONGS) {
     '  a march under every section, the edges tolling');
   ok(tl.duration >= 60 && tl.duration <= 180 && tl.sections.length === w.form.length,
     `  ${tl.duration.toFixed(0)} s, ${tl.sections.length} sections`);
+  // SPEC §296: the war band takes the tune up at a beat of the song's form,
+  // so the two must count the same beats in the same bars.
+  const ps = eng.buildTimeline(s);
+  ok(w.meter === s.meter && tl.beats === ps.beats && tl.sections.every((x, i) => Math.abs(x * w.bpm - ps.sections[i] * s.bpm) < 1e-6),
+    `  the same ${tl.beats} beats in ${w.meter}, section for section`);
 }
 for (const age of Object.keys(SONG_AGES)) {
   const n = WARS.filter((x) => x.ages.includes(age)).length;

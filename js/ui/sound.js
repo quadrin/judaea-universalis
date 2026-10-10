@@ -510,9 +510,17 @@ export function initSound(bus, getGame) {
   // loudness (the songs land within about 2 dB of the score).
   const SCORE_LVL = 1;
   const SONG_LVL = 0.45;
-  const FADE_IN = 2.5;      // seconds for a song to come up
-  const SCORE_OUT = 0.7;    // time constant of the score stepping aside
-  const SCORE_IN = 1.4;     // …and of its return after a song
+  const SCORE_IN = 1.4;     // time constant of the score's return
+  // SPEC §296: one music at a time. A campaign's music is its songs, one
+  // after another with a breath between; the open score is the title
+  // screen's, and leaves by finishing — a fade, then a rest — before the
+  // first song begins on its own first bar.
+  const SCORE_FADE = 3;     // seconds the open score takes to leave
+  const REST = 1.5;         // the silence after it, before the first song
+  // A month turn can hold the page for half a second (1948: up to ~0.45 s
+  // of simulation alone), and a note scheduled late is a note dropped: the
+  // songs are written out this far ahead.
+  const SONG_AHEAD = 1.5;
   const mus = {
     started: false,
     gain: null, droneGain: null, droneFilter: null, droneOscs: [],
@@ -520,6 +528,7 @@ export function initSound(bus, getGame) {
     timer: null,
     nextBeat: 0, beat: 0,
     mood: 'peace', era: 'antique', style: 'lyre',
+    scoreMood: 'peace',     // the mood the open score is playing in
     chordIdx: -1,           // which chord of the progression is sounding
     themePos: -1,           // -1 = between refrains; else index into the tune
     refrainIn: 18,          // beats until the next refrain begins
@@ -532,11 +541,13 @@ export function initSound(bus, getGame) {
     song: null,             // {def, events, idx, start, end, bus}
     nextSongAt: 0,          // ac time the next song may begin
     recent: [],             // ids of the last songs, so they do not repeat
-    // SPEC §295: the open score and the songs each have a bus, and hand over
-    // by crossfading: one is never heard starting over the other.
+    // SPEC §295/§296: the open score and the songs each have a bus, and
+    // never play over each other.
     scoreBus: null,
+    scoreOn: true,          // the open score is playing (or coming back)
+    scoreUntil: 0,          // ac time its fade-out ends (it plays until then)
     meter: null,            // an analyser on the whole score, for the tests
-    campaign: false,        // a campaign has begun (it opens on a song)
+    campaign: null,         // the game whose music this is (a new one begins again)
   };
 
   function noteHz(rootHz, mode, degree) {
@@ -581,10 +592,10 @@ export function initSound(bus, getGame) {
     try {
       const g = getGame ? getGame() : null;
       if (g) songAge = songAgeOf(g.bookmarkId, g.date && g.date.y);
-      // A campaign has begun: its first song comes up now (SPEC §295).
-      if (g && !mus.campaign && ac) {
-        mus.campaign = true;
-        if (!mus.song) mus.nextSongAt = ac.currentTime + 1.2;
+      // A campaign has begun (a new game, a loaded one): its music begins.
+      if (g && g !== mus.campaign && ac) {
+        mus.campaign = g;
+        beginCampaign();
       }
     } catch (e) { warnOnce('song-age', e); }
   }
@@ -702,11 +713,11 @@ export function initSound(bus, getGame) {
     lfo.start();
 
     mus.nextBeat = ac.currentTime + 0.2;
-    // The title screen hears the open score; a campaign opens on a song
-    // (SPEC §295), so the first thing a campaign hears is never the score
-    // being talked over. pollMood starts the song the moment a game appears.
+    // The title screen hears the open score and no song (SPEC §295); pollMood
+    // begins a campaign's music the moment a game appears.
     mus.nextSongAt = Infinity;
-    mus.campaign = false;
+    mus.scoreOn = true;
+    mus.campaign = null;
     mus.timer = setInterval(scheduleAhead, 200);
   }
 
@@ -720,6 +731,7 @@ export function initSound(bus, getGame) {
   // age's war songs and the war versions of its songs of peace.
   function pickSong() {
     const choice = getSetting('song');
+    if (choice === 'score') return null;
     const atWar = mus.mood !== 'peace';
     const dress = (x) => (atWar ? warVersionOf(x) : x);
     if (choice !== 'auto' && choice !== 'shuffle') {
@@ -734,79 +746,149 @@ export function initSound(bus, getGame) {
     return dress(pool[(Math.random() * pool.length) | 0]);
   }
 
-  // `fromSection`: begin at that section of the form (a war version taking
-  // over a song mid-way starts where the peace version had got to).
-  function startSong(def, at, fromSection, fadeIn) {
+  // Begin `def` at ac time `at`. `fromBeat`: start at that beat of its form
+  // (the war band taking up a tune where the song had got to), with the
+  // harmony already sounding at that beat taken up too.
+  function startSong(def, at, fromBeat) {
     const tl = buildTimeline(def);
+    const spb = 60 / def.bpm;
+    const skip = fromBeat > 0 ? fromBeat * spb : 0;
     const songBus = ac.createGain();
-    const lift = fadeIn === undefined ? FADE_IN : fadeIn;
-    songBus.gain.setValueAtTime(lift > 0 ? 0.0001 : SONG_LVL, at);
-    if (lift > 0) songBus.gain.linearRampToValueAtTime(SONG_LVL, at + lift);
+    songBus.gain.value = SONG_LVL;
     songBus.connect(mus.gain);
-    const skip = fromSection > 0 && tl.sections[fromSection] !== undefined ? tl.sections[fromSection] : 0;
+    const play = createSongVoices(ac, songBus, mus.send, noiseBuf);
     let idx = 0;
     while (idx < tl.events.length && tl.events[idx].t < skip - 1e-6) idx++;
+    for (let i = 0; i < idx; i++) {
+      const ev = tl.events[i];
+      if (ev.kind === 'chord' && ev.t + ev.dur > skip + 0.05) {
+        try { play({ ...ev, dur: ev.t + ev.dur - skip }, at); } catch (e) { warnOnce('song-note', e); }
+      }
+    }
     mus.song = {
       def, events: tl.events, idx, start: at - skip, end: at - skip + tl.duration, bus: songBus,
-      sections: tl.sections,
-      play: createSongVoices(ac, songBus, mus.send, noiseBuf),
+      beats: tl.beats, spb, from: fromBeat || 0, play, cut: null, noTurn: false,
     };
     const base = def.base || def.id;
     mus.recent = mus.recent.filter((x) => x !== base);
     mus.recent.push(base);
     while (mus.recent.length > Math.min(3, SONGS.length - 1)) mus.recent.shift();
-    // the open score steps aside, all of it, while the song comes up
-    try { mus.scoreBus.gain.setTargetAtTime(0, at, SCORE_OUT); } catch (e) { /* fine */ }
-  }
-  // Which section of its form the song is in now.
-  function sectionNow(cur, now) {
-    const t = now - cur.start;
-    let k = 0;
-    for (let i = 0; i < (cur.sections || []).length; i++) if (cur.sections[i] <= t) k = i;
-    return k;
   }
 
-  // Let the song go: a short fade, then its bus is let go too.
-  // `handOver`: another song follows at once, so the open score stays out.
-  function endSong(fade, handOver) {
+  // A song's bus goes quiet from `at` (its last notes released, not cut),
+  // and is let go once it has.
+  function releaseSong(cur, at, tc) {
+    try {
+      cur.bus.gain.cancelScheduledValues(at);
+      cur.bus.gain.setTargetAtTime(0, at, tc);
+      const ms = Math.max(0, at - ac.currentTime) * 1000 + tc * 8000;
+      setTimeout(() => { try { cur.bus.disconnect(); } catch (e) { /* gone */ } }, ms);
+    } catch (e) { warnOnce('song-end', e); }
+  }
+
+  // Let the song go now, with a short fade. What follows it waits for the
+  // fade (the callers set nextSongAt), so two songs never sound at once.
+  function endSong() {
     const cur = mus.song;
     if (!cur) return;
     mus.song = null;
-    const now = ac.currentTime;
-    try {
-      cur.bus.gain.cancelScheduledValues(now);
-      cur.bus.gain.setTargetAtTime(0, now, fade ? 0.5 : 0.05);
-      setTimeout(() => { try { cur.bus.disconnect(); } catch (e) { /* gone */ } }, fade ? 4000 : 600);
-    } catch (e) { warnOnce('song-end', e); }
-    if (!handOver) scoreReturns(now + (fade ? 1.2 : 0.2));
-    mus.nextBeat = Math.max(mus.nextBeat, now + 0.1);
+    releaseSong(cur, ac.currentTime, 0.35);
   }
-  // The open score comes back up after a song, gently.
-  function scoreReturns(at) {
+
+  // Stop a gain's planned moves where it stands — a fade turned back midway
+  // goes on from where it had got to, not from where it began. Now: the
+  // value it has now, written as an event (a gain set by .value has none,
+  // and a ramp with no event before it runs from time zero — a cut). Later:
+  // held where its moves will have taken it by then.
+  function holdAt(p, at) {
+    if (at > ac.currentTime + 0.05 && p.cancelAndHoldAtTime) { p.cancelAndHoldAtTime(at); return; }
+    const v = p.value;
+    p.cancelScheduledValues(at);
+    p.setValueAtTime(v, at);
+  }
+
+  // The open score leaves by fading over SCORE_FADE seconds — it keeps
+  // playing under the fade, so it is heard ending, not cut.
+  function scoreLeaves(at) {
+    mus.scoreOn = false;
+    mus.scoreUntil = at + SCORE_FADE;
     try {
-      mus.scoreBus.gain.cancelScheduledValues(at);
+      const p = mus.scoreBus.gain;
+      holdAt(p, at);
+      p.linearRampToValueAtTime(0, at + SCORE_FADE);
+    } catch (e) { /* fine */ }
+  }
+  // …and comes back gently: the title screen, the open-score setting, or an
+  // hour with no song for it.
+  function scoreReturns(at) {
+    mus.scoreOn = true;
+    try {
+      holdAt(mus.scoreBus.gain, at);
       mus.scoreBus.gain.setTargetAtTime(SCORE_LVL, at, SCORE_IN);
     } catch (e) { /* fine */ }
   }
 
-  // Between songs the open score plays: a long stretch when automatic, a
-  // breath when the player asked for songs.
+  // The next song: once whatever is sounding has gone. A song is never
+  // begun over the open score: the score leaves first, then a rest.
+  function songAfter(wait) {
+    const now = ac.currentTime;
+    if (mus.scoreOn) {
+      scoreLeaves(now);
+      mus.nextSongAt = now + SCORE_FADE + REST;
+    } else {
+      mus.nextSongAt = Math.max(now + wait, mus.scoreUntil + REST);
+    }
+  }
+
+  // A campaign begins (SPEC §296): what was playing ends — the title
+  // screen's open score by fading out, a last campaign's song by its short
+  // fade — and after a rest its first song begins at its first bar.
+  function beginCampaign() {
+    mus.recent = [];
+    if (getSetting('song') === 'score') return; // the open score plays on
+    const had = !!mus.song;
+    endSong();
+    songAfter(had ? 1.6 : 0.3);
+  }
+
+  // Between songs, a breath of silence — never the open score talking in.
   function gapAfterSong() {
-    return getSetting('song') === 'auto' ? 35 + Math.random() * 35 : 5;
+    return getSetting('song') === 'auto' ? 4 + Math.random() * 4 : 2.5;
   }
 
   function songChoiceChanged() {
     if (!ac || !mus.started) return;
-    endSong(true, true);
     mus.recent = [];
-    mus.nextSongAt = ac.currentTime + 1.5;
+    const had = !!mus.song;
+    endSong();
+    if (getSetting('song') === 'score') {
+      mus.nextSongAt = Infinity;
+      if (!mus.scoreOn) scoreReturns(ac.currentTime + (had ? 1.4 : 0.1));
+      return;
+    }
+    if (!mus.campaign) return; // the title screen keeps its score; the choice waits
+    songAfter(had ? 1.6 : 0.3);
   }
 
   // Skip ahead: the next song of the hour (one chosen song starts over).
   function nextSong() {
-    if (!ac || !mus.started) return;
-    endSong(true, true);
-    mus.nextSongAt = ac.currentTime + 1.2;
+    if (!ac || !mus.started || !mus.campaign || getSetting('song') === 'score') return;
+    const had = !!mus.song;
+    endSong();
+    songAfter(had ? 1.6 : 0.3);
+  }
+
+  // War comes (SPEC §295/§296): the war band takes up the tune at the next
+  // bar line after the notes already written out, at the same beat of the
+  // form — no gap, no jump ahead. A song all but over ends as it is.
+  function planWarTurn(cur, horizon) {
+    const war = warVersionOf(cur.def);
+    if (!war || war === cur.def) { cur.noTurn = true; return; }
+    const meter = cur.def.meter || 4;
+    const bar = meter * cur.spb;
+    const beat = Math.max(0, Math.ceil((horizon - cur.start) / bar - 1e-6)) * meter;
+    if (beat > cur.beats - 2 * meter) { cur.noTurn = true; return; }
+    cur.cut = { at: cur.start + beat * cur.spb, def: war, beat };
   }
 
   // Called every scheduler pass: keeps the song fed, ends it, starts the next.
@@ -814,58 +896,55 @@ export function initSound(bus, getGame) {
     const now = ac.currentTime;
     const cur = mus.song;
     if (cur) {
-      // War comes (SPEC §295): a song of peace turns into its war version at
-      // its next section — the same tune, taken up by the war band — in every
-      // setting. Never the other way: a war version plays out after the peace
-      // is signed, and the next song is a song of peace.
-      if (mus.mood !== 'peace' && !isWarSong(cur.def)) {
-        const war = warVersionOf(cur.def);
-        if (war && war !== cur.def) {
-          const k = Math.min(sectionNow(cur, now) + 1, war.form.length - 1);
-          endSong(true, true);
-          startSong(war, now + 0.6, Math.max(1, k), 1.2);
-          return true;
-        }
-      }
-      // automatic: a song from another age gives way to this one's
-      if (getSetting('song') === 'auto' && !cur.def.ages.includes(songAge)) {
-        endSong(true, true);
-        mus.nextSongAt = now + 1;
-        return false;
-      }
-      while (cur.idx < cur.events.length && cur.start + cur.events[cur.idx].t < horizon) {
+      // Never the other way: a war version plays out after the peace.
+      if (mus.mood !== 'peace' && !isWarSong(cur.def) && !cur.cut && !cur.noTurn) planWarTurn(cur, horizon);
+      const until = cur.cut ? Math.min(horizon, cur.cut.at) : horizon;
+      while (cur.idx < cur.events.length && cur.start + cur.events[cur.idx].t < until) {
         const ev = cur.events[cur.idx++];
         const at = cur.start + ev.t;
         if (at < now - 0.05) continue; // fell behind (muted, a hidden tab): drop, keep time
         try { cur.play(ev, Math.max(at, now)); mus.notes++; } catch (e) { warnOnce('song-note', e); }
       }
+      if (cur.cut && horizon >= cur.cut.at) {
+        const { at, def, beat } = cur.cut;
+        releaseSong(cur, at, 0.12);
+        startSong(def, at, beat);
+        return;
+      }
       if (now >= cur.end) {
         mus.song = null;
         try { cur.bus.disconnect(); } catch (e) { /* gone */ }
         mus.nextSongAt = now + gapAfterSong();
-        scoreReturns(now);
-        return false;
       }
-      return true;
+      return;
     }
     if (now >= mus.nextSongAt) {
       const def = pickSong();
-      if (def) { startSong(def, now + 0.25); return true; }
-      mus.nextSongAt = now + 20; // nothing for this hour: the open score, and look again
+      if (!def) { // nothing for this hour: the open score, and look again
+        if (!mus.scoreOn) scoreReturns(now);
+        mus.nextSongAt = now + 30;
+        return;
+      }
+      if (mus.scoreOn) { songAfter(0); return; } // the open score leaves first
+      startSong(def, now + 0.1, 0);
     }
-    return false;
   }
 
   function scheduleAhead() {
     if (!ac || !musicOn || muted) return;
     try {
       pollMood();
-      const horizon = ac.currentTime + 0.6;
-      if (songTick(horizon)) return; // a song holds the floor
+      songTick(ac.currentTime + SONG_AHEAD);
+      const now = ac.currentTime;
+      // the open score plays while it is on, and under its own fade-out —
+      // in the mood it had, so a campaign at war does not drum it out
+      if (!mus.scoreOn && now >= mus.scoreUntil) return;
+      if (mus.scoreOn) mus.scoreMood = mus.mood;
+      const horizon = now + 0.6;
       // after a mute/toggle, resume from now — never burst-schedule the gap
-      if (mus.nextBeat < ac.currentTime) mus.nextBeat = ac.currentTime + 0.1;
+      if (mus.nextBeat < now) mus.nextBeat = now + 0.1;
       while (mus.nextBeat < horizon) {
-        const beatDur = mus.mood === 'battle' ? 0.44 : mus.mood === 'war' ? 0.52 : 0.66;
+        const beatDur = mus.scoreMood === 'battle' ? 0.44 : mus.scoreMood === 'war' ? 0.52 : 0.66;
         scheduleBeat(mus.nextBeat, mus.beat++, beatDur);
         mus.nextBeat += beatDur;
       }
@@ -902,7 +981,7 @@ export function initSound(bus, getGame) {
   }
 
   function scheduleBeat(t, i, beatDur) {
-    const mood = mus.mood;
+    const mood = mus.scoreMood;
     const style = mus.style;
     const mode = mood === 'peace' ? 'adonai' : 'freygish';
     // the piece breathes, gently — swells, never dead air
@@ -1273,8 +1352,11 @@ export function initSound(bus, getGame) {
         return {
           on: musicOn, started: mus.started, mood: mus.mood, era: mus.era, style: mus.style, notes: mus.notes,
           age: songAge,
-          song: cur ? { id: cur.def.id, title: cur.def.title, blurb: cur.def.blurb, war: isWarSong(cur.def), base: cur.def.base || cur.def.id } : null,
+          song: cur ? { id: cur.def.id, title: cur.def.title, blurb: cur.def.blurb, war: isWarSong(cur.def), base: cur.def.base || cur.def.id,
+            from: cur.from, meter: cur.def.meter, at: ac.currentTime - cur.start, length: cur.end - cur.start } : null,
           score: mus.scoreBus ? mus.scoreBus.gain.value : null,
+          scoreOn: mus.scoreOn,
+          now: ac ? ac.currentTime : 0,
           songIn: cur || !ac ? 0 : Math.max(0, mus.nextSongAt - ac.currentTime),
         };
       },
@@ -1291,6 +1373,8 @@ export function initSound(bus, getGame) {
         return rms > 0 ? 20 * Math.log10(rms) : -120;
       },
       next() { nextSong(); },
+      // Tests: let the song reach its end now, as if it had played out.
+      endNow() { if (mus.song && ac) mus.song.end = ac.currentTime; },
     },
   };
 

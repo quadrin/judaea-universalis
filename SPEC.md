@@ -20814,7 +20814,8 @@ for battle.
 
 - **Automatic** (the default): the open score plays for 25–40 s, then a song
   of this age written for this mood, not one of the last three. Between songs
-  the open score returns for 35–70 s. A peace song gives way, with a short
+  the open score returns for 35–70 s. (The hand-over is now §295's, and the
+  gaps between songs are silent: §296.) A peace song gives way, with a short
   fade, when the war or the battle comes; a war song plays out after the
   peace is signed. A song from another age gives way when the campaign
   changes.
@@ -21406,3 +21407,83 @@ songs.
   the war version plays out; at war a chosen song starts in its war
   version. `uitest55.mjs` — automatic at war in the Great Revolt plays a
   piece for war of the Second Temple.
+
+## §296 — One music at a time
+
+**What the player still heard.** §295 crossfaded the open score into the
+songs, but a campaign still changed music every minute or two: a song, then
+35 to 70 seconds of the open score, then the next song coming up over the
+score in the middle of its phrase — another key, another beat, another
+band, cutting in. The first song of a campaign did the same 1.2 seconds
+after the game appeared, while the score had just turned to war drums. A
+recording of the music bus from the title screen into play (sampled on the
+audio clock) showed the pattern, and one more fault: silent holes inside a
+song (the meter at −120 dB for half a second). A month turn holds the page
+— 1948 spends up to 0.45 s of simulation alone on one, the Great Revolt
+0.15 s — and the songs were written out only 0.6 s ahead, so a late pass
+dropped the notes it had missed.
+
+**The rule: one music at a time, and none cuts in.**
+
+- The title screen has the open score, and no song.
+- A campaign's music is its songs. When a game appears (a new campaign, a
+  loaded one, a guest's seat), what was playing ends — the open score by a
+  three-second fade, played under the fade in the mood it had, so the war of
+  the new campaign does not drum it out; a last campaign's song by its short
+  fade — then a rest of 1.5 seconds, and the first song begins at its first
+  bar. A song never starts while the open score sounds.
+- Songs follow one another with a breath of silence: four to eight seconds
+  in automatic, 2.5 seconds for a chosen song or the shuffle. The open score
+  does not come in between them.
+- A new choice in the settings, or Next song, lets the song go with a short
+  fade and waits for it before the next one.
+- The settings offer **The open score only, no songs**: the song ends, the
+  score comes back and plays on through the campaign, following peace, war
+  and battle as before; Next song rests. Back to a song setting, the score
+  fades out and rests before the song begins.
+- An hour with no song for it (no age lacks one; this is the fallback) has
+  the open score, and a song comes again only after it has faded out.
+- A song from another age is no longer cut when the date crosses into a new
+  one; it plays out, and the next song is of the new age.
+
+**The war turn on a bar line.** §295 ended the song of peace and started its
+war version 0.6 s later at the start of the next section — a cut, a gap and
+a jump ahead. Now the war band takes up the tune at the next bar line after
+the notes already written out, at that same beat of the form (a war version
+counts the same beats in the same meter, section for section). The peace
+band's last notes are released over a tenth of a second, and the chord
+already sounding at that beat is taken up by the war band's strings, so the
+harmony does not drop out. A song in its last two bars ends as it is, and
+the next song is for war.
+
+**A fade is a fade.** A fade that begins now is written from the value the
+bus has now: the score's bus is set by `.value` on the title screen and has
+no automation event, and a ramp with no event before it runs from time zero
+— by the time a campaign begins, that ramp is all but over, and the fade
+was a cut. A fade turned back midway goes on from where it had got to.
+
+**Written out ahead.** The songs are scheduled 1.5 seconds ahead (the open
+score stays at 0.6 s: it follows the mood beat by beat). The recording after
+the change: the score fades over three seconds, 1.5 s of silence, the song
+from its first bar; through two minutes of play at speed the meter stays
+between −46 and −56 dB, with no silent holes.
+
+- **Regression contract**: `smoke200.mjs` — every war version counts the
+  same beats in the same meter as its song, section for section.
+  `uitest61.mjs` — the title screen hears the open score and no song; a
+  campaign begins: the score is gone (bus below 0.02) when the first song
+  begins, the song begins at least 3.5 s after the score began to leave, the
+  score is heard at a middle level on the way out (a fade, not a cut), and
+  the song begins at beat 0; a song of peace within 4 dB of the open score;
+  war comes and the war version takes over on a bar line (its first beat a
+  multiple of the meter), no earlier in the form than the song had reached;
+  the war version within 5 dB, named in the settings window; peace is
+  signed and the war version plays out; the song ends, a breath of at least
+  2 s, the next song, and the open score below 0.05 throughout; at war a
+  chosen song starts in its war version; "The open score only" ends the
+  song and brings the score back (above 0.9), no song after twelve seconds,
+  the window says "the open score" and Next song is disabled; back to
+  automatic, the song begins with the score gone. `uitest55.mjs` — a chosen
+  song plays, automatic at war plays a Second Temple piece for war, Next
+  song changes it.
+
