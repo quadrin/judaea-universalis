@@ -5276,7 +5276,8 @@ that a state has to be somewhere; an annexation is the same claim from the other
 direction and never got the same rule.
 
 The rule: a demand must be land-reachable from the claimant's own country,
-counting the other demands as stepping stones. A corridor is a country's arm, so
+counting the other demands as stepping stones (an island, which no land
+reaches, is reached across the water: §300). A corridor is a country's arm, so
 an advance may run outward through a chain of demanded provinces — otherwise
 nothing beyond the first rank could ever be taken — but it may not *begin* on
 the far side of a country nobody is taking. `endWarBySword` gets the same rule
@@ -21660,3 +21661,47 @@ squadrons could not. Now they can, the same way:
   the raster: on a loaded machine its right-click had landed on the
   province the camera was still passing over ("No harbor there"), before
   and after these changes alike.
+
+## §300 — An island can be annexed
+
+Reported from a played game: islands taken in a war could not be annexed at
+the peace table, "for whatever reason". The reason was §116. A demand has to
+be reachable by land from the claimant's side, through the other demands —
+the rule that keeps central Iran out of Egypt's hands — and an island touches
+no land. Cyprus, Crete, Rhodes, Sicily, Sardinia, Corsica, the Balearics,
+Britain, Ireland and Socotra could be landed on, besieged and held to the
+bell, and were then handed back at the table every time; a war ended by the
+sword (`annexable`) handed them back too.
+
+**Across the water.** The landmasses are the land graph's connected pieces
+over every province (`landmassOf`; a desert or a mountain still joins the
+land it lies on). A side that keeps at least one coastal province reaches a
+coastal claim on a landmass where it holds nothing — an island — by sea
+(`seaReachSeeds`). Those claims seed the reach the way the side's own soil
+does, so an island's inland provinces join it by land from its held coast
+(Britannia from Londinium), and not without it. Both §116 checks take the
+seeds: the peace table (`demandReach`) and the sword's settlement
+(`annexable`). The AI's treaties are built from the same table, so the AI
+can take islands too.
+
+**Balance.** All-AI runs (`node tools/autorun.mjs 25`, 3 seeds) are
+identical in eleven chapters. In 40 BCE two of the three runs differ, by a
+talent or two of net income a court (Rome 8 → 6, the Ptolemies 37 → 36,
+Antigonus 36 → 37, Parthia 35 → 36, Herod 18 → 19): a treaty that now
+keeps an island.
+
+**What does not change.** The mainland is one landmass from Gaul to the
+Indus, so a pocket on the far side of somebody else's country is still out of
+reach, coast or no coast — §116's case stands. A side with no harbor cannot
+reach an island. A mainland coast across a sea is not an island: it is
+reached by land, through the demands, as before.
+
+- **Regression contract**: `smoke207.mjs` on the real 1948 map — Israel at
+  war with Britain, holding Famagusta and Paphos (Cyprus, which touches no
+  land but itself), finds both on the table; Britannia (inland) is not
+  reached alone and is reached once Londinium (its coast) is held too; with
+  every province of Israel's side made inland, Cyprus stays off the table;
+  Egypt is still not offered Hyrcania, Gabae or Susa; a war ended by the
+  sword leaves Cyprus Israeli. On the old rule the island checks fail
+  (Famagusta ✗, Paphos ✗; the sword returns both to Britain). `smoke82`
+  (§116) still passes.
