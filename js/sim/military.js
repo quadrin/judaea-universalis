@@ -6167,6 +6167,49 @@ function geomHasEdges(ctx) {
   }
   return ctx._geomEdges;
 }
+// Across the water (SPEC §300). §116's reach walks the land, and an island
+// touches no land: Cyprus, Crete, Sicily or Britain, taken by a landing and
+// held to the bell, could never be put on the table. The landmasses are the
+// land graph's connected pieces over every province (a desert or a mountain
+// still joins the land it lies on), cached on the context like the map-shape
+// question above.
+function landmassOf(ctx) {
+  if (ctx._landmass) return ctx._landmass;
+  const g = ctx.game;
+  const nb = ctx.geom.neighbors;
+  const lm = new Int32Array(g.provinces.length);
+  let k = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    if (!g.provinces[i] || lm[i]) continue;
+    k++;
+    lm[i] = k;
+    const stack = [i];
+    while (stack.length) {
+      const cur = stack.pop();
+      for (const n of (nb[cur] || [])) {
+        if (n > 0 && n < lm.length && g.provinces[n] && !lm[n]) { lm[n] = k; stack.push(n); }
+      }
+    }
+  }
+  ctx._landmass = lm;
+  return lm;
+}
+// Which claims a side reaches by sea: coastal claims on a landmass where the
+// side holds nothing, when the side keeps a harbor to sail from. They seed
+// the reach the way the side's own soil does, so an island's inland
+// provinces join it by land from its coast. The mainland is one landmass, so
+// a pocket on the far side of somebody else's country is still out of reach
+// (§116's central Iran stays in Iran).
+function seaReachSeeds(ctx, own, claims) {
+  const coastal = ctx.geom && ctx.geom.coastal;
+  if (!Array.isArray(coastal) || !own.some((i) => coastal[i])) return [];
+  const lm = landmassOf(ctx);
+  const ours = new Set(own.map((i) => lm[i]));
+  const out = [];
+  for (const i of claims) if (coastal[i] && !ours.has(lm[i])) out.push(i);
+  return out;
+}
+
 function landComponents(ctx, ids) {
   const nb = ctx.geom && ctx.geom.neighbors;
   if (!nb || !geomHasEdges(ctx)) return [ids.slice()];
@@ -6651,6 +6694,13 @@ function demandReach(ctx, byTag, candidateIds, side, recipients) {
   const keep = new Set();
   const seen = new Set(own);
   const stack = own.slice();
+  // …and what the side's ships reach: an island's coast (SPEC §300)
+  for (const s of seaReachSeeds(ctx, own, claims)) {
+    if (seen.has(s)) continue;
+    seen.add(s);
+    keep.add(s);
+    stack.push(s);
+  }
   while (stack.length) {
     const cur = stack.pop();
     for (const n of (nb[cur] || [])) {
@@ -7427,10 +7477,17 @@ function annexable(ctx, war, winners, losers) {
     }
     if (!claims.size) continue;
     if (!own.length) { for (const id of claims) keepable.add(id); continue; }
-    // Grow outward from the winner's own soil, through the claims only.
+    // Grow outward from the winner's own soil, through the claims only —
+    // and from an island's coast its ships reach (SPEC §300).
     const stack = own.slice();
     const seen = new Set(own);
     const mine = new Set();
+    for (const s of seaReachSeeds(ctx, own, claims)) {
+      if (seen.has(s)) continue;
+      seen.add(s);
+      mine.add(s);
+      stack.push(s);
+    }
     while (stack.length) {
       const cur = stack.pop();
       for (const n of (nb[cur] || [])) {
