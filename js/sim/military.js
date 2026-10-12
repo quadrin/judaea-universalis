@@ -3793,17 +3793,17 @@ export function declareWar(ctx, atk, def, name, cb) {
   // §260). Every ally is put the two questions — does it think well enough of
   // the court that called, and can it march — and the ones that answer no stay
   // home and are named to their principal.
-  const callAlly = (side, al, principal, defending) => {
+  const callAlly = (side, al, principal) => {
     if (!g.tags[al] || !g.tags[al].alive) return;
     if (attackers.indexOf(al) >= 0 || defenders.indexOf(al) >= 0) return;
     let ans = { ok: true, why: '' };
-    try { ans = allyAnswersCall(ctx, al, principal, defending); }
+    try { ans = allyAnswersCall(ctx, al, principal); }
     catch (e) { warnOnce('allyCall:' + al, 'ally call failed', al, e); }
     if (!ans.ok) { refusals.push({ v: al, lord: principal, ally: true, why: ans.why }); return; }
     join(side, al);
   };
   for (const al of A.allies || []) {
-    if (al !== def && (D.allies || []).indexOf(al) < 0) callAlly(attackers, al, atk, false);
+    if (al !== def && (D.allies || []).indexOf(al) < 0) callAlly(attackers, al, atk);
   }
   for (const v of vassalsOf(ctx, atk)) if (loyal(v, atk)) join(attackers, v, true);
   // A punitive league (SPEC §21 extended): when the coalition itself declares
@@ -3823,7 +3823,7 @@ export function declareWar(ctx, atk, def, name, cb) {
     join(defenders, lord, true);
     for (const v of vassalsOf(ctx, lord)) if (v === def || loyal(v, lord)) join(defenders, v, true);
   }
-  for (const al of D.allies || []) callAlly(defenders, al, def, true);
+  for (const al of D.allies || []) callAlly(defenders, al, def);
   for (const v of vassalsOf(ctx, def)) if (loyal(v, def)) join(defenders, v, true);
   // The coalition answers: realms leagued against an infamous conqueror
   // defend anyone he attacks (anti-snowball, SPEC §21).
@@ -4033,14 +4033,12 @@ export const DIPLO = {
   // that merely tolerated us spent its levies on our conquests.
   //
   // Two questions now, asked of every ally on the day it is called. Does it
-  // think well enough of us to march? And can it march at all? The bar is
-  // lower for a war of OUR defense than for one we started: an ally that
-  // merely tolerates us will still answer an invasion, and none but a friend
-  // will answer an adventure.
-  allyJoinOpinion: 50,       // to join a war we START
-  allyDefendOpinion: 25,     // ...and to answer an attack on us
-  allyReadyExhaustion: 10,   // a court this tired of war stays home from ours...
-  allyReadyDefendExhaustion: 18, // ...and is a little braver about its own side of the map
+  // think well enough of us to march? And can it march at all? One call to
+  // arms (SPEC §301): the same two answers for a war we start and a war on
+  // us. §260 had a higher bar for our wars than for our defense, and the
+  // alliance that read "defensive only" was a pact half signed.
+  allyCallOpinion: 25,       // to answer our call, in our war or in our defense
+  allyReadyExhaustion: 18,   // a court this tired of war stays home
   allyReadyMen: 2000,        // men in the field plus manpower in hand...
   allyReadyMenShare: 0.25,   // ...or this share of what it could ever raise, whichever is less
   allyReadyTreasury: -100,   // and a court this deep in the red is not paying for a campaign
@@ -4071,30 +4069,25 @@ export const DIPLO = {
   // is the argument for the number.
   marryBreakOpinion: -35,
 };
-// Will this ally actually march (SPEC §260)? `defending` is the half of the
-// question that decides which bar is read: an ally of the DEFENDER is being
-// asked to answer an attack, an ally of the ATTACKER to join an adventure.
+// Will this ally actually march (SPEC §260, §301)? One question for every
+// call to arms — a war its principal starts and a war on its principal alike.
 //
 // Returns { ok, why } — the `why` is the sentence the player is shown when
 // their own alliance stays home, so it names the reason and not the rule.
-export function allyAnswersCall(ctx, ally, principal, defending) {
+export function allyAnswersCall(ctx, ally, principal) {
   const g = ctx.game;
   const t = g.tags[ally];
   if (!t || !t.alive) return { ok: false, why: 'is no longer a court' };
   // The bond of fealty is not this bond: a client marches under §75's rule
   // (its own loyalty test), and never reaches this one.
-  const bar = num(defending ? DIPLO.allyDefendOpinion : DIPLO.allyJoinOpinion, defending ? 25 : 50);
+  const bar = num(DIPLO.allyCallOpinion, 25);
   const view = opinionOf(ctx, ally, principal);
   if (view < bar) {
     return { ok: false, why: 'thinks too little of us to spend its levies on this (' + view + ' of ' + bar + ')' };
   }
-  // …and can it march? A court already carrying a war of its own has no army
-  // to lend to ours — that one is waived when the call is to defend us, since
-  // an ally under arms already has its host in the field.
-  if (!defending && (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) {
-    return { ok: false, why: 'has a war of its own already' };
-  }
-  const weary = num(defending ? DIPLO.allyReadyDefendExhaustion : DIPLO.allyReadyExhaustion, 10);
+  // …and can it march? A war of its own does not keep it home: a court
+  // already under arms has its host in the field.
+  const weary = num(DIPLO.allyReadyExhaustion, 18);
   if (num(t.warExhaustion) > weary) {
     return { ok: false, why: 'is too tired of war (exhaustion ' + Math.round(num(t.warExhaustion)) + ')' };
   }

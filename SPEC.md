@@ -18701,6 +18701,8 @@ client had been asked this question since §61 (`loyalOpinion`, and it stays
 home below it); an ally had never been asked anything.
 
 Now it is asked two questions on the day it is called, and both have to answer.
+(§301 later made the two answers the same for every call: one bar, 25, and
+the forgiving readiness below, for a war we start and a war on us alike.)
 **Does it think well enough of the court that called?** — `allyJoinOpinion`
 (50) for a war we started, `allyDefendOpinion` (25) for an attack on us,
 because an ally that merely tolerates us will still answer an invasion and none
@@ -18777,7 +18779,8 @@ their court and theirs at ours.
   annexation clause; the subsidy round trip netting zero ten times over and the
   cooldown refusing the eleventh; the client hearing an envoy better than a
   stranger does; and the diplomacy card reading a devoted ally, a cool one and
-  a cold one as march / defend-only / nothing. Four existing suites move with
+  a cold one as march / defend-only / nothing (now march / march / nothing:
+  §301). Four existing suites move with
   the prices: `smoke12` funds a
   chancery before writing a subsidy order, `smoke47` and `smoke167` read the
   release clause off `PEACE` rather than off the old numbers, and `smoke84`'s
@@ -21705,3 +21708,53 @@ reached by land, through the demands, as before.
   sword leaves Cyprus Israeli. On the old rule the island checks fail
   (Famagusta ✗, Paphos ✗; the sword returns both to Britain). `smoke82`
   (§116) still passes.
+
+## §301 — One call to arms
+
+Reported from a played game: the "defensive only" ally is "dumb". §260 asked
+an ally two questions when it was called, and asked them twice over: a war
+its principal started needed +50 regard, war exhaustion no higher than 10 and
+no war of its own; a war on its principal needed +25, exhaustion no higher
+than 18, and a war of its own did not matter. Between the two bars sat a pact
+that the panels labelled *Allied — defensive only*: signed, paid for with a
+seat in the chancery, and silent when its signatory went to war.
+
+**One call.** `allyAnswersCall(ctx, ally, principal)` no longer asks which
+side of the war it is called to. The same answer holds for a war we start and
+a war on us:
+
+- regard of at least `allyCallOpinion` (25);
+- war exhaustion no higher than `allyReadyExhaustion` (18);
+- a war of its own does not keep it home — a court already under arms has
+  its host in the field;
+- a treasury out of collapse and men enough to send, as before.
+
+An alliance is signed at +60 and its floor holds it there (§260), so a
+standing ally answers every call unless something has soured it below +25,
+worn it out, bankrupted it or emptied its barracks — and the panel names
+which.
+
+**Balance.** All-AI runs (`node tools/autorun.mjs 25`, 3 seeds) are
+identical in every chapter: an AI's standing allies sit at +60 and over,
+where both of §260's bars were already met.
+
+**The panels.** The realm panel and the province panel read *Allied* or
+*Allied — will not march*, and nothing between. The province panel's
+tooltip says either "They would march with us: in a war we start, and
+against an attack on us" or the reason they would not, followed by the one
+rule. `getDiplomacy(tag).allyCall` carries `marches`, `why`, `callOpinion`
+and `readyExhaustion`; `defends`, `defendWhy`, `joinOpinion` and
+`defendOpinion` are gone, as are `allyJoinOpinion`, `allyDefendOpinion` and
+`allyReadyDefendExhaustion` in `DIPLO`.
+
+- **Regression contract**: `smoke178.mjs` — of three allies at +90, +30 and
+  +10, the first two march in a war their principal starts and the third
+  stays home, and is refused in every call; a war of the ally's own does not
+  keep it home; exhaustion 14 answers and 20 does not; an empty treasury and
+  no host refuse; the diplomacy card reads +90 and +30 as marching, with no
+  `defends` field, and +10 as not, with the reason. `uitest65.mjs` — an
+  ally at +30 reads "Allied" in the province panel, its tooltip saying it
+  would march in a war we start and against an attack on us, with the one
+  rule; at +10 it reads "Allied — will not march" in red, with the reason; no
+  panel on the screen says "defensive only"; no page errors.
+

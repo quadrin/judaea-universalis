@@ -1049,9 +1049,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         let call = null;
         try { call = (actions && typeof actions.getDiplomacy === 'function') ? (actions.getDiplomacy(tag) || {}).allyCall : null; }
         catch (e) { call = null; }
-        standing = !call || call.marches ? 'Allied with us'
-          : call.defends ? 'Allied with us — defensive only' : 'Allied with us — will not march';
-        cls = call && !call.marches && !call.defends ? 'neg' : 'pos';
+        standing = !call || call.marches ? 'Allied with us' : 'Allied with us — will not march';
+        cls = call && !call.marches ? 'neg' : 'pos';
       }
       else {
         const key = me < tag ? me + '|' + tag : tag + '|' + me;
