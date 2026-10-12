@@ -1412,17 +1412,16 @@ export function gameActions(ctx) {
       const improveGain = improveGainFor(ctx, me, tag);
       // …and what the alliance is worth on the day it is called (SPEC §260).
       // A player who signs a pact is entitled to know whether it would answer,
-      // and to be told which of the two questions it fails.
+      // and why not. One answer for every call (SPEC §301).
       let allyCall = null;
       if (allied) {
         try {
-          const off = allyAnswersCall(ctx, tag, me, false);
-          const def = allyAnswersCall(ctx, tag, me, true);
+          const ans = allyAnswersCall(ctx, tag, me);
           allyCall = {
-            marches: !!off.ok, defends: !!def.ok,
-            why: off.ok ? '' : off.why,
-            defendWhy: def.ok ? '' : def.why,
-            joinOpinion: DIPLO.allyJoinOpinion, defendOpinion: DIPLO.allyDefendOpinion,
+            marches: !!ans.ok,
+            why: ans.ok ? '' : ans.why,
+            callOpinion: DIPLO.allyCallOpinion,
+            readyExhaustion: DIPLO.allyReadyExhaustion,
           };
         } catch (e) { allyCall = null; }
       }

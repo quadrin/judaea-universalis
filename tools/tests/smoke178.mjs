@@ -76,19 +76,20 @@ const ally = (game, a, b, opinion) => {
 console.log('== §260 an ally is asked, not enrolled ==');
 {
   const { game, ctx } = boot(BOOKMARK_66, EVENTS_66, 'JUD');
-  for (const k of ['JUD', 'ROM', 'PAR', 'ADI', 'AGR']) readyCourt(game, k);
+  for (const k of ['JUD', 'ROM', 'PAR', 'ADI', 'NAB']) readyCourt(game, k);
   game.wars = [];
   for (const k of Object.keys(game.tags)) game.tags[k].atWarWith = [];
-  // Two allies of the attacker: one devoted, one merely warm.
+  // Three allies of the attacker: one devoted, one merely warm, one cold.
   ally(game, 'JUD', 'PAR', 90);
   ally(game, 'JUD', 'ADI', 30);
+  ally(game, 'JUD', 'NAB', 10);
   const war = mil.declareWar(ctx, 'JUD', 'ROM', 'The Test War');
   ok(!!war, 'the war opens');
   ok(war.attackers.indexOf('PAR') >= 0, 'the ally that thinks well of us marches: ' + war.attackers.join(','));
-  ok(war.attackers.indexOf('ADI') < 0, 'the ally at +30 stays out of a war we started');
-  ok(mil.allyAnswersCall(ctx, 'ADI', 'JUD', false).ok === false
-    && mil.allyAnswersCall(ctx, 'ADI', 'JUD', true).ok === true,
-    'and the same court WOULD answer an attack on us — the defensive bar is lower');
+  // SPEC §301: one call to arms — the bar is the same for our war and our defense
+  ok(war.attackers.indexOf('ADI') >= 0, 'the ally at +30 marches too: one bar for every call, ' + 25);
+  ok(war.attackers.indexOf('NAB') < 0 && mil.allyAnswersCall(ctx, 'NAB', 'JUD').ok === false,
+    'and the ally at +10 stays home, in our war and in our defense alike');
 }
 {
   // Militarily poised, read out: no war of its own, not sick of war, not
@@ -101,21 +102,22 @@ console.log('== §260 an ally is asked, not enrolled ==');
   const t = game.tags.PAR;
   t.atWarWith = ['ADI'];
   game.tags.ADI.alive = true;
-  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD', false).ok === false, 'a court with a war of its own has no army to lend');
+  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD').ok === true, 'a war of its own does not keep it home: its host is already in the field');
   t.atWarWith = [];
   t.warExhaustion = 14;
-  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD', false).ok === false, 'nor a court sick of war');
-  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD', true).ok === true, '...though it will still defend us at that exhaustion');
+  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD').ok === true, 'a court somewhat tired of war (14) still answers');
+  t.warExhaustion = 20;
+  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD').ok === false, 'but not a court sick of it (20)');
   t.warExhaustion = 0;
   t.treasury = -400;
-  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD', false).ok === false, 'nor a court that cannot pay for a campaign');
+  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD').ok === false, 'nor a court that cannot pay for a campaign');
   t.treasury = 100;
   t.manpower = 0;
   t.maxManpower = 40000;
   for (const id of Object.keys(game.armies)) if (game.armies[id].tag === 'PAR') delete game.armies[id];
-  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD', false).ok === false, 'nor a court with no host to send');
+  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD').ok === false, 'nor a court with no host to send');
   t.manpower = 30000;
-  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD', false).ok === true, 'and one with men, money and quiet answers');
+  ok(mil.allyAnswersCall(ctx, 'PAR', 'JUD').ok === true, 'and one with men, money and quiet answers');
 }
 
 console.log('== §260 the panel says whether the pact would answer ==');
@@ -124,16 +126,16 @@ console.log('== §260 the panel says whether the pact would answer ==');
   for (const k of ['JUD', 'PAR']) readyCourt(game, k);
   ally(game, 'JUD', 'PAR', 90);
   const warm = actions.getDiplomacy('PAR');
-  ok(warm.allyCall && warm.allyCall.marches && warm.allyCall.defends,
+  ok(warm.allyCall && warm.allyCall.marches,
     'a devoted, unengaged ally reads as one that would march');
   game.tags.PAR.opinion.JUD = 30;
   const cool = actions.getDiplomacy('PAR');
-  ok(cool.allyCall && !cool.allyCall.marches && cool.allyCall.defends && /too little/.test(cool.allyCall.why),
-    'a cool one reads as defensive only, with the reason: ' + (cool.allyCall && cool.allyCall.why));
+  ok(cool.allyCall && cool.allyCall.marches && !('defends' in cool.allyCall),
+    'a cool one (+30) marches too — there is no "defensive only" (SPEC §301)');
   game.tags.PAR.opinion.JUD = 10;
   const cold = actions.getDiplomacy('PAR');
-  ok(cold.allyCall && !cold.allyCall.marches && !cold.allyCall.defends,
-    'and a cold one reads as an alliance that answers nothing');
+  ok(cold.allyCall && !cold.allyCall.marches && /too little/.test(cold.allyCall.why),
+    'and a cold one reads as an alliance that answers nothing, with the reason: ' + (cold.allyCall && cold.allyCall.why));
 }
 
 console.log('== §260 a standing bond does not cool ==');

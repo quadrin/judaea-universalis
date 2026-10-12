@@ -1018,8 +1018,8 @@ const RISING_LABELS = {
     else if (d.allied) {
       // What the pact is worth on the day it is called (SPEC §260).
       const c = d.allyCall;
-      status = c && !c.marches ? (c.defends ? 'Allied — defensive only' : 'Allied — will not march') : 'Allied';
-      cls = c && !c.marches && !c.defends ? 'neg' : 'pos';
+      status = c && !c.marches ? 'Allied — will not march' : 'Allied';
+      cls = c && !c.marches ? 'neg' : 'pos';
     }
     else if (d.truceUntil) {
       const mn = (DEFINES.MONTH_NAMES || [])[d.truceUntil.m - 1] || ('M' + d.truceUntil.m);
@@ -1053,18 +1053,15 @@ const RISING_LABELS = {
       }
       refs.dipStatus.dataset.tt = tt;
     } else if (d.allied && d.allyCall) {
-      // Whether the pact would actually answer, and which question it fails
-      // (SPEC §260). An alliance is a promise to be asked, not to be enrolled.
+      // Whether the pact would actually answer, and why not (SPEC §260). One
+      // call to arms (SPEC §301): a war we start and a war on us alike.
       const c = d.allyCall;
       refs.dipStatus.dataset.tt = (c.marches
-        ? 'They would march with us in a war we started, and answer an attack on us.'
-        : (c.defends
-          ? 'They would answer an attack on us, but not join a war we started — '
-            + (c.why || 'they are not ready for one') + '.'
-          : 'They would not answer a call to arms at all — ' + (c.why || 'they are in no state to march') + '.'))
-        + '\n――――――\nAn ally joins a war we START at ' + c.joinOpinion + ' regard and answers an attack '
-        + 'on us at ' + c.defendOpinion + ' — and either way it must be in a state to march: no war of '
-        + 'its own, not sick of war, a treasury out of the red, and men to send.';
+        ? 'They would march with us: in a war we start, and against an attack on us.'
+        : 'They would not answer a call to arms — ' + (c.why || 'they are in no state to march') + '.')
+        + '\n――――――\nAn ally answers every call to arms, ours or in our defense, at ' + c.callOpinion
+        + ' regard, and in a state to march: war exhaustion no more than ' + c.readyExhaustion
+        + ', a treasury out of the red, and men to send.';
     } else if ((d.ourClient || d.ourOverlord) && d.clientLoyalty && refs.dipStatus.dataset) {
       // A client's weight against its lord's, and where that settles its
       // regard (SPEC §298) — read from either end of the collar.
