@@ -194,12 +194,14 @@ export function incomeBreakdown(ctx, tag) {
   Object.assign(out, domesticIncome(ctx, tag));
   // Client tribute: a share of each vassal's own income flows to the overlord.
   if (t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) {
-    out.tributeOut = out.income * TRIBUTE_SHARE;
+    const pact = t.chapterStrategy?.patron;
+    out.tributeOut = out.income * (pact?.tag === t.overlord ? pact.rate : TRIBUTE_SHARE);
   }
   for (const k of Object.keys(g.tags)) {
     const v = g.tags[k];
     if (!v || !v.alive || v.overlord !== tag) continue;
-    out.tributeIn += domesticIncome(ctx, k).income * TRIBUTE_SHARE;
+    const pact = v.chapterStrategy?.patron;
+    out.tributeIn += domesticIncome(ctx, k).income * (pact?.tag === tag ? pact.rate : TRIBUTE_SHARE);
   }
   const maintPerReg = B(ctx, 'maintPerReg', 0.35);
   // A regiment costs what its pattern costs (SPEC §52): an Armored Corps
@@ -259,8 +261,10 @@ export function incomeBreakdown(ctx, tag) {
     const om = tagDef(ctx, tag).offmap;
     out.offmapIn = om ? num(om.income, 0) : 0;
   } catch (e) { out.offmapIn = 0; }
-  out.net = out.income + out.tributeIn + out.subsIn + out.offmapIn
-    - out.tributeOut - out.subsOut - out.maint - out.navy - out.forts - out.fuel - out.admin - out.develop - out.interest;
+  out.chapterIn = num(t.chapterStrategy?.monthlyIn);
+  out.chapterOut = num(t.chapterStrategy?.monthlyOut);
+  out.net = out.income + out.tributeIn + out.subsIn + out.offmapIn + out.chapterIn
+    - out.tributeOut - out.subsOut - out.maint - out.navy - out.forts - out.fuel - out.admin - out.develop - out.interest - out.chapterOut;
   return out;
 }
 
@@ -326,11 +330,11 @@ export function runMonthlyEconomy(ctx) {
       if (!t || !t.alive || tag === 'REB') { if (t) { t.income = 0; t.expenses = 0; } continue; }
       const bd = incomeBreakdown(ctx, tag);
       const opened = num(t.treasury);
-      t.income = Math.round((bd.income + bd.tributeIn + (bd.offmapIn || 0)) * 100) / 100;
+      t.income = Math.round((bd.income + bd.tributeIn + (bd.offmapIn || 0) + bd.chapterIn) * 100) / 100;
       // The markets' share of it (SPEC §292): the AI budgets its army on the
       // steadier part of its income (ai.js aiRecruit).
       t.marketTrade = Math.round((num(bd.trade) - num(bd.tolls)) * 100) / 100;
-      t.expenses = Math.round((bd.maint + bd.navy + bd.forts + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut) * 100) / 100; // the fleet, the walls, fuel, admin, the works, interest & tribute folded in
+      t.expenses = Math.round((bd.maint + bd.navy + bd.forts + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut + bd.chapterOut) * 100) / 100;
       t.treasury = num(t.treasury) + bd.net;
       // The court consumes what the country cannot justify holding (SPEC §101).
       const bleed = hoardBleed(ctx, tag, bd);
@@ -392,6 +396,8 @@ export function explainIncome(ctx, tag) {
     if (num(bd.tolls) > 0) rows.push({ label: 'Tolls', value: r2(bd.tolls) });
     if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
     if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
+    if (bd.chapterIn > 0) rows.push({ label: 'Chapter agreements received', value: r2(bd.chapterIn) });
+    if (bd.chapterOut > 0) rows.push({ label: 'Chapter projects & obligations', value: r2(-bd.chapterOut) });
     if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });
     if (bd.offmapIn > 0) rows.push({ label: 'The home economy, beyond the frame', value: r2(bd.offmapIn) });
     if (bd.subsOut > 0) rows.push({ label: 'Subsidies & reparations out', value: r2(-bd.subsOut) });

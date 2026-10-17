@@ -3,7 +3,7 @@
 import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
 import { buildProvinceMapping, mapProfileKey } from './js/data/map_profile.js';
-import { ERAS } from './js/data/compendium.js';
+import { ERAS, PLAYABLE_ERAS } from './js/data/compendium.js';
 import { entryFork } from './js/data/chapter_paths.js';
 import { bus } from './js/core/bus.js';
 import { initRenderer } from './js/map/renderer.js';
@@ -144,9 +144,9 @@ async function boot() {
   // The era registry lives in js/data/compendium.js (SPEC §71) so the wiki
   // reads the exact chains the engine plays. Chronological order — this is
   // also the title-screen card order.
-  const BOOKMARKS = ERAS;
-  const byId = (id) => BOOKMARKS.find((e) => e.bookmark.id === id) || BOOKMARKS[0];
-  const hasBookmark = (id) => BOOKMARKS.some((e) => e.bookmark.id === id);
+  const BOOKMARKS = PLAYABLE_ERAS;
+  const byId = (id) => ERAS.find((e) => e.bookmark.id === id) || BOOKMARKS[0];
+  const hasBookmark = (id) => ERAS.some((e) => e.bookmark.id === id);
   const fmtYr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
 
   // Saves are a shelf, not a downloads folder (SPEC §93). Every campaign has

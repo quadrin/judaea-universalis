@@ -12,6 +12,7 @@ import { forceLimitOf, regCount, reservesTerms } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
 import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 import { ideaCard, ideaTierIcon, ideaWallet } from './idea_cards.js';
+import { createChapterStrategyPanel } from './chapter_strategy.js';
 
 // The tabs (SPEC §175).
 //
@@ -106,6 +107,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   let readyTech = 0;
   const ideaSelections = new Map();
   const refs = {};
+  let chapterStrategyPanel = null;
 
   function setText(node, s) {
     if (node && node.textContent !== s) node.textContent = s;
@@ -190,6 +192,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
            era offers it. The Chapters block sat on Crown, which is the
            realm's own facts, and the two questions are different ones —
            what this realm IS, and what is being asked of it. -->
+      <div class="pp-build hidden" data-ref="chapterStrategyBlock" data-tab="missions">
+        <div class="pp-build-title">Chapter strategy</div>
+        <div class="chapter-strategy" data-ref="chapterStrategy"></div>
+      </div>
       <div class="pp-build hidden" data-ref="chapterBlock" data-tab="missions">
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
@@ -336,6 +342,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div data-ref="diploBody"></div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
+    chapterStrategyPanel = createChapterStrategyPanel(refs.chapterStrategy, () => actions);
     el.dataset.tab = tab;
 
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
@@ -1074,6 +1081,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // The levers of state belong to the player alone.
     refs.acts.classList.toggle('hidden', !self);
     refs.missionsBlock.classList.toggle('hidden', !self);
+    refs.chapterStrategyBlock.classList.toggle('hidden', !self || !actions?.getChapterStrategy?.());
     // A foreign court owes us nothing (SPEC §229) — and refreshMissions, which
     // is what normally writes this, does not run for one.
     if (!self) readyClaims = 0;
@@ -1091,6 +1099,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!self) refs.chapterBlock.classList.add('hidden');
     if (!self) refs.doctrineBlock.classList.add('hidden');
     if (self) {
+      chapterStrategyPanel.refresh();
       refreshActions(t, g);
       refreshChapter();
       refreshDoctrine();

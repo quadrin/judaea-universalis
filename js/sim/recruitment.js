@@ -19,7 +19,11 @@ export function queueUnitRecruitment(ctx, tag, provId, type, details = {}) {
   if (!Number.isFinite(g.nextRecruitId)) g.nextRecruitId = 1;
   // A caller may override the fitting time (armor, SPEC §181); the type's
   // table answers for everything that does not.
-  const months = Math.max(1, Math.round(num(details.months, unitRecruitMonths(ctx, type))));
+  let months = Math.max(1, Math.round(num(details.months, unitRecruitMonths(ctx, type))));
+  const chapter = g.tags[tag]?.chapterStrategy;
+  if (['inf', 'cav', 'art'].includes(type) && num(chapter?.equipment) > 0) {
+    chapter.equipment--; months = Math.max(1, months - 1);
+  }
   const order = {
     id: g.nextRecruitId++, tag, type,
     monthsLeft: months, totalMonths: months,

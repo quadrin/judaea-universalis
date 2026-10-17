@@ -137,6 +137,15 @@ export function traceSupply(ctx, army) {
   if (bestHome) {
     return { ok: true, via: 'home', route: routeTo(prev, army.prov, bestHome), homePort: 0, breakAt: 0, reason: '' };
   }
+  // Prepared local reserves can feed a cut-off force until occupation
+  // suppresses the network or its finite stock is exhausted.
+  const sites = ctx.game.tags[tag]?.chapterStrategy?.sites || {};
+  for (const id of prev.keys()) {
+    const site = sites[id], p = ctx.byId(id);
+    if (site?.strength > 0 && site.stock > 0 && p?.owner === tag) {
+      return { ok: true, via: 'depot', route: routeTo(prev, army.prov, id), homePort: 0, breakAt: 0, reason: '' };
+    }
+  }
   // 2) the chain reaches a friendly port, and the lane home is held. The
   // origin province is part of the CHAIN even in enemy hands (the army
   // stands there), but it only counts as a PORT once actually held — a host
@@ -240,6 +249,10 @@ export function monthlySupply(ctx) {
       continue;
     }
     const res = traceSupply(ctx, a);
+    if (res.ok && res.via === 'depot') {
+      const site = g.tags[a.tag]?.chapterStrategy?.sites?.[res.route.at(-1)];
+      if (site) site.stock = Math.max(0, site.stock - 1);
+    }
     if (res.ok) {
       if (num(a.oosMonths) > 0 && a.tag === g.playerTag) {
         ctx.bus.emit('notify', {

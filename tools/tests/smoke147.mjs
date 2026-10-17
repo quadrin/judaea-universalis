@@ -1,15 +1,5 @@
-// Headless regression — SPEC §222: a treaty that runs both ways. A realm that
-// is LOSING may put its own provinces on the table and buy an ending with
-// them, which is how most wars of the period actually finished.
-//
-// The section's claims, and this suite in order: the list is EVERY province we
-// own (occupied or not, reachable or not, colonised waste, the capital), each
-// priced at what the enemy would have paid to take it; a losing crown that
-// offers enough is accepted and one that offers less is told the number; the
-// land actually changes hands with the marks a conquest leaves; the ledger is
-// one currency, so a treaty may demand and concede in the same breath; and a
-// deal with no concessions in it behaves exactly as it did before, which is
-// why the balance harness cannot see any of this.
+// Headless regression — concessions settle surrender, but never fund demands.
+// Also covers province gifts at peace (SPEC §222).
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -131,31 +121,40 @@ console.log('== a losing crown buys its ending ==');
   ok(/Judaea cedes/.test(said), 'the chronicle says who gave what: ' + said.slice(0, 110));
 }
 
-console.log('== one currency, both directions ==');
-{
-  const { ctx, game, war } = losing();
-  // We are losing overall but our men hold one of theirs. The table settles
-  // the difference rather than refusing to hear it.
-  const theirs = ctx.prov('Caesarea Maritima') || ctx.prov('Ascalon');
+console.log('== concessions cannot fund demands at any war score ==');
+for (const score of [60, 1, 0, -60]) {
+  const { ctx, game, war, actions } = losing();
+  war.warscore = { ROM: -score, JUD: score };
+  const theirs = ctx.prov('Caesarea Maritima');
   theirs.owner = 'ROM';
   theirs.controller = 'JUD';
   const info = mil.peaceDealInfo(ctx, war, 'JUD');
-  const take = (info.provinces || [])[0];
-  ok(!!take, 'we hold one of theirs to ask for: ' + (take && take.name));
-  const sorted = [...info.concessions].sort((a, b) => b.cost - a.cost);
-  const give = [];
-  let sum = 0;
-  for (const r of sorted) { if (sum >= 60 + take.cost) break; give.push(r.id); sum += r.cost; }
-  const ev = mil.evaluatePeaceDeal(ctx, war, 'JUD', { provinces: [take.id], concessions: give });
-  ok(ev.cost >= take.cost && ev.offered === sum, 'both halves are priced: ' + ev.cost + ' asked, ' + ev.offered + ' offered');
-  ok(ev.net === ev.cost - ev.offered, 'and the net is the difference: ' + ev.net);
-  ok(ev.acceptable, 'a treaty that gives more than it asks is signed: ' + ev.reason);
-  mil.executePeaceDeal(ctx, war, 'JUD', { provinces: [take.id], concessions: give });
-  ok(ctx.byId(take.id).owner === 'JUD', 'we take the province we asked for');
-  ok(give.every((id) => ctx.byId(id).owner === 'ROM'), 'and they take the ones we offered');
-  ok(/Judaea cedes/.test(game.chronicle[game.chronicle.length - 1].text)
-    && /cedes/.test(game.chronicle[game.chronicle.length - 1].text),
-  'and the treaty reads both ways: ' + game.chronicle[game.chronicle.length - 1].text.slice(0, 140));
+  const take = info.provinces.find(r => r.id === theirs.id);
+  ok(!!take, 'enemy province available at ' + score + ' war score');
+  const give = info.concessions.map(r => r.id);
+  const variants = [
+    { provinces: [take.id] }, { gold: 100 }, { humiliate: true }, { reparations: true },
+    ...info.releasable.map(r => ({ release: [r.tag] })),
+    ...info.transferableVassals.map(r => ({ transferVassals: [r.tag] })),
+  ];
+  for (const demand of variants) {
+    const deal = { ...demand, concessions: give };
+    const ev = actions.evaluatePeace(war.id, deal);
+    ok(!ev.acceptable && ev.mixedTerms && /cannot pay for demands/.test(ev.reason),
+      'mixed ' + Object.keys(demand)[0] + ' refused at ' + score);
+    ok(ev.net === ev.cost && ev.offered > 0,
+      'concessions never reduce the demand cost');
+    const before = JSON.stringify(game);
+    mil.executePeaceDeal(ctx, war, 'JUD', deal);
+    ok(JSON.stringify(game) === before, 'direct execution cannot apply mixed terms');
+  }
+  if (score === 1) {
+    const ordinary = actions.evaluatePeace(war.id, { provinces: [take.id] });
+    ok(!ordinary.acceptable, 'province is beyond our actual bargaining power');
+    actions.offerPeaceDeal(war.id, { provinces: [take.id], concessions: give });
+    ok(theirs.owner === 'ROM' && give.every(id => ctx.byId(id).owner === 'JUD')
+      && game.wars.includes(war), 'the player command transfers no land and leaves the war running');
+  }
 }
 
 console.log('== nothing moves for a deal without concessions in it ==');

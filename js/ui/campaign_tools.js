@@ -10,19 +10,41 @@ const label = (name, text) => `<span class="campaign-label">${glyph(name)}<span>
 export function createCampaignTools({ getCtx, getActions, onProvince }) {
   let modal = null, tab = 'buildings', building = 'market', sort = 'income', selected = new Set();
   let counts = { inf: 4, cav: 1, art: 0 }, rally = 0, templateName = 'Field army';
-  let target = '', offers = {};
+  let target = '', offers = {}, rendered = '';
+  let renderedCtx = null, renderedActions = null;
   const openState = () => !!modal && !modal.classList.contains('hidden');
   const close = () => { if (modal) modal.classList.add('hidden'); };
   function shell(title, body) {
     if (!modal) {
       modal = document.createElement('div'); modal.id = 'campaign-tools'; modal.className = 'campaign-modal';
+      modal.innerHTML = '<div class="modal-scrim"></div><div class="ev-card peace-card campaign-card" role="dialog" aria-modal="true" tabindex="-1"></div>';
       document.getElementById('ui-root').appendChild(modal);
+      modal.querySelector('.modal-scrim').addEventListener('click', close);
     }
-    modal.innerHTML = `<div class="modal-scrim"></div><div class="ev-card peace-card campaign-card" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-      <h2>${glyph(target ? 'swords' : 'structures')}${esc(title)}</h2>${body}<button class="btn peace-cancel" data-close>${glyph('xmark')}Close</button></div>`;
+    const html = `<h2>${glyph(target ? 'swords' : 'structures')}${esc(title)}</h2>${body}<button class="btn peace-cancel" data-close>${glyph('xmark')}Close</button>`;
     modal.classList.remove('hidden');
+    // Keep the card mounted: replacing it replays the entrance animation on
+    // every selection and simulation refresh. Unchanged data needs no redraw.
+    const ctx = getCtx(), actions = getActions();
+    if (html === rendered && ctx === renderedCtx && actions === renderedActions) return false;
+    const card = modal.querySelector('.campaign-card');
+    const active = card.contains(document.activeElement) ? document.activeElement : null;
+    const focusKey = active ? [...active.attributes].filter(a => a.name.startsWith('data-')) : [];
+    const scroll = [card, ...card.querySelectorAll('.campaign-table')].map(e => [e.scrollTop, e.scrollLeft]);
+    card.innerHTML = html;
+    card.setAttribute('aria-label', title);
+    rendered = html;
+    renderedCtx = ctx; renderedActions = actions;
+    if (focusKey.length) {
+      const next = [...card.querySelectorAll('button, input, select')].find(e =>
+        focusKey.every(a => e.getAttribute(a.name) === a.value));
+      (next && !next.disabled ? next : card).focus({ preventScroll: true });
+    }
+    [card, ...card.querySelectorAll('.campaign-table')].forEach((e, i) => {
+      if (scroll[i]) { e.scrollTop = scroll[i][0]; e.scrollLeft = scroll[i][1]; }
+    });
     modal.querySelector('[data-close]').addEventListener('click', close);
-    modal.querySelector('.modal-scrim').addEventListener('click', close);
+    return true;
   }
   function render() {
     const ctx = getCtx(), actions = getActions(); if (!ctx || !actions) return;
@@ -62,7 +84,7 @@ export function createCampaignTools({ getCtx, getActions, onProvince }) {
         <div class="campaign-table"><table><thead><tr><th>${label('flag', 'Province')}</th><th>${label('helmet', 'Unit')}</th><th>${label('hourglass', 'Training ready')}</th></tr></thead><tbody>${plan.orders.map(o => `<tr><td>${esc(o.name)}</td><td><span class="campaign-unit">${unitIcon(plan.gen, o.type, 'campaign-icon')}${esc(armGenName(plan.gen, o.type))}</span></td><td>Month ${o.readyMonth}</td></tr>`).join('')}</tbody></table></div></div>
         <button class="btn" data-muster${plan.ok ? '' : ' disabled'}>${glyph('spears')}Recruit and assemble</button>`;
     }
-    shell('Macrobuilder', nav + body);
+    if (!shell('Macrobuilder', nav + body)) return;
     modal.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
     modal.querySelectorAll('[data-building]').forEach(b => b.addEventListener('click', () => { building = b.dataset.building; selected.clear(); render(); }));
     modal.querySelector('[data-sort]')?.addEventListener('change', e => { sort = e.target.value; render(); });
@@ -79,14 +101,14 @@ export function createCampaignTools({ getCtx, getActions, onProvince }) {
   function renderWar() {
     const actions = getActions(), ctx = getCtx();
     const plan = actions.getWarPlan(target, offers); if (!plan) { close(); return; }
-    shell('Declare war on ' + plan.name, `<p>Stability cost: ${plan.stabilityCost}. Allies evaluate trust, favors, and promised provinces as well as their ability to fight.</p>
+    if (!shell('Declare war on ' + plan.name, `<p>Stability cost: ${plan.stabilityCost}. Allies evaluate trust, favors, and promised provinces as well as their ability to fight.</p>
       <div class="campaign-allies">${plan.allies.map(a => `<div class="campaign-ally"><strong>${esc(a.name)}</strong> · trust ${Math.round(a.trust)} · favors ${Math.floor(a.favors)}
         <label>Call to arms<select data-offer="${a.ally}"><option value="ordinary">Ordinary call</option>
         <option value="favors"${offers[a.ally]?.favors ? ' selected' : ''}>Spend 10 favors</option>${a.interests.map(p =>
           `<option value="province:${p.id}"${offers[a.ally]?.province === p.id ? ' selected' : ''}>Promise ${esc(p.name)}</option>`).join('')}</select></label>
         <p class="${a.ok ? 'pos' : 'neg'}">${a.ok ? 'Will join' : 'Will stay home'}: ${esc(a.reasons.join('; '))}</p></div>`).join('') || '<p>We have no allies to call.</p>'}</div>
       <p>Promised land can be assigned to the ally in the peace treaty. Keeping the promise earns 10 trust; a victorious settlement that breaks it costs 25 trust and 50 opinion.</p>
-      <p class="neg">${esc(plan.whyNot || '')}</p><button class="btn" data-declare${plan.canWar ? '' : ' disabled'}>Declare war</button>`);
+      <p class="neg">${esc(plan.whyNot || '')}</p><button class="btn" data-declare${plan.canWar ? '' : ' disabled'}>Declare war</button>`)) return;
     modal.querySelectorAll('[data-offer]').forEach(b => b.addEventListener('change', () => {
       offers[b.dataset.offer] = b.value === 'favors' ? { favors: true } : b.value.startsWith('province:') ? { province: Number(b.value.split(':')[1]) } : {};
       renderWar();

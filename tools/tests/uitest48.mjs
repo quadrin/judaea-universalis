@@ -1,5 +1,5 @@
-// UI verification — SPEC §222: a treaty that runs both ways, and a deed that
-// needs no treaty, both in a real browser.
+// UI verification: peace demands and concessions exclude each other, and
+// surrender and peacetime province gifts remain usable.
 //
 // smoke147 proves the arithmetic. This proves the two surfaces: the peace
 // dialog growing an "Offer provinces of our own" section that a LOSING crown
@@ -18,9 +18,8 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
-await page.evaluate(() => localStorage.clear());
-await page.reload({ waitUntil: 'networkidle' });
+await page.addInitScript(() => localStorage.clear());
+await page.goto(process.env.JU_BASE_URL || 'http://127.0.0.1:8613/', { waitUntil: 'domcontentloaded', timeout: BOOT_MS });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 for (let i = 0; i < 12; i++) {
   const t = (await page.locator('.bm-card.current').textContent()) || '';
@@ -31,29 +30,63 @@ await page.waitForSelector('.nation-card');
 await page.locator('.nation-card').first().click();
 await page.waitForFunction(() => !!window._ctx);
 await page.waitForTimeout(700);
-// Losing the revolt badly.
+// A winning position with an occupied enemy province available to demand.
 const warId = await page.evaluate(() => {
   const g = window._ctx.game;
   const w = g.wars.find((x) => x.attackers.includes('ROM') || x.defenders.includes('ROM'));
   if (!w) return 0;
-  w.warscore[g.playerTag] = -60;
-  for (const t of w.attackers.concat(w.defenders)) if (t !== g.playerTag) w.warscore[t] = 60;
+  w.warscore[g.playerTag] = 60;
+  for (const t of w.attackers.concat(w.defenders)) if (t !== g.playerTag) w.warscore[t] = -60;
+  const p = window._ctx.prov('Caesarea Maritima');
+  p.controller = g.playerTag;
   return w.id;
 });
-ok(!!warId, 'a war we are losing: id ' + warId);
+ok(!!warId, 'a war we are winning: id ' + warId);
 // Open the peace dialog the way the player does: the war row in the realm
 // panel's diplomacy, whose Negotiate button calls openPeaceDialog.
 if (await page.locator('#nation-panel.hidden').count()) await page.locator('.tb-flag').click();
 await page.waitForSelector('#nation-panel:not(.hidden)');
 await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
 await page.waitForTimeout(300);
-const warRow = page.locator('#nation-panel [data-war]').first();
-if (await warRow.count()) { await warRow.click(); await page.waitForTimeout(500); }
-const neg = page.locator('[data-ref="negotiate"], .wo-negotiate, button:has-text("Negotiate")').first();
-if (await neg.count()) { await neg.click(); await page.waitForTimeout(600); }
+await page.locator(`#nation-panel [data-peace="${warId}"]`).click();
+await page.waitForSelector('#peace-modal:not(.hidden)');
 let has = await page.evaluate(() => !!document.querySelector('.peace-card'));
 ok(has, 'the peace dialog opens');
 if (has) {
+  const take = page.locator('#peace-modal [data-prov]').first();
+  const give = page.locator('#peace-modal [data-concede]').first();
+  ok(await take.count() > 0, 'occupied enemy land is available to demand');
+  await take.check();
+  ok(await give.isDisabled(), 'demanding land disables province concessions');
+  const demanded = await page.locator('#peace-modal [data-ref="total"]').textContent();
+  ok(/Demands cost \d+ war score/.test(demanded), 'the total uses the actual demand cost');
+  await take.uncheck();
+  ok(await give.isEnabled(), 'clearing demands restores concessions');
+  await give.check();
+  const demandControls = page.locator('#peace-modal [data-prov], #peace-modal [data-prov-to], #peace-modal [data-release], #peace-modal [data-transfer-vassal], #peace-modal [data-gold], #peace-modal [data-ref="humiliate"], #peace-modal [data-ref="reparations"], #peace-modal [data-ref="subjugate"], #peace-modal [data-ref="unifyCrown"]');
+  ok(await demandControls.evaluateAll(els => els.every(e => e.disabled)),
+    'offering land disables every kind of demand and recipient picker');
+  const pid = Number(await take.getAttribute('data-prov'));
+  await page.evaluate(id => window._ctx.bus.emit('mapclick', { provId: id, armyId: null }), pid);
+  ok(!(await take.isChecked()), 'map clicks cannot add demands while conceding');
+  await give.uncheck();
+  ok(await take.isEnabled(), 'clearing concessions restores demands');
+  const gold = page.locator('#peace-modal [data-gold="1"]');
+  await gold.click();
+  ok(await give.isDisabled(), 'demanding payment also disables concessions');
+  await page.locator('#peace-modal [data-gold="-1"]').click();
+  ok(await give.isEnabled(), 'clearing payment restores concessions');
+  await page.locator('#peace-modal .peace-cancel').click();
+  await page.evaluate(id => {
+    const g = window._ctx.game;
+    const w = g.wars.find(x => x.id === id);
+    w.warscore[g.playerTag] = -60;
+    for (const t of w.attackers.concat(w.defenders)) if (t !== g.playerTag) w.warscore[t] = 60;
+  }, warId);
+  await page.locator('.tb-flag').click();
+  await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+  await page.locator(`#nation-panel [data-peace="${warId}"]`).click();
+  await page.waitForSelector('#peace-modal:not(.hidden)');
   const read = await page.evaluate(() => {
     const rows = [...document.querySelectorAll('[data-concede]')];
     const secs = [...document.querySelectorAll('.peace-sec')].map((n) => n.textContent.trim());

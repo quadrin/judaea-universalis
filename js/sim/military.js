@@ -2065,6 +2065,7 @@ export function changeOwnerCore(ctx, p, tag) {
   if (!p || !tag || p.owner === tag) return;
   const from = p.owner;
   p.owner = tag;
+  p.modifiers = (p.modifiers || []).filter(m => !m.chapterOwner || m.chapterOwner === tag);
   resolveDisplayName(ctx, p);
   ctx.bus.emit('provinceOwner', { provId: p.id, from, to: tag });
 }
@@ -2699,6 +2700,8 @@ export function switchTagCore(ctx, from, to) {
     if (p.controller === from) p.controller = to;
     if (p.siege && p.siege.by === from) p.siege.by = to;
     if (p.conversion && p.conversion.by === from) p.conversion.by = to;
+    for (const mod of p.modifiers || []) if (mod.chapterOwner === from) mod.chapterOwner = to;
+    for (const order of p.unitQueue || []) if (order.tag === from) order.tag = to;
   }
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
@@ -2735,6 +2738,13 @@ export function switchTagCore(ctx, from, to) {
     if (Array.isArray(t.allies)) t.allies = t.allies.map((x) => (x === from ? to : x));
     if (Array.isArray(t.guarantees)) t.guarantees = t.guarantees.map((x) => (x === from ? to : x));
     if (t.overlord === from) t.overlord = to;
+    const chapter = t.chapterStrategy;
+    if (chapter) {
+      if (chapter.patron?.tag === from) chapter.patron.tag = to;
+      if (chapter.pledges?.[from]) { chapter.pledges[to] = chapter.pledges[from]; delete chapter.pledges[from]; }
+      for (const pledge of Object.values(chapter.pledges || {})) if (pledge.lord === from) pledge.lord = to;
+      for (const shipment of chapter.shipments || []) if (shipment.partner === from) shipment.partner = to;
+    }
     if (t.opinion && t.opinion[from] !== undefined) {
       t.opinion[to] = t.opinion[from];
       delete t.opinion[from];
@@ -3244,7 +3254,11 @@ export function truceActive(ctx, a, b) {
 export function clientForeignPolicyBar(ctx, tag) {
   const g = ctx && ctx.game;
   const t = g && g.tags[tag];
-  if (!t || !t.overlord) return '';
+  if (!t) return '';
+  const pact = t.chapterStrategy?.patron;
+  if (pact && g.tags[pact.tag]?.alive && num(t.chapterStrategy.rights) < 2) return g.tags[pact.tag].name || pact.tag;
+  if (!t.overlord) return '';
+  if (pact?.tag === t.overlord && num(t.chapterStrategy.rights) >= 2) return '';
   const lord = g.tags[t.overlord];
   if (!lord || !lord.alive) return ''; // a collar with nobody holding it (§75)
   return lord.name || t.overlord;
@@ -5700,10 +5714,13 @@ export function declareIndependenceCore(ctx, tag) {
   if (lord && Array.isArray(lord.allies)) lord.allies = lord.allies.filter((a) => a !== tag);
   me.overlord = null;
   me.incorporating = null; // a union half-woven dies with the bond (§219's terms)
+  const formerPact = me.chapterStrategy?.patron;
+  if (formerPact?.tag === lordTag) me.chapterStrategy.patron = null;
   const war = declareWar(ctx, tag, lordTag,
     (me.name || tag) + '’s War of Independence', 'independence');
   if (!war) {
     me.overlord = lordTag; // the declaration failed; the bond stands
+    if (formerPact?.tag === lordTag) me.chapterStrategy.patron = formerPact;
     return { ok: false, why: 'The herald could not be sent.' };
   }
   addOpinion(ctx, lordTag, tag, -80);
@@ -6990,6 +7007,11 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     .map((v) => ({ tag: v, name: (g.tags[v] && g.tags[v].name) || v }));
   return {
     warId: war.id, warName: war.name,
+    chapterSettlements: ctx.bookmark?.id === '351ce' && enemyLeader === 'ROM' && byTag !== 'ROM' && !exit ? [
+      { key: 'local_government', name: 'Protected local government', cost: 25, desc: 'Keep your realm as a Roman client with 5% tribute and a ten-year self-government guarantee.' },
+      { key: 'recognition', name: 'Recognize our government', cost: 45, desc: 'Mutual recognition ends claims to rule us. A future war requires renouncing recognition.' },
+      { key: 'independence', name: 'Guarantee independence', cost: 65, desc: 'Remain independent; Rome abandons its claims on our existing provinces.' },
+    ] : [],
     // SPEC §275. A client's chair: no table, and the reason why, plus what
     // it may do instead.
     petitioner,
@@ -7143,8 +7165,10 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
   // Either clause disposes of the whole political house, so neither leaves a
   // remainder for the rest of the table to argue over.
   const whole = unifyCrown || subjugate;
+  const chapterSettlement = !whole && (info.chapterSettlements || []).find(r => r.key === d.chapterSettlement);
   const chosen = [];
   let cost = 0;
+  if (chapterSettlement) cost += chapterSettlement.cost;
   if (unifyCrown) {
     cost += info.unifyCrownCost;
   } else if (subjugate) {
@@ -7206,12 +7230,8 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
       cost += row.cost;
     }
   }
-  // What we put on the table ourselves (SPEC §222). Priced in the same
-  // currency as everything else and credited against the total, so one ledger
-  // settles a treaty that runs in both directions: a province we hand over is
-  // worth exactly what they would have spent taking it. No escalation ladder
-  // here — `priceProvincePackage` makes each further DEMAND dearer because a
-  // congress resists a long list, and nothing resists a gift.
+  // Our provinces may settle a concession-only peace. Their value never
+  // discounts demands: demands and concessions are separate treaty directions.
   const conceded = [];
   let offered = 0;
   if (!whole) {
@@ -7234,10 +7254,14 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
   const reparations = !unifyCrown && !!d.reparations && !info.exit;
   if (reparations) cost += PEACE.reparationsCost;
   const white = !chosen.length && !releaseRows.length && !transferRows.length
-    && !conceded.length && gold <= 0 && !humiliate && !subjugate && !unifyCrown && !reparations;
+    && !conceded.length && gold <= 0 && !humiliate && !subjugate && !unifyCrown && !reparations && !chapterSettlement;
   const enemyWs = -info.myWs;
-  // The net of the table: what we ask, less what we lay down beside it.
-  const net = cost - offered;
+  const hasDemands = chosen.length > 0 || releaseRows.length > 0 || transferRows.length > 0
+    || gold > 0 || humiliate || subjugate || unifyCrown || reparations || chapterSettlement;
+  const mixedTerms = conceded.length > 0 && !!hasDemands;
+  // Preserve the signed result used by surrender handling and AI descriptions,
+  // without letting concessions buy extra demands (even in an invalid deal).
+  const net = hasDemands ? cost : -offered;
   const enthusiasm = warEnthusiasm(ctx, war, info.enemyLeader, byTag);
   // Exhaustion improves a real bargaining position; a skirmish cannot buy
   // an empire merely because its treasury and reserves are empty.
@@ -7247,7 +7271,10 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
     : clamp(enthusiasm.willingness, -10, Math.max(0, info.myWs) * 0.25);
   const acceptanceBudget = Math.max(0, Math.min(100, info.myWs + acceptanceAdjustment));
   let acceptable, reason;
-  if (white) {
+  if (mixedTerms) {
+    acceptable = false;
+    reason = 'Choose demands or concessions. Offering our provinces cannot pay for demands.';
+  } else if (white) {
     // A fresh grudge does not go home for nothing: in a war's first year the
     // enemy signs a white peace only if actually losing or war-weary — no
     // more declaring a war, shrugging, and shaking hands a month later.
@@ -7318,7 +7345,8 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
     }
   }
   return {
-    cost, net, offered, acceptable, reason, gold, humiliate, subjugate, reparations,
+    cost, net, offered, mixedTerms, acceptable, reason, gold, humiliate, subjugate, reparations,
+    chapterSettlement: chapterSettlement?.key || null,
     enthusiasm, acceptanceBudget, acceptanceAdjustment,
     expansion: options.consequences === false ? [] : expansionPreview(ctx, byTag, [...new Set([
       ...chosen.map(p => p.id),
@@ -8167,6 +8195,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
   const g = ctx.game;
   const info = peaceDealInfo(ctx, war, byTag, deal && deal.enemy); // separate peace scope (SPEC §67)
   const ev = evaluatePeaceDeal(ctx, war, byTag, deal);
+  if (ev.mixedTerms) return;
   const me = g.tags[byTag];
   const terms = [];
   // Cession first: demanded provinces change owner to the peacemaker — or, as
@@ -8435,6 +8464,31 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     et.stability = clamp(num(et.stability) - 1, -3, 3);
     me.aggression = num(me.aggression) + BAL(ctx, 'infamyHumiliate', 5);
     terms.push('is humiliated before the nations');
+  }
+  if (ev.chapterSettlement) {
+    const current = (g.date.y > 0 ? g.date.y - 1 : g.date.y) * 12 + g.date.m - 1;
+    me.chapterStrategy ||= {};
+    me.chapterStrategy.settlement = ev.chapterSettlement;
+    if (ev.chapterSettlement === 'local_government') {
+      me.overlord = info.enemyLeader;
+      for (const ally of (me.allies || []).slice()) breakAllianceCore(ctx, byTag, ally);
+      lapseClientGuarantees(ctx, byTag);
+      me.chapterStrategy.patron = { tag: info.enemyLeader, rate: .05, manpower: 0, until: current + 120, arrears: 0 };
+      me.chapterStrategy.rights = 1;
+      me.chapterStrategy.service = 0;
+      me.chapterStrategy.standing = 50;
+    } else {
+      if (me.overlord === info.enemyLeader) me.overlord = null;
+      if (ev.chapterSettlement === 'recognition') {
+        g.recognitions ||= {};
+        g.recognitions[recognitionKey(byTag, info.enemyLeader)] = { y: g.date.y, m: g.date.m };
+      }
+      if (ev.chapterSettlement === 'independence') {
+        const ours = new Set(g.provinces.filter(p => p?.owner === byTag).map(p => p.id));
+        g.tags[info.enemyLeader].claims = (g.tags[info.enemyLeader].claims || []).filter(id => !ours.has(id));
+      }
+    }
+    terms.push('accepts ' + (info.chapterSettlements.find(r => r.key === ev.chapterSettlement)?.name || 'our government'));
   }
   const participants = war.attackers.concat(war.defenders);
   // A treaty may now run in both directions (SPEC §222), so every summary

@@ -10,7 +10,7 @@ page.on('pageerror', e => errors.push(String(e)));
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const out = process.env.JU_OUT || '/tmp';
 try {
-  await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
+  await page.goto(process.env.JU_BASE_URL || 'http://127.0.0.1:8613/', { waitUntil: 'domcontentloaded', timeout: Number(process.env.JU_BOOT_TIMEOUT || 480000) });
   await page.waitForSelector('.bm-card', { timeout: Number(process.env.JU_BOOT_TIMEOUT || 480000) });
   await page.locator('.ss-dot[aria-label="The Great Revolt"]').click();
   await page.waitForTimeout(450);

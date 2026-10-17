@@ -76,6 +76,7 @@ import { buildProvinceMapping } from '../data/map_profile.js';
 import { sendAiCounteroffer } from './ai.js';
 import { traceSupply, supplyPenaltyText, supplyReasonText, supplyExempt } from './supply.js';
 import { chapterView } from './chapters.js';
+import { chapterStrategyView, chapterActionInfo, runChapterAction as runChapterActionCore } from './chapter_strategy.js';
 import { axisOf, pushDoctrine, doctrineView, doctrineEpithet } from './doctrine.js';
 import { divergenceView, divergenceSummary } from './divergence.js';
 import {
@@ -2268,7 +2269,7 @@ export function gameActions(ctx) {
             supplyText: num(a.oosMonths) > 0
               ? 'Out of supply ' + (num(a.oosMonths) | 0) + ' month' + (num(a.oosMonths) > 1 ? 's' : '')
                 + ' — ' + supplyPenaltyText(ctx, a)
-              : (a.supplyVia === 'port' ? 'Supplied by sea' : 'In supply'),
+              : (a.supplyVia === 'port' ? 'Supplied by sea' : a.supplyVia === 'depot' ? 'Supplied by local reserves' : 'In supply'),
           });
         }
         if (sel && sel.fleetId != null && g.fleets && g.fleets[sel.fleetId]) {
@@ -4286,6 +4287,13 @@ export function gameActions(ctx) {
     // ---- sandbox chapters (SPEC §83): the second act after the verdict ------
     getChapter() {
       try { return chapterView(ctx); } catch (e) { warnOnce('getChapter', 'getChapter failed', e); return null; }
+    },
+    getChapterStrategy() { return chapterStrategyView(ctx); },
+    getChapterDecision(key, args) { return chapterActionInfo(ctx, g.playerTag, key, args); },
+    runChapterStrategy(key, args) {
+      const result = runChapterActionCore(ctx, g.playerTag, key, args);
+      if (!result.ok) say('Chapter decision unavailable', result.why, 'bad');
+      return result;
     },
     // ---- the doctrine axes (realm panel, SPEC §85) --------------------------
     getDoctrine() {

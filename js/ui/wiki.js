@@ -7,7 +7,7 @@
 // the data modules always.
 import { esc, rgb, fmtYear, titleCase, warnOnce } from './format.js';
 import { icon, divider, flagChip } from './icons.js';
-import { ERAS, GENERIC_EVENTS } from '../data/compendium.js';
+import { PLAYABLE_ERAS as ERAS, GENERIC_EVENTS } from '../data/compendium.js';
 import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
 import { entryFork } from '../data/chapter_paths.js';

@@ -273,7 +273,7 @@ export function createOutliner(el, {
       const oos = (a.oosMonths | 0) > 0;
       const supplyTxt = oos
         ? `\n✂ OUT OF SUPPLY ${a.oosMonths | 0} month${(a.oosMonths | 0) > 1 ? 's' : ''} — no reinforcements, slow rally, mounting attrition.\nSelect the army to see where the line is cut.`
-        : (a.supplyVia === 'port' ? '\n⚓ Supplied by sea' : '');
+        : (a.supplyVia === 'port' ? '\n⚓ Supplied by sea' : a.supplyVia === 'depot' ? '\nLocal reserves supply this army' : '');
       const flagsTxt = (a.inBattle ? '\n⚔ In battle' : '') + (a.retreating ? '\n↩ Retreating' : '') + supplyTxt;
       // The three arms by their pattern names (SPEC §191), and the face of
       // whichever leads the column, in the row itself.

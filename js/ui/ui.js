@@ -17,6 +17,7 @@ import { icon, flagChip, unitIcon } from './icons.js';
 import { armGenName } from '../data/units.js';
 import { createCampaignTools } from './campaign_tools.js';
 import { createMessages } from './messages.js';
+import { renderPeaceStrategy } from './peace_strategy.js';
 
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
@@ -353,6 +354,7 @@ export function initUI(staticCtx) {
     const deal = {
       provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
       unifyCrown: false, // the crown war's answer (SPEC §226): one kingdom, one claimant
+      chapterSettlement: '',
       concessions: [], // provinces of our own laid on the table (SPEC §222)
       provinceTo: {}, // directed spoils: demanded province -> our client in this war
       release: [], // restored, returned, or newly created states (SPEC §69/§76)
@@ -413,19 +415,17 @@ export function initUI(staticCtx) {
         ${toPicker(p)}
         <span class="peace-prov-cost">${p.cost}</span>
       </label>`).join('');
-    // What we lay on the table ourselves (SPEC §222). Any province of ours —
-    // occupied or not, reachable or not, worth having or not — priced at what
-    // they would have paid to take it, and credited against the terms.
+    // Concessions settle a surrender separately from demands.
     const concessionRows = (info.concessions || []).map((p) =>
       `<label class="peace-prov" data-center="${p.id}" data-tt="${esc(p.name)} — ${p.dev} development${
         p.occupied ? '\nTheir armies already stand in it.' : ''}${
         p.capital ? '\nOur own capital. A crown may sign this away; it does not have to.' : ''}${
         p.discount === 'claim' ? '\nThey hold a claim on it (it is cheap for them to take).'
-          : p.discount === 'faith' ? '\nIt keeps their faith.' : ''}\nCeding it credits ${p.cost} war score against our terms">
+          : p.discount === 'faith' ? '\nIt keeps their faith.' : ''}\nWorth ${p.cost} war score in a concession-only peace. Cannot pay for demands.">
         <input type="checkbox" data-concede="${p.id}">
         <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev${
   p.occupied ? ' · occupied' : ''}${p.capital ? ' · our capital' : ''}</span></span>
-        <span class="peace-prov-cost">−${p.cost}</span>
+        <span class="peace-prov-cost">${p.cost}</span>
       </label>`).join('');
     peaceEl.innerHTML = `
       <div class="modal-scrim"></div>
@@ -448,13 +448,14 @@ export function initUI(staticCtx) {
         : (info.enemyName || 'They') + ' would leave the war alone — the rest of the coalition fights on, and every other front keeps its lines.')
       : 'The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.'}</div>
         <div class="peace-ws">${info.separate ? 'Separate war score' : 'War score'} against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
+        <div class="peace-hint">Choose demands or concessions. Clear selected terms to switch.</div>
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
         <div class="peace-sec">${info.exit ? 'Keep what our men hold' : 'Demand provinces'}</div>
         ${info.provinces.length ? `<div class="peace-provs">${provRows}</div>`
     : `<div class="peace-dim peace-none">${info.exit
       ? 'Our own men hold no enemy land — a withdrawal now reverts every occupation on our front.'
       : 'Occupy enemy land to put it on the table.'}</div>`}
-        <div class="peace-sec">Offer provinces of our own <span class="peace-dim">(credited against the terms)</span></div>
+        <div class="peace-sec">Offer provinces of our own <span class="peace-dim">(concessions only)</span></div>
         ${(info.concessions || []).length ? `<div class="peace-provs peace-give">${concessionRows}</div>`
     : '<div class="peace-dim peace-none">We hold no province to offer.</div>'}
         <div class="peace-sec">Demand payment <span class="peace-dim">(${info.goldCostPer100} war score per 100 talents)</span></div>
@@ -566,6 +567,10 @@ export function initUI(staticCtx) {
       ? 'A separate peace cannot transfer another sovereign’s clients.'
       : 'They have no direct client kingdom that can be transferred.'}</div>`}
         `}
+        ${info.chapterSettlements?.length ? `<div class="peace-sec">Political settlement</div>
+          <label class="chapter-action">${icon('scroll', 'icon-sm')}Settlement<select data-ref="chapterSettlement" aria-label="Political settlement">
+          <option value="">No additional guarantee</option>${info.chapterSettlements.map(r => `<option value="${r.key}">${esc(r.name)} · ${r.cost} war score</option>`).join('')}</select></label>
+          <p class="peace-dim" data-ref="chapterSettlementHint"></p>` : ''}
         <div class="peace-total" data-ref="total"></div>
         <div class="peace-verdict" data-ref="verdict"></div>
         <div class="peace-strategy" data-ref="strategy"></div>
@@ -582,6 +587,8 @@ export function initUI(staticCtx) {
     const subjugateBox = peaceEl.querySelector('[data-ref="subjugate"]');
     const crownBox = peaceEl.querySelector('[data-ref="unifyCrown"]');
     const reparationsBox = peaceEl.querySelector('[data-ref="reparations"]');
+    const settlementBox = peaceEl.querySelector('[data-ref="chapterSettlement"]');
+    settlementBox?.addEventListener('change', () => { deal.chapterSettlement = settlementBox.value; update(); });
 
     function update() {
       let ev = null;
@@ -593,40 +600,44 @@ export function initUI(staticCtx) {
       // table, indemnity and humiliation included — there is no court left
       // to pay or be shamed next month.
       const whole = deal.subjugate || deal.unifyCrown;
+      const conceding = deal.concessions.length > 0;
+      const demanding = deal.provinces.length > 0 || deal.release.length > 0
+        || deal.transferVassals.length > 0 || deal.gold > 0 || deal.humiliate
+        || deal.reparations || whole || !!deal.chapterSettlement;
       peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
-        box.disabled = whole;
+        box.disabled = whole || conceding;
         if (whole) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', whole);
+        box.closest('.peace-prov').classList.toggle('peace-off', box.disabled);
       });
       peaceEl.querySelectorAll('[data-prov-to]').forEach((sel) => {
-        sel.disabled = whole;
+        sel.disabled = whole || conceding;
         if (whole) sel.value = '';
       });
       peaceEl.querySelectorAll('[data-concede]').forEach((box) => {
-        box.disabled = whole;
+        box.disabled = demanding;
         if (whole) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', whole);
+        box.closest('.peace-prov').classList.toggle('peace-off', box.disabled);
       });
       peaceEl.querySelectorAll('[data-release]').forEach((box) => {
-        box.disabled = whole;
+        box.disabled = whole || conceding;
         if (whole) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', whole);
+        box.closest('.peace-prov').classList.toggle('peace-off', box.disabled);
       });
       peaceEl.querySelectorAll('[data-transfer-vassal]').forEach((box) => {
-        box.disabled = whole;
+        box.disabled = whole || conceding;
         if (whole) box.checked = false;
-        box.closest('.peace-prov').classList.toggle('peace-off', whole);
+        box.closest('.peace-prov').classList.toggle('peace-off', box.disabled);
       });
       if (whole) { deal.provinces = []; deal.release = []; deal.transferVassals = []; deal.provinceTo = {}; deal.concessions = []; }
       // The two whole-house clauses exclude each other: a crown cannot both
       // survive as a client and be taken.
       if (subjugateBox) {
-        subjugateBox.disabled = !info.canSubjugate || deal.unifyCrown;
+        subjugateBox.disabled = !info.canSubjugate || deal.unifyCrown || conceding;
         if (deal.unifyCrown) { subjugateBox.checked = false; deal.subjugate = false; }
         subjugateBox.closest('.peace-prov').classList.toggle('peace-off', subjugateBox.disabled);
       }
       if (crownBox) {
-        crownBox.disabled = !info.canUnifyCrown || deal.subjugate;
+        crownBox.disabled = !info.canUnifyCrown || deal.subjugate || conceding;
         if (deal.subjugate) { crownBox.checked = false; deal.unifyCrown = false; }
         crownBox.closest('.peace-prov').classList.toggle('peace-off', crownBox.disabled);
       }
@@ -640,12 +651,20 @@ export function initUI(staticCtx) {
       }
       [humiliateBox, reparationsBox].forEach((box) => {
         if (!box) return;
-        box.disabled = deal.unifyCrown;
-        box.closest('.peace-prov').classList.toggle('peace-off', deal.unifyCrown);
+        box.disabled = deal.unifyCrown || conceding;
+        box.closest('.peace-prov').classList.toggle('peace-off', box.disabled);
       });
+      peaceEl.querySelectorAll('[data-gold]').forEach(b => {
+        b.disabled = deal.unifyCrown || conceding;
+      });
+      if (settlementBox) {
+        settlementBox.disabled = whole || conceding;
+        if (whole) { settlementBox.value = ''; deal.chapterSettlement = ''; }
+        peaceEl.querySelector('[data-ref="chapterSettlementHint"]').textContent = info.chapterSettlements.find(r => r.key === deal.chapterSettlement)?.desc || '';
+      }
       const white = !deal.provinces.length && !deal.release.length && !deal.transferVassals.length
         && !deal.concessions.length && deal.gold <= 0
-        && !deal.humiliate && !deal.subjugate && !deal.unifyCrown && !deal.reparations;
+        && !deal.humiliate && !deal.subjugate && !deal.unifyCrown && !deal.reparations && !deal.chapterSettlement;
       totalEl.textContent = white
         ? (info.exit
           ? 'A clean withdrawal: occupations between us and the enemy revert; the war goes on without us.'
@@ -653,15 +672,11 @@ export function initUI(staticCtx) {
         : ev.net > 0
           ? `Demands cost ${ev.net} war score — we hold ${Math.max(0, info.myWs)}.`
           : ev.offered > 0
-            ? `We offer ${ev.offered} war score of our own land${ev.cost > 0 ? ` against ${ev.cost} demanded` : ''} — their war has earned ${Math.max(0, -info.myWs)}.`
+            ? `We offer ${ev.offered} war score of our own land — their war has earned ${Math.max(0, -info.myWs)}.`
             : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
       verdictEl.textContent = ev.acceptable ? 'They will accept these terms.' : ev.reason;
       const strategy = peaceEl.querySelector('[data-ref="strategy"]');
-      if (strategy) strategy.innerHTML = (ev.enthusiasm ? `<details open><summary>Enemy war enthusiasm: ${esc(ev.enthusiasm.level)} · demand limit ${Math.round(ev.acceptanceBudget)}</summary>
-        <p>Willingness ${ev.enthusiasm.willingness >= 0 ? '+' : ''}${ev.enthusiasm.willingness.toFixed(1)} after a base reluctance of 4. Applied adjustment ${ev.acceptanceAdjustment >= 0 ? '+' : ''}${ev.acceptanceAdjustment.toFixed(1)}; positive bonuses are capped at 25% of war score. Total victory compels terms within 100.</p>
-        ${ev.enthusiasm.factors.map(r => `<div>${esc(r.label)}: ${r.value >= 0 ? '+' : ''}${r.value}</div>`).join('')}</details>` : '')
-        + (ev.expansion?.length ? `<details open><summary>Regional concern after this treaty</summary><div class="campaign-table"><table><thead><tr><th>Court</th><th>Added</th><th>Total</th><th>Coalition risk</th></tr></thead><tbody>${ev.expansion.map(r =>
-          `<tr><td>${esc(r.name)}</td><td>+${r.gain.toFixed(1)}</td><td>${r.after.toFixed(1)}</td><td class="${r.coalition ? 'neg' : ''}">${r.newlyAlarmed ? 'Newly eligible' : r.coalition ? 'Eligible' : 'Below threshold / relations permit'}</td></tr>`).join('')}</tbody></table></div></details>` : '');
+      if (strategy) strategy.innerHTML = renderPeaceStrategy(ev, state.ctx);
       verdictEl.classList.toggle('pos', !!ev.acceptable);
       verdictEl.classList.toggle('neg', !ev.acceptable);
       sendBtn.textContent = info.exit
@@ -778,7 +793,7 @@ export function initUI(staticCtx) {
     // so subjugation deals ignore the map.
     const demandable = new Set(info.provinces.map((p) => p.id));
     peaceProvToggle = (pid) => {
-      if (deal.subjugate || deal.unifyCrown || !demandable.has(pid)) return;
+      if (deal.subjugate || deal.unifyCrown || deal.concessions.length || !demandable.has(pid)) return;
       const at = deal.provinces.indexOf(pid);
       if (at >= 0) {
         deal.provinces.splice(at, 1);

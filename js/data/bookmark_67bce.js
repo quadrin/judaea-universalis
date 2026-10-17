@@ -109,7 +109,7 @@ function fireEventById(ctx, eventId) {
 
 export const BOOKMARK_67 = {
   id: '67bce',
-  name: 'The Judaean Civil War',
+  name: 'The Struggle for Judaea',
   startDate: { y: -67, m: 4, d: 1 },
   // SPEC §121: the year after which this chapter's own undated trigger
   // cards stop belonging to anybody — the war of the brothers and the house that came out of it.
@@ -209,7 +209,9 @@ export const BOOKMARK_67 = {
     + 'younger has the army, the fortresses, and no patience. Idumean Antipater whispers to '
     + 'one, the Nabataean king weighs his price for the other\'s ruin — and far to the north '
     + 'Pompey the Great is finishing the last war that matters, after which he will need '
-    + 'something to organize.',
+    + 'something to organize. Win the succession, manage Roman and Parthian patrons, '
+    + 'and govern the kingdom that survives. Herod’s rise follows the surviving houses '
+    + 'and the choices you make; a consolidated Hasmonean victory keeps its own future.',
 
   // v5.4: PNT joins — Mithridates VI, restored at Zela, awaiting Pompey.
   activeTags: [

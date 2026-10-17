@@ -21939,3 +21939,115 @@ new book and lock glyphs use the shared decorative inline SVG icon set.
 Existing panel checks (`smoke119`, `smoke131`, `smoke132`, `uitest38`) track the
 new section ownership while retaining their unlock, purchase-path, court,
 institution and technology checks.
+
+## §305 — Peace demands and concessions have separate directions
+
+Province concessions can settle a surrender, but cannot discount demands.
+`evaluatePeaceDeal` rejects treaties that combine concessions with demands
+for provinces, gold, humiliation, reparations, releases or client transfers.
+The signed `net` remains the full demand cost for a demand treaty and the
+negative offered value for a concession treaty. Direct execution also refuses
+mixed terms. Existing whole-kingdom clauses continue to replace province terms.
+
+Selecting a demand disables concession controls; selecting a concession
+disables all demand controls, including recipient selectors and gold buttons.
+Clearing selected terms restores the other direction. Map clicks cannot add
+demands while offering concessions. Province values are displayed without a
+negative cost or credit language.
+
+`smoke147` covers rejected exchanges at positive, zero and negative war score,
+the player command and direct execution, ordinary demands and surrender.
+`uitest48` checks both directions of control exclusion, map input and payment,
+and retains its surrender and peacetime province-gift checks.
+
+## §306 — Stable macrobuilder interactions
+
+The campaign tools retain their dialog card when selections or live data
+change. Replacing that card previously restarted its entrance animation,
+reset the province list's scroll position and discarded keyboard focus after
+clicking a checkbox. Unchanged refreshes now retain the existing contents and
+event handlers. Changed contents restore the focused control and the dialog
+and table scroll offsets, including horizontal scrolling on narrow screens.
+The render cache also distinguishes game contexts and action bindings.
+
+The same shell serves war planning. `uitest68.mjs` mounts the actual component
+with the game simulation and stylesheet, covering pointer and keyboard row
+selection, repeated refreshes, affordability updates, construction, template
+editing, mobile scroll positions, ally offers, reopening and closing. Its
+selection case reproduces the former card replacement before the fix.
+
+## §307 — Chapter strategy and a combined succession campaign
+
+`js/data/chapter_strategy.js` defines 34 decisions across eleven profiles.
+`js/sim/chapter_strategy.js` validates and executes them through
+`getChapterStrategy`, `getChapterDecision` and `runChapterStrategy`. Their
+controls live under Court → Missions. Queries do not create persistent state.
+All prices and availability are checked again when a command executes.
+
+Province charters trade autonomy for production, annual levies and estate
+approval. Governors revoke privileges with local unrest. Capital and
+reconstruction projects consume money and points, bill monthly upkeep, pause
+under occupation or insolvency, and complete on the monthly clock. The three
+army reforms exchange higher maintenance and estate displeasure for discipline
+and reinforcement. Regional commissions use the existing recruitment queue;
+emergency taxes and requisitions have political costs and cooldowns.
+
+Patron agreements transfer the patron's own money or manpower and require
+36 months of revenue or military service. Missed payments reduce standing;
+three arrears end the agreement. Paid service and sufficient standing unlock
+two guarantees: reduced tribute and independent foreign policy. Existing
+clients pay the negotiated rate once, through the normal tribute ledger.
+Contract-only clients use balanced monthly receipts and obligations. Pledges
+expire after two years and supporters re-evaluate when an actual independence
+war begins. AI cannot take these decisions on behalf of a human chair.
+Defaulting or prematurely renouncing an agreement prevents re-signing with
+the same patron for three years; another human chair cannot be forced to
+fund a grant, supply equipment or join a pledged uprising.
+
+Support networks and depots reserve actual manpower, retain finite supplies,
+and lose organization under occupation. Supply tracing can use these sites
+when a home corridor is cut; each supplied army consumes a stock. Captured
+sites are dismantled, and stored recruits must be released in controlled
+territory. The Gallus chapter calculates Roman reinforcement pressure from
+concurrent wars and offers protected local government (25 war score), mutual
+recognition (45), or independence with claims renounced (65). These are
+ordinary positive-cost peace demands, incompatible with province concessions.
+
+The Keepers can exchange municipal autonomy for funding and choose local
+religious policies without instantly changing a province's faith. Persian
+Gambit occupation administrators collect limited revenue or improve patron
+standing; they never change sovereignty without a treaty. Modern mobilization
+exchanges civilian income and upkeep for manpower capacity. Shipments cost
+100 talents paid to a supplier, need three unobstructed delivery months, and
+stall under blockade, embargo, war, siege or a lost port. Six interrupted
+months cancel the order with a 50-talent supplier refund. Delivered equipment
+shortens the next four land recruitment orders by one month; existing arms
+licensing requirements remain in force.
+
+Chapter state is plain saved data. Monthly processing is idempotent, financial
+flows appear in the economy breakdown, and national formation redirects
+contracts, shipments, pledges, local policies and queued recruits. Authored AI
+playable courts can place one affordable decision each quarter, retaining a
+250-talent reserve before considering it.
+
+The title carousel and library use `PLAYABLE_ERAS`: eleven entries. The 67 BCE
+entry is now The Struggle for Judaea, using its existing conditional Herodian
+arc. The 40 BCE entry remains in `ERAS` with `legacy: true`; save lookup still
+uses the full registry, preserving its original world and event chain.
+
+`smoke210` covers chapter menus, read-only queries, exact costs, annual levies,
+project interruptions, service and rights, pledged wars, network suppression,
+finite supply, recruitment, political settlements, religious policies,
+occupation revenue, mobilization, shipment cancellation, national formation,
+AI decisions, the real monthly clock and save round trips. `uitest69` checks
+the actual carousel and chapter controls, mobile layout, foreign read-only
+views, costs and construction progress.
+
+## §308 — Compact peace factors
+
+`js/ui/peace_strategy.js` renders icon-led war-enthusiasm factors, compact
+willingness/applied-adjustment/demand-limit summaries, and flag-labelled
+regional concern. Coalition status uses a shield, alert or flame with the
+short labels Clear, Eligible and New. Native titles and game tooltips retain
+the full calculation and eligibility explanations. `uitest69` covers the
+factor icons, all three risk states, tooltips and narrow-screen layout.

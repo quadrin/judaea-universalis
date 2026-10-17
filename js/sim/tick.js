@@ -31,6 +31,7 @@ import { monthlyArms, monthlyPrograms } from './arms.js';
 import { monthlyAid } from './aid.js';
 import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
+import { monthlyChapterStrategies } from './chapter_strategy.js';
 import { monthlyPretenders, monthlyRisings } from './revolt.js';
 import { monthlyOutlaws } from './outlaws.js';
 import { monthlyCrises } from './crisis.js';
@@ -103,6 +104,7 @@ function monthlyMonarchPoints(ctx) {
 function monthlyBlock(ctx) {
   const g = ctx.game;
   safe('modifiers', () => tickModifiers(ctx));
+  safe('chapterStrategy', () => monthlyChapterStrategies(ctx));
   if (g.date.m === 1) safe('growth', () => yearlyGrowth(ctx)); // towns grow each January (SPEC §24)
   safe('construction', () => monthlyConstruction(ctx)); // before economy: a finished market earns this month
   safe('expeditions', () => monthlyExpeditions(ctx)); // camps in the waste check their supply line (SPEC §64)

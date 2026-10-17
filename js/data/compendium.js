@@ -246,7 +246,8 @@ export const ERAS = [
   { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, EVENTS_597_DESTRUCTION, EVENTS_597_PERSIA, EVENTS_597_NEIGHBOURS, EVENTS_597_POWERS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_CONQUEST, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_AUGUSTAN, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_ROAD, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
+  // Preserved for loading old campaigns; its playable arc is now in 67 BCE.
+  { legacy: true, bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_ROAD, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
   { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, ANTIQUE) },
   // 132's chain is three packages (SPEC §104): the revolt itself, the
   // Christian thread that runs beside it, and the world spine to 425. They
@@ -295,6 +296,7 @@ export const ERAS = [
   // coming down — that the chapter's arms deals and aliyah waves hang from.
   { bookmark: withPolitical(BOOKMARK_1948), events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_COLDWAR, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, EVENTS_1948_YEARS, EVENTS_1948_NEIGHBOURS, SHARED) },
 ];
+export const PLAYABLE_ERAS = ERAS.filter(e => !e.legacy);
 
 // The shared pool by itself (the wiki's "omens and incidents" page tells it
 // apart from each chapter's scripted chain).
