@@ -3,6 +3,25 @@
 Developer tooling. Plain Node, zero dependencies — none of this ships to the
 browser.
 
+## Campaign planning checks
+
+`node tools/tests/smoke208.mjs` exercises frontage, diplomatic commitments,
+regional concern, peace willingness, batch construction, distributed musters,
+save restoration, and message preferences. It also checks that AI candidate
+search and player treaty previews agree on costs and acceptance.
+
+With the game served on port 8613 and Playwright configured as below:
+
+```sh
+JU_PW_DIR=/workspace/ju-devtools JU_CHROMIUM=/usr/bin/chromium node tools/tests/uitest66.mjs
+```
+
+The browser suite builds a market, saves and recruits a template, checks a
+narrow viewport, negotiates an allied territorial promise, opens the peace
+preview, and exercises notification filtering, popups, persistent alerts, and
+automatic pausing. `uitest57.mjs` also checks the expanded settings panel in
+a short laptop window. Run browser suites serially with software WebGL.
+
 ## autorun.mjs — the balance harness
 
     node tools/autorun.mjs [years] [bookmarkId]

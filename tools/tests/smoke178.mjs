@@ -81,6 +81,8 @@ console.log('== §260 an ally is asked, not enrolled ==');
   for (const k of Object.keys(game.tags)) game.tags[k].atWarWith = [];
   // Three allies of the attacker: one devoted, one merely warm, one cold.
   ally(game, 'JUD', 'PAR', 90);
+  // Test an independent ally; clients cannot accept foreign war calls.
+  game.tags.ADI.overlord = null;
   ally(game, 'JUD', 'ADI', 30);
   ally(game, 'JUD', 'NAB', 10);
   const war = mil.declareWar(ctx, 'JUD', 'ROM', 'The Test War');

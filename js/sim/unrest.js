@@ -271,7 +271,8 @@ export function monthlyOpinionDrift(ctx) {
     if (!t.opinion) continue;
     for (const bad of infamous) {
       if (bad === tag || t.overlord === bad || (g.tags[bad].allies || []).indexOf(tag) >= 0) continue;
-      t.opinion[bad] = clamp(num(t.opinion[bad], 0) - Math.ceil(num(g.tags[bad].aggression) / 15), -200, 200);
+      if (!Object.hasOwn(t.expansionConcern || {}, bad))
+        t.opinion[bad] = clamp(num(t.opinion[bad], 0) - Math.ceil(num(g.tags[bad].aggression) / 15), -200, 200);
     }
     for (const other of Object.keys(t.opinion)) {
       if (other === tag) continue;

@@ -15,6 +15,8 @@ import { createSavesPanel } from './saves.js';
 import { createSettingsPanel } from './settings.js';
 import { icon, flagChip, unitIcon } from './icons.js';
 import { armGenName } from '../data/units.js';
+import { createCampaignTools } from './campaign_tools.js';
+import { createMessages } from './messages.js';
 
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
@@ -144,6 +146,9 @@ export function initUI(staticCtx) {
       if (p && camera) camera.centerOn(p.x, p.y);
     },
   });
+  const campaignTools = createCampaignTools({ getCtx: () => state.ctx, getActions: () => state.actions,
+    onProvince: id => setSelectedProv(id) });
+  const messages = createMessages({ getCtx: () => state.ctx, getActions: () => state.actions, toasts });
   function toggleNationPanel() {
     // Open on a foreign court? The flag brings you home instead of closing.
     if (nationPanel.isOpen() && !nationPanel.viewing()) { nationPanel.close(); return; }
@@ -168,6 +173,7 @@ export function initUI(staticCtx) {
     DEFINES,
     onFlagClick: () => toggleNationPanel(),
     onLedgerClick: () => toggleLedger(),
+    onBuilderClick: () => campaignTools.open(),
     onChronicleClick: () => toggleChronicle(),
     onSavesClick: () => { if (savesPanel) savesPanel.open(); },
     onToolsClick: () => toggleTools(),
@@ -177,7 +183,8 @@ export function initUI(staticCtx) {
     // A ready mission's bell (SPEC §291) opens our own court on Missions.
     onMissionClick: () => { setSelectedProv(0); fleetPanel.close(); nationPanel.open(null, 'missions'); },
   });
-  const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
+  const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0),
+    onWar: tag => campaignTools.openWar(tag) });
   // The fleet panel (SPEC §294) takes the same berth while a squadron of
   // ours is selected; deselecting it, or opening a province or the realm,
   // gives the berth back.
@@ -365,7 +372,7 @@ export function initUI(staticCtx) {
     const recips = info.cessionRecipients || [];
     const toPicker = (p) => (recips.length
       ? `<select class="peace-to" data-prov-to="${p.id}"
-          data-tt="Who receives ${esc(p.name)} in the treaty: our crown, or one of our clients marching in this war. Same war-score price either way.">
+          data-tt="Who receives ${esc(p.name)} in the treaty: our crown, a client, or an ally promised land in this war. Same war-score price either way.">
           <option value="">to us</option>
           ${recips.map((r) => `<option value="${esc(r.tag)}">to ${esc(r.name)}</option>`).join('')}
         </select>`
@@ -532,6 +539,7 @@ export function initUI(staticCtx) {
         `}
         <div class="peace-total" data-ref="total"></div>
         <div class="peace-verdict" data-ref="verdict"></div>
+        <div class="peace-strategy" data-ref="strategy"></div>
         <button class="btn peace-send" data-ref="send"></button>
         <button class="btn peace-cancel">Recall the envoys</button>
       </div>`;
@@ -619,6 +627,12 @@ export function initUI(staticCtx) {
             ? `We offer ${ev.offered} war score of our own land${ev.cost > 0 ? ` against ${ev.cost} demanded` : ''} — their war has earned ${Math.max(0, -info.myWs)}.`
             : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
       verdictEl.textContent = ev.acceptable ? 'They will accept these terms.' : ev.reason;
+      const strategy = peaceEl.querySelector('[data-ref="strategy"]');
+      if (strategy) strategy.innerHTML = (ev.enthusiasm ? `<details open><summary>Enemy war enthusiasm: ${esc(ev.enthusiasm.level)} · demand limit ${Math.round(ev.acceptanceBudget)}</summary>
+        <p>Willingness ${ev.enthusiasm.willingness >= 0 ? '+' : ''}${ev.enthusiasm.willingness.toFixed(1)} after a base reluctance of 4. Applied adjustment ${ev.acceptanceAdjustment >= 0 ? '+' : ''}${ev.acceptanceAdjustment.toFixed(1)}; positive bonuses are capped at 25% of war score. Total victory compels terms within 100.</p>
+        ${ev.enthusiasm.factors.map(r => `<div>${esc(r.label)}: ${r.value >= 0 ? '+' : ''}${r.value}</div>`).join('')}</details>` : '')
+        + (ev.expansion?.length ? `<details open><summary>Regional concern after this treaty</summary><div class="campaign-table"><table><thead><tr><th>Court</th><th>Added</th><th>Total</th><th>Coalition risk</th></tr></thead><tbody>${ev.expansion.map(r =>
+          `<tr><td>${esc(r.name)}</td><td>+${r.gain.toFixed(1)}</td><td>${r.after.toFixed(1)}</td><td class="${r.coalition ? 'neg' : ''}">${r.newlyAlarmed ? 'Newly eligible' : r.coalition ? 'Eligible' : 'Below threshold / relations permit'}</td></tr>`).join('')}</tbody></table></div></details>` : '');
       verdictEl.classList.toggle('pos', !!ev.acceptable);
       verdictEl.classList.toggle('neg', !ev.acceptable);
       sendBtn.textContent = info.exit
@@ -1041,6 +1055,7 @@ export function initUI(staticCtx) {
           <span class="bw-total">${fmtMen(s.men)} men · morale ${s.morale.toFixed(1)}</span>
         </div>
         <div class="bw-arms">${arms}${mixChip}</div>
+        <div class="bw-frontage">Frontage ${s.frontage.width} · ${fmtMen(s.field.engaged)} engaged · ${fmtMen(s.field.reserves)} reserves</div>
         <div class="bw-armies">${s.armies.map(armyRow).join('')}</div>
         <div class="bw-cas" data-tt="Casualties suffered in this battle so far">Fallen: ${fmtMen(s.casualties)}</div>
       </div>`;
@@ -1597,7 +1612,8 @@ export function initUI(staticCtx) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     // Settings keeps Space, the arrows and the digits for its own controls:
     // only Escape and O, which close it, reach the game.
-    if (settings.isOpen() && e.key !== 'Escape' && e.key !== 'o' && e.key !== 'O') return;
+    if ((settings.isOpen() && !['Escape', 'o', 'O'].includes(e.key))
+        || ((campaignTools.isOpen() || messages.isOpen()) && e.key !== 'Escape')) return;
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
       try { state.actions.togglePause(); } catch (err) { warnOnce('togglePause', err); }
@@ -1606,6 +1622,8 @@ export function initUI(staticCtx) {
       try { state.actions.setSpeed(Number(e.key)); } catch (err) { warnOnce('setSpeed', err); }
       topbar.refresh();
     } else if (e.key === 'Escape') {
+      if (messages.isOpen()) { messages.close(); return; }
+      if (campaignTools.isOpen()) { campaignTools.close(); return; }
       if (toolsOpen()) { closeTools(); return; }
       if (settings.isOpen()) { settings.close(); return; }
       if (helpOpen()) { closeHelp(); return; }
@@ -1620,6 +1638,8 @@ export function initUI(staticCtx) {
       if (g.ui.selectedArmy != null || (g.ui.selectedArmies && g.ui.selectedArmies.length)
           || g.ui.selectedFleet != null || g.ui.selectedWing != null) clearSelectedUnits();
       if (g.ui.selectedProv) setSelectedProv(0);
+    } else if (e.key === 'b' || e.key === 'B') {
+      campaignTools.open();
     } else if (e.key === 'n' || e.key === 'N') {
       toggleNationPanel();
     } else if (e.key === 'l' || e.key === 'L') {
@@ -1666,6 +1686,7 @@ export function initUI(staticCtx) {
     if (!body) return;
     body.innerHTML = toolTile('chron', 'Chronicle', 'lamp', 'The world\'s record')
       + toolTile('ledger', 'Ledger', 'scroll', 'Every nation, ranked')
+      + toolTile('builder', 'Macrobuilder', 'bricks', 'Buildings and army templates')
       + toolTile('help', 'How to play', 'laurel', 'The primer')
       + toolTile('save', 'Save', 'quill', 'Write this moment down')
       + toolTile('loadsave', 'Campaigns', 'amphora', 'Load a saved game')
@@ -1699,6 +1720,7 @@ export function initUI(staticCtx) {
         try {
           if (act === 'chron') { closeTools(); toggleChronicle(); }
           else if (act === 'ledger') { closeTools(); toggleLedger(); }
+          else if (act === 'builder') { closeTools(); campaignTools.open(); }
           else if (act === 'help') { closeTools(); toggleHelp(); }
           else if (act === 'save') { closeTools(); state.ctx.bus.emit('saveRequest', {}); }
           else if (act === 'loadsave') { closeTools(); if (savesPanel) savesPanel.open(); }
@@ -1736,7 +1758,7 @@ export function initUI(staticCtx) {
             <div>
               <div class="peace-sec">Keys</div>
               <div class="help-row"><b>Space</b> pause · <b>1–5</b> speed</div>
-              <div class="help-row"><b>N</b> realm panel · <b>L</b> ledger · <b>C</b> chronicle</div>
+              <div class="help-row"><b>N</b> realm panel · <b>L</b> ledger · <b>C</b> chronicle · <b>B</b> macrobuilder</div>
               <div class="help-row"><b>H</b> this help · <b>O</b> settings · <b>Esc</b> close / deselect</div>
               <div class="help-row"><b>Click</b> select a province, army, fleet, or air wing · <b>Shift-click</b> group armies</div>
               <div class="help-row"><b>Right-click</b> move the selected unit (air wings rebase between airfields)</div>
@@ -1871,7 +1893,10 @@ export function initUI(staticCtx) {
 
     const safe = (key, fn) => (p) => { try { fn(p); } catch (e) { warnOnce(key, e); } };
 
+    messages.reset();
     bus.on('day', safe('day-refresh', () => {
+      messages.scan();
+      campaignTools.refresh();
       const g = ctx.game;
       if (Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.length) {
         const alive = g.ui.selectedArmies.filter((id) => g.armies && g.armies[id]);
@@ -1924,7 +1949,12 @@ export function initUI(staticCtx) {
     bus.on('mapclick', safe('mapclick', onMapClick));
     bus.on('maprightclick', safe('maprightclick', onMapRightClick));
     bus.on('event', safe('event', (p) => eventModal.onBusEvent(p)));
-    bus.on('notify', safe('notify', (p) => toasts.push(p || {})));
+    bus.on('notify', safe('notify', (p) => messages.push(p || {})));
+    bus.on('battleStart', safe('battle-message', p => {
+      const b = ctx.game.battles.find(b => b.prov === p.prov);
+      if (b && b.atk.concat(b.def).some(id => ctx.game.armies[id]?.tag === ctx.game.playerTag))
+        messages.push({ category: 'battle', title: 'Battle joined', type: 'war', text: ctx.byId(p.prov)?.name, provName: ctx.byId(p.prov)?.name });
+    }));
     bus.on('gameover', safe('gameover', (p) => { gameover.show(p || {}); topbar.refresh(); }));
     // Forming a nation (SPEC §22): the chrome is rebuilt so the new banner,
     // name and color appear everywhere at once.

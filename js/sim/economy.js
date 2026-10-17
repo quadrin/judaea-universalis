@@ -94,6 +94,16 @@ export function adminExpense(ctx, tag) {
 
 // Own-provinces income only (tax + production × national multiplier) — shared
 // by incomeBreakdown and the tribute pass, which must not recurse.
+export function buildingIncomeDelta(ctx, tag, provId, key) {
+  if (!['market', 'shipyard'].includes(key)) return 0;
+  const p = ctx.byId(provId);
+  if (!p || (p.buildings || []).includes(key)) return 0;
+  const before = ownIncome(ctx, tag).income;
+  const land = ctx.game.provinces.slice();
+  land[provId] = { ...p, buildings: [...(p.buildings || []), key] };
+  const copy = { ...ctx, game: { ...ctx.game, provinces: land }, byId: id => land[id] };
+  return Math.max(0, ownIncome(copy, tag).income - before);
+}
 function ownIncome(ctx, tag) {
   const g = ctx.game;
   const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0 };

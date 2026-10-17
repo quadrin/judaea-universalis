@@ -7,7 +7,7 @@ import {
   issueMove, recruitRegiment, bfsDistances,
   resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
-  peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, monthsBetween,
+  peaceDealInfo, evaluatePeaceDeal as evaluatePeaceDealCore, executePeaceDeal, monthsBetween,
   coalitionAgainst, forceLimitOf, vassalsOf, sideLeaderOf,
   PETITION, warPetitionPressure,
   declareWar, truceActive, opinionOf, casusBelli, successionClaim, addOpinion, areRivals, recognized,
@@ -19,6 +19,9 @@ import {
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore, navalUpkeep, layUpCore, fleetUpkeep, LAID_UP_UPKEEP } from './navy.js';
 import { aiTrade } from './trade.js';
+// Candidate search only needs prices and acceptance. Regional consequences are
+// calculated for the player preview and again when the actual treaty executes.
+const evaluatePeaceDeal = (ctx, war, tag, deal) => evaluatePeaceDealCore(ctx, war, tag, deal, { consequences: false });
 import { deference } from './standing.js';
 import { institutionMult } from './institutions.js';
 import { attentionThreat } from './weather.js';
@@ -729,7 +732,7 @@ function coalitionPunitiveWars(ctx) {
   const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
   for (const target of humans) {
     const t = g.tags[target];
-    if (num(t.aggression) < num(bal.coalitionInfamy, 30)) continue;
+    if (!coalitionAgainst(ctx, target).length) continue;
     const free = coalitionAgainst(ctx, target).filter((k) => {
       const m = g.tags[k];
       if (!m || !m.alive || m.overlord) return false;

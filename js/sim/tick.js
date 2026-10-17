@@ -25,6 +25,8 @@ import { aiMarchGuard, aiDangerWatch } from './ai_war.js';
 import { fleetsDaily, monthlyNavy } from './navy.js';
 import { merchantsDaily, tradeMonthly } from './trade.js';
 import { monthlyRecruitment } from './recruitment.js';
+import { monthlyStrategy } from './strategy.js';
+import { advanceRallies } from './muster.js';
 import { monthlyArms, monthlyPrograms } from './arms.js';
 import { monthlyAid } from './aid.js';
 import { monthlySupply } from './supply.js';
@@ -145,6 +147,7 @@ function monthlyBlock(ctx) {
   safe('chancery', () => monthlyChancery(ctx)); // the establishment is paid for, and the collars chafe (SPEC §202)
   safe('strongClients', () => monthlyStrongClients(ctx)); // …and a client grown strong despises the collar (SPEC §298)
   safe('opinions', () => monthlyOpinionDrift(ctx));
+  safe('strategy', () => monthlyStrategy(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
   safe('programs', () => monthlyPrograms(ctx)); // …and the shops at home get a month older (SPEC §213)
   safe('aid', () => monthlyAid(ctx)); // war and embargo stop the checks, and the poor petition (SPEC §186)
@@ -175,6 +178,7 @@ export function tickDay(ctx) {
     if (!truce) {
       safe('marchGuard', () => aiMarchGuard(ctx)); // no column walks into a fight it would lose (SPEC §284)
       safe('dangerWatch', () => aiDangerWatch(ctx)); // …and no army waits for one to arrive
+      safe('rallies', () => advanceRallies(ctx));
       safe('move', () => moveArmiesDaily(ctx));
       safe('fleets', () => fleetsDaily(ctx));
     }

@@ -2,7 +2,7 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick, onToolsClick, onTechClick, onSettingsClick, onMissionClick }) {
+export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onBuilderClick, onChronicleClick, onSavesClick, onToolsClick, onTechClick, onSettingsClick, onMissionClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -60,6 +60,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
       <div class="tb-date" data-ref="date"></div>
       <div class="tb-speed">
         <button class="tb-save" data-ref="chron" data-tt="The chronicle — the world&#39;s recorded history (C)">${icon('lamp')}</button>
+        <button class="tb-save" data-ref="builder" data-tt="Macrobuilder — buildings and army templates (B)" aria-label="Open macrobuilder">${icon('bricks')}</button>
         <button class="tb-save" data-ref="ledger" data-tt="The ledger of nations (L)">${icon('scroll')}</button>
         <button class="tb-save" data-ref="save" data-tt="Save the campaign">${icon('quill')}</button>
         <button class="tb-save" data-ref="loadsave" data-tt="Saved campaigns — load one">${icon('amphora')}</button>
@@ -79,6 +80,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     refs.flagBtn.addEventListener('click', () => {
       if (onFlagClick) { try { onFlagClick(); } catch (e) { warnOnce('flagClick', e); } }
     });
+    refs.builder.addEventListener('click', () => { if (onBuilderClick) onBuilderClick(); });
     refs.ledger.addEventListener('click', () => {
       if (onLedgerClick) { try { onLedgerClick(); } catch (e) { warnOnce('ledgerClick', e); } }
     });

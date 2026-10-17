@@ -63,11 +63,13 @@ function completeLand(ctx, p, order) {
   const g = ctx.game;
   const regSize = Math.max(1, num(ctx.DEFINES && ctx.DEFINES.BASE && ctx.DEFINES.BASE.regSize, 1000));
   const host = Object.values(g.armies || {}).find((a) => a && a.tag === order.tag && a.prov === p.id
-    && !a.retreating && !a.inBattle && !a.aboard && num(a.gen) === num(order.gen));
+    && !a.retreating && !a.inBattle && !a.aboard && num(a.gen) === num(order.gen)
+    && (!order.templateId || (a.templateId === order.templateId && !a.path?.length)));
   if (host) {
     if (!host.regiments) host.regiments = { inf: 0, cav: 0, art: 0 };
     host.regiments[order.type] = num(host.regiments[order.type]) + 1;
     host.men = num(host.men) + regSize;
+    if (order.rallyProv) { host.rallyProv = order.rallyProv; host.templateId = order.templateId; }
     return { ok: true, name: host.name || 'The local army' };
   }
   const id = ctx.helpers && typeof ctx.helpers.spawnArmy === 'function'
@@ -79,6 +81,7 @@ function completeLand(ctx, p, order) {
       name: 'Levy of ' + p.name,
     }) : 0;
   const army = id && g.armies ? g.armies[id] : null;
+  if (army && order.rallyProv) { army.rallyProv = order.rallyProv; army.templateId = order.templateId; }
   return id ? { ok: true, name: (army && army.name) || ('Levy of ' + p.name) }
     : { ok: false, why: 'the regiment could not assemble' };
 }
@@ -142,30 +145,37 @@ export function monthlyRecruitment(ctx) {
       p.unitQueue.shift();
       continue;
     }
+    const stall = reason => {
+      if (order.stalled !== reason && order.tag === g.playerTag) ctx.bus?.emit('notify', {
+        category: 'recruitment', title: 'Recruitment stalled', type: 'bad', provName: p.name,
+        text: p.name + ': ' + reason + '.',
+      });
+      order.stalled = reason;
+    };
     if (p.controller !== order.tag || p.siege) {
-      order.stalled = p.siege ? 'Under siege' : 'Enemy occupation';
+      stall(p.siege ? 'Under siege' : 'Enemy occupation');
       continue;
     }
     if (order.type === 'ship' && !hasBuilding(p, 'shipyard')) {
-      order.stalled = 'Shipyard unavailable';
+      stall('Shipyard unavailable');
       continue;
     }
     if (order.type === 'wing' && !hasBuilding(p, 'airfield')) {
-      order.stalled = 'Airfield unavailable';
+      stall('Airfield unavailable');
       continue;
     }
-    order.stalled = '';
     order.monthsLeft = Math.max(0, num(order.monthsLeft, 1) - 1);
-    if (order.monthsLeft > 0) continue;
+    if (order.monthsLeft > 0) { order.stalled = ''; continue; }
     let result = null;
     if (order.type === 'inf' || order.type === 'cav' || order.type === 'art') result = completeLand(ctx, p, order);
     else if (order.type === 'ship') result = completeShip(ctx, p, order);
     else if (order.type === 'wing') result = completeWing(ctx, p, order);
     else result = { ok: false, why: 'unknown unit pattern' };
     if (!result.ok && result.stall) {
-      order.stalled = result.why || 'Waiting';
+      stall(result.why || 'Waiting');
       continue;
     }
+    order.stalled = '';
     p.unitQueue.shift();
     if (!result.ok) continue;
     if (ctx.bus) {

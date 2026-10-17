@@ -16,6 +16,8 @@ import {
   MOUNTED_TERRAIN, armGenName,
 } from '../data/units.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
+import { combatFrontage, fieldStrength } from './frontage.js';
+import { offensiveCall, commitAllyCall, settlePromises, rememberAllianceBreak, expansionPreview, applyExpansion, warEnthusiasm } from './strategy.js';
 // The month of the year (SPEC §272). seasons.js imports nothing from the sim
 // precisely so that this file, navy.js and weather.js may all consult it
 // without a cycle: it is date arithmetic and a table, nothing else.
@@ -903,7 +905,7 @@ function moraleDamage(X, Y, rollX, rollY) {
   const ratio = clamp(X.men / Math.max(1, Y.men), 0.05, 2.5); // tiny remnants can't break a legion's will
   return (0.16 + 0.045 * edge) * ratio * X.disc;
 }
-export function sideStats(ctx, armies, phase) {
+export function sideStats(ctx, armies, phase, provId) {
   let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0, gen = 0, armor = 0;
   const minArmorGen = num((ctx.DEFINES.ARMOR || {}).minGen, 5);
   const tags = new Set();
@@ -928,8 +930,9 @@ export function sideStats(ctx, armies, phase) {
     tags.add(a.tag);
   }
   for (const t of tags) hill = Math.max(hill, resolveTagAdd(ctx, t, 'hillDefBonus'));
+  const field = fieldStrength(men, provId == null ? Infinity : combatFrontage(ctx, provId).capacity);
   return {
-    men,
+    men: field.engaged, totalMen: men, reserveMen: field.reserves, moraleShare: field.moraleShare,
     morale: men > 0 ? moraleW / men : 0,
     disc: men > 0 ? discW / men : 1,
     pip, hill, gen, armor, // `armor` stays §181's COUNT: armorPips nets them
@@ -1004,8 +1007,8 @@ function battleRound(ctx, b) {
   const defBonus = terr ? num(terr.defBonus, 0) : 0;
   const hilly = !!p && (p.terrain === 'hills' || p.terrain === 'mountains');
   const phase = Math.floor((b.day - 1) / 3) % 2 === 0 ? 'fire' : 'shock';
-  const A = sideStats(ctx, atk, phase);
-  const D = sideStats(ctx, def, phase);
+  const A = sideStats(ctx, atk, phase, b.prov);
+  const D = sideStats(ctx, def, phase, b.prov);
   // Doctrines (SPEC §29): the side's best pattern adds pips — shieldwall for
   // the defender, shock charge, volley fire, combined arms. Air wings based
   // within range add one more in the fire phase (they cancel when both
@@ -1045,8 +1048,8 @@ function battleRound(ctx, b) {
   b.last = { phase, rollA, rollD, airA, airD, armA, armD, mixA, mixD };
   b.casAtk = num(b.casAtk) + casOnAtk;
   b.casDef = num(b.casDef) + casOnDef;
-  applySideDamage(atk, A.men, casOnAtk, mdOnAtk);
-  applySideDamage(def, D.men, casOnDef, mdOnDef);
+  applySideDamage(atk, A.totalMen, casOnAtk, mdOnAtk * A.moraleShare);
+  applySideDamage(def, D.totalMen, casOnDef, mdOnDef * D.moraleShare);
   for (const a of atk.concat(def)) if (a.men <= 0) removeArmy(ctx, a.id);
   if (g.battles.indexOf(b) < 0) return; // resolved via removals
   atk = battleSideArmies(ctx, b, 'atk');
@@ -1601,7 +1604,9 @@ export function battleInfo(ctx, provId) {
       // reads. `stats` is the same shape sideStats returns, so the window can
       // score the matchup for the phase it is showing.
       regs: { ...regs },
-      stats: sideStats(ctx, armies, b.last ? b.last.phase : 'fire'),
+      stats: sideStats(ctx, armies, b.last ? b.last.phase : 'fire', provId),
+      frontage: combatFrontage(ctx, provId),
+      field: fieldStrength(men, combatFrontage(ctx, provId).capacity),
       doctrines: doctrinesFor(gen).map((d) => ({ key: d.key, name: d.name, desc: d.desc })),
       air: airCoverFor(ctx, provId, tags),
       casualties: Math.round(num(key === 'atk' ? b.casAtk : b.casDef)),
@@ -1776,6 +1781,7 @@ export function siegeFall(ctx, p) {
   ctx.bus.emit('siegeEnd', { provId: p.id, by });
   if (playerConcerned(ctx, p, by) || (liberated && p.owner === g.playerTag)) {
     ctx.bus.emit('notify', {
+      category: 'siege',
       title: liberated ? p.name + ' is liberated' : p.name + ' has fallen',
       text: liberated
         ? (g.tags[by] ? g.tags[by].name : by) + ' restores ' + p.name + ' to ' + ((owner && owner.name) || p.owner) + '.'
@@ -1810,7 +1816,7 @@ function siegeDay(ctx, p) {
         if (roll + bonus >= 12 && s.breach < 3) {
           s.breach++;
           if (playerConcerned(ctx, p, s.by)) {
-            ctx.bus.emit('notify', { title: 'Walls breached', text: 'A breach opens in the walls of ' + p.name + '.', type: 'war', provName: p.name });
+            ctx.bus.emit('notify', { category: 'siege', title: 'Walls breached', text: 'A breach opens in the walls of ' + p.name + '.', type: 'war', provName: p.name });
           }
         } else if (roll === 1) {
           for (const a of besiegers) a.men = Math.max(0, a.men - Math.max(1, Math.floor(a.men * 0.02)));
@@ -2587,6 +2593,8 @@ function freeBanner(ctx, tag) {
     if (t.overlord === tag) t.overlord = null;
     if (t.opinion) delete t.opinion[tag];
     if (t.grudges) delete t.grudges[tag];
+    if (t.expansionConcern) delete t.expansionConcern[tag];
+    if (t.diplomaticCredit) delete t.diplomaticCredit[tag];
   }
   if (Array.isArray(g.subsidies)) {
     g.subsidies = g.subsidies.filter((s) => s && s.from !== tag && s.to !== tag);
@@ -2735,6 +2743,17 @@ export function switchTagCore(ctx, from, to) {
       delete book[key];
     }
   };
+  for (const t of Object.values(g.tags)) for (const field of ['expansionConcern', 'diplomaticCredit']) {
+    if (t[field] && Object.hasOwn(t[field], from)) { t[field][to] = t[field][from]; delete t[field][from]; }
+  }
+  for (const w of g.wars) {
+    for (const p of w.promises || []) {
+      if (p.caller === from) p.caller = to;
+      if (p.ally === from) p.ally = to;
+    }
+    if (w.promiseVictory?.[from]) { w.promiseVictory[to] = w.promiseVictory[from]; delete w.promiseVictory[from]; }
+  }
+  for (const t of g.armyTemplates || []) if (t.tag === from) t.tag = to;
   rekey(g.truces, '|', true);
   rekey(g.diploCooldowns, ':', false);
 
@@ -3517,14 +3536,16 @@ export function coalitionAgainst(ctx, expander) {
   // era actually applied. A bookmark turns the league off with
   // `mechanics.coalitions: false`.
   if (!mechanicOn(ctx, 'coalitions')) return [];
-  if (!t || num(t.aggression) < 30) return [];
+  if (!t) return [];
   const out = [];
   for (const k of Object.keys(g.tags)) {
     if (k === expander || k === 'REB') continue;
     const o = g.tags[k];
     if (!o || !o.alive || o.overlord === expander) continue;
     if ((t.allies || []).indexOf(k) >= 0) continue;
-    if (num(o.opinion && o.opinion[expander], 0) > -75) continue;
+    const regional = o.expansionConcern && Object.hasOwn(o.expansionConcern, expander);
+    if (regional ? num(o.expansionConcern[expander]) < 30 : num(t.aggression) < 30) continue;
+    if (num(o.opinion && o.opinion[expander], 0) > (regional ? -25 : -75)) continue;
     out.push(k);
   }
   return out;
@@ -3784,6 +3805,7 @@ export function declareWar(ctx, atk, def, name, cb) {
   // the house, the half of the bargain that never lapses.
   const V = ctx.DEFINES.VASSALS || {};
   const refusals = [];
+  const committedCalls = [];
   const loyal = (v, lord) => {
     if (opinionOf(ctx, v, lord) >= num(V.loyalOpinion, -25)) return true;
     refusals.push({ v, lord });
@@ -3797,7 +3819,17 @@ export function declareWar(ctx, atk, def, name, cb) {
     if (!g.tags[al] || !g.tags[al].alive) return;
     if (attackers.indexOf(al) >= 0 || defenders.indexOf(al) >= 0) return;
     let ans = { ok: true, why: '' };
-    try { ans = allyAnswersCall(ctx, al, principal); }
+    try {
+      ans = allyAnswersCall(ctx, al, principal);
+      if (side === attackers) {
+        const offer = (cb && typeof cb === 'object' && cb.offers && cb.offers[al]) || {};
+        ans = offensiveCall(ctx, al, principal, def, offer, ans);
+        const blocked = truceActive(ctx, al, def) || recognized(ctx, al, def);
+        if (blocked) { ans.ok = false; ans.reasons.push('Bound by a truce or recognition'); }
+        ans.why = ans.reasons.join('; ');
+        if (ans.ok) committedCalls.push({ al, principal, offer, answer: ans });
+      }
+    }
     catch (e) { warnOnce('allyCall:' + al, 'ally call failed', al, e); }
     if (!ans.ok) { refusals.push({ v: al, lord: principal, ally: true, why: ans.why }); return; }
     join(side, al);
@@ -3878,6 +3910,7 @@ export function declareWar(ctx, atk, def, name, cb) {
     _goalScore: 0,
     _goalTick: { ...g.date },
   };
+  for (const c of committedCalls) if (attackers.includes(c.al)) commitAllyCall(ctx, war, c.al, c.principal, c.offer, c.answer);
   g.wars.push(war);
   for (const a of attackers) {
     for (const d of defenders) {
@@ -4082,9 +4115,6 @@ export function allyAnswersCall(ctx, ally, principal) {
   // (its own loyalty test), and never reaches this one.
   const bar = num(DIPLO.allyCallOpinion, 25);
   const view = opinionOf(ctx, ally, principal);
-  if (view < bar) {
-    return { ok: false, why: 'thinks too little of us to spend its levies on this (' + view + ' of ' + bar + ')' };
-  }
   // …and can it march? A war of its own does not keep it home: a court
   // already under arms has its host in the field.
   const weary = num(DIPLO.allyReadyExhaustion, 18);
@@ -4100,6 +4130,9 @@ export function allyAnswersCall(ctx, ally, principal) {
     Math.round(num(t.maxManpower) * num(DIPLO.allyReadyMenShare, 0.25)));
   if (men < need) {
     return { ok: false, why: 'has no host to send (' + Math.round(men) + ' men of ' + need + ')' };
+  }
+  if (view < bar) {
+    return { ok: false, why: 'thinks too little of us to spend its levies on this (' + view + ' of ' + bar + ')' };
   }
   return { ok: true, why: '' };
 }
@@ -4936,6 +4969,7 @@ export function breakAllianceCore(ctx, breaker, other) {
   a.allies = (a.allies || []).filter((x) => x !== other);
   b.allies = (b.allies || []).filter((x) => x !== breaker);
   addOpinion(ctx, other, breaker, DIPLO.breakOpinion);
+  rememberAllianceBreak(ctx, breaker, other);
   return true;
 }
 
@@ -6930,8 +6964,9 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   // the client that stormed the walls can be given the town — instead of the
   // crown itself. Same war-score price; the pen-holder still carries the
   // treaty's infamy. A withdrawing junior directs nothing.
-  const cessionRecipients = exit ? [] : vassalsOf(ctx, byTag)
-    .filter((v) => mySide.indexOf(v) >= 0)
+  const cessionRecipients = exit ? [] : [...new Set(vassalsOf(ctx, byTag).concat(
+    (war.promises || []).filter(p => p.caller === byTag).map(p => p.ally)))]
+    .filter((v) => mySide.indexOf(v) >= 0 && g.tags[v] && g.tags[v].alive)
     .map((v) => ({ tag: v, name: (g.tags[v] && g.tags[v].name) || v }));
   return {
     warId: war.id, warName: war.name,
@@ -7062,7 +7097,7 @@ export function buildAiPeaceProvinces(ctx, info, budget) {
 // supersedes subjugation and everything else, there being no court left to
 // write terms for. Returns the warscore price, whether the enemy takes it, and
 // a one-line reason.
-export function evaluatePeaceDeal(ctx, war, byTag, deal) {
+export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
   const d = deal || {};
   const info = peaceDealInfo(ctx, war, byTag, d.enemy); // d.enemy: separate peace (SPEC §67)
   // SPEC §275: a client's envoys are not received at this war's table at all
@@ -7183,6 +7218,14 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   const enemyWs = -info.myWs;
   // The net of the table: what we ask, less what we lay down beside it.
   const net = cost - offered;
+  const enthusiasm = warEnthusiasm(ctx, war, info.enemyLeader, byTag);
+  // Exhaustion improves a real bargaining position; a skirmish cannot buy
+  // an empire merely because its treasury and reserves are empty.
+  // A crown war's authored threshold settles the dynastic question itself;
+  // enthusiasm changes ordinary terms, not that campaign's victory contract.
+  const acceptanceAdjustment = unifyCrown || info.myWs >= 99 ? 0
+    : clamp(enthusiasm.willingness, -10, Math.max(0, info.myWs) * 0.25);
+  const acceptanceBudget = Math.max(0, Math.min(100, info.myWs + acceptanceAdjustment));
   let acceptable, reason;
   if (white) {
     // A fresh grudge does not go home for nothing: in a war's first year the
@@ -7233,14 +7276,14 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       acceptable = false;
       reason = `No single treaty could strip so much land — the nations would not bear it (${chosenDev} development asked, ${capDev} is the most one settlement will carry).`;
     } else if (net > 0) {
-      acceptable = info.myWs > 0 && net <= info.myWs;
+      acceptable = info.myWs > 0 && net <= acceptanceBudget;
       reason = acceptable
         ? (unifyCrown
           ? 'The argument is settled: they renounce, and the crown is one.'
           : 'Our position compels them to accept.')
         : unifyCrown
           ? `A crown is not signed away by a court that still believes in the next campaign (${net} war score asked, ${Math.max(0, info.myWs)} held).`
-          : `Our war score does not cover such demands (${net} asked, ${Math.max(0, info.myWs)} held).`;
+          : `They will bear ${Math.round(acceptanceBudget)} war score of demands (${net} asked; enthusiasm ${enthusiasm.level.toLowerCase()}).`;
     } else {
       // We are the ones paying (SPEC §222). A court accepts what covers what
       // it has already won — no more, and no less. Offering past their score
@@ -7256,6 +7299,15 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   }
   return {
     cost, net, offered, acceptable, reason, gold, humiliate, subjugate, reparations,
+    enthusiasm, acceptanceBudget, acceptanceAdjustment,
+    expansion: options.consequences === false ? [] : expansionPreview(ctx, byTag, [...new Set([
+      ...chosen.map(p => p.id),
+      ...(whole ? ctx.game.provinces.filter(p => p && p.owner === info.enemyLeader).map(p => p.id) : []),
+      ...transferRows.flatMap(r => r.provIds || []),
+    ])].filter(id => !(independenceSideOf(war) === (war.attackers.includes(byTag) ? 'att' : 'def')
+        && liberatedSoil(ctx, ctx.byId(id), byTag))))
+      .map(r => subjugate && r.tag === info.enemyLeader || transferRows.some(t => t.tag === r.tag)
+        ? { ...r, coalition: false, newlyAlarmed: false } : r),
     unifyCrown, // the crown war's answer (SPEC §226): one kingdom, one claimant
     provinces: chosen.map((c) => c.id),
     provinceTo,
@@ -7336,6 +7388,7 @@ function liftSiegesBetween(ctx, a, b) {
 }
 export function dissolveWar(ctx, war) {
   const g = ctx.game;
+  settlePromises(ctx, war);
   const participants = war.attackers.concat(war.defenders);
   liftSiegesBetween(ctx, war.attackers, war.defenders);
   const wi = g.wars.indexOf(war);
@@ -7530,6 +7583,7 @@ function settleFronts(ctx, war, winnersKey, winners, losers, participants, keep)
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
       const conqueror = g.tags[p.controller];
       if (conqueror && !(freeborn && liberatedSoil(ctx, p, p.controller))) {
+        applyExpansion(ctx, p.controller, expansionPreview(ctx, p.controller, [p.id]));
         conqueror.aggression = num(conqueror.aggression) + infamyForDev(ctx, devTotal(p));
       }
       p.integration = 0; // integration is with a sovereign, not the soil (SPEC §66)
@@ -7553,6 +7607,8 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
   const winners = winnersKey === 'att' ? war.attackers : winnersKey === 'def' ? war.defenders : [];
   const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
   const participants = war.attackers.concat(war.defenders);
+  war.promiseVictory ||= {};
+  for (const tag of winners) war.promiseVictory[tag] = true;
   const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
   settleFronts(ctx, war, winnersKey, winners, losers, participants, keep);
   dissolveWar(ctx, war);
@@ -8098,6 +8154,10 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
   // this war. New land arrives restive — high autonomy and a generation of
   // resentment; integration (Establish Rule / Convert the Faith) is how it
   // becomes truly yours.
+  applyExpansion(ctx, byTag, ev.expansion || []);
+  war.promiseVictory ||= {};
+  if (ev.net > 0 && info.myWs > 0) war.promiseVictory[byTag] = true;
+  if (ev.net < 0 && info.myWs < 0) war.promiseVictory[info.enemyLeader] = true;
   const cededNames = [];
   const cededToClient = {}; // recipient tag -> province names, for the treaty line
   for (const id of ev.provinces) {

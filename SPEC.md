@@ -21758,3 +21758,103 @@ and `readyExhaustion`; `defends`, `defendWhy`, `joinOpinion` and
   rule; at +10 it reads "Allied — will not march" in red, with the reason; no
   panel on the screen says "defensive only"; no page errors.
 
+
+## §302 — Campaign planning, diplomatic commitments, and battle frontage
+
+The standard campaign tools now include the following systems. The simulation
+readers are DOM-free and deterministic; previews spend nothing and consume no
+random numbers. Optional save fields initialize lazily, so existing campaigns
+load without a save-version change.
+
+- **Frontage:** `frontage.js` supplies the capacity shared by `battleRound`,
+  `ai_war.js` and the battle window. Capacity is width times regiment size.
+  Mountain width is 8, hills 12, marsh 10, forest 12, desert 16, coast 18,
+  farmland 22, steppe 24, and other ground 20. `DEFINES.COMBAT.terrainWidth`
+  can override the table. Each side fills its line proportionally from its
+  armies. The remainder is a reserve pool; it fills casualties each day and
+  takes 10% of frontline morale shock. Arriving armies join through the normal
+  movement and battle rules. Casualties cannot exceed the existing per-round
+  ceiling on the engaged enemy. Forecasts apply the same capacity and morale
+  fractions to expected dice. The UI displays engaged men and reserves.
+
+- **Diplomatic credit:** `tags[provider].diplomaticCredit[caller]` stores trust
+  (default 50, range 0–100) and favors the caller can spend (default 0, cap
+  100). Allied months earn 0.1 favors; deploying troops against a shared enemy
+  earns up to 2 per month instead. Credit remains directional. An offensive
+  call's effective opinion is opinion + half of trust above/below 50, plus
+  20 for spending 10 favors or 15 for a valid territorial promise. It needs
+  25 effective opinion and 25 trust. The existing military-readiness checks
+  still apply; favors cannot pay an insolvent ally or replace missing troops.
+  Breaking an alliance costs 20 trust with the abandoned ally and clears
+  favors held against it. Clients cannot accept independent calls. Allied defenders, truces, and
+  recognition also keep an offensive ally home. Defensive calls retain the
+  base readiness rule in §301.
+
+- **Promises:** enemy provinces are ranked by claims, adjacency, culture,
+  development, and distance from the ally's capital. The five leading
+  interests are available as explicit promises. A call may spend favors or
+  promise one province. War planning refuses duplicate promises. Only an ally
+  actually joining spends favors or receives a commitment. `war.promises`
+  stores caller, ally, province, and settlement status. A promised ally can
+  receive land through the ordinary treaty recipient selector. Fulfillment
+  grants 10 trust and 15 opinion. A victorious settlement that breaks a
+  promise costs 25 trust and 50 opinion; defeat excuses it. Resolution is
+  idempotent. Country formation rekeys credit, commitments, and templates.
+
+- **Regional concern:** `tags[observer].expansionConcern[conqueror]` records
+  each court's reaction. Base concern is 0.55 per development taken, times
+  proximity (1 within 400 map pixels, 0.45 within 1200, otherwise 0.1), shared
+  provincial religion (1.35), shared culture (1.25), and alliance (0.5).
+  The opinion penalty is half the gain, rounded up. Concern decays 0.5 each
+  peaceful month or 0.2 while the conqueror is at war. Coalition eligibility
+  needs 30 concern and opinion at or below −25, subject to the existing
+  alliance, client and era restrictions. Global infamy remains for legacy
+  saves and older consumers; observers with a regional entry use that entry
+  instead of worldwide opinion pressure. An observer's first entry preserves
+  existing legacy infamy before adding the new gain. Treaty and military
+  settlements both record concern. Independence settlements preserve the
+  existing homeland-liberation exemption. Treaty previews list gains, totals,
+  and coalition eligibility before the player sends terms.
+
+- **Peace enthusiasm:** `strategy.js` reports exhaustion, occupied provinces,
+  manpower depletion, capital occupation, war duration, and the relative
+  forces still in the field. Their sum, less base reluctance of 4, is bounded
+  to −10…20. Positive demand-budget adjustments are capped at 25% of positive
+  war score. At 99+ score, total victory retains its ordinary compulsion.
+  Crown unification retains its authored war-score threshold without an
+  enthusiasm adjustment. Existing restrictions on negotiation, settlement
+  development, and political clauses remain. The treaty UI shows each factor and the effective budget.
+
+- **Macrobuilder:** B, the topbar bricks button, and the campaign tools menu
+  open building comparisons and army templates. Building rows reuse
+  `getBuildInfo`; income projections compare own income on an isolated copy
+  with the prospective building, before tribute and trade changes. Batch
+  construction validates the complete selection and total treasury before
+  beginning any work. Nonfinancial benefits retain their existing labels.
+
+- **Army templates:** each court can save up to 12 named compositions, each
+  totaling 1–100 whole regiments. `muster.js` validates the entire cost,
+  manpower, armor access, and rally province before scheduling recruitment.
+  Orders go to the shortest queues with a safe owned-and-controlled land
+  route to the rally point. Completion follows existing monthly queues;
+  `rallyProv` and `templateId` travel with orders and armies. Daily rally
+  movement follows the safe corridor and merges matching formations at the
+  destination. Cease-fires still stop movement. An unsafe rally province
+  cancels automatic assembly and alerts its owner. Manual movement takes
+  over from automatic rally orders. Templates and unfinished musters survive
+  saves and stay assigned to their commanding court in multiplayer.
+
+- **Messages:** browser settings store a validated mode for siege, battle,
+  approaching-army, truce-expiry, recruitment, and general notices. Modes are
+  off, timed notice, persistent alert, popup, and pause plus persistent alert;
+  the default is timed notice. Recruitment stalls alert only on a changed
+  condition. Approaching-army alerts identify a hostile column within five
+  days of its next province when that province belongs to the player.
+  Truce transitions alert once. Pausing uses the existing action API and table
+  rules, rather than introducing preferences into the deterministic sim.
+
+Regression coverage: `smoke208.mjs` exercises diplomatic credit and promises,
+regional concern and coalitions, enthusiasm, batch accounting, distributed
+training and assembly, save restoration, stalled-order alerts, and preference
+normalization. `uitest66.mjs` exercises construction, templates, war planning,
+treaty previews and message modes in Chromium, including a narrow viewport.

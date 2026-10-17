@@ -17,13 +17,13 @@ const FADE_MS = 550;
 export function createToasts(container, { onProvClick } = {}) {
   function push(payload) {
     if (!container) return;
-    const { title, text, type, provName } = payload || {};
+    const { title, text, type, provName, persistent } = payload || {};
     const kind = TYPES[type] ? type : 'info';
     const div = document.createElement('div');
-    div.className = 'toast toast-' + kind + (provName ? ' toast-link' : '');
+    div.className = 'toast toast-' + kind + (provName ? ' toast-link' : '') + (persistent ? ' toast-persistent' : '');
     div.innerHTML =
       `<div class="toast-title">${icon(TYPE_ICONS[kind] || 'scroll')}<span>${esc(title || 'Notice')}</span></div>` +
-      (text ? `<div class="toast-text">${esc(text)}</div>` : '');
+      (text ? `<div class="toast-text">${esc(text)}</div>` : '') + (persistent ? '<button class="toast-dismiss" aria-label="Dismiss alert">✕</button>' : '');
     if (provName) div.dataset.tt = 'Click to view ' + provName;
 
     let gone = false;
@@ -36,7 +36,8 @@ export function createToasts(container, { onProvClick } = {}) {
     // A notice stays as long as the player asked (SPEC §289); a murmur keeps
     // its shorter life unless that is longer than the notice's.
     const life = (getSetting('toastSecs') || 6) * 1000;
-    const timer = setTimeout(remove, kind === 'murmur' ? Math.min(MURMUR_LIFE_MS, life) : life);
+    const timer = persistent ? null : setTimeout(remove, kind === 'murmur' ? Math.min(MURMUR_LIFE_MS, life) : life);
+    div.querySelector('.toast-dismiss')?.addEventListener('click', e => { e.stopPropagation(); remove(); });
 
     div.addEventListener('click', () => {
       if (provName && onProvClick) {
@@ -47,7 +48,8 @@ export function createToasts(container, { onProvClick } = {}) {
     });
 
     container.appendChild(div);
-    while (container.children.length > MAX_TOASTS) container.firstChild.remove();
+    while (container.querySelectorAll('.toast:not(.toast-persistent)').length > MAX_TOASTS)
+      container.querySelector('.toast:not(.toast-persistent)').remove();
   }
 
   return { push };

@@ -9,6 +9,7 @@ const { EVENTS_66 } = await import(R + '/js/data/events_66ce.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const mil = await import(R + '/js/sim/military.js');
 const unrest = await import(R + '/js/sim/unrest.js');
+const { applyExpansion, monthlyStrategy } = await import(R + '/js/sim/strategy.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -57,10 +58,13 @@ t.aggression = 45; // a rampage
 // courts abroad sour month by month
 game.tags.PAR.opinion.JUD = -40;
 game.tags.NAB.opinion.JUD = -40;
-for (let m = 0; m < 12; m++) unrest.monthlyOpinionDrift(ctx);
-ok(game.tags.PAR.opinion.JUD < -60, 'Parthian court sours: ' + game.tags.PAR.opinion.JUD);
+applyExpansion(ctx, 'JUD', [{ tag: 'PAR', gain: 45 }, { tag: 'NAB', gain: 45 }]);
+ok(game.tags.PAR.opinion.JUD < -60, 'Parthian court sours after regional concern: ' + game.tags.PAR.opinion.JUD);
+const concern = game.tags.PAR.expansionConcern.JUD;
+for (let m = 0; m < 12; m++) { unrest.monthlyOpinionDrift(ctx); monthlyStrategy(ctx); }
+ok(game.tags.PAR.expansionConcern.JUD < concern, 'regional concern decays');
 ok(t.aggression < 45, 'infamy decays: ' + t.aggression);
-t.aggression = 45;
+t.aggression = 0; // regional coalitions persist independently of the old global score
 game.tags.PAR.opinion.JUD = -100;
 game.tags.NAB.opinion.JUD = -100;
 const coal = mil.coalitionAgainst(ctx, 'JUD');

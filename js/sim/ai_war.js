@@ -39,6 +39,7 @@ import {
 } from './military.js';
 import { doctrinePips } from '../data/tech.js';
 import { MOUNTED_TERRAIN } from '../data/units.js';
+import { combatFrontage, fieldStrength } from './frontage.js';
 import { seasonSiegeFactor } from './seasons.js';
 import { reservedForNavalOp } from './invasion.js';
 
@@ -111,7 +112,7 @@ function phasePips(ctx, atk, def, provId) {
       + airPips(ctx, -net) + armD + armPips(ctx, phase, D, A, terrain);
     out[phase] = bA - bD;
   }
-  return { pips: out, A: base.A, D: base.D };
+  return { pips: out, A: base.A, D: base.D, capacity: combatFrontage(ctx, provId).capacity };
 }
 
 // Run the battle forward on expected dice. `shift` moves every round's pips
@@ -125,10 +126,12 @@ function runForecast(prep, shift) {
     const phase = Math.floor((day - 1) / 3) % 2 === 0 ? 'fire' : 'shock';
     const d = pips[phase] + shift;
     const eA = expEdge(d), eD = expEdge(-d);
-    const casOnD = Math.min(aM * 0.010 * (1 + 0.12 * eA) * (aDi / Math.max(0.5, dDi)), dM * 0.12);
-    const casOnA = Math.min(dM * 0.010 * (1 + 0.12 * eD) * (dDi / Math.max(0.5, aDi)), aM * 0.12);
-    const mdOnD = (0.16 + 0.045 * eA) * clamp(aM / Math.max(1, dM), 0.05, 2.5) * aDi;
-    const mdOnA = (0.16 + 0.045 * eD) * clamp(dM / Math.max(1, aM), 0.05, 2.5) * dDi;
+    const aField = fieldStrength(aM, prep.capacity), dField = fieldStrength(dM, prep.capacity);
+    const aLine = aField.engaged, dLine = dField.engaged;
+    const casOnD = Math.min(aLine * 0.010 * (1 + 0.12 * eA) * (aDi / Math.max(0.5, dDi)), dLine * 0.12);
+    const casOnA = Math.min(dLine * 0.010 * (1 + 0.12 * eD) * (dDi / Math.max(0.5, aDi)), aLine * 0.12);
+    const mdOnD = (0.16 + 0.045 * eA) * clamp(aLine / Math.max(1, dLine), 0.05, 2.5) * aDi * dField.moraleShare;
+    const mdOnA = (0.16 + 0.045 * eD) * clamp(dLine / Math.max(1, aLine), 0.05, 2.5) * dDi * aField.moraleShare;
     aM -= casOnA; dM -= casOnD; aMo -= mdOnA; dMo -= mdOnD;
     if (aM <= 0 || dM <= 0) { winner = aM > 0 ? 'atk' : 'def'; break; }
     const aBroke = aMo <= 0.05, dBroke = dMo <= 0.05;

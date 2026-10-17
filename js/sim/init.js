@@ -51,7 +51,7 @@ import {
 import { TRADE_NODE_BY_ID } from '../data/trade_nodes.js';
 import { migrateTradeState, tradeView, merchantTargets, provinceTrade, buildSites, buildMerchantCore, buildMerchantInfo, sendMerchantCore as sendTradeMerchantCore, recallMerchantCore, setFleetMissionCore, merchantsOf, touchTrade } from './trade.js';
 import { navalGenName } from '../data/tech.js';
-import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
+import { maxManpowerOf, explainIncome, incomeBreakdown, buildingIncomeDelta, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked, missionPaceMonths, missionClosedSet, missionForkState, missionForkLedger, claimMission } from './realm.js';
 import { missionCosts, costBand, BANDS } from './mission_cost.js';
@@ -69,6 +69,8 @@ import {
 } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
+import { offensiveCall, diplomaticCredit } from './strategy.js';
+import { armyTemplatePlan, recruitTemplate as recruitTemplateCore } from './muster.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
 import { sendAiCounteroffer } from './ai.js';
 import { traceSupply, supplyPenaltyText, supplyReasonText, supplyExempt } from './supply.js';
@@ -1275,6 +1277,7 @@ export function gameActions(ctx) {
         ? 'No land route to ' + p.name + ' — the sea is in the way. Build ships, embark the army, and sail.'
         : 'No route to ' + p.name + '.' };
     }
+    delete a.rallyProv; delete a.templateId;
     return { ok: true, why: '' };
   }
   function marchCue(a) {
@@ -1901,6 +1904,26 @@ export function gameActions(ctx) {
       g.paused = !g.paused;
       ctx.bus.emit('pause', g.paused);
     },
+    getArmyTemplate(counts, rallyProv) { return armyTemplatePlan(ctx, g.playerTag, counts, rallyProv); },
+    recruitTemplate(counts, rallyProv) {
+      const result = recruitTemplateCore(ctx, g.playerTag, counts, rallyProv);
+      say(result.ok ? 'Muster ordered' : 'Cannot muster', result.ok
+        ? result.total + ' regiments ordered; they will assemble at ' + ctx.byId(result.rallyProv).name + '.' : result.why,
+        result.ok ? 'good' : 'bad');
+      return result;
+    },
+    saveArmyTemplate(name, counts, rallyProv) {
+      const plan = armyTemplatePlan(ctx, g.playerTag, counts, rallyProv);
+      if (!plan.orders.length) { say('Template not saved', plan.why, 'bad'); return { ok: false, why: plan.why }; }
+      name = String(name || '').trim().slice(0, 40);
+      if (!name) { say('Template not saved', 'Name the template.', 'bad'); return { ok: false, why: 'Name the template.' }; }
+      g.armyTemplates ||= [];
+      const existing = g.armyTemplates.find(t => t.name === name && t.tag === g.playerTag);
+      if (existing) existing.counts = { ...counts };
+      else if (g.armyTemplates.filter(t => t.tag === g.playerTag).length < 12) g.armyTemplates.push({ name, tag: g.playerTag, counts: { ...counts } });
+      else { say('Template not saved', 'At most 12 templates per court.', 'bad'); return { ok: false, why: 'At most 12 templates per court.' }; }
+      return { ok: true };
+    },
     getRecruitmentQueue(provId) {
       try {
         const p = ctx.byId(provId | 0);
@@ -1942,6 +1965,7 @@ export function gameActions(ctx) {
         if (!a) return;
         if (a.tag !== g.playerTag) return;
         const r = marchOrder(a, provId);
+        if (r.ok) { delete a.rallyProv; delete a.templateId; }
         if (!r.ok) { if (r.why) say('Orders refused', r.why, 'bad'); return; }
         // The column takes the road (SPEC §191): what you HEAR is the arm that
         // sets its pace — hooves, tramping feet, or an engine. The cue is the
@@ -1998,6 +2022,27 @@ export function gameActions(ctx) {
     },
 
     // ---- buildings (frozen contract) ---------------------------------------
+    buildMacroSelection(ids, key) {
+      const unique = [...new Set(Array.isArray(ids) ? ids : [])];
+      if (!unique.length) return { ok: false, why: 'Select at least one province.' };
+      const rows = unique.map(id => rawActions.getBuildInfo(id)?.options.find(o => o.key === key));
+      const total = rows.reduce((s, r) => s + num(r?.cost), 0);
+      if (rows.some(r => !r?.canBuild) || total > num(g.tags[g.playerTag]?.treasury)) {
+        say('Cannot build', 'The selection is no longer available or affordable.', 'bad');
+        return { ok: false };
+      }
+      for (const id of unique) rawActions.buildBuilding(id, key);
+      return { ok: true, cost: total };
+    },
+    getMacrobuilder(key = 'market') {
+      return g.provinces.filter(p => p && !p.impassable && p.owner === g.playerTag && p.controller === g.playerTag)
+        .map(p => {
+          const info = rawActions.getBuildInfo(p.id);
+          const option = info?.options.find(o => o.key === key);
+          return option ? { ...option, id: p.id, province: p.name,
+            income: buildingIncomeDelta(ctx, g.playerTag, p.id, key), queue: info.constructing } : null;
+        }).filter(Boolean);
+    },
     getBuildInfo(provId) {
       try {
         const p = ctx.byId(provId);
@@ -3511,8 +3556,29 @@ export function gameActions(ctx) {
 
     // ---- declaring war (a casus belli softens the cost) ---------------------
     // no CB: -2 stability, -5 legitimacy · holy war: -1 stability · claim: free
-    declareWarOn(tag) {
+    getWarPlan(tag, offers = {}) {
+      const d = getDip(tag);
+      if (!d) return null;
+      const mine = g.tags[g.playerTag];
+      const promised = Object.values(offers || {}).map(o => Number(o.province)).filter(Boolean);
+      const duplicates = new Set(promised.filter((id, i) => promised.indexOf(id) !== i));
+      return { target: tag, name: d.name, canWar: d.canWar, whyNot: d.whyNotWar,
+        stabilityCost: d.cb ? d.cb.type === 'holy' ? 1 : 0 : 2,
+        allies: (mine.allies || []).filter(a => a !== tag && g.tags[a]?.alive).map(a => {
+          const answer = offensiveCall(ctx, a, g.playerTag, tag, offers[a], allyAnswersCall(ctx, a, g.playerTag));
+          if (truceActive(ctx, a, tag) || recognized(ctx, a, tag)) {
+            answer.ok = false; answer.reasons.push('Bound by a truce or recognition');
+          }
+          if (duplicates.has(answer.promise)) { answer.ok = false; answer.reasons.push('The same province was promised to another ally'); }
+          return { ...answer, name: g.tags[a].name || a };
+        }),
+      };
+    },
+    getDiplomaticCredit(tag) { return diplomaticCredit(ctx, tag, g.playerTag); },
+    declareWarOn(tag, offers = {}) {
       try {
+        const promised = Object.values(offers || {}).map(o => Number(o.province)).filter(Boolean);
+        if (new Set(promised).size !== promised.length) { say('Declare war', 'Each province may be promised to one ally only.', 'bad'); return; }
         const d = getDip(tag);
         if (!d) return;
         if (!d.canWar) { say('Declare war', d.whyNotWar || 'We cannot declare war on ' + d.name + '.', 'bad'); return; }
@@ -3527,7 +3593,7 @@ export function gameActions(ctx) {
         addOpinion(ctx, tag, g.playerTag, -100);
         // A war without a legal pretext is still a conquest with a declared
         // strategic objective; it simply pays the full stability cost.
-        declareWar(ctx, g.playerTag, tag, null, cb || 'conquest');
+        return declareWar(ctx, g.playerTag, tag, null, { ...(cb || { type: 'conquest' }), offers });
       } catch (e) { warnOnce('declareWarOn', 'declareWarOn failed', e); }
     },
 

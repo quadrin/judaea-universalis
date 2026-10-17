@@ -135,10 +135,10 @@ console.log('== a state annexed whole is not a state dismembered (SPEC §220) ==
   ok(ev.acceptable, 'and taking it whole is accepted anyway: ' + ev.reason);
 
   // War score is the gate that remains, and it is a real one.
-  war.warscore.JUD = ev.cost - 1;
+  war.warscore.JUD = Math.max(1, ev.cost - Math.ceil(ev.enthusiasm.willingness) - 1);
   const poor = mil.evaluatePeaceDeal(ctx, war, 'JUD', { provinces: all });
-  ok(!poor.acceptable && /war score does not cover/.test(poor.reason),
-    'one point short and it is refused for score, not for the cap: ' + poor.reason);
+  ok(!poor.acceptable && poor.cost > poor.acceptanceBudget,
+    'beyond the adjusted demand limit it is refused for score, not for the cap: ' + poor.reason);
   war.warscore.JUD = 100;
 
   ok(info.theirSideDev === dev, 'the rump holds nothing else to leave behind');

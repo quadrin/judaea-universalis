@@ -9,7 +9,7 @@ import { buildingFace } from '../sim/military.js';
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
 const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine', shipyard: 'shipyard', airfield: 'plane' };
 
-export function createProvincePanel(el, { DEFINES, onClose }) {
+export function createProvincePanel(el, { DEFINES, onClose, onWar }) {
   let ctx = null;
   let actions = null;
   let provId = 0;
@@ -207,6 +207,7 @@ const RISING_LABELS = {
     refs.dipBtns.addEventListener('click', (e) => {
       const b = e.target instanceof Element ? e.target.closest('[data-dip]') : null;
       if (!b || !actions || !dipTag || b.classList.contains('disabled')) return;
+      if (b.dataset.dip === 'war' && onWar) { onWar(dipTag); return; }
       if (b.dataset.dip === 'claim') {
         // Claims act on the province, not the tag.
         try { if (typeof actions.fabricateClaim === 'function') actions.fabricateClaim(provId); }
@@ -1061,7 +1062,10 @@ const RISING_LABELS = {
         : 'They would not answer a call to arms — ' + (c.why || 'they are in no state to march') + '.')
         + '\n――――――\nAn ally answers every call to arms, ours or in our defense, at ' + c.callOpinion
         + ' regard, and in a state to march: war exhaustion no more than ' + c.readyExhaustion
-        + ', a treasury out of the red, and men to send.';
+        + ', a treasury out of the red, and men to send.'
+        + (actions.getDiplomaticCredit ? (() => { const r = actions.getDiplomaticCredit(d.tag || dipTag);
+          return '\nTrust ' + Math.round(r.trust) + ' · favors ' + Math.floor(r.favors)
+            + '. Offensive war plans also check trust, favors, promised land, and treaty obligations.'; })() : '');
     } else if ((d.ourClient || d.ourOverlord) && d.clientLoyalty && refs.dipStatus.dataset) {
       // A client's weight against its lord's, and where that settles its
       // regard (SPEC §298) — read from either end of the collar.

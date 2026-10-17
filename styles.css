@@ -42,6 +42,39 @@ html, body {
 
 .hidden { display: none !important; }
 
+/* Campaign planning tools share the existing parchment modal vocabulary. */
+.campaign-modal { position: absolute; inset: 0; z-index: 125; pointer-events: auto; }
+.campaign-modal .campaign-card { width: min(1000px, calc(100vw - 28px)); max-width: none; max-height: calc(100dvh - 70px); overflow-y: auto; }
+.campaign-modal .ev-card { z-index: 1; }
+.campaign-controls, .campaign-tabs { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 12px 0; }
+.campaign-controls label, .campaign-ally label { display: flex; flex-direction: column; gap: 5px; }
+.campaign-controls input[type=number] { width: 90px; }
+.campaign-controls input, .campaign-controls select, .campaign-ally select { font: inherit; padding: 7px; color: #332719; background: #e8d9b8; border: 1px solid #8b7754; max-width: 100%; }
+.campaign-tabs [aria-pressed=true] { outline: 2px solid #a78027; }
+.campaign-table { overflow-x: auto; max-height: 38dvh; overflow-y: auto; margin: 12px 0; }
+.campaign-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.campaign-table th, .campaign-table td { padding: 8px; text-align: left; border-bottom: 1px solid #8b775455; vertical-align: top; }
+.campaign-table th { position: sticky; top: 0; background: #e4d3af; z-index: 1; }
+.campaign-table input[type=checkbox] { width: 20px; height: 20px; }
+.campaign-link { font: inherit; text-decoration: underline; color: inherit; background: transparent; border: 0; cursor: pointer; }
+.campaign-ally { border-bottom: 1px solid #8b775466; padding: 12px 0; }
+.campaign-ally label { margin-top: 8px; }
+.campaign-card .btn:disabled { opacity: .45; cursor: default; }
+.peace-strategy { margin: 12px 0; font-size: 13px; }
+.peace-strategy details { margin: 10px 0; }
+.peace-strategy summary { cursor: pointer; font-weight: bold; }
+.bw-frontage { font-size: 12px; margin: 5px 0; color: #c8b481; }
+.toast-persistent { position: relative; padding-right: 30px; pointer-events: auto; }
+.toast-dismiss { position: absolute; top: 6px; right: 5px; color: inherit; background: transparent; border: 0; cursor: pointer; }
+#toast-container { max-height: 65dvh; overflow-y: auto; }
+.st-message-settings { border-top: 1px solid #8b775455; padding-top: 8px; }
+@media (max-width: 600px) {
+  .campaign-modal .campaign-card { max-height: calc(100dvh - 24px); }
+  .campaign-controls { align-items: stretch; }
+  .campaign-controls label { flex: 1 1 40%; min-width: 0; }
+  .campaign-ally select { min-height: 44px; }
+}
+
 button {
   font-family: inherit;
   color: inherit;

@@ -11,6 +11,7 @@
 // multiplayer table never sees another player's volume.
 import { esc, warnOnce } from './format.js';
 import { icon } from './icons.js';
+import { MESSAGE_CATEGORIES, MESSAGE_MODES, DEFAULT_MESSAGE_MODES, normalizeMessageModes } from './message_policy.js';
 
 const KEY = 'ju_settings';
 
@@ -23,6 +24,7 @@ export const SETTING_DEFAULTS = Object.freeze({
   autosave: true,    // the January autosave
   toastSecs: 6,      // how long a notice stays up
   reduceMotion: false,
+  messages: DEFAULT_MESSAGE_MODES,
 });
 
 const TOAST_CHOICES = [[4, 'Short'], [6, 'Normal'], [10, 'Long']];
@@ -49,6 +51,7 @@ function load() {
     autosave: typeof raw.autosave === 'boolean' ? raw.autosave : d.autosave,
     toastSecs: TOAST_CHOICES.some(([s]) => s === raw.toastSecs) ? raw.toastSecs : d.toastSecs,
     reduceMotion: typeof raw.reduceMotion === 'boolean' ? raw.reduceMotion : d.reduceMotion,
+    messages: normalizeMessageModes(raw.messages),
   };
 }
 
@@ -62,7 +65,7 @@ export function getSetting(k) { return getSettings()[k]; }
 export function setSetting(k, v) {
   const s = getSettings();
   if (!(k in SETTING_DEFAULTS) || s[k] === v) return;
-  s[k] = v;
+  s[k] = k === 'messages' ? normalizeMessageModes(v) : v;
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private window: this session only */ }
   if (k === 'reduceMotion') applyMotion();
   for (const fn of listeners) {
@@ -174,6 +177,9 @@ export function createSettingsPanel({ getSongs } = {}) {
       <div class="st-sec st-game">
         <div class="peace-sec">Game</div>
         ${toggle('autosave', 'Yearly autosave', !!getSetting('autosave'), 'Each January the campaign saves itself to the autosave row. Your own saves are not touched.')}
+        <div class="st-message-settings">${Object.entries(MESSAGE_CATEGORIES).map(([key, label]) =>
+          `<label class="st-row"><span class="st-label">${esc(label)}</span><select class="st-select" data-message="${key}" aria-label="${esc(label)} notification">${Object.entries(MESSAGE_MODES).map(([mode, name]) =>
+            `<option value="${mode}"${normalizeMessageModes(getSetting('messages'))[key] === mode ? ' selected' : ''}>${esc(name)}</option>`).join('')}</select></label>`).join('')}</div>
         <div class="st-row" data-tt="How long a notice stays on the screen.">
           <span class="st-label">Notices stay</span>
           <span class="st-seg">${TOAST_CHOICES.map(([s, l]) =>
@@ -219,7 +225,9 @@ export function createSettingsPanel({ getSongs } = {}) {
     });
     el.addEventListener('change', (e) => {
       const t = e.target;
-      if (t instanceof HTMLSelectElement && t.dataset.set === 'song') {
+      if (t instanceof HTMLSelectElement && t.dataset.message) {
+        setSetting('messages', { ...normalizeMessageModes(getSetting('messages')), [t.dataset.message]: t.value });
+      } else if (t instanceof HTMLSelectElement && t.dataset.set === 'song') {
         setSetting('song', t.value);
         const nx = el.querySelector('[data-act="next"]');
         if (nx) { nx.disabled = t.value === 'score'; nx.classList.toggle('disabled', t.value === 'score'); }
