@@ -50,13 +50,13 @@ that compatibility is not a reason to add effects to new flags.
 
 | Court | Device and field |
 | --- | --- |
-| Byzantium | Gold Chi-Rho alone on purple |
+| Byzantium | Custom gold Chi-Rho with a shaped loop and restrained terminals on purple |
 | Modern Israel | White field, two blue stripes, blue Magen David |
 | Kingdom of Israel | Gold Magen David on blue |
 | Judaea | Broad Arch of Titus menorah with a polygonal stepped base, gold on blue |
-| Hasmonean Judaea | Cornucopias and pomegranate, entirely gold on blue |
-| Galilee | Earlier beige zodiac roundel on baby blue |
-| Phoenicia | Gold angular Phoenician letter on purple, matching the supplied reference |
+| Hasmonean Judaea | Tapered cornucopias and a clearly crowned pomegranate, entirely gold on blue |
+| Galilee | Beige zodiac roundel with twelve divisions and a central sun on baby blue |
+| Phoenicia | Gold angular Phoenician letter on purple, with consistent strokes and sharp joins |
 | Rome | Gold SPQR on red, without an eagle or wreath |
 | Assyria / Persia | Simplified winged figure and disc |
 | Babylonia | Gold eight-pointed star on blue |

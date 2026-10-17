@@ -29,18 +29,27 @@ function temple(color = P) {
     + [29, 40, 51, 62].map(x => rect(x, 48, 5, 23, color) + rect(x - 1, 48, 7, 3, color)).join('')
     + rect(24, 72, 48, 4, color) + rect(21, 77, 54, 4, color);
 }
-const cornucopias = `<g>${path('M44 77C23 69 20 50 28 35L37 41C28 52 33 66 44 73Z')}${circle(29, 35, 5)}${circle(34, 32, 4)}${circle(25, 30, 3)}<g transform="translate(96 0) scale(-1 1)">${path('M44 77C23 69 20 50 28 35L37 41C28 52 33 66 44 73Z')}${circle(29, 35, 5)}${circle(34, 32, 4)}${circle(25, 30, 3)}</g></g>`;
+// Tapered horns with an angled lip and a small spray at the opening.
+// Open space between the horns and fruit keeps the coin motif readable.
+const leftCornucopia = path('M43 78C25 71 17 56 23 39L26 32 34 35 31 43C25 58 31 70 43 78Z')
+  + path('M23 29 36 34 34 39 21 34Z')
+  + path('M26 29C22 26 23 21 26 18C30 21 31 26 29 30ZM31 31C30 26 34 22 38 23C38 28 35 31 32 32Z');
+const cornucopias = leftCornucopia + `<g transform="translate(96 0) scale(-1 1)">${leftCornucopia}</g>`;
+const pomegranate = path('M43 37 42 30 46 32 48 27 50 32 54 30 53 37C60 44 56 55 48 58C40 55 36 44 43 37Z');
 function menorah() {
-  // Broad curved branches and the two-tier polygonal pedestal of the
-  // Arch of Titus silhouette. The seven oil cups are unlit, with room
-  // between their rims; branch joins sit at three levels on the stem.
-  return [30, 20, 10].map(r => line(`M${48 - r} 28V33A${r} ${r} 0 0 0 ${48 + r} 33V28`, G, 4.2)).join('')
-    + line('M48 27V72', G, 4.8)
-    + [43, 53, 63].map(y => circle(48, y, 3.2)).join('')
-    + [-30, -20, -10, 0, 10, 20, 30].map(dx => path(`M${48 + dx - 4} 23H${48 + dx + 4}L${48 + dx + 2.7} 28H${48 + dx - 2.7}Z`)).join('')
-    + path('M36 69H60L66 73 60 77H36L30 73Z')
-    + path('M31 77H65L72 81 65 85H31L24 81Z');
+  // The Titus silhouette: wide curved arms, seven separate oil cups,
+  // collars at the branch joins and a compact, polygonal stepped plinth.
+  return [30, 20, 10].map(r => line(`M${48 - r} 28V33A${r} ${r} 0 0 0 ${48 + r} 33V28`, G, 3.4)).join('')
+    + line('M48 27V71', G, 4.2)
+    + [43, 53, 63].map(y => rect(44.5, y - 1, 7, 2, G)).join('')
+    + [-30, -20, -10, 0, 10, 20, 30].map(dx => path(`M${48 + dx - 3.6} 23H${48 + dx + 3.6}L${48 + dx + 2.4} 28H${48 + dx - 2.4}Z`)).join('')
+    + path('M39 70H57L63 73.5 57 77H39L33 73.5Z')
+    + path('M34 78H62L69 81.5 62 85H34L27 81.5Z');
 }
+const chiRho = path('M41 17H54V20H50V76H54V79H40V76H44V20H41Z')
+  + path('M48 17H54C75 17 75 44 54 44H48V39H54C68 39 68 22 54 22H48Z')
+  + path('M26 27 70 73 66 77 22 31ZM22 73 66 27 70 31 26 77Z');
+const phoenicianAleph = `<path d="M68 25 24 48 68 71M48 24V72" fill="none" stroke="${G}" stroke-width="6.2" stroke-linejoin="miter"/>`;
 
 const lion = path('M63 34 69 26 67 20 56 21 50 29 51 39 41 45 28 39 22 42 33 51 47 54 44 63 35 63 28 73 20 77 21 81 34 79 44 70 55 70 61 76 59 82 70 82 72 77 66 65 69 55 64 45 69 40Z')
   + line('M68 56C87 65 83 39 78 34Q72 26 80 22', G, 4)
@@ -58,11 +67,12 @@ const ring = (x, y, r, ink = G, width = 3) => `<circle cx="${x}" cy="${y}" r="${
 const magenDavid = line('M48 18 74 63H22ZM48 78 22 33H74Z', G, 4.5);
 const GALILEE_BLUE = '#98ceec', ZODIAC_BEIGE = '#f4e1b8';
 function zodiacWheel() {
-  // Restore the earlier synagogue roundel: a pale disc, twelve radial
-  // divisions and a circular central medallion, on the baby-blue field.
-  return circle(48, 48, 31, ZODIAC_BEIGE)
-    + Array.from({ length: 12 }, (_, i) => `<g transform="rotate(${i * 30} 48 48)">${line('M48 20V35', GALILEE_BLUE, 2.7)}</g>`).join('')
-    + ring(48, 48, 11, GALILEE_BLUE, 2.7) + circle(48, 48, 3.4, GALILEE_BLUE);
+  // Twelve calm, even divisions around a sun medallion. The thin circular
+  // groove leaves one continuous outer rim, like the synagogue roundels.
+  return circle(48, 48, 32, ZODIAC_BEIGE)
+    + ring(48, 48, 29.2, GALILEE_BLUE, 1.3)
+    + Array.from({ length: 12 }, (_, i) => `<g transform="rotate(${i * 30} 48 48)">${line('M48 18.8V33.5', GALILEE_BLUE, 1.8)}</g>`).join('')
+    + circle(48, 48, 13, GALILEE_BLUE) + star(48, 48, 12, 9, 6, ZODIAC_BEIGE);
 }
 
 function wingedFigure(field, archer = false) {
@@ -90,8 +100,8 @@ export const FLAT_FLAGS = {
   BAL: standard('#9b2180', anchor(G), { emblem: 'anchor' }),
   DMT: standard('#3431a5', anchor(S), { emblem: 'anchor' }),
   LKH: standard('#bd3c24', path('M54 24A25 25 0 1 0 68 67A28 28 0 0 1 54 24Z') + star(53, 46, 8, 11, 4), { emblem: 'crescent-star' }),
-  HAS: standard('#1644b2', cornucopias + circle(48, 47, 8) + path('M44 40V35L48 38 52 35V40Z'), { emblem: 'cornucopias', scale: 1.3, dy: -4 }),
-  JUD: standard('#154bb6', menorah(), { emblem: 'menorah', scale: 1.18, dy: -6, note: 'Broad curved branches and a polygonal stepped base, following the Arch of Titus silhouette.' }),
+  HAS: standard('#1644a3', cornucopias + pomegranate, { emblem: 'cornucopias', scale: 1.18, note: 'Tapered double cornucopias and a crowned pomegranate, entirely in gold.' }),
+  JUD: standard('#173f94', menorah(), { emblem: 'menorah', scale: 1.18, dy: -6, note: 'Broad curved branches and a polygonal stepped base, following the Arch of Titus silhouette.' }),
   ISR: standard('#ffffff', rect(0, 14, 96, 10, '#0038b8') + rect(0, 72, 96, 10, '#0038b8')
     + line('M48 30 64 57H32ZM48 66 32 39H64Z', '#0038b8', 2.6), { emblem: 'israeli-flag', scale: 1, note: 'Modern Israel: blue stripes and blue Magen David on white.' }),
   MLI: standard('#1640a5', magenDavid, { emblem: 'magen-david', note: 'Kingdom of Israel: gold Magen David on blue.' }),
@@ -100,11 +110,11 @@ export const FLAT_FLAGS = {
   IEM: standard('#243c77', magenDavid, { emblem: 'magen-david' }),
   JDH: standard('#183da0', lion, { emblem: 'lion', dx: -4.5 }),
   SAM: standard('#008064', path('M20 73 48 30 76 73Z', P) + line('M32 64H64', '#008064', 3.5), { emblem: 'gerizim', note: 'Mount Gerizim as a geometric mountain insignia.' }),
-  GAL: standard(GALILEE_BLUE, zodiacWheel(), { emblem: 'zodiac-wheel', note: 'The earlier beige zodiac roundel restored on baby blue.' }),
+  GAL: standard(GALILEE_BLUE, zodiacWheel(), { emblem: 'zodiac-wheel', note: 'Beige zodiac roundel on baby blue, with twelve divisions and a central sun.' }),
   GLT: standard('#238244', line('M37 72A27 27 0 1 1 59 72', G, 7) + circle(36, 72, 5) + circle(60, 72, 5), { emblem: 'torc' }),
   SEL: standard('#e4b33c', anchor('#6c217b'), { emblem: 'anchor' }),
   PTO: standard('#00649d', eagle(), { emblem: 'eagle-thunderbolt', scale: 1.1, dy: -5 }),
-  BYZ: standard('#7a198b', line('M45 78V20H55A13 13 0 0 1 55 46H45M28 69 68 30M28 30 68 69', G, 5), { emblem: 'chi-rho', note: 'The Chi-Rho alone on imperial purple.' }),
+  BYZ: standard('#61227a', chiRho, { emblem: 'chi-rho', dx: 2, note: 'A custom Chi-Rho with a shaped loop and restrained terminals on imperial purple.' }),
   ROM: standard('#8e2430', path('M10.56 55.13H11.81L12.46 58.2Q13.06 58.9 14.27 59.37Q15.48 59.84 16.78 59.84Q20.88 59.84 20.88 56.47Q20.88 55.42 20.1 54.69Q19.32 53.96 17.65 53.39Q15.2 52.57 14.12 52.07Q13.04 51.56 12.3 50.88Q11.56 50.19 11.11 49.21Q10.67 48.23 10.67 46.81Q10.67 44.28 12.39 42.96Q14.11 41.64 17.43 41.64Q19.82 41.64 22.74 42.25V46.81H21.47L20.82 44.18Q19.37 43.12 17.43 43.12Q15.67 43.12 14.73 43.77Q13.78 44.42 13.78 45.76Q13.78 46.72 14.57 47.4Q15.35 48.08 17.03 48.6Q20.3 49.68 21.52 50.47Q22.74 51.26 23.38 52.43Q24.02 53.6 24.02 55.19Q24.02 61.29 16.84 61.29Q15.2 61.29 13.49 61.01Q11.78 60.73 10.56 60.27ZM37.7 47.52Q37.7 45.23 36.85 44.33Q36 43.42 33.86 43.42H32.73V51.92H33.92Q35.9 51.92 36.8 50.92Q37.7 49.92 37.7 47.52ZM32.73 53.49V59.57L35.92 59.96V61H25.95V59.96L28.22 59.57V43.26L25.77 42.89V41.85H34.21Q38.27 41.85 40.29 43.21Q42.3 44.58 42.3 47.49Q42.3 53.49 35.3 53.49ZM44.56 51.4Q44.56 41.64 54.51 41.64Q59.42 41.64 61.94 44.11Q64.45 46.59 64.45 51.4Q64.45 58.5 59.11 60.54L59.82 61.41Q61.92 64.04 63.42 64.04Q64.17 64.04 64.59 63.93V65.16Q64.29 65.3 63.2 65.52Q62.11 65.74 61.22 65.74Q60.18 65.74 59.37 65.55Q58.57 65.36 57.87 64.95Q57.18 64.54 56.52 63.88Q55.85 63.21 54.34 61.29Q49.59 61.26 47.07 58.74Q44.56 56.22 44.56 51.4ZM49.3 51.4Q49.3 55.96 50.55 57.91Q51.8 59.86 54.51 59.86Q57.21 59.86 58.46 57.9Q59.71 55.94 59.71 51.4Q59.71 46.88 58.46 44.98Q57.21 43.08 54.51 43.08Q51.8 43.08 50.55 44.98Q49.3 46.88 49.3 51.4ZM73.35 52.89V59.57L75.8 59.96V61H66.56V59.96L68.84 59.57V43.26L66.38 42.89V41.85H75.53Q79.76 41.85 81.84 43.15Q83.93 44.45 83.93 47.21Q83.93 51.32 80.07 52.49L85.19 59.57L87.26 59.96V61H81.06L75.72 52.89ZM79.47 47.23Q79.47 45.09 78.59 44.26Q77.7 43.42 75.35 43.42H73.35V51.32H75.42Q77.62 51.32 78.55 50.4Q79.47 49.49 79.47 47.23Z'), { emblem: 'spqr', scale: 1, dx: -.9, dy: -5.7, note: 'SPQR in outlined Roman serif lettering.' }),
   ASR: standard('#a81e38', wingedFigure('#a81e38', true), { emblem: 'winged-ashur', scale: 1, note: 'A winged figure and disc, following the supplied visual reference.' }),
   ASY: standard('#bd382f', wingedFigure('#bd382f', true), { emblem: 'winged-ashur', scale: 1 }),
@@ -114,7 +124,7 @@ export const FLAT_FLAGS = {
   SAS: standard('#ad1639', fireAltar, { emblem: 'fire-altar' }),
 
   // Revival courts keep one regional device rather than an ornamental frame.
-  PHO: standard('#800080', path('M23 48 68 26 71 31 36 48 71 66 68 71Z', '#ffe000') + rect(47, 27, 5.5, 44, '#ffe000'), { emblem: 'phoenician-aleph', scale: 1.5, note: 'Gold Phoenician letter on purple, following the supplied reference.' }),
+  PHO: standard('#800080', phoenicianAleph, { emblem: 'phoenician-aleph', scale: 1.5, dx: 2, note: 'Gold Phoenician letter on purple, with consistent strokes and crisp angular joins.' }),
   PHL: standard('#b44b24', [30, 39, 48, 57, 66].map((x, i) => path(`M${x - 3} 49L${x - 5} ${31 + Math.abs(i - 2) * 4}L${x} ${23 + Math.abs(i - 2) * 3}L${x + 4} 33L${x + 2} 49Z`, P)).join('')
     + path('M29 50H67V62L57 76H39L29 62Z'), { emblem: 'feathered-helmet' }),
   IDU: standard('#bd3c26', path('M22 77 35 31 47 23 53 49 64 35 76 77Z', P) + path('M40 77 48 43 53 77Z', '#bd3c26'), { emblem: 'rock' }),
