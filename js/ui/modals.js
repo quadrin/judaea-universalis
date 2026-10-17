@@ -3,6 +3,19 @@ import { esc, warnOnce } from './format.js';
 import { icon, divider } from './icons.js';
 import { entryFork } from '../data/chapter_paths.js';
 
+function optionStakes(option) {
+  if (!Array.isArray(option?.stakes)) return '';
+  return '<span class="ev-stakes">' + option.stakes.map(s =>
+    `<span class="ev-stake">${icon(s.icon, 'icon-sm')}<span>${esc(s.label || '')}</span></span>`).join('') + '</span>';
+}
+function historicalNote(event) {
+  if (!event?.historical || !Array.isArray(event.sources) || !event.sources.length) return '';
+  const links = event.sources.filter(s => /^https:\/\//.test(s.url)).map(s =>
+    `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label || 'Source')}</a>`).join(' · ');
+  return `<details class="ev-history"><summary>${icon('book', 'icon-sm')} Historical background</summary>`
+    + `<p>${esc(event.historical)}</p><p>${links}</p></details>`;
+}
+
 // A fork card wears its badge as it is dealt (SPEC §184): if this event is an
 // entry of the §119 path tree, the chip above the title says the road forks
 // here, and the tooltip asks the fork's own question. Read off the tree
@@ -111,6 +124,7 @@ export function createEventModal(el) {
       const tip = o && o.tooltip ? String(o.tooltip) : '';
       return `<button class="btn ev-opt" data-idx="${idxOf(i)}"${tip ? ` data-tt="${esc(tip)}"` : ''}>`
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
+        + optionStakes(o)
         + `</button>`;
     }).join('');
     const chapterId = (ctx && ctx.bookmark && ctx.bookmark.id) || (ctx && ctx.game && ctx.game.bookmarkId) || '';
@@ -124,6 +138,7 @@ export function createEventModal(el) {
         <div class="ev-desc">${esc(ev.desc || '')}</div>
         ${deciderLine}
         <div class="ev-opts">${opts}</div>
+        ${historicalNote(ev)}
       </div>`;
     el.querySelector('.ev-opts').addEventListener('click', (e) => {
       const b = e.target instanceof Element ? e.target.closest('[data-idx]') : null;
@@ -176,6 +191,7 @@ export function createEventModal(el) {
       return `<button class="btn ev-opt"${mine ? ` data-idx="${idx}"` : ' disabled'}`
         + `${tip ? ` data-tt="${esc(tip)}"` : ''}>`
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
+        + optionStakes(o)
         + `</button>`;
     }).join('');
     // The host resolved the fork badge before sending (SPEC §184) — a guest
@@ -192,6 +208,7 @@ export function createEventModal(el) {
         <div class="ev-desc">${esc(p.desc || '')}</div>
         ${p.deciderName ? `<div class="ev-decider">The decision belongs to ${esc(p.deciderName)} — we may only take note.</div>` : ''}
         <div class="ev-opts">${opts}</div>
+        ${historicalNote(p)}
         ${mine ? '' : '<div class="ev-host-note">The host speaks for the realm…</div>'}
       </div>`;
     if (mine) {

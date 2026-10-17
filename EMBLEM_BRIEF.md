@@ -8,16 +8,18 @@ description of one.
 
 ## 1. What you are producing
 
-For each court, an entry in the `FLAGS` table in `js/ui/icons.js`. There are
-two shapes and you may use either.
+Every catalog or revival court needs its own entry in the `FLAGS` table in
+`js/ui/icons.js`. New full-field designs live in `js/ui/flag_art.js` and are
+spread into that table. Either of the two shapes below is supported.
 
-**The rich shape** — use this one. The emblem brings its own coordinate space
+**The rich shape** — use this one. The flag brings its own coordinate space
 and its own palette:
 
 ```js
   XXX: {
     viewBox: '0 0 96 96',
-    body: `<defs>…</defs><g>…</g><path …/>`,
+    flatBanner: true,
+    body: `<rect …/><g>…</g><path …/>`,
   },
 ```
 
@@ -31,13 +33,16 @@ grid. Every emblem drawn before this brief existed uses it, and it still works:
 Either way, `body` is SVG **content**, not a document: the app supplies the
 `<svg>` element and you supply what goes inside it. Allowed and encouraged:
 `<path>`, `<circle>`, `<rect>`, `<ellipse>`, `<polygon>`, `<g>`, `<defs>`,
-`<linearGradient>`, `<radialGradient>`, `<mask>`, `<clipPath>`, `<filter>`,
-`opacity`, and any colours you like. Not allowed: a nested `<svg>`, external
-file references, `<script>`, and anything that loads over the network.
+`<mask>`, `<clipPath>` and solid colours. Use flat vector fills and crisp
+outlines. Omit cloth textures, folds, lighting, gradients, shadows, raster
+images and filters. Keep small marks legible at game sizes.
+
+A nested `<svg>`, external file references, `<script>`, and network loads
+are also prohibited. The renderer retains support for older rich SVG shapes;
+new production flags follow the flat-colour direction above.
 
 **Ids are yours to name freely.** Every emblem on a page shares one document,
-so two of them reaching for `id="a"` would be two gradients fighting over one
-name. The app rewrites every id per emblem on the way out — `id="a"` becomes
+so two of them reaching for `id="a"` would share the same SVG definition. The app rewrites every id per emblem on the way out — `id="a"` becomes
 `id="fjdh-a"`, and `url(#a)`, `href="#a"` and `xlink:href="#a"` are rewritten
 to match. Write whatever reads well; collisions are handled.
 
@@ -45,13 +50,13 @@ to match. Write whatever reads well; collisions are handled.
 
 ## 2. The frame, and the thing that has not changed
 
-The `<svg>` you fill sits inside a rounded square filled with **the court's own
+The `<svg>` you fill occupies a rounded square backed by **the court's own
 colour** (its "field"). Each court's field colour is in the table below. Your
-emblem is drawn on top of it, and may paint over it completely if you want to
-— 38 of the existing emblems already do, which is how several modern courts
-fly real national flags in real national colours.
+flag can fill this field completely, as the full-field standards and modern
+national flags do.
+The SVG fills the chip; `flatBanner: true` opts out of the legacy glyph frame.
 
-**The square is drawn at 14px to 34px.** That is the entire range across the
+**The square is drawn at 14px to 34px in the game.** That is the entire range across the
 whole UI, and it is the one constraint that is not negotiable by writing
 different SVG.
 
@@ -60,8 +65,7 @@ misunderstood: **a larger `viewBox` does not buy more pixels.** `0 0 96 96`
 drawn at 34px has exactly the same pixel budget as `0 0 24 24` drawn at 34px.
 A viewBox is a coordinate space, not a resolution, and SVG coordinates were
 already floats. What the larger frame actually buys is convenience — round
-numbers to work in — and what the loosened contract actually buys is **colour,
-shading, grouping and masking**.
+numbers to work in — and what the richer format buys is **colour, grouping, field divisions and masking**.
 
 So: use the freedom for richness, not for detail. A design that needs 60px to
 resolve will not resolve.
@@ -121,12 +125,13 @@ A worked example in the plain shape:
 
 `tools/tests/smoke186.mjs` fails the build unless:
 
-1. Every court has an emblem. There is no skipping one.
+1. Every catalog and revival court has an emblem. There is no skipping one.
 2. No emblem's body is under 100 characters (i.e. is not a stub).
 3. The body has at least one `<path|circle|rect|g>` and **no** `<svg>` tag.
 4. **No two courts anywhere in the table share identical art.**
 5. Both shapes are accepted, and the rich one's viewBox, gradients, colours
-   and id-scoping are all covered by their own checks.
+   and id-scoping are all covered by their own checks. `smoke213.mjs` also
+   checks flat production artwork, formation targets, runtime variants and old saves.
 
 ---
 
@@ -176,6 +181,11 @@ and Israel's own faction quarrel is named `altars_and_the_house`.
 ---
 
 ## 8. The courts
+
+The complete current roster is in [`tools/flags.html`](tools/flags.html):
+210 catalog/revival courts with 96px previews and 14/24/34px samples.
+`js/ui/flag_art.js` supplies forty new full-field designs. The table below
+is an older motif reference, rather than the coverage checklist.
 
 `NEW` marks the 23 most recently drawn — the ones under review. Everything
 else is long-standing and is listed so you can match the house hand and avoid

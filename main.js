@@ -430,7 +430,7 @@ async function boot() {
         // an answer that travels has to name the option, not its place in a
         // filtered list.
         let options = (Array.isArray(ev.options) ? ev.options : [])
-          .map((o, i) => ({ label: o && o.label, tooltip: o && o.tooltip, idx: i }));
+          .map((o, i) => ({ label: o && o.label, tooltip: o && o.tooltip, stakes: o && o.stakes, idx: i }));
         let deciderName = null;
         // The guest mirrors the host's card, so it mirrors the host's mask
         // too (SPEC §128) — a spectator watching an accession should see the
@@ -458,6 +458,8 @@ async function boot() {
             instanceId: p.instanceId,
             title: ev.title,
             desc: ev.desc,
+            historical: ev.historical,
+            sources: ev.sources,
             world: ev.world === true,
             deciderName,
             options,

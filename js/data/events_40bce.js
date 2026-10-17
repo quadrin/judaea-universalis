@@ -1,7 +1,8 @@
 // Judaea Universalis — event chain: Herod's Rise, 40–37 BCE.
-// Content package. Zero imports; all effects run through ctx.helpers at runtime.
+// Content package; shared crisis data is imported, all effects use ctx.helpers.
 // Source spine: Josephus, Antiquitates XIV.13–16, Bellum I.13–18; Cassius Dio
 // XLVIII–XLIX; Plutarch, Antonius. BCE years are negative.
+import { HEROD_SUCCESSION } from './events_historical_crises.js';
 
 const _warned = new Set();
 function warnOnce(key, e) {
@@ -2184,50 +2185,7 @@ export const EVENTS_40 = [
   },
 
   // ── 25: the death of Herod ────────────────────────────────────────────────
-  {
-    id: 'ev5_herod_dies',
-    title: 'The King Is Dead',
-    worldLabel: 'Herod dies at Jericho',
-    desc: 'Herod dies at Jericho in the spring, in an agony the physicians catalogue '
-      + 'and cannot name, five days after Antipater and thirty-four years after the '
-      + 'axe fell on the last Hasmonean. The testament — the sixth — divides the '
-      + 'realm: Archelaus to rule Judaea as ethnarch, Antipas to hold Galilee and '
-      + 'Peraea, Philip the northern wilds, all of it subject to Augustus\' pleasure. '
-      + 'The funeral procession is a mile of purple and gold. The mourning, by most '
-      + 'accounts, is shorter.',
-    forTag: 'both',
-    decider: 'HER',
-    date: { y: -4, m: 3 },
-    major: true,
-    aiOption: 0,
-    options: [
-      {
-        label: 'The testament stands',
-        tooltip: 'Archelaus rules as Ethnarch (Antipas heir). The divided testament: −10% income and +0.5 unrest everywhere for 36 months as the tetrarchies pull apart.',
-        effects: guard('ev5_herod_dies:0', (ctx) => {
-          if (!alive(ctx, 'HER')) return;
-          ctx.helpers.setRuler(ctx, 'HER', { name: 'Archelaus', title: 'Ethnarch of Judaea', gov: 1, infl: 2, mar: 1, age: 19 });
-          ctx.helpers.setHeir(ctx, 'HER', { name: 'Herod Antipas', gov: 2, infl: 3, mar: 2, age: 16 });
-          ctx.helpers.addTagModifier(ctx, 'HER', {
-            id: 'divided_testament', name: 'The Divided Testament', months: 36,
-            effects: { incomeMult: 0.9, unrestAll: 0.5 },
-          });
-          ctx.helpers.chronicle(ctx, 'ruler', 'Herod dies at Jericho; by testament Archelaus takes Judaea as ethnarch, Antipas Galilee, Philip the north.');
-        }),
-      },
-      {
-        label: 'The army acclaims Antipas alone',
-        tooltip: 'Overturn the testament: Antipas rules the whole realm undivided (−10 legitimacy, −1 stability for defying the dead king\'s seal — and Augustus\' arithmetic).',
-        effects: guard('ev5_herod_dies:1', (ctx) => {
-          if (!alive(ctx, 'HER')) return;
-          ctx.helpers.setRuler(ctx, 'HER', { name: 'Herod Antipas', title: 'King of the Jews', gov: 3, infl: 3, mar: 2, age: 16 });
-          ctx.helpers.setHeir(ctx, 'HER', null);
-          ctx.helpers.adjust(ctx, 'HER', { legitimacy: -10, stability: -1 });
-          ctx.helpers.chronicle(ctx, 'ruler', 'The testament is set aside: the army acclaims Antipas over the whole undivided realm.');
-        }),
-      },
-    ],
-  },
+  HEROD_SUCCESSION,
 
   // ── 25b: the war of Varus ─────────────────────────────────────────────────
   {
@@ -2245,6 +2203,8 @@ export const EVENTS_40 = [
     forTag: 'both',
     decider: 'HER',
     date: { y: -4, m: 7 },
+    after: 'ev5_herod_dies',
+    when: (ctx) => !ctx.game.flags.historicalCrises?.herod || ctx.game.tags[who(ctx, 'HER')]?.ruler?.name === 'Archelaus',
     major: true,
     aiOption: 0,
     options: [

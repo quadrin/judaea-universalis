@@ -20,6 +20,27 @@ and **The War of Independence, 1948** (Israel).
 
 Zero dependencies, no build step: browser ES modules + WebGL2.
 
+**Court flags.** All 210 catalog and releasable courts carry distinct vector
+artwork, including Antipas’s and Philip’s tetrarchies. Forty standards have
+new full-field designs. Flags use flat colours and outlines; Court headers
+show them at 34px. Browse every design and its game-size samples in
+[`tools/flags.html`](tools/flags.html).
+
+**Historical turning points.** Jonathan can back Alexander Balas or Demetrius
+in a real Seleucid succession war. Hyrcanus and Aristobulus can negotiate an
+accord, keep it, or reopen the succession with an independence war. Herod’s
+final will can divide the map into separate tetrarchies, while an undivided
+inheritance needs Roman agreement or risks intervention. Event choices show
+icon-led stakes and expandable primary-text references; the historical
+background distinguishes recorded outcomes from playable alternatives.
+
+Six further crises cover Egypt’s change of allegiance (145 BCE), Tryphon’s
+invitation and Jonathan’s ransom (143 BCE), Rome’s annexation of Nabataea
+(106 CE), the Lakhmid succession at Hira (602), the Roman–Persian peace
+(628), and the Luxembourg Agreement (1952). These can change wars, rulers,
+sovereignty and access. Reparations arrive as funded goods from March 1953;
+invest them in chosen provinces under Court → Objectives → Chapter strategy.
+
 The former 40 BCE bookmark remains loadable from existing saves. New succession
 campaigns start in 67 BCE; their later events follow the houses that survive.
 
@@ -47,7 +68,7 @@ the point balances and technology requirements are visible alongside the
 groups. Technology and institutions remain in **Technology**. Foreign courts
 show their ideas for inspection, with purchasing controls hidden.
 
-**Chapter strategy.** Open **Court → Missions → Chapter strategy** for decisions
+**Chapter strategy.** Open **Court → Objectives → Chapter strategy** for decisions
 specific to your bookmark. Each decision shows its location or partner, upfront
 cost, recurring obligations and current availability. Projects advance with the
 monthly clock and pause if funding or control is lost.

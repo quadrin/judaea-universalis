@@ -1,3 +1,4 @@
+import { ARABIA_ENTRY } from './events_political_turning_points.js';
 // Judaea Universalis — the years the chain skips: 73–128 CE (SPEC §240).
 // Content package. Zero imports; every effect runs through ctx.helpers.
 //
@@ -467,63 +468,7 @@ export const EVENTS_66_YEARS = [
   },
 
   // ── 106 ────────────────────────────────────────────────────────────────────
-  {
-    id: 'ev66y_the_rock_becomes_a_province',
-    title: 'The Rock Becomes a Province',
-    desc: 'The last Nabataean king dies and the Sixth Legion walks into Petra. There is no war '
-      + 'and no siege; the province of Arabia is proclaimed, a new road is surveyed from '
-      + 'Bostra to the Red Sea, and a kingdom that had held the incense trade for four hundred '
-      + 'years by knowing where the water was is simply administered out of existence.\n\n'
-      + 'What that does to everybody else on this coast is arithmetic. The caravan tolls that '
-      + 'used to be split between Petra and the ports now run north up a Roman road to a Roman '
-      + 'customs house. The desert frontier that Nabataean cavalry used to hold on their own '
-      + 'account is now a Roman frontier with legions on it. And there is one fewer buffer '
-      + 'state between anybody in this region and the empire, which was the only real service '
-      + 'a buffer state ever performed.',
-    forTag: 'player',
-    date: { y: 106, m: 3 },
-    world: true,
-    worldLabel: 'Rome annexes Nabataea; Arabia becomes a province',
-    aiOption: 1,
-    historical: 'Trajan annexed the Nabataean kingdom in 106 CE without a recorded war and built the Via Nova Traiana through it within a decade.',
-    options: [
-      {
-        label: 'Buy into the new road before the tolls are set',
-        tooltip: '−50 talents placed with the contractors and the caravan houses: "The New Road" (+9% income, +7% trade) for twenty years.',
-        effects: guard('rock:0', (ctx) => {
-          const h = ctx.helpers;
-          h.adjust(ctx, P(ctx), { treasury: -50 });
-          mod(ctx, 'the_new_road', 'The New Road', { incomeMult: 1.09, tradeMult: 1.07 }, 240);
-          h.chronicle(ctx, 'era', 'Money goes into the new Arabian road before the tolls are '
-            + 'fixed. When they are fixed, some of them are ours.');
-        }),
-      },
-      {
-        label: 'Take in whoever will not live under a prefect',
-        tooltip: '−30 talents in settlement: +8 legitimacy and "The Caravan Families" (+6% income, +5% trade, +3% manpower) for fifteen years. Petra\'s guides, drovers and water-masters are worth more than Petra.',
-        effects: guard('rock:1', (ctx) => {
-          const h = ctx.helpers;
-          h.adjust(ctx, P(ctx), { treasury: -30, legitimacy: 8 });
-          mod(ctx, 'caravan_families', 'The Caravan Families', { incomeMult: 1.06, tradeMult: 1.05, manpowerMult: 1.03 }, 180);
-          h.chronicle(ctx, 'era', 'The caravan families who will not live under a prefect are '
-            + 'settled on this side of the line, with their routes and their water in their '
-            + 'heads.');
-        }),
-      },
-      {
-        label: 'Note what happened to a kingdom nobody went to war with',
-        tooltip: '+12 governance points, +8 martial points, and "What Happened at Petra" (+5% manpower, −0.4 unrest everywhere) for fifteen years. The lesson is circulated to every officer in the country.',
-        effects: guard('rock:2', (ctx) => {
-          const h = ctx.helpers;
-          h.adjust(ctx, P(ctx), { gov: 12, mar: 8 });
-          mod(ctx, 'what_happened_at_petra', 'What Happened at Petra', { manpowerMult: 1.05, unrestAll: -0.4 }, 180);
-          h.chronicle(ctx, 'era', 'The annexation of Petra is written up and circulated: no '
-            + 'war, no siege, no casus belli, and a four-hundred-year-old kingdom gone in a '
-            + 'summer.');
-        }),
-      },
-    ],
-  },
+  ARABIA_ENTRY,
 
   // ── 112 ────────────────────────────────────────────────────────────────────
   {

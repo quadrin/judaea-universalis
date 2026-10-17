@@ -1,6 +1,8 @@
 // Judaea Universalis — sim entry: initGame / makeCtx / gameActions / simHelpers
 // (SPEC §6.1, §6.2, §6.4, §6.6). DOM-free; imports only core/rng + sim siblings.
 
+import { politicalCrisisInfo, choosePoliticalCrisis, politicalCrisisView, investReparations, canPoliticalIntervention } from './political_turning_points.js';
+import { historicalCrisisInfo, chooseHistoricalCrisis, canImperialIntervention } from './historical_crises.js';
 import { winChance } from './ai_war.js';
 import { createRng } from '../core/rng.js';
 import {
@@ -580,6 +582,20 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
 // the chapter is not supposed to stop when they do. `L` is that one line.
 const L = livingTag;
 export const simHelpers = {
+  politicalCrisisInfo(ctx, key) { return politicalCrisisInfo(ctx, key); },
+  canPoliticalIntervention(ctx, key) { return canPoliticalIntervention(ctx, key); },
+  choosePoliticalCrisis(ctx, key, choice, actor) {
+    const result = choosePoliticalCrisis(ctx, key, choice, actor);
+    if (!result.ok) ctx.bus.emit('notify', { title: 'The situation has changed', text: result.why, type: 'info' });
+    return result;
+  },
+  historicalCrisisInfo(ctx, key) { return historicalCrisisInfo(ctx, key); },
+  canImperialIntervention(ctx) { return canImperialIntervention(ctx); },
+  chooseHistoricalCrisis(ctx, key, choice) {
+    const result = chooseHistoricalCrisis(ctx, key, choice);
+    if (!result.ok) ctx.bus.emit('notify', { title: 'The situation has changed', text: result.why, type: 'info' });
+    return result;
+  },
   // The forwarding address itself, for the predicates content owns: a package
   // may not import the sim, so a chain that keeps its own `alive`/`holds`
   // reaches the lookup through here.
@@ -4288,7 +4304,21 @@ export function gameActions(ctx) {
     getChapter() {
       try { return chapterView(ctx); } catch (e) { warnOnce('getChapter', 'getChapter failed', e); return null; }
     },
-    getChapterStrategy() { return chapterStrategyView(ctx); },
+    getChapterStrategy() {
+      const report = chapterStrategyView(ctx);
+      if (report) report.political = politicalCrisisView(ctx);
+      return report;
+    },
+    investReparations(province) {
+      const result = investReparations(ctx, province);
+      if (!result.ok) say('Investment unavailable', result.why, 'bad');
+      return result;
+    },
+    compromiseReparations() {
+      const result = investReparations(ctx, 0, true);
+      if (!result.ok) say('Compromise unavailable', result.why, 'bad');
+      return result;
+    },
     getChapterDecision(key, args) { return chapterActionInfo(ctx, g.playerTag, key, args); },
     runChapterStrategy(key, args) {
       const result = runChapterActionCore(ctx, g.playerTag, key, args);
@@ -4477,6 +4507,14 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
     let p = game.provinces[id];
     if (!p) {
       p = makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id });
+      // Newly opened districts inherit the saved parent's government if their
+      // bookmark court did not exist in this save. Loading must not resurrect
+      // a kingdom (Hira in old 529 saves) or create an owner with no tag state.
+      if (source.latentParent && p.owner !== 'WASTE' && !game.tags[p.owner]?.alive) {
+        const parentId = srcProvs.findIndex(v => v.name === source.latentParent) + 1;
+        const parent = game.provinces[parentId];
+        if (parent) { p.owner = parent.owner; p.controller = parent.controller; }
+      }
       game.provinces[id] = p;
     } else {
       // Geometry and display names are map-profile data, not campaign state.

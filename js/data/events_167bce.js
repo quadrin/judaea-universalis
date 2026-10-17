@@ -1,7 +1,9 @@
+import { TRYPHON_INVITATION } from './events_political_turning_points.js';
 // Judaea Universalis — event chain: The Maccabean Revolt, 167–140 BCE (SPEC §9.2, §13).
-// Content package. Zero imports; all effects run through ctx.helpers at runtime.
+// Content package; shared crisis data is imported, all effects use ctx.helpers.
 // Source spine: 1–2 Maccabees; Josephus, Antiquitates Judaicae XII–XIII. BCE years
 // are negative. Every effects() body is guarded so nothing can throw in the tick loop.
+import { BALAS_EVENT } from './events_historical_crises.js';
 
 const _warned = new Set();
 function warnOnce(key, e) {
@@ -1811,55 +1813,7 @@ export const EVENTS_167 = [
   },
 
   // ── 18 ────────────────────────────────────────────────────────────────────
-  {
-    id: 'ev_balas_vs_demetrius',
-    title: 'Two Kings Bid for Jonathan',
-    desc: 'A young man has landed at Ptolemais who calls himself Alexander, son of '
-      + 'Antiochus Epiphanes, and half the world finds it convenient to believe him. '
-      + 'Demetrius the king and Alexander the pretender are now outbidding each other '
-      + 'for every armed man in Syria — and both have written to Jonathan. Demetrius '
-      + 'offers the release of the hostages and the right to muster troops; Alexander '
-      + 'sends a purple robe and a golden crown, and with them the high priesthood of '
-      + 'the nation, vacant these seven years. The brothers of Modein, who began as '
-      + 'outlaws of the hill country, are courted by kings.',
-    forTag: 'HAS',
-    date: { y: -152, m: 6 },
-    major: true,
-    aiOption: 0,
-    options: [
-      {
-        label: 'Take the crown and the priesthood from Alexander',
-        tooltip: 'At Tabernacles the high priest puts on the sacred vestments: +20 legitimacy, +50 treasury, +10 governance, "The High Priesthood" (-1 unrest everywhere); the kingdom turns on itself for 18 months (+10 warscore).',
-        effects: guard('ev_balas_vs_demetrius:0', (ctx) => {
-          const h = ctx.helpers;
-          h.adjust(ctx, 'HAS', { legitimacy: 20, treasury: 50, gov: 10 });
-          h.addTagModifier(ctx, 'HAS', {
-            id: 'high_priesthood', name: 'The High Priesthood', months: -1,
-            effects: { unrestAll: -1 },
-          });
-          h.addTagModifier(ctx, 'SEL', {
-            id: 'war_of_two_kings', name: 'A War of Two Kings', months: 18,
-            effects: { aiPassive: true, reinforceMult: 0.75 },
-          });
-          addWarscore(ctx, 'HAS', 10);
-          h.setFlag(ctx, 'highPriesthood', true);
-        }),
-      },
-      {
-        label: 'Take Demetrius’ concessions, and no man’s office',
-        tooltip: '+75 treasury, +5 legitimacy — and the kingdom’s civil war rages regardless (Seleucids passive 18 months, +5 warscore).',
-        effects: guard('ev_balas_vs_demetrius:1', (ctx) => {
-          const h = ctx.helpers;
-          h.adjust(ctx, 'HAS', { treasury: 75, legitimacy: 5 });
-          h.addTagModifier(ctx, 'SEL', {
-            id: 'war_of_two_kings', name: 'A War of Two Kings', months: 18,
-            effects: { aiPassive: true, reinforceMult: 0.75 },
-          });
-          addWarscore(ctx, 'HAS', 5);
-        }),
-      },
-    ],
-  },
+  BALAS_EVENT,
 
   // ── 19 ────────────────────────────────────────────────────────────────────
   {
@@ -1874,6 +1828,9 @@ export const EVENTS_167 = [
       + 'called a wedding party. Armies have been called worse things.',
     forTag: 'HAS',
     date: { y: -150, m: 4 },
+    when: (ctx) => ctx.game.flags.historicalCrises?.balas
+      ? ctx.helpers.historicalCrisisInfo(ctx, 'balas').winner === who(ctx, 'BAL')
+      : !!ctx.game.flags.highPriesthood,
     major: true,
     aiOption: 0,
     options: [
@@ -2039,83 +1996,7 @@ export const EVENTS_167 = [
   },
 
   // ── 22 ────────────────────────────────────────────────────────────────────
-  {
-    id: 'ev_tryphon',
-    title: 'The Gates of Ptolemais',
-    desc: 'Tryphon, who keeps a child king the way other men keep a seal-ring, feared '
-      + 'Jonathan and dealt with him accordingly: he received him at Ptolemais with '
-      + 'honors, persuaded him to send his army home, and shut the gates on him and the '
-      + 'thousand men who remained. The thousand are dead. Jonathan is in chains. In '
-      + 'Jerusalem, Simon stood up before the people in their fear and said: "You know '
-      + 'what things I and my brethren and my father’s house have done for the laws and '
-      + 'the sanctuary. All my brethren are slain for Israel’s sake, and I am left '
-      + 'alone. Far be it from me to spare my own life in any time of trouble, for I am '
-      + 'not better than my brethren." And the people answered with a great voice: "You '
-      + 'are our leader, in the place of Judah and Jonathan your brothers."',
-    forTag: 'HAS',
-    major: true,
-    trigger: safeTrigger('ev_tryphon', (ctx) =>
-      dateGE(ctx, -143, 9) && alive(ctx, 'HAS') && !!ctx.helpers.getFlag(ctx, 'judahFallen')),
-    aiOption: 0,
-    options: [
-      {
-        label: 'I am not better than my brethren',
-        tooltip: 'Jonathan is taken and will not return. -1 stability — and Simon (2/3/3) takes command, +5 legitimacy.',
-        effects: guard('ev_tryphon:0', (ctx) => {
-          const h = ctx.helpers;
-          h.killGeneral(ctx, 'HAS', 'Jonathan Apphus');
-          h.adjust(ctx, 'HAS', { stability: -1, legitimacy: 5 });
-          const a = biggestArmy(ctx, 'HAS', true);
-          if (a) {
-            a.general = { name: 'Simon Thassi', fire: 2, shock: 3, maneuver: 3 };
-          } else {
-            const at = firstControlled(ctx, 'HAS', ['Jerusalem', 'Emmaus', 'Lydda']);
-            if (at) {
-              h.spawnArmy(ctx, 'HAS', at, {
-                inf: 2, name: 'Army of Simon',
-                general: { name: 'Simon Thassi', fire: 2, shock: 3, maneuver: 3 },
-              });
-            }
-          }
-          h.setRuler(ctx, 'HAS', { name: 'Simon Thassi', title: 'High Priest and Leader', gov: 4, infl: 3, mar: 3, age: 50 });
-          h.setHeir(ctx, 'HAS', { name: 'John Hyrcanus', gov: 3, infl: 3, mar: 4, age: 21 });
-          h.setFlag(ctx, 'jonathanTaken', true);
-          h.notify(ctx, {
-            title: 'Simon Takes Command', type: 'bad', provName: 'Ptolemais',
-            text: 'Jonathan is seized by treachery at Ptolemais. The last brother leads.',
-          });
-        }),
-      },
-      {
-        label: 'Pay the hundred talents, though it be a snare',
-        tooltip: 'The silver and the children are sent, and Jonathan is not returned. −100 treasury, −1 stability, +15 legitimacy — none can say Simon grudged his brother’s ransom. Simon (2/3/3) takes command.',
-        effects: guard('ev_tryphon:1', (ctx) => {
-          const h = ctx.helpers;
-          h.killGeneral(ctx, 'HAS', 'Jonathan Apphus');
-          h.adjust(ctx, 'HAS', { stability: -1, legitimacy: 15, treasury: -100 });
-          const a = biggestArmy(ctx, 'HAS', true);
-          if (a) {
-            a.general = { name: 'Simon Thassi', fire: 2, shock: 3, maneuver: 3 };
-          } else {
-            const at = firstControlled(ctx, 'HAS', ['Jerusalem', 'Emmaus', 'Lydda']);
-            if (at) {
-              h.spawnArmy(ctx, 'HAS', at, {
-                inf: 2, name: 'Army of Simon',
-                general: { name: 'Simon Thassi', fire: 2, shock: 3, maneuver: 3 },
-              });
-            }
-          }
-          h.setRuler(ctx, 'HAS', { name: 'Simon Thassi', title: 'High Priest and Leader', gov: 4, infl: 3, mar: 3, age: 50 });
-          h.setHeir(ctx, 'HAS', { name: 'John Hyrcanus', gov: 3, infl: 3, mar: 4, age: 21 });
-          h.setFlag(ctx, 'jonathanTaken', true);
-          h.notify(ctx, {
-            title: 'Simon Takes Command', type: 'bad', provName: 'Ptolemais',
-            text: 'The ransom is paid and betrayed. Jonathan does not return; the last brother leads.',
-          });
-        }),
-      },
-    ],
-  },
+  TRYPHON_INVITATION,
 
   // ── 23 ────────────────────────────────────────────────────────────────────
   {
@@ -2511,8 +2392,8 @@ export const EVENTS_167 = [
   {
     id: 'ev_tryphon_ends',
     title: 'The Usurper Runs Out of Sea',
-    desc: 'Tryphon — who murdered Jonathan at Ptolemais, murdered the child king he '
-      + 'pretended to serve, and wore a diadem no assembly ever voted him — has been '
+    desc: 'Tryphon, the usurper who claimed to serve a child king before taking the '
+      + 'diadem himself, has been '
       + 'shut up in Dora by land and sea. He slipped out by ship to Orthosia while the '
       + 'engines battered the wall, and ran along his shrinking coast to Apamea, where '
       + 'he began; and there it ended. The chroniclers do not agree whether he died by '

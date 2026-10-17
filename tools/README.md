@@ -3,6 +3,46 @@
 Developer tooling. Plain Node, zero dependencies — none of this ships to the
 browser.
 
+## Court flag checks
+
+`node tools/tests/smoke213.mjs` checks artwork for all 210 catalog/revival
+courts, formation targets, chapter overrides, runtime rebrands, old borrowed
+flags, synthetic courts from old saves, and safe handling of edited saves.
+`smoke186.mjs` includes the revival catalog in its existing coverage and
+distinctness checks. `uitest72.mjs` checks actual SVG rendering, flat styles,
+start-screen identities, Herodian partitions and mobile Court headers.
+
+Open `tools/flags.html` through the development server to review all flags.
+Each card shows a 96px preview and the 14/24/34px game sizes. The search
+accepts court names or tags. This is a development gallery and requires no
+image files or external services.
+
+## Historical crises checks
+
+`node tools/tests/smoke211.mjs` exercises the Balas succession, the brothers’
+accord, and the Herodian inheritance against real bookmark maps. It checks
+resource conservation, both courts’ consent, treaty rates in the actual
+economy, binding truces, rival courts, tetrarchies, queued recruits, alternate
+successors, intervention, saves, formation, and the monthly simulation.
+
+With Playwright configured as below, `node tools/tests/uitest70.mjs` checks
+the actual event modal on desktop and mobile: icon stakes, historical notes,
+source links, affordability filtering, province division, saved-event rescan,
+and relayed multiplayer cards. `JU_BASE_URL` selects the local server and
+`JU_OUT` selects a screenshot directory.
+
+`node tools/tests/smoke212.mjs` covers the six additional historical turning
+points: Egyptian defections, Tryphon’s invitation and ransom, Nabataean and
+Lakhmid annexation/client/resistance branches, the peace of 628, and funded
+reparations investments. It checks real wars and tribute, scarce resources,
+both courts’ answers, passage expiry, human-chair protection, occupied land,
+monthly economy charges, interrupted deliveries, formation, old saves, and
+the dependent reprisals sequence. It also checks the January negotiations,
+September signature, refusal, and old reparations saves without duplicate
+windfalls. `node tools/tests/uitest71.mjs` exercises
+the invitation and reparations cards and the actual Court investment
+controls, including mobile layout, focus, and foreign read-only views.
+
 ## Campaign planning checks
 
 `node tools/tests/smoke209.mjs` checks fort-controlled routes, alternate

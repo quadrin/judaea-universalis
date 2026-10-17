@@ -24,6 +24,7 @@
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
+const { REVIVALS } = await import(R + '/js/data/revivals.js');
 const { FLAGS, flagChip } = await import(R + '/js/ui/icons.js');
 
 // SPEC §270: an emblem is a string of 24x24 body content, or an object that
@@ -49,7 +50,7 @@ const emblemOf = (tag) => {
   return isEmblem(art) ? art : null;
 };
 
-const courts = Object.keys(DEFINES.TAGS || {}).filter((t) => t !== 'WASTE');
+const courts = [...new Set([...Object.keys(DEFINES.TAGS || {}), ...REVIVALS.map(r => r.tag)])].filter((t) => t !== 'WASTE');
 const seated = new Set();
 for (const era of ERAS) for (const t of (era.bookmark.activeTags || [])) seated.add(t);
 
@@ -137,7 +138,7 @@ console.log('== §270: the richer emblem shape, and the trap that comes with it 
   const rich = { viewBox: '0 0 96 96',
     body: '<defs><linearGradient id="a"><stop offset="0" stop-color="#123456"/></linearGradient></defs>'
       + '<rect x="0" y="0" width="96" height="96" fill="url(#a)"/>' };
-  const legacy = FLAGS.SEL;
+  const legacy = FLAGS.PNT;
   try {
     FLAGS.__RICH_PROBE = rich;
     const probe = flagChip('__RICH_PROBE', DEFINES, 40);
@@ -152,7 +153,7 @@ console.log('== §270: the richer emblem shape, and the trap that comes with it 
   } finally {
     delete FLAGS.__RICH_PROBE;
   }
-  ok(typeof legacy === 'string' && flagChip('SEL', DEFINES, 20).includes('viewBox="0 0 24 24"'),
+  ok(typeof legacy === 'string' && flagChip('PNT', DEFINES, 20).includes('viewBox="0 0 24 24"'),
     'and a plain string emblem still renders on the 24x24 grid it was drawn for');
   const shapes = Object.keys(FLAGS).map((t) => typeof FLAGS[t]);
   ok(shapes.every((x) => x === 'string' || x === 'object'),

@@ -4,11 +4,12 @@ const costText = c => Object.entries(c).filter(([, v]) => v).map(([k, v]) => `${
 
 export function createChapterStrategyPanel(el, getActions) {
   const choices = {}, suppliers = {};
+  let investment = '';
   let binding = null;
   function refresh() {
     const actions = getActions(), report = actions?.getChapterStrategy?.();
     if (!report) { el.innerHTML = ''; return false; }
-    if (binding !== actions) { for (const key of Object.keys(choices)) delete choices[key]; binding = actions; }
+    if (binding !== actions) { for (const key of Object.keys(choices)) delete choices[key]; investment = ''; binding = actions; }
     const rows = report.actions.map(a => {
       const option = a.options.find(v => v.id === choices[a.key]) || a.options.find(v => v.ok) || a.options[0];
       if (option) choices[a.key] = option.id;
@@ -24,7 +25,22 @@ export function createChapterStrategyPanel(el, getActions) {
         <button class="pp-build-btn" type="button" data-cs-act="${a.key}"${check.ok ? '' : ' disabled'}>${esc(a.months ? 'Begin project' : 'Enact')}</button>
         ${check.ok ? '' : `<div class="chapter-reason">${esc(check.why)}</div>`}</article>`;
     }).join('');
+    const political = report.political;
+    const site = political?.provinces.find(p => p.id === investment) || political?.provinces.find(p => p.ok) || political?.provinces[0];
+    if (site) investment = site.id;
+    const investments = political ? `<article class="chapter-action political-investments">
+      <h4>${icon('ship', 'icon-sm')} Reparations goods · ${esc(political.priority)}</h4>
+      <p>${political.goods} goods available · ${political.delivered} delivered · ${political.projects} completed projects</p>
+      <progress value="${Math.max(0, 144 - political.months)}" max="144" aria-label="Reparations delivery period"></progress>
+      <p>${political.months} months remaining${political.why ? ' · ' + esc(political.why) : ''}</p>
+      <label>Invest in province<select data-cs-invest-site aria-label="Reparations investment province">${political.provinces.map(p => `<option value="${esc(p.id)}"${p.id === site?.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
+      <button type="button" class="pp-build-btn" data-cs-invest${site?.ok ? '' : ' disabled'}>Invest 96 goods</button>
+      ${site?.why ? `<div class="chapter-reason">${esc(site.why)}</div>` : ''}
+      <button type="button" class="pp-build-btn" data-cs-compromise${political.compromise.ok ? '' : ' disabled'}>Domestic compromise · 48 goods · 30 influence</button>
+      ${political.compromise.why ? `<div class="chapter-reason">${esc(political.compromise.why)}</div>` : ''}
+    </article>` : '';
     const html = `<h3>${esc(report.title)}</h3><p>${esc(report.summary)}</p>
+      ${investments}
       <p class="chapter-status">${esc(report.phase)}${report.actions.some(a => a.key === 'regulars') ? ' · ' + report.reforms + '/3 army reforms' : ''}${report.mobilization ? ' · Mobilization ' + report.mobilization : ''}${report.equipment ? ' · ' + report.equipment + ' equipment sets' : ''}</p>
       ${report.patron ? `<div class="chapter-agreement"><b>${esc(report.patron.name)}</b> · ${report.patron.months} months remaining<br>${Math.round(report.patron.rate * 1000) / 10}% revenue · ${report.patron.manpower} manpower/month<br>${report.service} fulfilled months · ${report.rights}/2 autonomy guarantees · standing ${report.standing}/100${report.patron.arrears ? '<br>Missed service: ' + report.patron.arrears + '/3 months' : ''}</div>` : ''}
       ${report.monthlyOut || report.monthlyIn ? `<p>Monthly commitments: ${report.monthlyOut.toFixed(1)} talents out · ${report.monthlyIn.toFixed(1)} in</p>` : ''}
@@ -50,11 +66,18 @@ export function createChapterStrategyPanel(el, getActions) {
     return true;
   }
   el.addEventListener('change', e => {
+    if (e.target.hasAttribute('data-cs-invest-site')) investment = e.target.value;
     if (e.target.dataset.csTarget) choices[e.target.dataset.csTarget] = e.target.value;
     if (e.target.dataset.csSupplier) suppliers[e.target.dataset.csSupplier] = e.target.value;
     refresh();
   });
   el.addEventListener('click', e => {
+    const invest = e.target.closest('[data-cs-invest]'), compromise = e.target.closest('[data-cs-compromise]');
+    if (invest || compromise) {
+      const button = invest || compromise; if (button.disabled) return;
+      if (invest) getActions().investReparations(Number(investment)); else getActions().compromiseReparations();
+      refresh(); return;
+    }
     const button = e.target.closest('[data-cs-act]'); if (!button || button.disabled) return;
     const actions = getActions(), report = actions.getChapterStrategy(), key = button.dataset.csAct;
     const action = report.actions.find(a => a.key === key), option = action?.options.find(v => v.id === choices[key]);

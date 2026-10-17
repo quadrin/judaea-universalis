@@ -439,6 +439,8 @@ export const DEFINES = {
     ROM: 'monarchy', JUD: 'theocracy', HAS: 'theocracy', SEL: 'monarchy',
     PTO: 'monarchy', PAR: 'monarchy', NAB: 'monarchy', ARM: 'monarchy',
     AGR: 'monarchy', HYR: 'theocracy', ARI: 'monarchy', HER: 'monarchy',
+    DMT: 'monarchy', LKH: 'monarchy',
+    BAL: 'monarchy', HPA: 'monarchy', HPH: 'monarchy',
     ATG: 'monarchy', OSR: 'monarchy', ADI: 'monarchy', CHX: 'monarchy',
     CMG: 'monarchy', CYZ: 'monarchy', ITU: 'theocracy',
     SAM: 'theocracy', // the High Priesthood is the office; a king is the thing in dispute
@@ -971,6 +973,18 @@ export const DEFINES = {
       description: 'The mountain tetrarchy of Chalcis: priest-kings, archers, and tolls on every road through Lebanon.',
       ideas: { hillDefBonus: 1, manpowerMult: 1.05 },
     },
+    BAL: {
+      flag: 'BAL', name: 'Alexander Balas’s Claim', adj: 'Balas’s', color: [160, 74, 112], religion: 'hellenism', culture: 'greek', capital: 'Ptolemais',
+      description: 'The rival Seleucid court of Alexander Balas, whose claimed descent from Antiochus IV was disputed.', ideas: {},
+    },
+    HPA: {
+      flag: 'HPA', name: 'Galilee and Peraea', adj: 'Antipan', color: [154, 100, 65], religion: 'judaism', culture: 'judean', capital: 'Sepphoris',
+      description: 'The tetrarchy assigned to Herod Antipas in the Augustan settlement.', ideas: {},
+    },
+    HPH: {
+      flag: 'HPH', name: "Philip's Tetrarchy", adj: 'Philippian', color: [112, 116, 166], religion: 'judaism', culture: 'judean', capital: 'Caesarea Philippi',
+      description: 'The northeastern tetrarchy assigned to Philip after Herod’s death.', ideas: {},
+    },
     HER: {
       name: "Herod's Judaea", adj: "Herod's", color: [148, 108, 42], religion: 'judaism', culture: 'idumean', capital: 'Hebron',
       description: 'The Idumean commoner with a Roman decree: a crown of paper, to be made iron.',
@@ -1005,6 +1019,14 @@ export const DEFINES = {
       name: 'Sasanian Persia', adj: 'Sasanian', color: [188, 128, 44], religion: 'zoroastrianism', culture: 'persian', capital: 'Seleucia-Ctesiphon',
       description: 'The House of Sasan at high tide: the royal banner, the armored lancers, and a King of Kings who dreams of Alexander in reverse.',
       ideas: { moraleMult: 1.05, reinforceMult: 1.1 },
+    },
+    DMT: {
+      name: 'Demetrius II’s Claim', adj: 'Demetrian', flag: 'DMT', color: [92, 105, 161], religion: 'hellenism', culture: 'greek', capital: 'Ptolemais',
+      description: 'The Seleucid claim of Demetrius II, supported by Ptolemy VI against Alexander Balas.', ideas: {},
+    },
+    LKH: {
+      name: 'The Lakhmid Kingdom', adj: 'Lakhmid', flag: 'LKH', color: [162, 122, 74], religion: 'hellenism', culture: 'arab', capital: 'Najaf',
+      description: 'The Arab client kings at al-Hira, commanding Persia’s desert frontier.', ideas: {},
     },
     GHA: {
       name: 'Ghassanids', adj: 'Ghassanid', color: [150, 44, 52], religion: 'christianity', culture: 'arab', capital: 'Bostra',

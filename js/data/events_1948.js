@@ -3384,16 +3384,15 @@ export const EVENTS_1948 = [
     desc: 'Ben-Gurion resigns — again, and this time it holds — and goes back to his '
       + 'hut at Sde Boker to write and to quarrel by mail. Levi Eshkol inherits: a '
       + 'compromiser, a treasurer, a man who speaks four languages and haggles in all '
-      + 'of them. The reparations economy is pouring foundations faster than the '
-      + 'ideologues can argue about the money\'s smell, and in the south something '
-      + 'unphotographed hums at Dimona.',
+      + 'of them. Housing, industry and military supply compete for the budget. '
+      + 'What he can build depends on the investments already made.',
     forTag: 'ISR',
     date: { y: 1963, m: 6 },
     aiOption: 0,
     options: [
       {
         label: 'Eshkol — the manager, not the prophet',
-        tooltip: 'Levi Eshkol becomes Prime Minister: +1 stability, and the reparations boom pays +5% income for 36 months.',
+        tooltip: 'Levi Eshkol becomes Prime Minister: +1 stability, and completed reparations investments can support +5% income for 36 months.',
         effects: guard('ev_i_eshkol:0', (ctx) => {
           if (!alive(ctx, 'ISR')) return;
           ctx.helpers.setRuler(ctx, 'ISR', { name: 'Levi Eshkol', title: 'Prime Minister', gov: 4, infl: 3, mar: 2, age: 67 });
@@ -3401,7 +3400,8 @@ export const EVENTS_1948 = [
           // On the road where the shilumim were refused (SPEC §119) there is
           // no reparations economy for the treasurer to inherit — the boom is
           // the road's own, not the succession's.
-          if (!ctx.helpers.getFlag(ctx, 'shilumimRefused')) {
+          const programme = ctx.game.flags.historicalCrises?.reparations;
+          if (programme ? programme.invested >= 96 : !ctx.helpers.getFlag(ctx, 'shilumimRefused')) {
             ctx.helpers.addTagModifier(ctx, 'ISR', {
               id: 'reparations_boom', name: 'The Reparations Economy', months: 36, effects: { incomeMult: 1.05 },
             });
@@ -6133,7 +6133,7 @@ export const EVENTS_1948 = [
 
   {
     id: 'ev_i_the_shilumim',
-    title: 'The Shilumim',
+    title: 'The Vote to Open Negotiations',
     desc: 'The arithmetic is on one page: the state has doubled its population, the '
       + 'treasury is running on austerity coupons, and across the sea there is a German '
       + 'government prepared to pay — goods, ships, machinery, oil — three billion '
@@ -6146,6 +6146,7 @@ export const EVENTS_1948 = [
       + 'vote.',
     forTag: 'ISR',
     date: { y: 1952, m: 1 },
+    when: ctx => !ctx.game.flags.historicalCrises?.reparations && !ctx.game.flags.shilumimSigned && !ctx.game.flags.shilumimRefused,
     major: true,
     aiOption: 0,
     historical: 'The Knesset approved negotiations 61–50 with the windows breaking, the '
@@ -6154,48 +6155,26 @@ export const EVENTS_1948 = [
       + 'second decade.',
     options: [
       {
-        label: 'Sign. The dead would not vote to keep us poor',
-        tooltip: 'The Luxembourg road: +300 treasury over the agreement and "The Shilumim" '
-          + '(+12% income, 144 months) as the ports and the grid rise on the transfer '
-          + 'goods. −10 legitimacy, the Revisionists −25, and +1.5 unrest everywhere for '
-          + '12 months — the square empties slowly, and it does not forgive.',
+        label: 'Authorize negotiations with West Germany',
+        stakes: [{ icon: 'quill', label: 'Open talks' }, { icon: 'laurel', label: '−10 legitimacy' }],
+        tooltip: '−10 legitimacy and +1.5 unrest for 12 months. Open negotiations; the later agreement still requires a programme choice and Germany’s signature. No cash or goods arrive with this vote.',
         effects: guard('ev_i_shilumim:0', (ctx) => {
           const h = ctx.helpers;
-          h.adjust(ctx, 'ISR', { treasury: 300, legitimacy: -10 });
-          h.addTagModifier(ctx, 'ISR', {
-            id: 'the_shilumim', name: 'The Shilumim', months: 144,
-            effects: { incomeMult: 1.12 },
-          });
+          h.adjust(ctx, 'ISR', { legitimacy: -10 });
           h.addTagModifier(ctx, 'ISR', {
             id: 'the_broken_windows', name: 'The Broken Windows', months: 12,
             effects: { unrestAll: 1.5 },
           });
-          h.factionShift(ctx, 'ISR', 'revisionists', -25);
-          h.setFlag(ctx, 'shilumimSigned', true);
-          h.chronicle(ctx, 'era', 'The agreement is signed at Luxembourg by men who do not '
-            + 'shake hands. The first cargoes are cranes and rails and generators, and the '
-            + 'state builds its second decade with them, keeping the invoices forever.');
+          h.setFlag(ctx, 'shilumimNegotiations', true);
+          h.chronicle(ctx, 'era', 'The Knesset authorizes negotiations with West Germany. The terms and signature remain to be agreed.');
         }),
       },
       {
-        label: 'Refuse. There are things a state does not invoice',
-        tooltip: 'The road not taken: +15 legitimacy, the Revisionists +25, +1 stability '
-          + '— the square empties singing — and "The Long Austerity" (−8% income, 96 '
-          + 'months): the coupons stay, the camps wait longer, and the state pays for its '
-          + 'principle in the currency principles are paid in.',
+        label: 'Refuse negotiations',
+        stakes: [{ icon: 'laurel', label: '+12 legitimacy' }, { icon: 'coins', label: 'Continued austerity' }],
+        tooltip: '+12 legitimacy, +1 stability, Revisionists +25 and Coalition −10; eight years of −8% income under continued austerity. Block this reparations agreement.',
         effects: guard('ev_i_shilumim:1', (ctx) => {
-          const h = ctx.helpers;
-          h.adjust(ctx, 'ISR', { legitimacy: 15, stability: 1 });
-          h.addTagModifier(ctx, 'ISR', {
-            id: 'the_long_austerity', name: 'The Long Austerity', months: 96,
-            effects: { incomeMult: 0.92 },
-          });
-          h.factionShift(ctx, 'ISR', 'revisionists', 25);
-          h.setFlag(ctx, 'shilumimRefused', true);
-          h.chronicle(ctx, 'era', 'The Knesset refuses the payments and the square empties '
-            + 'singing. The austerity books are reprinted for another decade, and the '
-            + 'refusal is filed where the state keeps the things it is — which is not the '
-            + 'treasury.');
+          ctx.helpers.choosePoliticalCrisis(ctx, 'reparations', 'decline');
         }),
       },
     ],
@@ -6219,6 +6198,7 @@ export const EVENTS_1948 = [
     minYear: 1959,
     maxYear: 1963,
     trigger: safeTrigger('ev_i_shilumim_built', (ctx) => alive(ctx, 'ISR')
+      && !ctx.game.flags.historicalCrises?.reparations
       && (ctx.helpers.getFlag(ctx, 'shilumimSigned') || ctx.helpers.getFlag(ctx, 'shilumimRefused'))
       && !ctx.helpers.getFlag(ctx, 'shilumimReckoned')),
     aiOption: 0,

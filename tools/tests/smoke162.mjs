@@ -30,6 +30,7 @@ const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
 const { GENERIC_EVENTS } = await import(R + '/js/data/events_generic.js');
+const { EVENTS_66_YEARS } = await import(R + '/js/data/events_66ce_years.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx } = await import(R + '/js/sim/init.js');
 const fs = await import('fs');
@@ -130,12 +131,13 @@ console.log('== after the years package and before the shared pools ==');
     const list = ERAS.find((e) => e.bookmark.id === id).events;
     const mine = [];
     const years = [];
+    const yearIds = id === '66ce' ? new Set(EVENTS_66_YEARS.map(c => c.id)) : null;
     let firstShared = Infinity;
     for (let i = 0; i < list.length; i++) {
       const c = list[i];
       if (!c || !c.id) continue;
       if (c.id.startsWith(prefix)) mine.push(i);
-      else if (/^ev\d*y_|^ev48y_/.test(c.id)) years.push(i);
+      else if (yearIds ? yearIds.has(c.id) : /^ev\d*y_|^ev48y_/.test(c.id)) years.push(i);
       else if (sharedIds.has(c.id) && i < firstShared) firstShared = i;
     }
     ok(years.length && Math.min(...mine) > Math.max(...years),
@@ -312,3 +314,5 @@ console.log('== the Keepers\' package names its own tags, not the player\'s chai
 }
 
 console.log(failures ? failures + ' FAILURES' : 'smoke162: ALL PASS');
+
+process.exitCode = failures ? 1 : 0;

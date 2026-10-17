@@ -181,7 +181,8 @@ export const EVENTS_67_AFTER = [
     date: { y: 6, m: 6 },
     world: true,
     major: true,
-    when: safeTrigger('ev4_c_the_petition:when', (ctx) => clientKingdom(ctx)),
+    when: safeTrigger('ev4_c_the_petition:when', (ctx) => clientKingdom(ctx)
+      && (!ctx.game.flags.historicalCrises?.herod || ctx.game.tags[crown(ctx)]?.ruler?.name === 'Archelaus')),
     aiOption: 0,
     historical: 'The petition succeeded. Archelaus was deposed to Vienne, Judaea became a province of the third rank, and Coponius arrived from Caesarea.',
     options: [

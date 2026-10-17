@@ -959,6 +959,13 @@ button {
 .ev-opts { display: flex; flex-direction: column; gap: 8px; }
 .ev-opt { width: 100%; text-align: center; }
 .ev-opt-label { display: block; }
+.ev-stakes { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px 12px; margin-top: 5px; font-size: 12px; }
+.ev-stake { display: inline-flex; align-items: center; gap: 4px; }
+.ev-stake .icon { flex: 0 0 auto; }
+.ev-history { margin-top: 14px; font-size: 12px; line-height: 1.5; color: var(--ink); }
+.ev-history summary { cursor: pointer; display: flex; align-items: center; gap: 5px; min-height: 32px; }
+.ev-history p { margin: 8px 0 0; }
+.ev-history a { color: inherit; text-decoration: underline; overflow-wrap: anywhere; }
 /* A foreign court's decision arrives as a notice (SPEC §70): one button, and
    this line explains whose choice it was. */
 .ev-decider {
@@ -1663,59 +1670,44 @@ button {
 
 /* ============================================================
    Country flag chips (js/ui/icons.js flagChip)
-   Rounded rect in the tag's color (background-color comes inline
-   from flagChip; the gradient here lays a top-sheen over it), thin
-   gold border + inner highlight border, two-tone emblem on the
-   field. Width/height come inline from flagChip(size).
+   Flat vector banners, clipped to the existing thumbnail footprint.
    ============================================================ */
 .fchip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  border: 1px solid rgba(201, 162, 39, 0.75);
-  border-radius: 3px;
-  overflow: hidden; /* full-field emblems (ISR) clip to the chip's corners */
-  color: #f0e3ba; /* fallback-abbr ink */
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.30) 0%,
-    rgba(255, 255, 255, 0.10) 30%,
-    rgba(0, 0, 0, 0.05) 55%,
-    rgba(0, 0, 0, 0.24) 100%
-  );
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-    inset 0 -3px 5px rgba(0, 0, 0, 0.30),
-    0 1px 2px rgba(0, 0, 0, 0.4);
-  vertical-align: middle;
+  border: 1px solid #9d8450;
+  border-radius: 2px;
   overflow: hidden;
+  color: #f0e3ba;
+  background-image: none;
+  box-shadow: none;
+  vertical-align: middle;
 }
 .fchip svg {
-  width: 84%;
-  height: 84%;
+  width: 100%;
+  height: 100%;
   display: block;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+  overflow: hidden;
+  filter: none;
 }
 .fchip-abbr {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 /* Clickable chips: anywhere a linked flag appears, it opens that court. */
 .fchip-link { cursor: pointer; }
 .fchip-link:hover {
   border-color: #f4d76a;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-    0 0 6px rgba(224, 194, 90, 0.55),
-    0 1px 2px rgba(0, 0, 0, 0.4);
+  outline: 1px solid #f4d76a;
 }
+
 .tb-flag .fchip { border-color: var(--gold); }
 .ol-name .fchip { margin-right: 4px; vertical-align: -3px; }
-.ol-name .fchip svg { filter: none; } /* tiny sizes smear with drop-shadow */
+.ol-name .fchip svg { filter: none; }
 
 /* ============================================================
    Map labels (js/map/labels.js) — EU4-style legibility:
@@ -2275,7 +2267,7 @@ html, body {
 .tb-flag { cursor: pointer; border-radius: 4px; }
 .tb-flag:hover .fchip {
   border-color: var(--gold-bright);
-  box-shadow: 0 0 8px rgba(201, 162, 39, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  outline: 1px solid var(--gold-bright);
 }
 .tb-flag:hover .tb-flag-tag { color: var(--gold-bright); }
 .tb-break { display: none; }

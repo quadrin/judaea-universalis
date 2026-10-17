@@ -1,3 +1,4 @@
+import { monthlyPoliticalCrises } from './political_turning_points.js';
 // Judaea Universalis — daily tick orchestration (SPEC §6.3). DOM-free.
 
 import {
@@ -105,6 +106,7 @@ function monthlyBlock(ctx) {
   const g = ctx.game;
   safe('modifiers', () => tickModifiers(ctx));
   safe('chapterStrategy', () => monthlyChapterStrategies(ctx));
+  safe('politicalCrises', () => monthlyPoliticalCrises(ctx));
   if (g.date.m === 1) safe('growth', () => yearlyGrowth(ctx)); // towns grow each January (SPEC §24)
   safe('construction', () => monthlyConstruction(ctx)); // before economy: a finished market earns this month
   safe('expeditions', () => monthlyExpeditions(ctx)); // camps in the waste check their supply line (SPEC §64)

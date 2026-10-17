@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Court flags · Judaea Universalis</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  html,body { margin:0; min-height:100%; height:auto; overflow:auto; background:#efe5ce; color:#32261f; }
+  main { max-width:1160px; margin:auto; padding:28px; font-family:Georgia,serif; }
+  h1 { margin:0 0 8px; font-size:30px; }
+  p { max-width:70ch; line-height:1.5; }
+  input { box-sizing:border-box; width:100%; padding:12px; margin:12px 0; color:#32261f; background:#fff7e6; border:1px solid #aa9368; font:inherit; }
+  .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(154px,1fr)); gap:12px; }
+  article { display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:16px 8px; border:1px solid #c8b68e; background:#f8efd9; }
+  article h2 { font-size:14px; margin:0; min-height:34px; display:flex; align-items:center; }
+  .samples { display:flex; align-items:center; gap:8px; }
+  .tag { font:11px system-ui,sans-serif; letter-spacing:.12em; color:#66573e; }
+  article p { margin:0; font-size:11px; line-height:1.4; }
+  @media(max-width:500px) { main { padding:16px; } .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+</style>
+<main>
+  <h1>Court flags</h1>
+  <p>Flat SVG standards with solid colours. Ancient and alternative banners are original game designs inspired by period motifs, rather than claims that these exact flags existed. Modern national flags retain their established designs.</p>
+  <label for="search">Find a court</label><input id="search" type="search" placeholder="Name or tag">
+  <p id="count"></p><div class="gallery" id="gallery"></div>
+</main>
+<script type="module">
+  import { DEFINES } from '../js/data/defines.js';
+  import { REVIVALS } from '../js/data/revivals.js';
+  import { FLAT_FLAGS } from '../js/ui/flag_art.js';
+  import { flagChip } from '../js/ui/icons.js';
+  const courts = new Map(REVIVALS.map(r => [r.tag, r]));
+  for (const [tag, def] of Object.entries(DEFINES.TAGS)) if (tag !== 'WASTE') courts.set(tag, def);
+  const first = ['HPA','HPH','HER','BAL','DMT','LKH','HAS','JUD','MLI','ISL','JDH','SAM','SEL','PTO','BYZ','SAS'];
+  const entries = [...courts].sort(([a],[b]) => {
+    const x = first.indexOf(a), y = first.indexOf(b);
+    return (x < 0 ? 999 : x) - (y < 0 ? 999 : y) || a.localeCompare(b);
+  });
+  function render() {
+    const search = document.getElementById('search').value.trim().toLowerCase(), host = document.getElementById('gallery');
+    host.replaceChildren(); let n = 0;
+    for (const [tag, def] of entries) {
+      if (search && !(tag + ' ' + def.name).toLowerCase().includes(search)) continue;
+      const card = document.createElement('article'); card.dataset.tag = tag;
+      const name = document.createElement('h2'); name.textContent = def.name;
+      const big = document.createElement('div'); big.innerHTML = flagChip(tag, DEFINES, 96);
+      const samples = document.createElement('div'); samples.className = 'samples';
+      samples.innerHTML = [14,24,34].map(size => flagChip(tag, DEFINES, size)).join('');
+      const key = document.createElement('span'); key.className = 'tag'; key.textContent = tag;
+      card.append(big,name,samples,key);
+      if (FLAT_FLAGS[tag]?.note) { const note = document.createElement('p'); note.textContent = FLAT_FLAGS[tag].note; card.append(note); }
+      host.append(card); n++;
+    }
+    document.getElementById('count').textContent = n + ' / ' + courts.size + ' courts · 96px preview and 14 / 24 / 34px game sizes';
+  }
+  document.getElementById('search').addEventListener('input',render); render();
+</script>
+</html>

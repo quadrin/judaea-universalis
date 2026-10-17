@@ -498,13 +498,18 @@ export function sameSide(ctx, a, b) {
   }
   return false;
 }
+export function militaryPassage(ctx, tag, owner) {
+  const d = ctx.game.date, current = (d.y > 0 ? d.y - 1 : d.y) * 12 + d.m - 1;
+  return !isHostile(ctx, tag, owner) && (ctx.game.flags.politicalCrises?.access || []).some(v =>
+    v.until > current && livingTag(ctx, v.owner) === owner && livingTag(ctx, v.grantee) === tag);
+}
 export function canEnter(ctx, tag, provId) {
   const p = ctx.byId(provId);
   if (!p || p.impassable) return false;
   if (tag === 'REB') return true;
   if (p.owner === tag) return true;
   if (isHostile(ctx, tag, p.owner)) return true;
-  if (sameSide(ctx, tag, p.owner)) return true;
+  if (sameSide(ctx, tag, p.owner) || militaryPassage(ctx, tag, p.owner)) return true;
   // Unclaimed land nobody governs is walkable by anyone. Before SPEC §160
   // this line could not be reached: every WASTE cell in the game was also
   // `impassable: true` — all nine of them were deep desert — so the check
@@ -2936,8 +2941,8 @@ export function secedeTagCore(ctx, from, to, opts = {}) {
   parent.opinion[to] = meet;
   t.opinion[from] = meet;
 
-  chronicle(ctx, 'era', (t.name || to) + ' leaves ' + (parent.name || from)
-    + ': the union is dissolved and both halves keep their own capital.');
+  chronicle(ctx, 'era', opts.chronicle || ((t.name || to) + ' leaves ' + (parent.name || from)
+    + ': the union is dissolved and both halves keep their own capital.'));
   return t;
 }
 

@@ -842,7 +842,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setText(refs.factionsTitle, terms.factions || 'Estates');
     setText(refs.courtTitle, terms.court || 'The Court');
 
-    setHtml(refs.flag, flagChip(tag, DEFINES, 22, false, g));
+    setHtml(refs.flag, flagChip(tag, DEFINES, 34, false, g));
     setText(refs.name, (t.name || tag) + (t.alive === false ? ' †' : ''));
     // Foreign dress: the note, and our own flag as the way home.
     refs.foreignNote.classList.toggle('hidden', self);

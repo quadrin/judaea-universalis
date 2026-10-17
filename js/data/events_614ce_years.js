@@ -175,20 +175,22 @@ export const EVENTS_614_YEARS = [
   {
     id: 'ev614y_the_oath_and_the_fast',
     title: 'The Oath and the Fast',
-    desc: 'The emperor comes back. The Persian war is over, the Cross is going up to Jerusalem '
-      + 'in his own hands, and on the road the delegations meet him — including one from the '
-      + 'Jews of Galilee, whose leader had entertained him at Tiberias and had his safety '
-      + 'sworn to, in writing, by the emperor himself.\n\n'
-      + 'The monks and the clergy of the city put the argument to him: that an oath sworn to '
-      + 'the enemies of Christ does not bind, and that the sin of breaking it, if it is a sin, '
-      + 'will be taken on by the church, which will keep a fast every year in perpetuity in '
-      + 'expiation. He accepts the argument. The reprisals begin in the spring. The fast is '
-      + 'still being kept by Coptic congregations twelve centuries later, which is the only '
-      + 'part of the transaction anybody afterwards is proud of.',
+    desc: 'Roman authority has returned to the Galilee after the peace. Local leaders '
+      + 'seek assurances against reprisals. Later Christian accounts describe an imperial '
+      + 'promise of protection, clerical pressure to break it, and a fast associated with '
+      + 'the ensuing violence. The details and chronology of these accounts are disputed.\n\n'
+      + 'In this campaign, the exposed villages can be evacuated, their guarantees defended '
+      + 'through petitions, or their households helped to rebuild. A recognized local state '
+      + 'is protected from this event.',
     forTag: 'player',
-    date: { y: 628, m: 4 },
+    minYear: 629, maxYear: 632,
+    trigger: (ctx) => {
+      const r = ctx.game.flags.historicalCrises?.peace628;
+      return !!r && r.status === 'settled' && !['recognized', 'petition', 'pending', 'independent'].includes(r.local)
+        && ['Tiberias', 'Sepphoris'].some(n => ctx.helpers.controls(ctx, 'BYZ', n));
+    },
     aiOption: 0,
-    historical: 'The sources record Heraclius\' sworn amnesty, the clerical argument that it did not bind, the massacres that followed, and the annual fast of atonement the Egyptian church undertook.',
+    historical: 'Later Christian traditions connect Heraclius, a broken promise of protection, reprisals against Jews, and an expiatory fast. These are retrospective accounts with disputed details and chronology. The village responses and their numerical effects are gameplay alternatives.',
     options: [
       {
         label: 'Get the villages out before the spring',

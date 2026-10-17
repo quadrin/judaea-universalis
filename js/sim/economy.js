@@ -261,10 +261,11 @@ export function incomeBreakdown(ctx, tag) {
     const om = tagDef(ctx, tag).offmap;
     out.offmapIn = om ? num(om.income, 0) : 0;
   } catch (e) { out.offmapIn = 0; }
+  out.politicalOut = num(g.flags.politicalCrises?.monthlyExpenses?.[tag]);
   out.chapterIn = num(t.chapterStrategy?.monthlyIn);
   out.chapterOut = num(t.chapterStrategy?.monthlyOut);
   out.net = out.income + out.tributeIn + out.subsIn + out.offmapIn + out.chapterIn
-    - out.tributeOut - out.subsOut - out.maint - out.navy - out.forts - out.fuel - out.admin - out.develop - out.interest - out.chapterOut;
+    - out.politicalOut - out.tributeOut - out.subsOut - out.maint - out.navy - out.forts - out.fuel - out.admin - out.develop - out.interest - out.chapterOut;
   return out;
 }
 
@@ -334,7 +335,7 @@ export function runMonthlyEconomy(ctx) {
       // The markets' share of it (SPEC §292): the AI budgets its army on the
       // steadier part of its income (ai.js aiRecruit).
       t.marketTrade = Math.round((num(bd.trade) - num(bd.tolls)) * 100) / 100;
-      t.expenses = Math.round((bd.maint + bd.navy + bd.forts + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut + bd.chapterOut) * 100) / 100;
+      t.expenses = Math.round((bd.maint + bd.navy + bd.forts + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut + bd.chapterOut + bd.politicalOut) * 100) / 100;
       t.treasury = num(t.treasury) + bd.net;
       // The court consumes what the country cannot justify holding (SPEC §101).
       const bleed = hoardBleed(ctx, tag, bd);
@@ -396,6 +397,7 @@ export function explainIncome(ctx, tag) {
     if (num(bd.tolls) > 0) rows.push({ label: 'Tolls', value: r2(bd.tolls) });
     if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
     if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
+    if (bd.politicalOut > 0) rows.push({ label: 'Treaty goods deliveries', value: r2(-bd.politicalOut) });
     if (bd.chapterIn > 0) rows.push({ label: 'Chapter agreements received', value: r2(bd.chapterIn) });
     if (bd.chapterOut > 0) rows.push({ label: 'Chapter projects & obligations', value: r2(-bd.chapterOut) });
     if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });

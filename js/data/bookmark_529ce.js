@@ -181,6 +181,7 @@ const OWNERS = {};
 for (const n of BYZ_LANDS) OWNERS[n] = 'BYZ';
 for (const n of SAS_LANDS) OWNERS[n] = 'SAS';
 for (const n of GHA_LANDS) OWNERS[n] = 'GHA';
+OWNERS.Najaf = 'LKH';
 // SPEC §162: the Galilee is PALAESTINA SECUNDA in 529, not a kingdom. There
 // was no Jewish state anywhere between Bar Kokhba and 1948, and this chapter
 // was quietly asserting one — JUD held these four towns outright, with no
@@ -260,6 +261,7 @@ export const BOOKMARK_529 = {
 
   // The map speaks its era (SPEC §25).
   provinceNames: {
+    'Najaf': 'al-Hira',
     'Byzantion': 'Constantinople',
     // The §230 districts under the names their own age used.
     'Shobak': 'Gebalene',             // the highland of Seir, Palaestina Tertia
@@ -400,9 +402,9 @@ export const BOOKMARK_529 = {
   // the Christian garrison town five miles away, so leaving them folded would
   // give the community's own farmland to the thing watching it. This chapter
   // is four hill provinces or it is nothing.
-  activeProvinces: ['Jenin', 'Tulkarm', 'Qalqilya'],
+  activeProvinces: ['Jenin', 'Tulkarm', 'Qalqilya', 'Najaf'],
 
-  activeTags: ['SAM', 'BYZ', 'JUD', 'GHA', 'SAS',
+  activeTags: ['SAM', 'BYZ', 'JUD', 'GHA', 'SAS', 'LKH',
     // The political west (SPEC §173): the successor kingdoms four years
     // before Belisarius sails, seated by js/data/political_maps.js. The
     // reconquest is not scripted; the courts, wars and successions of §163
@@ -779,6 +781,7 @@ export const BOOKMARK_529 = {
     // The phylarchate answers Constantinople — and in this chapter it is the
     // instrument, not the background.
     if (g.tags.GHA) g.tags.GHA.overlord = 'BYZ';
+    if (g.tags.LKH) { g.tags.LKH.overlord = 'SAS'; g.tags.LKH.treasury = 120; g.tags.LKH.manpower = 3000; }
 
     // The client kingdom answers Aksum (SPEC §208): Procopius I.20 — Kaleb
     // set Sumyafa Ashwa over the Himyarites, took his tribute, and sailed
@@ -941,6 +944,7 @@ export const BOOKMARK_529 = {
 
   // Courts of the spring of 529.
   rulers: {
+    LKH: { name: 'al-Mundhir III', title: 'King of Hira', gov: 2, infl: 3, mar: 3, age: 45 },
     SAM: {
       name: 'Julianus ben Sabar', title: 'King of the Keepers',
       gov: 2, infl: 3, mar: 3, age: 44,

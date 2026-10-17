@@ -125,7 +125,7 @@ console.log('== appended after the chapter\'s chain and before the shared pools 
 }
 
 // ---------------------------------------------------------------------------
-console.log('== dated, windowed, historical, and answerable ==');
+console.log('== dated or bounded after peace, historical, and answerable ==');
 {
   const everyId = new Map();
   for (const era of ERAS) {
@@ -141,9 +141,12 @@ console.log('== dated, windowed, historical, and answerable ==');
     const start = era.bookmark.startDate.y;
     const bad = [];
     for (const c of pack) {
-      if (!c.date || !Number.isFinite(c.date.y) || !(c.date.m >= 1 && c.date.m <= 12)) bad.push(c.id + ':date');
-      else if (c.date.y < start || c.date.y > lastYear) bad.push(c.id + ':' + c.date.y);
-      if (typeof c.trigger === 'function') bad.push(c.id + ':trigger');
+      const afterPeace = c.id === 'ev614y_the_oath_and_the_fast';
+      if (afterPeace) {
+        if (c.minYear !== 629 || c.maxYear !== 632 || typeof c.trigger !== 'function') bad.push(c.id + ':peace-window');
+      } else if (!c.date || !Number.isFinite(c.date.y) || !(c.date.m >= 1 && c.date.m <= 12)) bad.push(c.id + ':date');
+      else if (c.date && (c.date.y < start || c.date.y > lastYear)) bad.push(c.id + ':' + c.date.y);
+      if (!afterPeace && typeof c.trigger === 'function') bad.push(c.id + ':trigger');
       if (typeof c.historical !== 'string' || c.historical.length < 20) bad.push(c.id + ':historical');
       if (!Array.isArray(c.options) || c.options.length < 2) bad.push(c.id + ':options');
       const ai = c.aiOption | 0;
@@ -153,7 +156,7 @@ console.log('== dated, windowed, historical, and answerable ==');
       }
       if (!c.id.startsWith(prefix)) bad.push(c.id + ':prefix');
     }
-    ok(!bad.length, id + ': every card dated inside ' + start + '–' + lastYear
+    ok(!bad.length, id + ': every card scheduled inside ' + start + '–' + lastYear
       + ', with a recorded course that exists' + (bad.length ? ' (' + bad.slice(0, 4).join(', ') + ')' : ''));
     const shared = pack.filter((c) => (everyId.get(c.id) || new Set()).size !== 1);
     ok(!shared.length, '  and no id shared with any other chapter'
@@ -242,7 +245,7 @@ console.log('== the road the campaign is not on retires ==');
   // Three cards presume the House fell (SPEC §75). On the Second Kingdom road
   // `templeBurned` is never set, and `when` has to say no — otherwise the
   // chapter fires the sicarii of Cyrene at a country whose altar is standing.
-  const gated = loaded.get('66ce').filter((c) => typeof c.when === 'function');
+  const gated = loaded.get('66ce').filter((c) => typeof c.when === 'function' && c.id !== 'ev66y_the_rock_becomes_a_province');
   ok(gated.length === 3, 'three cards carry a when gate (' + gated.length + ')');
   const w = boot('66ce');
   const shut = gated.filter((c) => c.when(w.ctx) === false);
@@ -276,3 +279,5 @@ console.log('== the two flags the section shares on purpose, and the one it does
 }
 
 console.log(failures ? failures + ' FAILURES' : 'smoke161: ALL PASS');
+
+process.exitCode = failures ? 1 : 0;

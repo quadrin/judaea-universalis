@@ -34,6 +34,7 @@ const { readFileSync } = await import('fs');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
+const { EVENTS_STATECRAFT } = await import(R + '/js/data/events_statecraft.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx, gameActions, simHelpers, reviveGame } = await import(R + '/js/sim/init.js');
 const { livingTag, switchTagCore } = await import(R + '/js/sim/military.js');
@@ -242,6 +243,41 @@ console.log('== 1948 is the exception, and stays it ==');
     '  with only one of the two banners on the roster');
 }
 
+// Repeatable statecraft draws depend on size, population and a shared random
+// channel. Two centuries of different wars need not draw the same cards.
+// Check their eligibility in the SAME world across formation instead.
+console.log('== repeatable statecraft survives formation in the same world ==');
+{
+  const w = boot('167bce', 'HAS');
+  w.game.date = { y: -150, m: 6, d: 1 };
+  for (const name of ['Jerusalem', 'Jericho', 'Emmaus', 'Lydda', 'Joppa', 'Hebron',
+    'Sebaste', 'Tyre', 'Sidon', 'Berytus', 'Damascus', 'Gaza']) {
+    const p = w.ctx.prov(name); p.owner = 'HAS'; p.controller = 'HAS';
+  }
+  for (const name of ['Tyre', 'Sidon', 'Berytus', 'Gaza']) w.ctx.prov(name).religion = 'hellenism';
+  const cards = EVENTS_STATECRAFT.filter(e => e.once === false && typeof e.trigger === 'function');
+  const before = cards.map(e => !!e.trigger(w.ctx));
+  const ids = ['ev_sc_the_bid_for_a_province', 'ev_sc_the_temple_they_want_reopened', 'ev_sc_the_language_of_the_decree'];
+  ok(ids.every(id => before[cards.findIndex(e => e.id === id)]), 'the three mixed-realm prompts are eligible before formation');
+  switchTagCore(w.ctx, 'HAS', 'MLI');
+  const after = cards.map(e => !!e.trigger(w.ctx));
+  ok(before.every((value, i) => value === after[i]), 'every repeatable statecraft gate gives the same answer after formation');
+}
+
+// War outcomes and their follow-ups must remain available under a new banner
+// in the SAME world; separate campaigns can win different wars.
+{
+  const w = boot('167bce', 'HAS');
+  w.game.date = { y: -133, m: 6, d: 1 }; w.game.tags.HAS.overlord = null;
+  for (const name of ['Jerusalem', 'Antioch']) { const p = w.ctx.prov(name); p.owner = 'HAS'; p.controller = 'HAS'; }
+  w.game.flags.sidetesBesieges = true; w.game.flags.diademInDust = true;
+  const cards = ['ev_jerusalem_terms', 'ev_diadem_in_dust', 'ev_hasidean_admonition'].map(id => card('167bce', id));
+  const before = cards.map(e => !!e.trigger(w.ctx));
+  ok(before.every(Boolean), 'the siege peace and imperial roots are eligible in their required world');
+  switchTagCore(w.ctx, 'HAS', 'MLI');
+  ok(cards.every((e, i) => !!e.trigger(w.ctx) === before[i]), 'formation preserves the siege peace and imperial-root gates');
+}
+
 // ---------------------------------------------------------------------------
 console.log('== end to end: the crown costs the chapter nothing ==');
 {
@@ -349,7 +385,8 @@ console.log('== end to end: the crown costs the chapter nothing ==');
   const plain = play(false);
   const crowned = play(true);
   ok(crowned.crowned === 'MLI', 'the crowned run really did proclaim the Kingdom of Israel');
-  const scripted = (id) => !/^dyn_/.test(id);
+  const repeatable = new Set(era('167bce').events.filter(ev => ev.once === false).map(ev => ev.id));
+  const scripted = (id) => !/^dyn_/.test(id) && !repeatable.has(id);
   // SPEC §284: since the war planner, the AI fights its wars to win them, and
   // whether the Hasmonean realm swallows the Seleucid empire is decided in
   // the field in both runs. The imperial strand (ev_x_*) opens only on that
@@ -357,7 +394,8 @@ console.log('== end to end: the crown costs the chapter nothing ==');
   // dust — so when the crowned run never reached its first card, the rest of
   // the strand is the war's drift, not the crown's cost.
   const reachedEmpire = (run) => run.empire || run.fired.has('ev_x_the_successor_state');
-  const conquestGated = (id) => /^ev_x_/.test(id) && reachedEmpire(plain) && !reachedEmpire(crowned);
+  const imperialRoot = new Set(['ev_diadem_in_dust', 'ev_hasidean_admonition']);
+  const conquestGated = (id) => (/^ev_x_/.test(id) || imperialRoot.has(id)) && reachedEmpire(plain) && !reachedEmpire(crowned);
   const lost = [...plain.fired].filter((id) => !crowned.fired.has(id) && scripted(id) && !conquestGated(id));
   ok(lost.length <= 2,
     'taking the crown costs at most a card of seeded drift, not a strand ('

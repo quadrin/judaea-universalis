@@ -3,6 +3,8 @@
 // carousel) order, each chain with the shared generic pool appended exactly as
 // the engine plays it. main.js boots from this list and the in-game wiki reads
 // it, so the two can never drift. Zero DOM; data-only imports.
+import { EVENTS_EGYPT145, EVENTS_TRYPHON, EVENTS_ARABIA106, EVENTS_LAKHMID602, EVENTS_PEACE628, EVENTS_REPARATIONS } from './events_political_turning_points.js';
+import { EVENTS_BALAS, EVENTS_BROTHERS, EVENTS_HEROD_SUCCESSION } from './events_historical_crises.js';
 import { BOOKMARK_931 } from './bookmark_931bce.js';
 import { EVENTS_931 } from './events_931bce.js';
 import { EVENTS_931_WORLD } from './events_931bce_world.js';
@@ -244,11 +246,11 @@ export const ERAS = [
   // law read at the water gate. It rides before the shared pools like every
   // other chapter package.
   { bookmark: withPolitical(BOOKMARK_597), events: EVENTS_597.concat(EVENTS_597_WORLD, EVENTS_597_YEARS, EVENTS_597_DESTRUCTION, EVENTS_597_PERSIA, EVENTS_597_NEIGHBOURS, EVENTS_597_POWERS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_CONQUEST, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_AUGUSTAN, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_167), events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_REPUBLIC, EVENTS_167_PROVINCES, EVENTS_167_CONQUEST, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, EVENTS_167_YEARS, EVENTS_167_NEIGHBOURS, EVENTS_BALAS, EVENTS_EGYPT145, EVENTS_TRYPHON, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_AUGUSTAN, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, EVENTS_BROTHERS, EVENTS_HEROD_SUCCESSION, ANTIQUE) },
   // Preserved for loading old campaigns; its playable arc is now in 67 BCE.
-  { legacy: true, bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_ROAD, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, ANTIQUE) },
+  { legacy: true, bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_ROAD, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, EVENTS_HEROD_SUCCESSION.filter(e => e.id !== 'ev5_herod_dies'), ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, EVENTS_ARABIA106, ANTIQUE) },
   // 132's chain is three packages (SPEC §104): the revolt itself, the
   // Christian thread that runs beside it, and the world spine to 425. They
   // are concatenated HERE rather than inside events_132ce.js so that every
@@ -284,17 +286,17 @@ export const ERAS = [
   // The world package (SPEC §104's rule) is the age's own calendar — the
   // successions Justinian's court never scripted, from Gelimer's coup to
   // Heraclius' fleet, ending exactly where the roads package picks up.
-  { bookmark: withPolitical(BOOKMARK_529), events: EVENTS_529.concat(EVENTS_529_WORLD, EVENTS_529_ROADS, EVENTS_529_YEARS, EVENTS_529_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_529), events: EVENTS_529.concat(EVENTS_529_WORLD, EVENTS_529_ROADS, EVENTS_529_YEARS, EVENTS_529_NEIGHBOURS, EVENTS_LAKHMID602, ANTIQUE) },
   // The west package is the same century seen from Toledo, Paris and the
   // Danube — Sisebut's edict to the Seventeenth Council, with Whitby and
   // the Bulgars between.
-  { bookmark: withPolitical(BOOKMARK_614), events: EVENTS_614.concat(EVENTS_614_PERSIA, EVENTS_614_WEST, EVENTS_614_THIRD, EVENTS_614_POWER, EVENTS_614_DAVID, EVENTS_614_YEARS, EVENTS_614_NEIGHBOURS, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_614), events: EVENTS_614.concat(EVENTS_614_PERSIA, EVENTS_614_WEST, EVENTS_614_THIRD, EVENTS_614_POWER, EVENTS_614_DAVID, EVENTS_614_YEARS, EVENTS_614_NEIGHBOURS, EVENTS_PEACE628, ANTIQUE) },
   // 1948's chain carries the region's own quarrels beside it (SPEC §105):
   // Suez as a crisis rather than a headline, the union coming apart, Eli
   // Cohen, Tehran in 1979, and the northern border it produced. The cold
   // war package is the superpowers' own weather — Berlin to the flag
   // coming down — that the chapter's arms deals and aliyah waves hang from.
-  { bookmark: withPolitical(BOOKMARK_1948), events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_COLDWAR, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, EVENTS_1948_YEARS, EVENTS_1948_NEIGHBOURS, SHARED) },
+  { bookmark: withPolitical(BOOKMARK_1948), events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_COLDWAR, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, EVENTS_1948_YEARS, EVENTS_1948_NEIGHBOURS, EVENTS_REPARATIONS, SHARED) },
 ];
 export const PLAYABLE_ERAS = ERAS.filter(e => !e.legacy);
 

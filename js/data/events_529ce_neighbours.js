@@ -485,11 +485,9 @@ export const EVENTS_529_NEIGHBOURS = [
       + 'phylarch on this one. The two of them have been raiding each other for sixty years '
       + 'and their two empires have twice gone to war over what started as a quarrel between '
       + 'them about grazing.\n\n'
-      + 'Both are now large enough to have their own foreign policy, and this year both '
-      + 'empires have started to find their clients inconvenient — the eastern one has just '
-      + 'deposed its king at Hira, and the western one has arrested its own phylarch. Two '
-      + 'confederations that used to be everybody\'s auxiliaries are discovering, in the same '
-      + 'decade, that they are on their own.',
+      + 'The western empire arrested its Ghassanid phylarch in 582. The kingdom at '
+      + 'Hira remains a Persian client, but the arrest is a warning to every frontier '
+      + 'court whose authority depends on imperial support.',
     forTag: 'SAM',
     date: { y: 583, m: 6 },
     when: safeWhen('other', (ctx) => alive(ctx, 'SAM')),
@@ -498,39 +496,36 @@ export const EVENTS_529_NEIGHBOURS = [
     options: [
       {
         label: 'Keep the roads open to both, and take neither side',
-        tooltip: '−35 talents: +14 influence points and "Both Deserts" (+8% income, +7% trade, −0.4 unrest everywhere) for twenty-five years. Two confederations with no patrons are two customers with money and grievances.',
+        tooltip: '−35 talents: +14 influence points and "Both Deserts" (+8% income, +7% trade, −0.4 unrest everywhere) for twenty-five years. The frontier courts remain customers even when their patrons withdraw support.',
         effects: guard('other:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'SAM', { treasury: -35, infl: 14 });
           mod(ctx, 'SAM', 'both_deserts', 'Both Deserts', { incomeMult: 1.08, tradeMult: 1.07, unrestAll: -0.4 }, 300);
           h.setFlag(ctx, 'bothDeserts', true);
           h.chronicle(ctx, 'diplomacy', 'Roads and credit are kept open to both confederations '
-            + 'and no side is taken. Within twenty years both of them have been abandoned by '
-            + 'their empires and both remember who did not.');
+            + 'and no side is taken. Trade continues despite the upheaval on the western frontier.');
         }),
       },
       {
         label: 'Write down what happens when an empire dismantles its own clients',
-        tooltip: '+16 governance points and "The Dismantled Clients" (+5% income, +5% manpower, −0.4 unrest everywhere) for twenty-five years. Two identical decisions on two frontiers in one decade is a pattern, and this community is in the same category of usefulness.',
+        tooltip: '+16 governance points and "The Dismantled Clients" (+5% income, +5% manpower, −0.4 unrest everywhere) for twenty-five years. The arrest on the western frontier is a warning, and this community is in the same category of usefulness.',
         effects: guard('other:1', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'SAM', { gov: 16 });
           mod(ctx, 'SAM', 'the_dismantled_clients', 'The Dismantled Clients', { incomeMult: 1.05, manpowerMult: 1.05, unrestAll: -0.4 }, 300);
-          h.chronicle(ctx, 'era', 'What both empires did to their own Arab clients in the same '
-            + 'decade is written down and read to the elders. The word "useful" is discussed '
-            + 'at some length.');
+          h.chronicle(ctx, 'era', 'The arrest of the Ghassanid phylarch is recorded as a warning '
+            + 'about the security of imperial client arrangements.');
         }),
       },
       {
-        label: 'Take the trade that both confederations can no longer protect',
-        tooltip: '−50 talents to raise our own escorts: "The Escort of the Desert" (+9% income, +6% trade, +4% manpower) for twenty-five years. With both confederations broken, the roads are unprotected and the protecting is a business.',
+        label: 'Raise escorts for the uncertain frontier roads',
+        tooltip: '−50 talents to raise our own escorts: "The Escort of the Desert" (+9% income, +6% trade, +4% manpower) for twenty-five years. Disrupted western patronage creates demand for additional escorts.',
         effects: guard('other:2', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'SAM', { treasury: -50 });
           mod(ctx, 'SAM', 'the_escort_of_the_desert', 'The Escort of the Desert', { incomeMult: 1.09, tradeMult: 1.06, manpowerMult: 1.04 }, 300);
-          h.chronicle(ctx, 'era', 'With both confederations broken, this district raises its own '
-            + 'escorts and takes the protection trade. It is the most profitable decade the '
-            + 'mountain has had and it is built on somebody else\'s collapse.');
+          h.chronicle(ctx, 'era', 'The district raises its own caravan escorts as western '
+            + 'imperial patronage falters.');
         }),
       },
     ],

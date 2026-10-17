@@ -8,6 +8,7 @@
 // read it. `unitIcon()` below wraps them in this file's grid.
 
 import { unitGlyphSvg } from '../data/units.js';
+import { FLAT_FLAGS, REVIVAL_FLAGS, LEGACY_BORROWED_FLAGS, presentFlag, legacyCourtFlag } from './flag_art.js';
 
 export const ICONS = {
   // --- mapmodes -----------------------------------------------------------
@@ -1848,6 +1849,7 @@ export const FLAGS = {
     `<path d="M0.6 4.5h22.8M0.6 10.9h22.8M0.6 17.3h22.8" stroke="#b5342c" stroke-width="3.2" fill="none"/>` +
     `<rect x="0.6" y="0.6" width="9.8" height="9.5" fill="#1d3c6e" stroke="none"/>` +
     star5(5.5, 5.3, 2.6, '#f2f4f4'),
+  ...FLAT_FLAGS,
 };
 
 function escText(s) {
@@ -1856,27 +1858,10 @@ function escText(s) {
   }[c]));
 }
 
-// Country chip: rounded rect in the tag's color (CSS .fchip layers a subtle
-// top-sheen gradient over the background-color set here), thin gold border,
-// two-tone emblem centered on the field. Falls back to the 3-letter tag when
-// no emblem exists. `size` is the chip's edge in px. With `link` the chip
-// becomes a click target: a document-level handler (ui.js) opens that
-// nation's realm panel wherever such a chip is clicked.
-// Pass the live `game` to honor a realm's runtime identity: a revolution may
-// An emblem is EITHER a string of SVG body content on the 24x24 grid — which
-// is what every emblem in this table was until §270 — or an object that
-// carries its own frame: `{ viewBox, body }`. The object form exists because
-// the grid, the three inks and the flat two-tone hand were a house style that
-// had hardened into a contract, and the contract was being read as a limit on
-// what a court's banner could be. It is not one. A court may now bring its own
-// coordinate space, its own palette, gradients, filters and groups.
-//
-// What has NOT changed is the frame it lands in: a square the size of a
-// thumbnail, filled with the court's colour, drawn at 14 to 34 pixels
-// everywhere in this UI. A `viewBox` of 0 0 96 96 buys finer COORDINATES, not
-// more pixels — the same square at the same size — so detail that needs room
-// to resolve still will not resolve. Read the brief in EMBLEM_BRIEF.md before
-// using the freedom this gives you.
+// Court flags accept a legacy 24x24 glyph or { viewBox, body, flatBanner }.
+// flag_art.js composes flat, full-field standards; the chip keeps its familiar
+// 14–34px footprint. The Court header uses 34px. New and revived courts have
+// their own art, and old synthetic courts receive a deterministic SVG device.
 function viewBoxOf(art) {
   if (art && typeof art === 'object' && typeof art.viewBox === 'string') return art.viewBox;
   return '0 0 24 24';
@@ -1912,7 +1897,8 @@ function scopeIds(body, key) {
 // player picks a chapter. A live game still wins over both.
 export function flagChip(tag, DEFINES, size = 20, link = false, game = null, lens = null) {
   const t = String(tag || '');
-  const base = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[t]) || {};
+  const base = (DEFINES && DEFINES.TAGS && Object.hasOwn(DEFINES.TAGS, t) && DEFINES.TAGS[t])
+    || (Object.hasOwn(REVIVAL_FLAGS, t) && REVIVAL_FLAGS[t]) || {};
   const def = lens && typeof lens === 'object' ? { ...base, ...lens } : base;
   const live = (game && game.tags && game.tags[t]) || null;
   const c = live && Array.isArray(live.color) && live.color.length >= 3 ? live.color
@@ -1922,11 +1908,13 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null, len
   // must fall back to the base emblem (or the text chip), never surface a
   // prototype-chain member as the SVG body.
   const own = (k) => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(FLAGS, k) ? FLAGS[k] : null);
-  const key = (live && own(live.flag) && live.flag) || (own(def.flag) && def.flag) || (own(t) && t) || '';
-  const art = own(key);
+  const savedFlag = live && Object.hasOwn(LEGACY_BORROWED_FLAGS, t) && live.flag === LEGACY_BORROWED_FLAGS[t] ? t : live?.flag;
+  const key = (own(savedFlag) && savedFlag) || (own(def.flag) && def.flag) || (own(t) && t) || '';
+  const art = own(key) || (live && t !== 'WASTE' ? legacyCourtFlag(t, live.releaseIdentity, c) : null);
+  const banner = art && presentFlag(key, art, c);
   const dispName = (live && live.name) || def.name || t;
   const inner = art
-    ? `<svg viewBox="${escText(viewBoxOf(art))}" aria-hidden="true">${scopeIds(bodyOf(art), key)}</svg>`
+    ? `<svg viewBox="${escText(viewBoxOf(banner))}" aria-hidden="true" focusable="false" data-flag-key="${escText(key || t)}">${scopeIds(bodyOf(banner), key || t)}</svg>`
     : `<span class="fchip-abbr">${escText(t || '—')}</span>`;
   const linked = link && t && t !== 'REB' && t !== 'WASTE';
   const linkAttrs = linked

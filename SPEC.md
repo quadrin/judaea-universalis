@@ -22051,3 +22051,163 @@ regional concern. Coalition status uses a shield, alert or flame with the
 short labels Clear, Eligible and New. Native titles and game tooltips retain
 the full calculation and eligibility explanations. `uitest69` covers the
 factor icons, all three risk states, tooltips and narrow-screen layout.
+
+## §309 — Historical political crises
+
+`events_historical_crises.js` supplies three branching chains; their effects
+live in `sim/historical_crises.js`, with plain saved state under
+`game.flags.historicalCrises`. The event engine remains responsible for
+dates, queues, deciding courts and multiplayer choices. Effects validate
+resources, rulers, sovereignty and the live map again before acting.
+
+- **Alexander Balas, 152 BCE.** Extends `ev_balas_vs_demetrius` in the 167 BCE
+  chapter. Balas establishes a rival court at an uncontested Seleucid
+  Ptolemais, taking 22% of the incumbent’s treasury and muster rolls as
+  defections. His landing army consumes those rolls. Jonathan can transfer
+  100 talents and 1,000 manpower to support him, accept Demetrius’s offer
+  while at peace, or remain neutral. Acceptance of Balas’s offer grants the
+  priesthood immediately, as in the historical account. Lasting confirmation
+  or the incumbent’s fiscal concessions depends on who actually holds a
+  peaceful Antioch afterward. Neither side is automatically deposed, and
+  Jonathan’s financial support does not force him into the war. The wedding
+  at Ptolemais follows a successful Balas, rather than contradicting defeat.
+- **The brothers’ accord, 67 BCE.** Hyrcanus proposes and Aristobulus separately
+  accepts or rejects. Acceptance yields uncontested Jerusalem, ends the war
+  between the brothers, and makes Hyrcanus’s remaining administration a
+  client with a ten-year pact charging 5% tribute through the existing
+  economy. Allies keep their own wars. A six-month truce binds both courts;
+  Antipater’s follow-up can reopen the succession through the ordinary
+  independence declaration only after it expires. Keeping the accord
+  preserves the existing guards against a forced restart of the dynastic
+  war. The dependent administration is an explicit gameplay abstraction:
+  Josephus describes Hyrcanus’s retirement, not a separate client state.
+- **Herod’s final succession, 4 BCE.** Available in 67 BCE and legacy 40 BCE
+  campaigns only where Herod’s court survives in Jerusalem. Division creates
+  `HPA` (Antipas’s Galilee/Peraea) and `HPH` (Philip’s northeastern tetrarchy)
+  from eligible owned, controlled, unbesieged land. Local armies, paid
+  recruitment queues, and proportional treasury/manpower shares follow;
+  foreign and occupied territory is untouched. Archelaus rules the remainder.
+  Antipas can instead petition under an earlier will: 100 talents go to Rome,
+  whose own court decides whether to confirm an undivided client kingdom at
+  15% tribute. Earlier succession preparation and relations influence the AI
+  answer. A refusal leads to voluntary division or resistance; Rome then
+  decides whether to intervene, respecting truces and recognition. The
+  older Archelaus-specific events do not fire for an Antipan successor.
+
+Sources are identified on the cards: 1 Maccabees 10:1–66; Josephus,
+Antiquities 14.1–2 and 17.8–11. Claimed parentage is described as disputed;
+alternative settlements and numerical costs are game design. External text
+retrieval was blocked in the development environment, so these references
+are not represented as a fresh source verification.
+
+The modal shows compact SVG stakes on each option and expandable historical
+background with primary-text links. The same fields travel in multiplayer
+event relays. `smoke211` covers the simulation and `uitest70` exercises the
+actual modal, commands, load rescan and mobile layout.
+
+`smoke90` compares one-time chapter content across its long campaigns. It
+checks repeatable statecraft eligibility in the same world before and after
+formation, since different random draws are not evidence of a closed event.
+The siege-peace and imperial-root gates are also compared in the same world;
+separate campaigns can win different wars and unlock different conquests.
+
+## §310 — Six further historical turning points
+
+`events_political_turning_points.js` extends existing cards where they overlap
+and adds replies through the ordinary event queue. `sim/political_turning_points.js`
+revalidates their decisions against the live map and saves their state under
+`flags.historicalCrises`; `flags.politicalCrises` holds temporary passage and
+monthly delivery expenses. Queries remain read-only. Foreign courts choose
+their own answers, including through the multiplayer event queue.
+
+- **Egypt, 145 BCE.** Requires a surviving Ptolemy VI and a successful Alexander
+  Balas in Antioch, after Demetrius I’s displacement. Egypt can remain loyal or
+  establish Demetrius II’s rival court from safely held coastal land and a
+  proportional share of Balas’s resources. Egypt joins the resulting war.
+  Jonathan can abandon Balas’s partnership and office concession, fight for
+  him, or request Egyptian neutrality. Passage lasts three years and grants
+  movement rights without creating an alliance or allied supply.
+- **Tryphon, 143 BCE.** Jonathan chooses before the meeting. A small escort
+  reserves 1,000 manpower; a substantial one reserves 3,000 and costs 40 talents.
+  The host can honour the meeting or ambush it. A large escort loses 1,000 men
+  and returns 2,000 as an actual army. Capture installs Simon as acting ruler.
+  A 100-talent ransom goes to the captor, who independently chooses release or
+  betrayal. Refusal can provoke a legal punitive war. Later Tryphon prose no
+  longer claims Jonathan was murdered on every branch.
+- **Nabataea, 106, and Hira, 602.** The empire demands direct administration or
+  offers a client settlement. The local court can submit, fund an embassy,
+  accept clientship or resist through the existing war/independence systems.
+  An embassy transfers 100 talents; a confirmed client pays 10% tribute under
+  a ten-year pact. Annexation uses the normal tag dissolution machinery,
+  preserving resources and armies, and requires uncontested land. Two human
+  chairs cannot be merged. Neighbours can recognize the arrangement, negotiate
+  passage and trade, fund surviving resistance, or host an exiled court with
+  restoration claims. Hira uses the separate Najaf cell in the 529 map; old
+  saves without the Lakhmid tag inherit the saved parent’s government rather
+  than resurrecting a kingdom. The 583 neighbour card keeps the eastern
+  kingdom in place instead of anticipating its suppression in 602.
+- **Peace of 628.** Persia may depose Khosrow II and offer peace, or continue
+  the war. Rome chooses territorial restoration, an armistice or rejection.
+  Restoration touches eligible Persian-owned Roman territory; third-party
+  ownership and occupations are excluded. A surviving local court separately
+  petitions for recognition, accepts clientship or risks intervention.
+  Recognition adds an actual ten-year guarantee; an existing guarantee is
+  preserved after expiry. The older plague and reprisals cards follow the
+  resulting ruler and settlement. Reprisals require restored Roman control
+  and cannot override a recognized local state; their retrospective source
+  tradition is identified as disputed.
+- **Luxembourg Agreement, 1952.** Israel chooses shipping, industry or housing,
+  or refuses the agreement. Germany signs separately. Deliveries begin no
+  earlier than March 1953 and last 144 calendar months. A funded, unobstructed
+  month charges Germany eight talents through the economy ledger and stores
+  eight goods for the recipient. War, embargo, lack of an unblocked delivery
+  port or insufficient German funds stops deliveries. There is no immediate
+  treasury grant. Ninety-six goods fund a permanent project in a chosen
+  uncontested province: a shipyard and production on the coast, a market and
+  production inland, or housing with tax/manpower development and lower local
+  unrest. One project per province; stored goods remain usable after expiry.
+  A once-only domestic compromise consumes 48 goods and 30 influence. AI
+  recipients invest through the same validation. Controls appear under
+  Court → Objectives → Chapter strategy and retain focus and scroll position.
+  The January Knesset card now authorizes negotiations rather than awarding
+  cash or signing the September agreement early. Refusal closes the new chain;
+  old saves already on the modifier programme retain their existing follow-up
+  without also receiving the new deliveries. The 1963 industrial bonus requires
+  an actual completed investment on the new programme.
+
+Cards identify 1 Maccabees 11–13, Cassius Dio 68.14, Encyclopaedia Iranica’s
+Lakhmids entry, Howard-Johnston’s *The Last Great War of Antiquity*, and the
+Luxembourg Agreement in UNTS volume 162. External retrieval remained blocked;
+these references are not presented as newly verified transcriptions. Historical
+notes distinguish recorded episodes from alternative diplomacy and numerical
+game abstractions. `smoke212` and `uitest71` cover the simulation and controls.
+
+## §311 — Flat vector court flags, including every revival
+
+`ui/flag_art.js` supplies forty full-field standards: sixteen prominent
+ancient/alternative courts and twenty-four revival courts that previously
+had no art. The union of `DEFINES.TAGS` and `REVIVALS` contains 210 courts,
+excluding WASTE, and each has its own `FLAGS` entry. Revival definitions also
+supply the correct names and colours before a court has a live game state.
+
+Antipas (`HPA`) flies a reed and wreath on burgundy; Philip (`HPH`) has a
+silver temple on teal. Herod, Balas, Demetrius II and Hira have distinct
+standards. The five former borrowed-flag defaults now name their own art.
+Rendering recognizes those specific placeholders in old saves without
+mutating them; other runtime rebrands and chapter identities retain their
+normal precedence, including `JUD` wearing `GAL` in the Galilean chapters.
+
+Existing glyphs receive flat bordered fields, while modern flag geometry is
+preserved. Art consists of inline SVG with solid fills and outlines. Flags
+have no image assets, cloth textures, folds, gradients, filters or lighting.
+Legacy synthetic F-tag courts receive deterministic vector devices based on their
+saved identity; coverage tests still require explicit artwork for all known
+courts. Link targets and accessible court names remain intact.
+
+Normal chips keep their existing dimensions; Court headers now use the
+existing 34px size. `tools/flags.html` is a searchable development gallery
+with large previews and actual game-size samples. Ancient and alternative
+designs are identified as original game art inspired by period motifs,
+without asserting that these exact flags existed. `smoke186`, `smoke213`
+and `uitest72` cover roster completeness, uniqueness, old saves, runtime
+identity, SVG validity, flat styling, start-screen consumers and mobile UI.

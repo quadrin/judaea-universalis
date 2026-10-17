@@ -1,3 +1,4 @@
+import { REPARATIONS_ENTRY } from './events_political_turning_points.js';
 // Judaea Universalis — the absorption (SPEC §171). Content package: zero
 // imports, keyed on the Israeli standard of the 1948 chapter.
 //
@@ -317,68 +318,7 @@ export const EVENTS_1948_ABSORPTION = [
     ],
   },
 
-  {
-    id: 'ev_ab_the_reparations',
-    title: 'The Money From Germany',
-    desc: 'The offer is three billion marks in goods over twelve years, and it would '
-      + 'solve the problem — the ships, the ports, the power stations, the housing, '
-      + 'all of it, at a stroke. It is also blood money from the state that did it, '
-      + 'seven years after, and Begin has told a crowd in Zion Square that there are '
-      + 'things for which a Jew does not take payment and that this government will '
-      + 'not survive taking it. The crowd goes to the Knesset and the stones go '
-      + 'through the windows of the chamber while the debate is running. Both men '
-      + 'are entirely serious and both of them are right about something.',
-    forTag: 'player',
-    date: { y: 1952, m: 1 },
-    trigger: safeTrigger('ev_ab_the_reparations', (ctx) => {
-      const me = israel(ctx);
-      return !!me && isPlayer(ctx, me) && !flag(ctx, 'reparationsSettled');
-    }),
-    aiOption: 0,
-    historical: 'The Reparations Agreement was signed on 10 September 1952 after a Knesset debate conducted while a demonstration stoned the building. It transferred some 3 billion marks in goods and is generally credited with funding the merchant fleet, the electricity grid and a great deal of the absorption.',
-    options: [
-      {
-        label: 'Take it. The living have a claim the dead cannot make.',
-        tooltip: 'Signed. A very large one-time transfer and twelve years of goods: +900 talents, +10% income and +10% development growth for twelve years. The Revisionists will not forget it (−25) and the street is dangerous for a season (+1 unrest, 24 months); the Coalition owns the decision (+10).',
-        effects: guard('ev_ab_the_reparations:0', (ctx) => {
-          const h = ctx.helpers;
-          const me = israel(ctx);
-          h.adjust(ctx, me, { treasury: 900 });
-          h.addTagModifier(ctx, me, {
-            id: 'the_reparations', name: 'The Reparations Agreement', months: 144,
-            effects: { incomeMult: 1.1, growthMult: 1.1 },
-          });
-          h.addTagModifier(ctx, me, {
-            id: 'zion_square', name: 'The Stones in Zion Square', months: 24,
-            effects: { unrestAll: 1 },
-          });
-          h.factionShift(ctx, me, 'revisionists', -25);
-          h.factionShift(ctx, me, 'coalition', 10);
-          h.setFlag(ctx, 'reparationsSettled', true);
-          h.setFlag(ctx, 'reparationsTaken', true);
-          h.chronicle(ctx, 'era', 'The reparations agreement is signed while the chamber\'s windows are broken from outside.');
-        }),
-      },
-      {
-        label: 'There are things for which a Jew does not take payment',
-        tooltip: 'Refused. No transfer and no goods — the absorption is paid for out of this country\'s own thin pocket. +12 legitimacy and the Revisionists are vindicated (+25); the Coalition wears the cost (−10), and the treasury does too: −5% income for six years.',
-        effects: guard('ev_ab_the_reparations:1', (ctx) => {
-          const h = ctx.helpers;
-          const me = israel(ctx);
-          h.adjust(ctx, me, { legitimacy: 12 });
-          h.addTagModifier(ctx, me, {
-            id: 'no_blood_money', name: 'No Payment Was Taken', months: 72,
-            effects: { incomeMult: 0.95 },
-          });
-          h.factionShift(ctx, me, 'revisionists', 25);
-          h.factionShift(ctx, me, 'coalition', -10);
-          h.setFlag(ctx, 'reparationsSettled', true);
-          h.setFlag(ctx, 'reparationsRefused', true);
-          h.chronicle(ctx, 'era', 'The reparations offer is refused. The absorption will be paid for out of this country\'s own pocket.');
-        }),
-      },
-    ],
-  },
+  REPARATIONS_ENTRY,
 
   {
     id: 'ev_ab_what_the_decade_made',

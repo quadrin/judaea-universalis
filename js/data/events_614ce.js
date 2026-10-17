@@ -1,3 +1,4 @@
+import { PEACE628_ENTRY } from './events_political_turning_points.js';
 // Judaea Universalis — event chain: The Persian Gambit, 614–629 CE.
 // Content package. Zero imports; all effects run through ctx.helpers at runtime.
 // Source spine: the Chronicon Paschale; Sebeos; Antiochus Strategos on the fall
@@ -1078,43 +1079,7 @@ export const EVENTS_614 = [
   },
 
   // ── 9 ─────────────────────────────────────────────────────────────────────
-  {
-    id: 'ev_p_khosrow_falls',
-    title: 'The Fall of the House of Sasan',
-    desc: 'Khosrow, who would not make peace while a Roman lived, is deposed by his own '
-      + 'nobles and murdered in a dungeon by his own son. Kavad II\'s first act is to '
-      + 'sue for peace on any terms; his second is to die of plague; and the empire of '
-      + 'four centuries begins to eat itself alive.',
-    forTag: 'both',
-    world: true,
-    trigger: safeTrigger('ev_p_khosrow_falls', (ctx) =>
-      dateGE(ctx, 628, 2) && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_nineveh)),
-    major: true,
-    aiOption: 0,
-    options: [
-      {
-        label: 'The wheel turns',
-        tooltip: 'Kavad II takes the throne; the great war ends in a white peace; Persia stands down.',
-        effects: guard('ev_p_khosrow:0', (ctx) => {
-          ctx.helpers.setRuler(ctx, 'SAS', {
-            name: 'Kavad II', title: 'King of Kings', gov: 1, infl: 2, mar: 1, age: 38,
-          });
-          ctx.helpers.endWar(ctx, 'SAS', 'BYZ', null);
-          ctx.helpers.adjust(ctx, 'SAS', { stability: -1, legitimacy: -20 });
-          // Ten monarchs in four years: the court that murders its kings
-          // cannot also pay, rally and reinforce its field armies. The
-          // disarray must outlast the funeral — it is the hollowed Persia the
-          // Arab columns historically found in the 630s; a 24-month pause
-          // left the empire fully rearmed before the Iraq campaign began.
-          ctx.helpers.addTagModifier(ctx, 'SAS', {
-            id: 'house_eats_itself', name: 'The House Eats Itself', months: 60,
-            effects: { aiPassive: true, moraleMult: 0.85, reinforceMult: 0.75 },
-          });
-          ctx.helpers.chronicle(ctx, 'peace', 'Khosrow is murdered by his own son; the last great war of antiquity ends where it began.');
-        }),
-      },
-    ],
-  },
+  PEACE628_ENTRY,
 
   // ── 9b ────────────────────────────────────────────────────────────────────
   {
@@ -1129,7 +1094,9 @@ export const EVENTS_614 = [
     decider: 'SAS',
     trigger: safeTrigger('ev_p_plague', (ctx) =>
       dateGE(ctx, 628, 10)
-      && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_khosrow_falls)),
+      && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_khosrow_falls)
+      && (!ctx.game.flags.historicalCrises?.peace628 || ctx.game.flags.historicalCrises.peace628.status === 'settled')
+      && /Kavad/.test(ctx.game.tags[who(ctx, 'SAS')]?.ruler?.name || '')),
     aiOption: 0,
     options: [
       {
