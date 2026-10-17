@@ -234,6 +234,7 @@ export function embarkCore(ctx, fleet, armyId) {
     return { ok: false, why: 'not enough hulls — each ship carries ' + CAPACITY + ' men' };
   }
   a.aboard = fleet.id;
+  delete a.fortApproach;
   a.path = [];
   a.moveDaysLeft = 0;
   a.retreating = false;

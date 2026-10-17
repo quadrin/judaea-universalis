@@ -47,6 +47,16 @@ Additional troops form a reserve pool that fills losses as fighting continues
 and suffers reduced morale shock. The battle window shows the fighting line
 and reserves; the AI's forecast uses the same frontage rules.
 
+**Fort-controlled routes.** Press **F** or choose the tower map button to see
+fortresses and their guarded approaches. A manned hostile fort stops transit
+through its own province and protects neighboring enemy land: approach the
+fort, retrace your entry route, or find a way around. Occupying a neighboring
+town does not remove its fort's protection. Capture the fort to open the
+corridor; overlapping forts must be cleared separately. Empty and mothballed
+forts exert no control. Selecting an army shows hostile approaches and its
+withdrawal route; hovering a destination names any fort blocking the march.
+The AI uses the same restrictions and values forts that unlock nearby land.
+
 **Message controls.** Settings (**O**) lets each category of news use a short
 notice, persistent alert, popup, automatic pause with an alert, or silence.
 Categories include battles, sieges, approaching armies, expiring truces, and

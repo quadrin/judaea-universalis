@@ -148,6 +148,7 @@ const RISING_LABELS = {
         <div class="bar bar-garrison"><div class="bar-fill" data-ref="garrisonFill"></div></div>
         <button class="btn pp-mothball hidden" data-ref="mothball"></button>
       </div>
+      <div class="pp-fort-routes hidden" data-ref="fortRoutes"></div>
       <div class="pp-block pp-siege hidden" data-ref="siegeBlock">
         <div class="pp-bar-label"><span data-ref="siegeLabel"></span><span data-ref="siegePct"></span></div>
         <div class="bar bar-siege"><div class="bar-fill" data-ref="siegeFill"></div></div>
@@ -570,6 +571,16 @@ const RISING_LABELS = {
       setText(refs.garrisonText, `${fmtMen(p.garrison)} / ${fmtMen(p.maxGarrison)}`);
       refs.garrisonFill.style.width = Math.max(0, Math.min(100, ((p.garrison || 0) / maxG) * 100)) + '%';
     }
+
+    const routes = actions?.getFortRoutes ? actions.getFortRoutes(p.id) : null;
+    const guardNames = routes?.guards.map(f => f.name).join(', ');
+    const approachNames = routes?.approaches.map(q => q.name).join(', ');
+    refs.fortRoutes.classList.toggle('hidden', !guardNames && !approachNames);
+    const guardedText = guardNames
+      ? 'Guarded by ' + guardNames + '. Capture the fort to advance, or retrace your approach.'
+      : '';
+    const protectsText = approachNames ? 'Guards approaches through ' + approachNames + '. See Fort routes (F).' : '';
+    setText(refs.fortRoutes, [guardedText, protectsText].filter(Boolean).join(' '));
 
     // Siege
     refs.siegeBlock.classList.toggle('hidden', !p.siege);

@@ -102,11 +102,11 @@ await page.waitForTimeout(400);
 
 // The mapmode bar. This count has been stale since trade and estates landed —
 // it asserted 8 while the bar shipped 9, and was failing on main before SPEC
-// §175 added the tenth (the dispersion) and §242 the eleventh. Political,
+// §175 added the tenth, §242 the eleventh, and §303 the twelfth. Political,
 // diplomatic, trade, terrain, religion, culture, development, unrest, estates,
-// diaspora, structures.
+// diaspora, structures, forts.
 const mm = await page.locator('.mm-btn').count();
-ok(mm === 11, 'eleven mapmode buttons: ' + mm);
+ok(mm === 12, 'twelve mapmode buttons: ' + mm);
 ok(await page.locator('.mm-btn[data-mode="diaspora"]').count() === 1,
   'the dispersion has a button of its own');
 ok(await page.locator('.mm-btn[data-mode="structures"]').count() === 1,

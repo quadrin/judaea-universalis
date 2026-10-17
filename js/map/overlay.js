@@ -3,6 +3,8 @@
 // so everything lands on the same screen points as the GL map underneath.
 
 import { traceSupply } from '../sim/supply.js';
+import { fortRegions, fortControl, fortApproachFor } from '../sim/fort_control.js';
+import { isHostile, sameSide } from '../sim/military.js';
 import { createSeaRoutes, pointAt, slice } from './searoutes.js';
 import { seaFightsLive } from '../sim/navy.js';
 // The land roster (SPEC §191): every banner wears the face of the arm that
@@ -1794,6 +1796,59 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
+  let fortMode = false, fortLog = [];
+  function drawFortRoutes(game, camera) {
+    fortLog = [];
+    const ui = game.ui || {};
+    const id = ui.selectedArmy ?? ui.selectedArmies?.[0];
+    const army = game.armies?.[id];
+    const selected = army && army.tag === game.playerTag && !army.aboard;
+    if (!fortMode && !selected) return;
+    const ctx = { game, geom, DEFINES, byId: id => game.provinces[id] || null };
+    const regions = fortRegions(ctx);
+    const control = selected ? fortControl(ctx, army.tag, regions) : null;
+    for (const r of regions) {
+      const hostile = isHostile(ctx, game.playerTag, r.controller);
+      if (!fortMode && !hostile) continue;
+      const c = geom.centroids[r.id];
+      if (!c) continue;
+      const [x, y] = camera.mapToScreen(c.x, c.y);
+      const color = hostile ? '#e47967' : sameSide(ctx, game.playerTag, r.controller) ? '#77c4ca' : '#dfbf70';
+      labelObstacles.push({ x: x - 12, y: y - 12, w: 24, h: 24 });
+      const approaches = !fortMode && control
+        ? r.approaches.filter(id => control.guards.get(id)?.includes(r.id)) : r.approaches;
+      fortLog.push({ ...r, approaches, hostile });
+      x2.save();
+      x2.strokeStyle = color; x2.lineWidth = 2; x2.setLineDash([5, 5]);
+      x2.beginPath();
+      for (const id of approaches) {
+        const p = geom.centroids[id];
+        if (!p) continue;
+        const [tx, ty] = camera.mapToScreen(p.x, p.y);
+        x2.moveTo(x, y); x2.lineTo(tx, ty);
+      }
+      x2.stroke(); x2.setLineDash([]);
+      x2.fillStyle = 'rgba(30,25,20,0.92)';
+      x2.beginPath(); x2.arc(x, y, 11, 0, Math.PI * 2); x2.fill(); x2.stroke();
+      x2.translate(x, y); x2.stroke(TOWER_PATH);
+      x2.restore();
+    }
+    if (selected) {
+      const trail = fortApproachFor(ctx, army, control);
+      if (trail.length) {
+        x2.save(); x2.strokeStyle = '#efd179'; x2.lineWidth = 3; x2.setLineDash([3, 5]);
+        x2.beginPath();
+        for (const [i, id] of [army.prov, ...trail.slice().reverse()].entries()) {
+          const c = geom.centroids[id];
+          if (!c) continue;
+          const [x, y] = camera.mapToScreen(c.x, c.y);
+          if (i === 0) x2.moveTo(x, y); else x2.lineTo(x, y);
+        }
+        x2.stroke(); x2.restore();
+      }
+    }
+  }
+
   let labelObstacles = [];
   function draw(game, camera, timeMs, dayFrac) {
     labelObstacles = [];
@@ -1809,6 +1864,8 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const vh = camera.viewport.h;
       const onScreen = (sx, sy) =>
         sx > -CULL_MARGIN && sy > -CULL_MARGIN && sx < vw + CULL_MARGIN && sy < vh + CULL_MARGIN;
+
+      drawFortRoutes(game, camera);
 
       // movement arrows (under everything else)
       for (const a of Object.values(game.armies || {})) {
@@ -2034,5 +2091,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  return { draw, labelObstacles: () => labelObstacles, ships: () => shipLog.slice(), trade: () => tradeLog.slice(), setTradeView, hitTestArmy, hitTestStack, hitTestFleet, hitTestWing, hitTestBattle, addRaidFx };
+  return { draw, labelObstacles: () => labelObstacles, ships: () => shipLog.slice(), trade: () => tradeLog.slice(), setTradeView,
+    setFortMode: on => { fortMode = !!on; }, fortRoutes: () => fortLog.slice(),
+    hitTestArmy, hitTestStack, hitTestFleet, hitTestWing, hitTestBattle, addRaidFx };
 }

@@ -10,6 +10,8 @@
 //               every mapmode and after conquests, without extra API surface.
 
 import { TRADE_NODES } from '../data/trade_nodes.js';
+import { fortRegions } from '../sim/fort_control.js';
+import { isHostile, sameSide } from '../sim/military.js';
 import { nodeOfProv, nodeCenterId } from '../sim/trade.js';
 import { largestMinorityFaith } from '../sim/population.js';
 import { dominantEstate, seatsFor } from '../sim/estates.js';
@@ -157,6 +159,7 @@ const MODE_PARAMS = {
   estates: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
   diaspora: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
   structures: { relief: 0.3, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
+  forts: { relief: 0.35, flat: 0, terrMix: 0.12, jitter: 0, desat: 0 },
 };
 
 // Diplomatic mode palette (colors relative to the player).
@@ -182,6 +185,17 @@ export function computeMapmodeColors(ctx, mode) {
   const flags = new Uint8Array(N + 1);
 
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
+  const fortColors = new Map();
+  if (mode === 'forts') {
+    // Hostile coverage wins overlaps so a friendly ring never hides a threat.
+    const regions = fortRegions(ctx).sort((a, b) =>
+      Number(isHostile(ctx, game.playerTag, a.controller)) - Number(isHostile(ctx, game.playerTag, b.controller)));
+    for (const r of regions) {
+      const color = isHostile(ctx, game.playerTag, r.controller) ? [190, 66, 56]
+        : sameSide(ctx, game.playerTag, r.controller) ? [68, 137, 146] : [180, 150, 80];
+      for (const id of [r.id, ...r.approaches]) fortColors.set(id, color);
+    }
+  }
   const centers = new Set();
   if (mode === 'trade') {
     for (const n of TRADE_NODES) {
@@ -298,6 +312,10 @@ export function computeMapmodeColors(ctx, mode) {
         const t = DEFINES.TERRAINS && DEFINES.TERRAINS[p.terrain];
         if (t && t.color) cA = t.color;
         else warnOnce('terr:' + p.terrain, `unknown terrain "${p.terrain}" on ${p.name}`);
+        break;
+      }
+      case 'forts': {
+        cA = fortColors.get(id) || [204, 198, 180];
         break;
       }
       case 'religion': {

@@ -30,6 +30,7 @@ const MAPMODES = [
   { id: 'estates', ico: icon('scales'), name: 'Estates — which party of the court holds this ground' },
   { id: 'diaspora', ico: icon('diaspora'), name: 'The Dispersion — where the communities are, how large, and how they regard this crown' },
   { id: 'structures', ico: icon('structures'), name: 'Structures — what stands on this ground, and what is going up' },
+  { id: 'forts', ico: icon('tower'), name: 'Fort routes — fortresses and their guarded approaches (F)' },
 ];
 
 function buildMapmodeBar(bar, bus) {
@@ -82,6 +83,34 @@ export function initUI(staticCtx) {
 
   initTooltip(els.tooltip);
   buildMapmodeBar(els.mapmodeBar, bus);
+
+  const fortLegend = document.createElement('div');
+  fortLegend.id = 'fort-route-legend'; fortLegend.className = 'hidden';
+  fortLegend.innerHTML = '<b>Fort routes</b><span><i class="fort-enemy"></i>Hostile <i class="fort-friendly"></i>Friendly <i class="fort-neutral"></i>Neutral</span>'
+    + '<span>Dashed lines show guarded approaches. Capture the fort to advance; gold marks your withdrawal route.</span>';
+  const marchPreview = document.createElement('div');
+  marchPreview.id = 'march-preview'; marchPreview.className = 'hidden';
+  marchPreview.setAttribute('role', 'status');
+  document.getElementById('ui-root').append(fortLegend, marchPreview);
+  let fortMapOpen = false, hoverProvince = 0;
+  function refreshFortFeedback() {
+    const g = state.ctx?.game;
+    const army = g?.armies?.[g.ui.selectedArmy ?? g.ui.selectedArmies?.[0]];
+    const selected = army && army.tag === g.playerTag && !army.aboard;
+    fortLegend.classList.toggle('hidden', !g || (!fortMapOpen && !selected));
+    if (!selected || !hoverProvince || !state.actions?.getMarchInfo) {
+      marchPreview.classList.add('hidden'); return;
+    }
+    const info = state.actions.getMarchInfo(army.id, hoverProvince);
+    const text = info.ok ? 'March to ' + state.ctx.byId(hoverProvince).name + ' · route open'
+      : info.why;
+    marchPreview.textContent = text;
+    marchPreview.classList.toggle('blocked', !info.ok);
+    marchPreview.classList.toggle('hidden', !text);
+  }
+  bus.on('mapmode', mode => { fortMapOpen = mode === 'forts'; refreshFortFeedback(); });
+  bus.on('selectArmy', refreshFortFeedback);
+  bus.on('maphover', id => { hoverProvince = id; refreshFortFeedback(); });
 
   // ------------------------------------------------------- mobile chrome --
   // Both buttons live in CSS-land until a media query shows them: the group
@@ -1640,6 +1669,9 @@ export function initUI(staticCtx) {
       if (g.ui.selectedProv) setSelectedProv(0);
     } else if (e.key === 'b' || e.key === 'B') {
       campaignTools.open();
+    } else if ((e.key === 'f' || e.key === 'F')
+        && !e.target.closest?.('input, textarea, select, [contenteditable="true"]')) {
+      bus.emit('mapmode', fortMapOpen ? 'political' : 'forts');
     } else if (e.key === 'n' || e.key === 'N') {
       toggleNationPanel();
     } else if (e.key === 'l' || e.key === 'L') {
@@ -1762,6 +1794,7 @@ export function initUI(staticCtx) {
               <div class="help-row"><b>H</b> this help · <b>O</b> settings · <b>Esc</b> close / deselect</div>
               <div class="help-row"><b>Click</b> select a province, army, fleet, or air wing · <b>Shift-click</b> group armies</div>
               <div class="help-row"><b>Right-click</b> move the selected unit (air wings rebase between airfields)</div>
+              <div class="help-row"><b>F</b> fort routes: forts guard their own province and neighboring enemy land. Capture the fort, find another approach, or retrace your route. Mothballed and empty forts exert no control.</div>
               <div class="help-row"><b>Shift-click</b> armies (banners or outliner rows) to build a group, then <b>click</b> a province: the whole group marches there</div>
             </div>
             <div>
@@ -1895,6 +1928,7 @@ export function initUI(staticCtx) {
 
     messages.reset();
     bus.on('day', safe('day-refresh', () => {
+      refreshFortFeedback();
       messages.scan();
       campaignTools.refresh();
       const g = ctx.game;
@@ -1932,6 +1966,7 @@ export function initUI(staticCtx) {
     bus.on('pause', safe('pause', () => { topbar.refresh(); panel.refresh(); }));
     bus.on('speed', safe('speed', () => topbar.refresh()));
     bus.on('actionTaken', safe('actionTaken', () => {
+      refreshFortFeedback();
       topbar.refresh(); panel.refresh(); fleetPanel.refresh(); outliner.refresh(true); nationPanel.refresh(); updatePill();
     }));
     // A card answered anywhere comes off this table too (SPEC §216): world

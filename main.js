@@ -126,9 +126,9 @@ async function boot() {
     }
     overlay.setTradeView(v);
   }
-  bus.on('mapmode', (m) => { mapmode = m; colorsDirty = true; refreshTradeView(); });
+  bus.on('mapmode', (m) => { mapmode = m; colorsDirty = true; refreshTradeView(); overlay.setFortMode(m === 'forts'); });
   bus.on('month', () => { if (mapmode === 'trade') { colorsDirty = true; refreshTradeView(); } });
-  bus.on('actionTaken', () => { if (mapmode === 'trade') refreshTradeView(); });
+  bus.on('actionTaken', () => { if (mapmode === 'trade') refreshTradeView(); if (mapmode === 'forts') colorsDirty = true; });
   // Bombing raids play out on the overlay (SPEC §30), in the raider's color.
   bus.on('airRaid', (p) => {
     if (!p || !ctx) return;
@@ -887,6 +887,16 @@ async function boot() {
     bus.emit('maprightclick', { mapX, mapY, sx, sy, provId });
   });
   bus.on('select', (provId) => renderer.setSelected(provId || 0));
+
+  let hoveredProvince = 0;
+  container.addEventListener('pointermove', e => {
+    if (!ctx || e.buttons || e.pointerType === 'touch') return;
+    const rect = container.getBoundingClientRect();
+    const [x, y] = camera.screenToMap(e.clientX - rect.left, e.clientY - rect.top);
+    const id = renderer.provIdAt(x, y);
+    if (id !== hoveredProvince) { hoveredProvince = id; bus.emit('maphover', id); }
+  });
+  container.addEventListener('pointerleave', () => { hoveredProvince = 0; bus.emit('maphover', 0); });
 
   let last = performance.now();
   let acc = 0;

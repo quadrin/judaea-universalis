@@ -17,6 +17,7 @@ import {
 } from '../data/units.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 import { combatFrontage, fieldStrength } from './frontage.js';
+import { landRoutes, fortControl, fortStep, fortApproachFor } from './fort_control.js';
 import { offensiveCall, commitAllyCall, settlePromises, rememberAllianceBreak, expansionPreview, applyExpansion, warEnthusiasm } from './strategy.js';
 // The month of the year (SPEC §272). seasons.js imports nothing from the sim
 // precisely so that this file, navy.js and weather.js may all consult it
@@ -576,11 +577,11 @@ export function bfsDistances(ctx, fromId, pass, maxDepth) {
   }
   return dist;
 }
-export function findPath(ctx, tag, fromId, toId) {
+export function findPath(ctx, tag, fromId, toId, army = null) {
   if (!fromId || !toId) return null;
   if (fromId === toId) return [];
   if (!canEnter(ctx, tag, toId)) return null;
-  return bfs(ctx, fromId, (id) => canEnter(ctx, tag, id), (id) => id === toId, 64);
+  return landRoutes(ctx, army || { tag, prov: fromId }, { target: toId }).pathTo(toId);
 }
 // Marching speed by unit pattern (SPEC §25): antiquity walks, the lance ages
 // ride a little faster, the musket age has roads, the modern age has trucks.
@@ -694,7 +695,7 @@ export function issueMove(ctx, army, targetId) {
   if (ceasefireHolds(ctx)) return false;
   if (!army || army.inBattle) return false;
   if (army.prov === targetId) { army.path = []; army.moveDaysLeft = 0; return true; }
-  const path = findPath(ctx, army.tag, army.prov, targetId);
+  const path = findPath(ctx, army.tag, army.prov, targetId, army);
   if (!path || !path.length) return false;
   army.path = path;
   army.moveDaysLeft = 0; // first leg cost set on next day's tick
@@ -1639,6 +1640,7 @@ export function battleInfo(ctx, provId) {
 // ---------------------------------------------------------------- movement
 export function moveArmiesDaily(ctx) {
   const g = ctx.game;
+  const controls = new Map();
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
     if (!a || a.inBattle || a.aboard) continue;
@@ -1652,13 +1654,29 @@ export function moveArmiesDaily(ctx) {
       if (a.retreating) a.retreating = false;
       continue;
     }
-    if (a.moveDaysLeft <= 0) { a.moveDaysLeft = hopDays(ctx, a.prov, a.path[0], a); a.hopTotal = a.moveDaysLeft; }
+    const next = a.path[0];
+    let approach = [];
+    if (!a.retreating) {
+      if (!controls.has(a.tag)) controls.set(a.tag, fortControl(ctx, a.tag));
+      const control = controls.get(a.tag);
+      approach = fortStep(control, a.prov, next, fortApproachFor(ctx, a, control));
+      if (!canEnter(ctx, a.tag, next) || approach === null) {
+        a.path = []; a.moveDaysLeft = 0; a.hopTotal = 0;
+        if (approach === null && a.tag === g.playerTag) {
+          const names = controls.get(a.tag).guards.get(a.prov).map(id => ctx.byId(id).name);
+          ctx.bus.emit('notify', { title: 'March halted', category: 'movement', type: 'war',
+            text: a.name + ': ' + names.join(', ') + ' now guards the route. Capture the fort or retrace your approach.' });
+        }
+        continue;
+      }
+    }
+    if (a.moveDaysLeft <= 0) { a.moveDaysLeft = hopDays(ctx, a.prov, next, a); a.hopTotal = a.moveDaysLeft; }
     a.moveDaysLeft--;
     if (a.moveDaysLeft > 0) continue;
-    const next = a.path[0];
-    if (!a.retreating && !canEnter(ctx, a.tag, next)) { a.path = []; a.moveDaysLeft = 0; continue; }
     a.path.shift();
     a.prov = next;
+    if (approach.length) a.fortApproach = approach;
+    else delete a.fortApproach;
     a.moveDaysLeft = 0;
     if (a.retreating && !a.path.length) a.retreating = false;
     engageIfNeeded(ctx, a);
@@ -2477,6 +2495,7 @@ export function splitArmyCore(ctx, army) {
     general: null,
     gen: num(army.gen, 0), // the detachment marches in its parent's pattern
     inBattle: false, retreating: false,
+    ...(army.fortApproach ? { fortApproach: [...army.fortApproach] } : {}),
   };
   g.armies[id] = det;
   engageIfNeeded(ctx, det);
@@ -2517,6 +2536,7 @@ export function splitArmyByArmCore(ctx, army) {
       general: null,
       gen: num(army.gen, 0),
       inBattle: false, retreating: false,
+      ...(army.fortApproach ? { fortApproach: [...army.fortApproach] } : {}),
     };
     g.armies[id] = det;
     engageIfNeeded(ctx, det);

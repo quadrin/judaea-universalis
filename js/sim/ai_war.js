@@ -33,13 +33,14 @@
 // and at mid-month for wars the AI fights among itself.
 
 import {
-  num, clamp, devTotal, regCount, armiesOf, isHostile, sameSide, canEnter,
+  num, clamp, devTotal, regCount, armiesOf, isHostile, sameSide,
   hopDays, genSpeed, armSpeedOf, splitArmyCore, mergeInto, sideStats, airNet, airPips, armorPips, armPips,
   warGoalInfo, sideComponents, tagDef, ceasefireHolds, isHumanChair, battleScoreFor, resolveTagMult, effectiveFort,
 } from './military.js';
 import { doctrinePips } from '../data/tech.js';
 import { MOUNTED_TERRAIN } from '../data/units.js';
 import { combatFrontage, fieldStrength } from './frontage.js';
+import { landRoutes, fortControl } from './fort_control.js';
 import { seasonSiegeFactor } from './seasons.js';
 import { reservedForNavalOp } from './invasion.js';
 
@@ -224,68 +225,10 @@ function edgeCost(ctx, from, to, army) {
 // `avoid`: provinces a route may end in but not pass through — where an
 // enemy stands that would stop the column on its way somewhere else.
 function travelFrom(ctx, army, maxDays, avoid) {
-  const dist = new Map();
-  const prev = new Map();
-  const nbs = ctx.geom && ctx.geom.neighbors;
-  if (!nbs || !army || !army.prov) return { dist, prev };
-  // A column already in the middle of a hop finishes it first.
-  dist.set(army.prov, 0);
-  const heap = [[0, army.prov]];
-  const push = (d, id) => {
-    heap.push([d, id]);
-    let i = heap.length - 1;
-    while (i > 0) {
-      const j = (i - 1) >> 1;
-      if (heap[j][0] <= heap[i][0]) break;
-      [heap[i], heap[j]] = [heap[j], heap[i]]; i = j;
-    }
-  };
-  const pop = () => {
-    const top = heap[0];
-    const last = heap.pop();
-    if (heap.length) {
-      heap[0] = last;
-      let i = 0;
-      for (;;) {
-        const l = 2 * i + 1, r = l + 1;
-        let m = i;
-        if (l < heap.length && heap[l][0] < heap[m][0]) m = l;
-        if (r < heap.length && heap[r][0] < heap[m][0]) m = r;
-        if (m === i) break;
-        [heap[i], heap[m]] = [heap[m], heap[i]]; i = m;
-      }
-    }
-    return top;
-  };
-  while (heap.length) {
-    const [d, cur] = pop();
-    if (d > (dist.has(cur) ? dist.get(cur) : Infinity)) continue;
-    if (avoid && cur !== army.prov && avoid.has(cur)) continue; // arrive, but no further
-    const set = nbs[cur];
-    if (!set) continue;
-    for (const nb of set) {
-      if (!canEnter(ctx, army.tag, nb)) continue;
-      const nd = d + edgeCost(ctx, cur, nb, army);
-      if (nd > maxDays) continue;
-      if (nd < (dist.has(nb) ? dist.get(nb) : Infinity)) {
-        dist.set(nb, nd);
-        prev.set(nb, cur);
-        push(nd, nb);
-      }
-    }
-  }
-  return { dist, prev };
+  return landRoutes(ctx, army, { maxCost: maxDays, avoid,
+    cost: (from, to) => edgeCost(ctx, from, to, army) });
 }
-function routeTo(tr, from, to) {
-  const path = [];
-  let at = to;
-  while (at !== from) {
-    path.unshift(at);
-    at = tr.prev.get(at);
-    if (at === undefined) return null;
-  }
-  return path;
-}
+function routeTo(tr, from, to) { return tr.pathTo(to); }
 // March by the fastest road rather than the fewest hops. Nothing moves under
 // a cease-fire (SPEC §261) or out of a battle.
 function marchTo(ctx, army, dest, tr) {
@@ -474,6 +417,14 @@ function provinceTasks(ctx, W) {
   }
   const capName = tagDef(ctx, tag).capital || null;
   const tasks = [];
+  const control = fortControl(ctx, tag);
+  const fortValue = new Map();
+  for (const [id, forts] of control.guards) {
+    const p = ctx.byId(id);
+    for (const fort of forts) {
+      if (id !== fort) fortValue.set(fort, (fortValue.get(fort) || 0) + devTotal(p) * 0.2);
+    }
+  }
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
@@ -491,6 +442,9 @@ function provinceTasks(ctx, W) {
     } else if (ours) {
       value = devTotal(p) * 0.4; // rebels, or a war that is not ours to score
     }
+    // A gateway buys access to the countryside behind it, even when the
+    // fortress itself has little development. The AI must invest in sieges.
+    value += fortValue.get(i) || 0;
     if (goalOf.has(i)) value += 10;
     if (W.objective(p)) value += OBJECTIVE_VALUE;
     if (ours && capName && (p.canon || p.name) === capName) value += 6;

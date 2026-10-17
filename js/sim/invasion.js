@@ -429,7 +429,7 @@ function aiSealift(ctx, tag) {
     if (a === main || a.aboard || a.inBattle || a.retreating || a.men <= 0) continue;
     if (a.path && a.path.length) continue;
     if (reservedForNavalOp(t, a.id)) continue;
-    if (findPath(ctx, tag, a.prov, main.prov)) continue; // it can march — let it
+    if (findPath(ctx, tag, a.prov, main.prov, a)) continue; // it can march — let it
     if (!wave || a.men > wave.men) wave = a;
   }
   if (!wave) return;

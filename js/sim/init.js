@@ -5,7 +5,7 @@ import { winChance } from './ai_war.js';
 import { createRng } from '../core/rng.js';
 import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
-  declareWar, joinWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
+  declareWar, joinWar, issueMove, findPath, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   petitionInfo, petitionForPeace as petitionForPeaceCore,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
@@ -71,6 +71,7 @@ import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 import { offensiveCall, diplomaticCredit } from './strategy.js';
 import { armyTemplatePlan, recruitTemplate as recruitTemplateCore } from './muster.js';
+import { fortBlockReason, fortRegions, fortControl } from './fort_control.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
 import { sendAiCounteroffer } from './ai.js';
 import { traceSupply, supplyPenaltyText, supplyReasonText, supplyExempt } from './supply.js';
@@ -1272,6 +1273,8 @@ export function gameActions(ctx) {
     if (!p || p.impassable) return { ok: false, why: '' };
     if (!canEnter(ctx, a.tag, provId)) return { ok: false, why: 'We are not at war with the rulers of ' + p.name + '.' };
     if (!issueMove(ctx, a, provId)) {
+      const fortWhy = fortBlockReason(ctx, a, provId);
+      if (fortWhy) return { ok: false, why: fortWhy };
       const overseas = isCoastal(ctx, provId) || isCoastal(ctx, a.prov);
       return { ok: false, why: overseas
         ? 'No land route to ' + p.name + ' — the sea is in the way. Build ships, embark the army, and sail.'
@@ -1958,6 +1961,28 @@ export function gameActions(ctx) {
             + num(res.queued && res.queued.totalMonths, unitRecruitMonths(ctx, type)) + ' months. Units train one at a time in each province.', 'good');
         }
       } catch (e) { warnOnce('recruit', 'recruit failed', e); }
+    },
+    getMarchInfo(armyId, provId) {
+      const a = g.armies[armyId];
+      if (!a || a.tag !== g.playerTag) return { ok: false, why: '' };
+      if (a.inBattle || a.retreating || a.shatteredDays > 0 || a.aboard)
+        return { ok: false, why: 'This army cannot take marching orders yet.' };
+      if (g.ceasefire && monthsBetween(g.date, g.ceasefire) >= 0)
+        return { ok: false, why: 'The cease-fire holds: armies cannot march.' };
+      const p = ctx.byId(provId);
+      if (!p || p.impassable) return { ok: false, why: 'Impassable ground.' };
+      if (!canEnter(ctx, a.tag, provId)) return { ok: false, why: 'No military access to ' + p.name + '.' };
+      const path = findPath(ctx, a.tag, a.prov, provId, a);
+      return { ok: path !== null, path,
+        why: path !== null ? '' : fortBlockReason(ctx, a, provId) || 'No land route to ' + p.name + '.' };
+    },
+    getFortRoutes(provId) {
+      const regions = fortRegions(ctx);
+      const control = fortControl(ctx, g.playerTag, regions);
+      return {
+        guards: (control.guards.get(provId) || []).map(id => ({ id, name: ctx.byId(id).name })),
+        approaches: regions.find(r => r.id === provId)?.approaches.map(id => ({ id, name: ctx.byId(id).name })) || [],
+      };
     },
     moveArmy(armyId, provId) {
       try {

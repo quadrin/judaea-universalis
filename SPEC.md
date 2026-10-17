@@ -21858,3 +21858,56 @@ regional concern and coalitions, enthusiasm, batch accounting, distributed
 training and assembly, save restoration, stalled-order alerts, and preference
 normalization. `uitest66.mjs` exercises construction, templates, war planning,
 treaty previews and message modes in Chromium, including a narrow viewport.
+
+## §303 — Fortresses guard the approaches
+
+`js/sim/fort_control.js` supplies the movement rules shared by player orders,
+AI travel and the map. A fort is active when it has a positive fort level,
+is not mothballed, and has a positive garrison. Its controller determines
+hostility. It guards its own province and adjacent passable land belonging to
+its owner's side; neighboring control restricts an invader only on land whose
+owner is hostile to that invader. Occupying an unfortified approach does not
+remove the protection of the surviving fortress.
+
+An army may enter a guarded province. From there it may approach a fortress
+that guards it, withdraw along its recorded approach, or enter friendly owned
+and controlled land. An active hostile fortress itself cannot be crossed on
+an onward march. Capturing the fortress removes its hostile control
+immediately; another fortress covering the same ground remains effective.
+No restrictions cross sea edges, neutral forts do not restrict a belligerent,
+and battle routs and treaty withdrawals retain their existing forced retreat.
+
+`army.fortApproach` records the return trail as plain optional save data.
+Normal arrivals update it; reversing the approach pops it; leaving guarded
+land clears it. Both army split operations copy the trail, and embarking
+clears it. A force with no recorded entry (including older saves and armies
+raised or landed inside a guarded region) gets a deterministic withdrawal
+route toward friendly owned and controlled territory, when one exists.
+Previewing that route changes neither state nor the random stream.
+
+`landRoutes` searches province plus entry history, so alternate approaches
+remain distinct even when they reach the same province. Player `findPath`
+and the AI's weighted travel search use this reader. Daily movement checks
+the next edge again, stopping an order if a fort has reactivated or changed
+hands; the player receives one named notification. AI province valuation
+includes the neighboring development an active hostile fort guards. The
+planner can invest in its siege, capture it, and continue inland.
+
+The **Fort routes** mapmode (tower button or **F**) colors hostile coverage
+coral, friendly coverage blue-green and neutral coverage gold, with dashed
+lines connecting fortresses to their approaches. Selecting an own land army
+shows hostile approaches in other mapmodes too, and a gold dotted line shows
+its withdrawal route. A desktop destination preview names a blocking fort
+before the player gives an order; refused commands repeat the explanation.
+Province inspection lists guarding fortresses and the approaches an active
+fort protects. The mapmode and province details are available on touch
+screens without hover.
+
+**Regression contract:** `smoke209.mjs` covers guarded interiors, actual
+orders and daily arrivals, occupying an approach, alternative routes,
+weighted searches, both retreat types, overlapping forts, real siege capture,
+empty/mothballed/captured/neutral forts, reactivation mid-march, save/load,
+missing-history recovery, both split operations, map colors and the AI's full
+gateway siege and subsequent advance. `uitest67.mjs` checks the actual game
+UI, selected-army coverage, named previews and refusals, keyboard mapmode,
+province details, mobile layout and capture updates.

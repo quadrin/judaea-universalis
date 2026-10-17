@@ -64,7 +64,7 @@ console.log('== the button is in the bar and repaints the map ==');
   const btn = page.locator('.mm-btn[data-mode="structures"]');
   ok(await btn.count() === 1, 'the mapmode bar has a button for the works');
   ok(await btn.locator('svg').count() === 1, 'and the button carries a real glyph');
-  ok(await page.locator('.mm-btn').count() === 11, 'eleven buttons in the bar now');
+  ok(await page.locator('.mm-btn').count() === 12, 'twelve buttons in the bar now');
   await btn.click();
   await page.waitForTimeout(600);
   ok(await btn.evaluate((e) => e.classList.contains('active')), 'clicking it lights the button');

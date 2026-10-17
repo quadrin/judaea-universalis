@@ -750,6 +750,37 @@ button {
 }
 
 /* ---------------------------------------------------------- mapmode bar -- */
+#fort-route-legend, #march-preview {
+  position: absolute; z-index: 8; pointer-events: none;
+  border: 1px solid var(--gold-dim); border-radius: 5px;
+  background: rgba(29, 24, 20, 0.94); color: var(--parchment, #eee3c7);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4); padding: 10px 12px;
+  font-size: 12px; line-height: 1.45;
+}
+#fort-route-legend { right: 12px; bottom: 70px; width: min(350px, calc(100vw - 24px)); box-sizing: border-box; }
+#fort-route-legend > span { display: block; margin-top: 4px; }
+#fort-route-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 8px; }
+#fort-route-legend i:first-child { margin-left: 0; }
+.fort-enemy { background: #e47967; }
+.fort-friendly { background: #77c4ca; }
+.fort-neutral { background: #dfbf70; }
+#march-preview { bottom: 70px; left: 60px; max-width: min(440px, calc(100vw - 96px)); }
+#march-preview.blocked { border-color: #e47967; }
+.pp-fort-routes { color: var(--gold-bright); font-size: 12px; line-height: 1.45; margin: 8px 0; }
+@media (max-width: 900px) {
+  #march-preview { bottom: 190px; }
+}
+@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+  #fort-route-legend { bottom: 12px; right: 10px; width: min(224px, calc(100vw - 168px)); }
+  #march-preview { bottom: 208px; left: 12px; width: calc(100vw - 24px); max-width: none; box-sizing: border-box; }
+}
+@media (pointer: coarse) and (max-width: 900px) {
+  #fort-route-legend { bottom: 68px; width: min(224px, calc(100vw - 184px)); }
+  #march-preview { display: none; }
+}
+@media (pointer: coarse) and (max-width: 900px) and (orientation: landscape) {
+  #fort-route-legend { left: 10px; right: auto; bottom: 12px; }
+}
 #mapmode-bar {
   position: absolute;
   bottom: 12px;

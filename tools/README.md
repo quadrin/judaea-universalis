@@ -5,6 +5,17 @@ browser.
 
 ## Campaign planning checks
 
+`node tools/tests/smoke209.mjs` checks fort-controlled routes, alternate
+approaches, voluntary and forced withdrawals, overlapping forts, capture,
+mothballing, mid-march changes, save restoration, splitting armies, map colors,
+and an AI siege followed by an advance into the interior.
+
+`JU_PW_DIR=/workspace/ju-devtools JU_CHROMIUM=/usr/bin/chromium node tools/tests/uitest67.mjs`
+checks the fort mapmode, keyboard and mobile controls, selected-army overlay,
+named route previews, province inspection, and live updates after capture.
+Set `JU_BASE_URL` to use a server other than the default port 8613; `JU_OUT`
+chooses the screenshot directory. Run browser suites serially.
+
 `node tools/tests/smoke208.mjs` exercises frontage, diplomatic commitments,
 regional concern, peace willingness, batch construction, distributed musters,
 save restoration, and message preferences. It also checks that AI candidate
