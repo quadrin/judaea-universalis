@@ -20,7 +20,7 @@
 </style>
 <main>
   <h1>Court flags</h1>
-  <p>Flat SVG standards with solid colours. Ancient and alternative banners are original game designs inspired by period motifs, rather than claims that these exact flags existed. Modern national flags retain their established designs.</p>
+  <p>One large insignia on a solid field. Ancient and alternative banners are original game designs inspired by period motifs, rather than claims that these exact flags existed. The Kingdom of Israel uses a gold Magen David on blue. Modern Israel retains its white flag with blue stripes and star.</p>
   <label for="search">Find a court</label><input id="search" type="search" placeholder="Name or tag">
   <p id="count"></p><div class="gallery" id="gallery"></div>
 </main>
@@ -31,7 +31,7 @@
   import { flagChip } from '../js/ui/icons.js';
   const courts = new Map(REVIVALS.map(r => [r.tag, r]));
   for (const [tag, def] of Object.entries(DEFINES.TAGS)) if (tag !== 'WASTE') courts.set(tag, def);
-  const first = ['HPA','HPH','HER','BAL','DMT','LKH','HAS','JUD','MLI','ISL','JDH','SAM','SEL','PTO','BYZ','SAS'];
+  const first = ['ISR','MLI','JUD','GAL','QDR','SAB','BYZ','HAS','PHO','ASR','BBL','PAS','SAS','ROM','SAM','HPA','HPH','SEL','PTO'];
   const entries = [...courts].sort(([a],[b]) => {
     const x = first.indexOf(a), y = first.indexOf(b);
     return (x < 0 ? 999 : x) - (y < 0 ? 999 : y) || a.localeCompare(b);

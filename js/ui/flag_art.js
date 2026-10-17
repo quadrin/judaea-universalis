@@ -1,12 +1,13 @@
 // Flat vector court standards. Ancient banners are original game designs,
 // inspired by coins, seals and regional motifs, not reconstructed flags.
 // No raster images, gradients, filters, cloth, lighting or remote resources.
+import { DEFINES } from '../data/defines.js';
 import { REVIVALS } from '../data/revivals.js';
 
 export const REVIVAL_FLAGS = Object.fromEntries(REVIVALS.map(r => [r.tag, r]));
 export const LEGACY_BORROWED_FLAGS = { HPA: 'HER', HPH: 'HER', BAL: 'SEL', DMT: 'SEL', LKH: 'GHA' };
-const G = '#e2bd60', P = '#f4e6be', S = '#d5e2e7', K = '#32261f';
-const path = (d, fill = G, stroke = K, width = 1.2) => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${width}" stroke-linejoin="round"/>`;
+const G = '#f2c75b', P = '#f4e6be', S = '#d5e2e7';
+const path = (d, fill = G, stroke = 'none', width = 1.2) => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${width}" stroke-linejoin="round"/>`;
 const line = (d, color = G, width = 2) => path(d, 'none', color, width);
 const rect = (x, y, w, h, fill) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`;
 const circle = (x, y, r, fill = G) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}"/>`;
@@ -17,137 +18,220 @@ function star(x, y, n = 8, r = 10, inner = 4, fill = G) {
   });
   return `<polygon points="${points.join(' ')}" fill="${fill}"/>`;
 }
-function wreath(color = G, offset = 0) {
-  const side = line('M47 82C23 76 17 52 27 30', color, 2)
-    + [0, 1, 2, 3, 4, 5].map(i => {
-      const y = 35 + i * 7, x = 23 + Math.max(0, i - 2) * 2;
-      return path(`M${x} ${y}q-9-3-8-10q8 1 8 10m0 0q8-2 9-9q-8-1-9 9`, color, 'none');
-    }).join('');
-  return `<g transform="translate(0 ${offset})">${side}<g transform="translate(96 0) scale(-1 1)">${side}</g></g>`;
-}
-const anchor = (color = G) => circle(48, 29, 6, color) + circle(48, 29, 3, '#273241')
+const anchor = (color = G) => ring(48, 29, 5, color, 3)
   + line('M48 35V73M33 44H63', color, 5)
   + path('M48 76C33 75 26 66 25 57L35 62 31 65Q37 71 48 72Q59 71 65 65L61 62 71 57C70 66 63 75 48 76Z', color);
 const diadem = (y = 23, color = G) => path(`M30 ${y}Q48 ${y - 8} 66 ${y}L64 ${y + 5}Q48 ${y - 1} 32 ${y + 5}Z`, color)
-  + [35, 42, 48, 54, 61].map(x => circle(x, y + (x === 48 ? -2 : 0), 1.3, '#9d423f')).join('')
-  + line(`M31 ${y + 3}L25 ${y + 16}M65 ${y + 3}L71 ${y + 16}`, color, 2);
+  + line(`M31 ${y + 3}L25 ${y + 16}M65 ${y + 3}L71 ${y + 16}`, color, 3);
 const flame = (x = 48, y = 25) => path(`M${x} ${y - 12}q-3 8-7 12q-3 9 7 13q10-4 7-13q-1 7-5 6q3-10-2-18Z`, G, 'none');
 function temple(color = P) {
   return path('M25 41 48 25 71 41Z', color) + rect(25, 42, 46, 5, color)
-    + [29, 40, 51, 62].map(x => rect(x, 48, 5, 23, color) + rect(x - 1, 48, 7, 3, G)).join('')
-    + rect(24, 72, 48, 4, color) + rect(21, 77, 54, 4, color)
-    + path('M44 71V53H52V71Z', '#202c37', 'none');
+    + [29, 40, 51, 62].map(x => rect(x, 48, 5, 23, color) + rect(x - 1, 48, 7, 3, color)).join('')
+    + rect(24, 72, 48, 4, color) + rect(21, 77, 54, 4, color);
 }
 const cornucopias = `<g>${path('M44 77C23 69 20 50 28 35L37 41C28 52 33 66 44 73Z')}${circle(29, 35, 5)}${circle(34, 32, 4)}${circle(25, 30, 3)}<g transform="translate(96 0) scale(-1 1)">${path('M44 77C23 69 20 50 28 35L37 41C28 52 33 66 44 73Z')}${circle(29, 35, 5)}${circle(34, 32, 4)}${circle(25, 30, 3)}</g></g>`;
-const pomegranate = circle(48, 47, 9, '#bd4344') + path('M43 39 43 33 48 36 53 33 53 39Z', '#bd4344') + line('M45 45Q42 51 47 53', '#edbc80', 1.4);
 function menorah() {
-  return [22, 15, 8].map(r => line(`M${48 - r} 31V40A${r} ${r} 0 0 0 ${48 + r} 40V31`, G, 4)).join('')
-    + line('M48 31V76', G, 4)
-    + [-22, -15, -8, 0, 8, 15, 22].map(dx => rect(48 + dx - 3, 26, 6, 4, G) + path(`M${48 + dx} 20l-2 5h4Z`, G, 'none')).join('')
-    + rect(40, 75, 16, 4, G) + rect(34, 80, 28, 4, G);
+  // Broad curved branches and the two-tier polygonal pedestal of the
+  // Arch of Titus silhouette. The seven oil cups are unlit, with room
+  // between their rims; branch joins sit at three levels on the stem.
+  return [30, 20, 10].map(r => line(`M${48 - r} 28V33A${r} ${r} 0 0 0 ${48 + r} 33V28`, G, 4.2)).join('')
+    + line('M48 27V72', G, 4.8)
+    + [43, 53, 63].map(y => circle(48, y, 3.2)).join('')
+    + [-30, -20, -10, 0, 10, 20, 30].map(dx => path(`M${48 + dx - 4} 23H${48 + dx + 4}L${48 + dx + 2.7} 28H${48 + dx - 2.7}Z`)).join('')
+    + path('M36 69H60L66 73 60 77H36L30 73Z')
+    + path('M31 77H65L72 81 65 85H31L24 81Z');
 }
+
 const lion = path('M63 34 69 26 67 20 56 21 50 29 51 39 41 45 28 39 22 42 33 51 47 54 44 63 35 63 28 73 20 77 21 81 34 79 44 70 55 70 61 76 59 82 70 82 72 77 66 65 69 55 64 45 69 40Z')
   + line('M68 56C87 65 83 39 78 34Q72 26 80 22', G, 4)
-  + path('M78 21 81 15 85 21 82 25Z', G, 'none') + path('M53 27 46 30 50 34 55 32Z', G, 'none')
-  + line('M55 38 61 34M56 46 61 42', '#9c7432', 1.5);
+  + path('M78 21 81 15 85 21 82 25Z', G, 'none') + path('M53 27 46 30 50 34 55 32Z', G, 'none');
 function eagle(color = G) {
   return path('M43 48C47 35 58 24 72 19C76 33 73 50 64 60L52 68 42 62Z', color)
-    + line('M68 27C64 40 57 48 47 56M70 35C66 46 59 53 51 59M70 43C67 51 61 58 56 61', '#946c2a', 2)
+    + line('M68 27C64 40 57 48 47 56M70 35C66 46 59 53 51 59M70 43C67 51 61 58 56 61', '#00649d', 2.5)
     + path('M45 69C34 66 28 58 30 49C31 43 36 41 37 36C34 34 34 30 37 27C41 24 47 26 49 30L48 34C44 35 43 39 44 44C48 49 52 57 51 65L57 73 48 72 43 77Z', color)
-    + path('M37 29 29 31 27 35 34 34 38 35Z', color) + circle(40, 30, 1.1, K)
+    + path('M37 29 29 31 27 35 34 34 38 35Z', color)
     + line('M38 67 36 77 31 78M48 69 51 77 57 78', color, 3)
     + path('M23 81H43L38 86 61 79H73L62 84H46L51 79H31Z', color, 'none');
 }
-const mountain = path('M21 77 38 46 48 61 59 36 77 77Z', S) + path('M34 54 38 46 43 55 38 52 36 57ZM53 46 59 36 65 48 59 44 57 49Z', P, 'none');
-const fireAltar = rect(36, 49, 24, 5, P) + rect(43, 54, 10, 18, S) + rect(34, 73, 28, 4, P) + rect(29, 78, 38, 5, S) + flame(48, 32);
-const disk = circle(48, 42, 9) + line('M48 31V53M37 42H59', P, 2);
-const wingedDisk = disk + path('M36 40 15 30 20 46 37 48ZM60 40 81 30 76 46 59 48Z', G) + line('M23 37 36 43M25 42 36 46M73 37 60 43M71 42 60 46', K, 1.5);
-function border(kind, ink = G) {
-  const edge = `<rect x="5" y="5" width="86" height="86" fill="none" stroke="${ink}" stroke-width="2"/>`;
-  if (kind === 'plain') return edge;
-  if (kind === 'diamonds') return edge + [18, 38, 58, 78].map(x => path(`M${x} 8l5 4-5 4-5-4ZM${x} 80l5 4-5 4-5-4Z`, ink, 'none')).join('');
-  if (kind === 'corners') return edge + [0, 1, 2, 3].map(i => `<g transform="rotate(${i * 90} 48 48)">${line('M9 26V9H26M13 22V13H22V18H18', ink, 2)}</g>`).join('');
-  return edge + [0, 1, 2, 3].map(i => `<g transform="rotate(${i * 90} 48 48)">${line('M12 6V13H20V6M28 6V13H36V6M44 6V13H52V6M60 6V13H68V6M76 6V13H84V6', ink, 2)}</g>`).join('');
+const fireAltar = rect(36, 49, 24, 5, G) + rect(43, 54, 10, 18, G) + rect(34, 73, 28, 4, G) + rect(29, 78, 38, 5, G) + flame(48, 32);
+const ring = (x, y, r, ink = G, width = 3) => `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${ink}" stroke-width="${width}"/>`;
+const magenDavid = line('M48 18 74 63H22ZM48 78 22 33H74Z', G, 4.5);
+const GALILEE_BLUE = '#98ceec', ZODIAC_BEIGE = '#f4e1b8';
+function zodiacWheel() {
+  // Restore the earlier synagogue roundel: a pale disc, twelve radial
+  // divisions and a circular central medallion, on the baby-blue field.
+  return circle(48, 48, 31, ZODIAC_BEIGE)
+    + Array.from({ length: 12 }, (_, i) => `<g transform="rotate(${i * 30} 48 48)">${line('M48 20V35', GALILEE_BLUE, 2.7)}</g>`).join('')
+    + ring(48, 48, 11, GALILEE_BLUE, 2.7) + circle(48, 48, 3.4, GALILEE_BLUE);
 }
-function standard(color, motif, { trim = 'corners', ink = G, field = '', note = '' } = {}) {
-  return { viewBox: '0 0 96 96', flatBanner: true, note,
-    body: rect(0, 0, 96, 96, color) + field + border(trim, ink) + `<g>${motif}</g>` };
+
+function wingedFigure(field, archer = false) {
+  const wing = path('M39 43H9C12 54 22 62 40 63L43 54Z')
+    + [0, 1, 2, 3, 4].map(i => line(`M${13 + i * 5} 46L${20 + i * 4} 58`, field, 1.5)).join('');
+  const figure = path('M45 34 43 27 46 23H52L55 27 52 33 54 39 58 43V46H43V39L36 36 34 30 39 32Z')
+    + path('M44 22V18L47 20 49 17 51 20 54 18V22Z')
+    + (archer ? line('M36 29Q22 39 36 48M36 29V48M27 38H43', G, 2) : ring(34, 36, 5, G, 2.5));
+  return wing + `<g transform="translate(96 0) scale(-1 1)">${wing}</g>`
+    + path('M42 61 35 77H61L54 61Z') + line('M43 64 40 75M48 64V75M53 64 56 75', field, 1.8)
+    + circle(48, 52, 12, field) + ring(48, 52, 10, G, 4)
+    + line('M38 59Q27 69 24 60M58 59Q69 69 72 60', G, 2.5) + figure;
+}
+function standard(color, motif, { emblem = 'insignia', note = '', scale = 1.18, dx = 0, dy = 0 } = {}) {
+  return { viewBox: '0 0 96 96', flatBanner: true, fieldColor: color, emblem, note,
+    body: rect(0, 0, 96, 96, color) + `<g data-emblem="${emblem}" transform="translate(48 48) scale(${scale}) translate(${-48 + dx} ${-48 + dy})">${motif}</g>` };
 }
 
 export const FLAT_FLAGS = {
-  // The Herodian sons get separate coin-inspired devices and field colours.
-  HPA: standard('#762a3d', wreath(P) + line('M48 80V25', G, 3) + path('M48 24Q37 40 44 58L48 65ZM48 39Q64 40 57 56L48 65Z', G, 'none'), { trim: 'key', note: 'Antipas: a reed and wreath; original game banner.' }),
-  HPH: standard('#1c5864', temple(S), { trim: 'corners', ink: S, field: rect(8, 83, 80, 5, G), note: 'Philip: a temple façade inspired by his coin imagery.' }),
-  HER: standard('#793e30', anchor() + diadem(18), { field: rect(48, 0, 48, 96, '#a8772e'), trim: 'plain' }),
-  BAL: standard('#753660', wreath(P) + anchor() + star(48, 17, 8, 8, 3), { trim: 'diamonds' }),
-  DMT: standard('#273b69', anchor(S) + diadem(18) + line('M25 72 24 39M71 72 72 39', G, 2)
-    + [0, 1, 2, 3].map(i => line(`M24 ${44 + i * 7}l-7-6m7 6 7-6M72 ${44 + i * 7}l-7-6m7 6 7-6`, G, 2)).join(''), { trim: 'corners', ink: S }),
-  LKH: standard('#a15e31', path('M52 29A22 22 0 1 0 66 65A25 25 0 0 1 52 29Z') + star(52, 49, 8, 10, 4, S)
-    + line('M22 30V78M74 30V78', P, 2) + path('M18 30 22 22 26 30ZM70 30 74 22 78 30Z', P), { field: rect(0, 48, 96, 48, '#272830'), trim: 'diamonds' }),
-  HAS: standard('#234e87', cornucopias + pomegranate, { trim: 'corners' }),
-  JUD: standard('#20457c', menorah(), { trim: 'diamonds', ink: P }),
-  MLI: standard('#26417e', line('M48 29 27 65H69ZM48 77 27 41H69Z', S, 4) + diadem(17), { trim: 'corners', ink: S }),
-  ISL: standard('#205840', rect(33, 49, 30, 27, P) + path('M28 49V39L35 44H61L68 39V49Z', P)
-    + line('M34 58H62M34 67H62M43 50V58M53 59V67M43 68V75', '#9c8b6b', 1.6) + rect(29, 77, 38, 5, P) + flame(48, 31), { trim: 'diamonds' }),
-  JDH: standard('#263f70', lion, { trim: 'key', ink: G }),
-  SAM: standard('#286e8b', mountain + flame(48, 26), { trim: 'diamonds', ink: P }),
-  SEL: standard('#bb913c', anchor(P), { field: rect(0, 0, 15, 96, '#694773') + rect(81, 0, 15, 96, '#694773'), trim: 'key', ink: '#f7df9b' }),
-  PTO: standard('#285c87', eagle(), { trim: 'key', field: rect(0, 0, 96, 9, '#91332e') + rect(0, 87, 96, 9, '#91332e') }),
-  BYZ: standard('#632e68', wreath(P) + line('M36 67 60 35M36 35 60 67M48 76V22', G, 5)
-    + path('M48 22H57A10 10 0 0 1 57 42H48V36H56A4 4 0 0 0 56 28H48Z'), { trim: 'corners' }),
-  SAS: standard('#753334', fireAltar + path('M35 64 16 51 20 67 35 70ZM61 64 80 51 76 67 61 70Z', G)
-    + line('M22 59 33 65M74 59 63 65', K, 1.5), { field: rect(48, 0, 48, 48, '#292b31') + rect(0, 48, 48, 48, '#292b31'), trim: 'key', ink: P }),
+  // A single connected insignia on a solid field. Related courts may share
+  // a device, with their field and ink colours distinguishing the identity.
+  HPA: standard('#a51d54', line('M48 77V24', G, 3.5) + path('M48 22Q36 39 44 57L48 65ZM48 39Q64 38 57 55L48 65Z'), { emblem: 'reed', scale: 1.25, dy: -1, note: 'Antipas: a single reed on burgundy.' }),
+  HPH: standard('#007b85', temple(S), { emblem: 'temple', scale: 1.25, dy: -5, note: 'Philip: a temple façade on teal.' }),
+  HER: standard('#b7481e', diadem(47), { emblem: 'diadem', scale: 1.5, dy: -3 }),
+  BAL: standard('#9b2180', anchor(G), { emblem: 'anchor' }),
+  DMT: standard('#3431a5', anchor(S), { emblem: 'anchor' }),
+  LKH: standard('#bd3c24', path('M54 24A25 25 0 1 0 68 67A28 28 0 0 1 54 24Z') + star(53, 46, 8, 11, 4), { emblem: 'crescent-star' }),
+  HAS: standard('#1644b2', cornucopias + circle(48, 47, 8) + path('M44 40V35L48 38 52 35V40Z'), { emblem: 'cornucopias', scale: 1.3, dy: -4 }),
+  JUD: standard('#154bb6', menorah(), { emblem: 'menorah', scale: 1.18, dy: -6, note: 'Broad curved branches and a polygonal stepped base, following the Arch of Titus silhouette.' }),
+  ISR: standard('#ffffff', rect(0, 14, 96, 10, '#0038b8') + rect(0, 72, 96, 10, '#0038b8')
+    + line('M48 30 64 57H32ZM48 66 32 39H64Z', '#0038b8', 2.6), { emblem: 'israeli-flag', scale: 1, note: 'Modern Israel: blue stripes and blue Magen David on white.' }),
+  MLI: standard('#1640a5', magenDavid, { emblem: 'magen-david', note: 'Kingdom of Israel: gold Magen David on blue.' }),
+  ISL: standard('#225393', magenDavid, { emblem: 'magen-david', note: 'Gold Magen David on blue for the Kingdom of Israel.' }),
+  AIS: standard('#173a73', magenDavid, { emblem: 'magen-david' }),
+  IEM: standard('#243c77', magenDavid, { emblem: 'magen-david' }),
+  JDH: standard('#183da0', lion, { emblem: 'lion', dx: -4.5 }),
+  SAM: standard('#008064', path('M20 73 48 30 76 73Z', P) + line('M32 64H64', '#008064', 3.5), { emblem: 'gerizim', note: 'Mount Gerizim as a geometric mountain insignia.' }),
+  GAL: standard(GALILEE_BLUE, zodiacWheel(), { emblem: 'zodiac-wheel', note: 'The earlier beige zodiac roundel restored on baby blue.' }),
+  GLT: standard('#238244', line('M37 72A27 27 0 1 1 59 72', G, 7) + circle(36, 72, 5) + circle(60, 72, 5), { emblem: 'torc' }),
+  SEL: standard('#e4b33c', anchor('#6c217b'), { emblem: 'anchor' }),
+  PTO: standard('#00649d', eagle(), { emblem: 'eagle-thunderbolt', scale: 1.1, dy: -5 }),
+  BYZ: standard('#7a198b', line('M45 78V20H55A13 13 0 0 1 55 46H45M28 69 68 30M28 30 68 69', G, 5), { emblem: 'chi-rho', note: 'The Chi-Rho alone on imperial purple.' }),
+  ROM: standard('#8e2430', path('M10.56 55.13H11.81L12.46 58.2Q13.06 58.9 14.27 59.37Q15.48 59.84 16.78 59.84Q20.88 59.84 20.88 56.47Q20.88 55.42 20.1 54.69Q19.32 53.96 17.65 53.39Q15.2 52.57 14.12 52.07Q13.04 51.56 12.3 50.88Q11.56 50.19 11.11 49.21Q10.67 48.23 10.67 46.81Q10.67 44.28 12.39 42.96Q14.11 41.64 17.43 41.64Q19.82 41.64 22.74 42.25V46.81H21.47L20.82 44.18Q19.37 43.12 17.43 43.12Q15.67 43.12 14.73 43.77Q13.78 44.42 13.78 45.76Q13.78 46.72 14.57 47.4Q15.35 48.08 17.03 48.6Q20.3 49.68 21.52 50.47Q22.74 51.26 23.38 52.43Q24.02 53.6 24.02 55.19Q24.02 61.29 16.84 61.29Q15.2 61.29 13.49 61.01Q11.78 60.73 10.56 60.27ZM37.7 47.52Q37.7 45.23 36.85 44.33Q36 43.42 33.86 43.42H32.73V51.92H33.92Q35.9 51.92 36.8 50.92Q37.7 49.92 37.7 47.52ZM32.73 53.49V59.57L35.92 59.96V61H25.95V59.96L28.22 59.57V43.26L25.77 42.89V41.85H34.21Q38.27 41.85 40.29 43.21Q42.3 44.58 42.3 47.49Q42.3 53.49 35.3 53.49ZM44.56 51.4Q44.56 41.64 54.51 41.64Q59.42 41.64 61.94 44.11Q64.45 46.59 64.45 51.4Q64.45 58.5 59.11 60.54L59.82 61.41Q61.92 64.04 63.42 64.04Q64.17 64.04 64.59 63.93V65.16Q64.29 65.3 63.2 65.52Q62.11 65.74 61.22 65.74Q60.18 65.74 59.37 65.55Q58.57 65.36 57.87 64.95Q57.18 64.54 56.52 63.88Q55.85 63.21 54.34 61.29Q49.59 61.26 47.07 58.74Q44.56 56.22 44.56 51.4ZM49.3 51.4Q49.3 55.96 50.55 57.91Q51.8 59.86 54.51 59.86Q57.21 59.86 58.46 57.9Q59.71 55.94 59.71 51.4Q59.71 46.88 58.46 44.98Q57.21 43.08 54.51 43.08Q51.8 43.08 50.55 44.98Q49.3 46.88 49.3 51.4ZM73.35 52.89V59.57L75.8 59.96V61H66.56V59.96L68.84 59.57V43.26L66.38 42.89V41.85H75.53Q79.76 41.85 81.84 43.15Q83.93 44.45 83.93 47.21Q83.93 51.32 80.07 52.49L85.19 59.57L87.26 59.96V61H81.06L75.72 52.89ZM79.47 47.23Q79.47 45.09 78.59 44.26Q77.7 43.42 75.35 43.42H73.35V51.32H75.42Q77.62 51.32 78.55 50.4Q79.47 49.49 79.47 47.23Z'), { emblem: 'spqr', scale: 1, dx: -.9, dy: -5.7, note: 'SPQR in outlined Roman serif lettering.' }),
+  ASR: standard('#a81e38', wingedFigure('#a81e38', true), { emblem: 'winged-ashur', scale: 1, note: 'A winged figure and disc, following the supplied visual reference.' }),
+  ASY: standard('#bd382f', wingedFigure('#bd382f', true), { emblem: 'winged-ashur', scale: 1 }),
+  PAS: standard('#812c9e', wingedFigure('#812c9e'), { emblem: 'winged-figure', scale: 1, note: 'A Faravahar-inspired insignia for the game.' }),
+  BBL: standard('#283cba', star(48, 48, 8, 29, 10), { emblem: 'eight-pointed-star' }),
+  BAB: standard('#095caf', star(48, 48, 8, 29, 10), { emblem: 'eight-pointed-star' }),
+  SAS: standard('#ad1639', fireAltar, { emblem: 'fire-altar' }),
 
-  // Courts raised by release/revival, deliberately outside DEFINES.TAGS.
-  PHO: standard('#813d79', path('M28 57H72L62 71H38Z', P) + line('M49 31V57M35 76H66', G, 3)
-    + path('M49 32 69 51H49Z') + circle(26, 29, 6) + line('M17 81Q25 75 33 81T49 81T65 81T81 81', P, 2), { trim: 'key' }),
-  PHL: standard('#9e6635', [30, 39, 48, 57, 66].map((x, i) => path(`M${x - 3} 49L${x - 5} ${31 + Math.abs(i - 2) * 4}L${x} ${23 + Math.abs(i - 2) * 3}L${x + 4} 33L${x + 2} 49Z`, P)).join('')
-    + path('M29 50H67V62L57 76H39L29 62Z') + line('M33 57H63M38 67H58', K, 2), { trim: 'corners' }),
-  IDU: standard('#8c4c37', path('M22 77 35 31 47 23 53 49 64 35 76 77Z', P) + path('M40 77 48 43 53 77Z', '#8c4c37', 'none')
-    + star(68, 25, 8, 7, 3), { trim: 'diamonds' }),
-  MOA: standard('#753c50', path('M30 78V38A18 18 0 0 1 66 38V78Z', '#282b30') + [41, 49, 57, 65].map(y => line(`M36 ${y}H60`, P, 2)).join('')
-    + rect(27, 79, 42, 4, G), { trim: 'corners' }),
-  AMM: standard('#625580', path('M27 76V42H35V29H43V42H53V29H61V42H69V76Z', P)
-    + path('M43 76V61A5 5 0 0 1 53 61V76Z', '#625580', 'none') + star(48, 22, 6, 8, 4), { trim: 'diamonds' }),
-  ARD: standard('#3c647e', path('M44 23H59L50 41H63L35 76 42 51H31Z')
-    + line('M23 31 30 37M68 27 61 36M21 65H31M65 59H75', P, 3), { trim: 'key', ink: P }),
-  PLM: standard('#b68a37', circle(48, 42, 14, P) + star(48, 42, 12, 23, 17, G) + circle(48, 42, 10, '#8b3c3b')
-    + line('M29 78V60M39 78V60M57 78V60M67 78V60M25 58H71M25 80H71', P, 4), { trim: 'corners', ink: P }),
-  EME: standard('#9a4950', path('M31 73 35 43 45 24 56 31 65 73Z', '#282a31')
-    + circle(49, 48, 5, G) + rect(28, 75, 40, 5, P) + star(71, 26, 8, 7, 3), { trim: 'diamonds', ink: P }),
-  DEC: standard('#4c6c58', temple(P) + Array.from({ length: 10 }, (_, i) => {
-    const a = Math.PI * 2 * i / 10; return circle((48 + Math.cos(a) * 34).toFixed(2), (49 + Math.sin(a) * 34).toFixed(2), 2.1, G);
-  }).join(''), { trim: 'plain' }),
-  ASY: standard('#854039', wingedDisk + line('M48 53V79', P, 3) + rect(37, 78, 22, 4, G), { trim: 'diamonds', ink: P }),
-  BAB: standard('#335c8a', star(48, 43, 8, 21, 9, P) + circle(48, 43, 6, G)
-    + [65, 73, 81].map(y => line(`M24 ${y}Q30 ${y - 5} 36 ${y}T48 ${y}T60 ${y}T72 ${y}`, G, 2)).join(''), { trim: 'corners' }),
-  ELM: standard('#866842', line('M37 77C65 77 64 59 45 59S27 42 49 42S65 27 52 23', P, 7)
-    + path('M49 21 60 22 59 29 51 29Z', P) + line('M25 80H71', G, 3), { trim: 'diamonds' }),
-  MED: standard('#614d8a', path('M43 72 43 35 38 27 42 21 48 25 54 21 58 27 53 35 53 72 48 81Z', P)
-    + line('M34 38H62M48 44V72', G, 4), { trim: 'corners' }),
-  PRS: standard('#9b4055', fireAltar + star(24, 34, 8, 6, 3, P) + star(72, 34, 8, 6, 3, P), { trim: 'diamonds' }),
-  CIL: standard('#386961', path('M32 36 48 22 64 36V61H32Z', P) + path('M22 77 38 48 49 63 60 45 76 77Z')
-    + circle(48, 33, 4, '#386961'), { trim: 'corners', ink: P }),
-  CAP: standard('#80644d', path('M27 74 38 55 39 40 47 24 56 40 57 55 70 74Z', P)
-    + rect(43, 46, 9, 28, '#80644d') + line('M26 80H71M35 40H60', G, 3), { trim: 'key' }),
-  ION: standard('#2a6b82', path('M35 76V44H61V76Z', P) + rect(29, 77, 38, 5, P)
-    + line('M36 47V72M48 47V72M60 47V72', '#2a6b82', 2)
-    + line('M31 38C19 38 22 23 32 25C41 28 34 40 32 34M65 38C77 38 74 23 64 25C55 28 62 40 64 34M31 27H65M28 42H68', G, 4), { trim: 'key' }),
-  HEL: standard('#2c4e8c', wreath(P) + rect(38, 42, 20, 30, G) + line('M40 38H56M41 49H55M41 55H55M41 61H55', K, 2)
-    + star(48, 25, 8, 8, 3), { trim: 'corners', ink: P }),
-  CYP: standard('#a16d3c', path('M48 77V43C33 46 25 38 29 26Q39 22 48 33Q57 22 67 26C71 38 63 46 48 43Z', P)
-    + line('M48 35V76M34 80H62', G, 3), { trim: 'diamonds' }),
-  KMT: standard('#b58f31', line('M48 78V42', '#254c63', 7) + circle(48, 32, 12, P) + circle(48, 32, 7, '#b58f31')
-    + line('M30 49H66', '#254c63', 6), { trim: 'key', ink: '#254c63' }),
-  HEJ: standard('#292c31', rect(0, 32, 96, 32, '#27804d') + rect(0, 64, 96, 32, '#f3eee1')
-    + path('M0 0 48 48 0 96Z', '#a92e35', 'none'), { trim: 'plain', ink: '#bba66e', note: 'Sharifian colours, drawn as a flat square flag.' }),
-  KUR: standard('#c1323c', rect(0, 32, 96, 32, '#f4f1e5') + rect(0, 64, 96, 32, '#287b43')
-    + star(48, 48, 21, 15, 10, '#edbf31'), { trim: 'plain', ink: '#bdad79' }),
-  ALW: standard('#f3eee0', path('M0 0 25 0 25 25H0ZM71 0H96V25H71ZM0 71H25V96H0ZM71 71H96V96H71Z', '#a3303b', 'none')
-    + star(48, 48, 12, 21, 16, '#d7ac3e'), { trim: 'plain', ink: '#456c86', note: 'Original game emblem for the coastal state; not a reconstruction of its mandate flag.' }),
-  DRZ: standard('#f1eee0', rect(0, 0, 30, 96, '#28784a') + rect(30, 0, 66, 24, '#ad343d')
-    + rect(30, 24, 66, 24, '#e0b843') + rect(30, 48, 66, 24, '#285c96') + rect(30, 72, 66, 24, '#f1eee0'), { trim: 'plain', ink: '#b6a576', note: 'Five-colour Druze identity in a flat game banner.' }),
+  // Revival courts keep one regional device rather than an ornamental frame.
+  PHO: standard('#800080', path('M23 48 68 26 71 31 36 48 71 66 68 71Z', '#ffe000') + rect(47, 27, 5.5, 44, '#ffe000'), { emblem: 'phoenician-aleph', scale: 1.5, note: 'Gold Phoenician letter on purple, following the supplied reference.' }),
+  PHL: standard('#b44b24', [30, 39, 48, 57, 66].map((x, i) => path(`M${x - 3} 49L${x - 5} ${31 + Math.abs(i - 2) * 4}L${x} ${23 + Math.abs(i - 2) * 3}L${x + 4} 33L${x + 2} 49Z`, P)).join('')
+    + path('M29 50H67V62L57 76H39L29 62Z'), { emblem: 'feathered-helmet' }),
+  IDU: standard('#bd3c26', path('M22 77 35 31 47 23 53 49 64 35 76 77Z', P) + path('M40 77 48 43 53 77Z', '#bd3c26'), { emblem: 'rock' }),
+  MOA: standard('#9c245a', path('M30 78V38A18 18 0 0 1 66 38V78Z', P) + [42, 50, 58, 66].map(y => line(`M37 ${y}H59`, '#9c245a', 2)).join(''), { emblem: 'stele' }),
+  AMM: standard('#6531a6', path('M27 76V42H35V29H43V42H53V29H61V42H69V76Z', P)
+    + path('M43 76V61A5 5 0 0 1 53 61V76Z', '#6531a6'), { emblem: 'citadel', dy: -4.5 }),
+  ARD: standard('#096c9d', path('M44 23H59L50 41H63L35 76 42 51H31Z'), { emblem: 'lightning' }),
+  PLM: standard('#c3451e', star(48, 48, 12, 29, 20) + circle(48, 48, 13, '#c3451e'), { emblem: 'sun' }),
+  EME: standard('#b8274e', path('M31 73 35 43 45 24 56 31 65 73Z', P) + circle(49, 48, 5, '#b8274e'), { emblem: 'sacred-stone' }),
+  DEC: standard('#087b53', temple(P), { emblem: 'temple', dy: -5 }),
+  ELM: standard('#a74121', line('M37 77C65 77 64 59 45 59S27 42 49 42S65 27 52 23', P, 7)
+    + path('M49 21 60 22 59 29 51 29Z', P), { emblem: 'serpent' }),
+  MED: standard('#7134b8', path('M43 72 43 35 38 27 42 21 48 25 54 21 58 27 53 35 53 72 48 81Z', P)
+    + line('M34 38H62', P, 4), { emblem: 'akinakes' }),
+  PRS: standard('#bd204c', fireAltar, { emblem: 'fire-altar' }),
+  CIL: standard('#007f73', path('M29 75V40L48 23 67 40V75Z', P) + path('M42 75V49H54V75Z', '#007f73'), { emblem: 'gate' }),
+  CAP: standard('#ae4524', path('M27 74 38 55 39 40 47 24 56 40 57 55 70 74Z', P)
+    + rect(43, 46, 9, 28, '#ae4524'), { emblem: 'rock-sanctuary' }),
+  ION: standard('#007ca6', rect(36, 44, 24, 33, P) + rect(30, 77, 36, 4, P)
+    + line('M43 48V72M53 48V72', '#007ca6', 2)
+    + line('M31 38C19 38 22 23 32 25C41 28 34 40 32 34M65 38C77 38 74 23 64 25C55 28 62 40 64 34M31 27H65M28 42H68', P, 4), { emblem: 'ionic-column', dy: -4.5 }),
+  HEL: standard('#264cb6', rect(43, 45, 10, 32, P) + path('M37 42H59L55 51H41Z', P) + flame(48, 29), { emblem: 'torch' }),
+  CYP: standard('#c05221', path('M29 27Q48 35 67 27Q61 48 67 69Q48 61 29 69Q35 48 29 27Z', P), { emblem: 'copper-ingot', scale: 1.6 }),
+  KMT: standard('#00688c', line('M48 78V42M30 49H66', G, 7) + ring(48, 31, 12, G, 6), { emblem: 'ankh' }),
+  // Modern territorial flags retain their established multicolour layouts.
+  HEJ: standard('#292c31', rect(0, 32, 96, 32, '#27804d') + rect(0, 64, 96, 32, '#f3eee1') + path('M0 0 48 48 0 96Z', '#a92e35'), { scale: 1, emblem: 'sharifian-colours' }),
+  KUR: standard('#c1323c', rect(0, 32, 96, 32, '#f4f1e5') + rect(0, 64, 96, 32, '#287b43') + star(48, 48, 21, 15, 10, '#edbf31'), { scale: 1, emblem: 'kurdish-colours' }),
+  ALW: standard('#f3eee0', path('M0 0 25 0 25 25H0ZM71 0H96V25H71ZM0 71H25V96H0ZM71 71H96V96H71Z', '#a3303b') + star(48, 48, 12, 21, 16, '#d7ac3e'), { scale: 1, emblem: 'coastal-state', note: 'An original game banner for the coastal state.' }),
+  DRZ: standard('#f1eee0', rect(0, 0, 30, 96, '#28784a') + rect(30, 0, 66, 24, '#ad343d') + rect(30, 24, 66, 24, '#e0b843') + rect(30, 48, 66, 24, '#285c96') + rect(30, 72, 66, 24, '#f1eee0'), { scale: 1, emblem: 'druze-colours' }),
 };
+
+// Explicit assignments keep small court devices intentional. These are game
+// insignia, not a catalogue of attested ancient flags. No faces or pictorial
+// scenes: broad silhouettes, open negative space and one ink per device.
+const DEVICES = {
+  bow: c => line('M32 21Q67 48 32 75', c, 6) + line('M32 21 46 48 32 75M24 48H72', c, 3) + path('M65 40 76 48 65 56Z', c),
+  horns: c => path('M21 22C19 46 27 65 48 70C69 65 77 46 75 22C70 40 64 50 54 53V43H42V53C32 50 26 40 21 22Z', c) + circle(48, 28, 7, c),
+  crescent: c => path('M57 20A29 29 0 1 0 72 68A32 32 0 0 1 57 20Z', c),
+  'crescent-star': c => path('M51 21A28 28 0 1 0 71 69A31 31 0 0 1 51 21Z', c) + star(58, 40, 6, 12, 5, c),
+  spear: c => path('M48 18 57 37 51 43V78H45V43L39 37Z', c),
+  spears: c => `<g transform="rotate(-28 48 48)">${path('M48 18 55 33 51 39V78H45V39L41 33Z', c)}</g><g transform="rotate(28 48 48)">${path('M48 18 55 33 51 39V78H45V39L41 33Z', c)}</g>`,
+  lightning: c => path('M47 18H66L53 41H69L29 80 41 52H26Z', c),
+  axe: c => line('M48 23V78', c, 6) + path('M44 27Q28 26 23 38Q31 52 44 47ZM52 27Q68 26 73 38Q65 52 52 47Z', c),
+  branch: c => line('M48 76V23', c, 4) + [0, 1, 2].map(i => path(`M46 ${42 + i * 12}Q24 ${40 + i * 12} 25 ${24 + i * 12}Q43 ${25 + i * 12} 46 ${42 + i * 12}ZM50 ${42 + i * 12}Q72 ${40 + i * 12} 71 ${24 + i * 12}Q53 ${25 + i * 12} 50 ${42 + i * 12}Z`, c)).join(''),
+  palm: c => line('M48 77V39', c, 5) + path('M48 40Q23 40 20 58Q35 46 48 47Q61 46 76 58Q73 40 48 40ZM48 37Q28 22 22 39Q35 30 48 43Q61 30 74 39Q68 22 48 37ZM48 39Q38 25 48 18Q58 25 48 39Z', c),
+  sun: c => star(48, 48, 16, 31, 18, c) + circle(48, 48, 12, c),
+  rosette: c => star(48, 48, 8, 29, 14, c),
+  wheel: c => ring(48, 48, 27, c, 5) + line('M48 21V75M21 48H75M29 29 67 67M29 67 67 29', c, 4),
+  torc: c => line('M36 72A27 27 0 1 1 60 72', c, 7) + circle(35, 72, 5, c) + circle(61, 72, 5, c),
+  trident: c => line('M48 20V77M28 28V43Q28 52 48 52Q68 52 68 43V28', c, 5) + path('M48 17 41 29H55ZM28 22 21 34H35ZM68 22 61 34H75Z', c),
+  tamga: c => line('M48 22V76M27 27V48H69V27M36 76H60', c, 6),
+  'iyi-tamga': c => line('M26 23V75M70 23V75M38 25 48 44 58 25M48 44V73', c, 6),
+  wing: c => path('M23 70V25L75 39 66 47 37 35V42L61 51 53 59 37 51V58L47 63 39 72Z', c),
+  sail: c => path('M46 20V65H23ZM52 25 75 65H52Z', c) + path('M19 70H77L67 79H31Z', c),
+  prow: c => path('M21 57H64V42L78 32V63L65 77H31Z', c) + line('M26 46H58M31 35H56', c, 4),
+  tower: c => path('M30 77V24H39V32H44V24H53V32H58V24H67V77H54V57H43V77Z', c),
+  gate: c => path('M24 76V31H34V40H42V25H54V40H62V31H72V76H57V57A9 9 0 0 0 39 57V76Z', c),
+  mountain: c => path('M19 74 48 22 77 74ZM40 52H56L48 37Z', c),
+  pyramid: c => path('M21 76 46 20 53 76ZM52 30 76 76H59Z', c),
+  stele: c => path('M34 78V36A14 14 0 0 1 62 36V78Z M41 42H55V47H41ZM41 54H55V59H41ZM41 66H55V71H41Z', c).replace('stroke-width=', 'fill-rule="evenodd" stroke-width='),
+  serpent: c => line('M31 73H53C78 73 71 51 49 51S22 28 44 28H63', c, 7) + path('M59 20 74 28 59 36Z', c),
+  dagger: c => path('M43 23H53V38H63V44H53V67L48 80 43 67V44H33V38H43Z', c),
+  sabre: c => path('M34 21H42V37H49V43H42Q38 64 65 76Q28 76 33 43H26V37H34Z', c),
+  cross: c => path('M42 20H54V42H76V54H54V76H42V54H20V42H42Z', c),
+  lambda: c => path('M44 20H52L77 77H65L48 36 31 77H19Z', c),
+  koppa: c => ring(48, 38, 20, c, 7) + line('M48 57V80', c, 7),
+  cup: c => path('M26 25H70C70 43 63 54 52 57V69H65V76H31V69H44V57C33 54 26 43 26 25Z', c),
+  cap: c => path('M25 70Q33 54 35 41Q35 24 53 20Q43 32 55 39Q68 51 70 70ZM23 73H73V79H23Z', c),
+  crown: c => path('M22 29 36 42 48 22 60 42 74 29 66 70H30ZM31 74H65V79H31Z', c),
+  diadem: c => diadem(47, c),
+  temple: c => temple(c),
+  anchor: c => anchor(c),
+  torch: c => path('M39 49H57L52 79H44ZM35 41H61L57 50H39ZM48 16C54 29 63 30 56 39H40C32 30 44 27 48 16Z', c),
+  seal: c => path('M26 26H70V61H26ZM35 62 32 80 44 75 48 62 52 75 64 80 61 62Z', c),
+  book: c => path('M21 27Q36 21 45 30V76Q35 67 21 73ZM51 30Q60 21 75 27V73Q61 67 51 76Z', c),
+  'v-rod': c => line('M21 27 48 67 75 27', c, 6) + path('M25 44Q48 68 71 44Q65 79 48 79Q31 79 25 44Z', c),
+  knot: c => line('M32 27H63V62H32V27M48 17V77M20 44H76', c, 6),
+  tree: c => path('M44 78V65H22L35 49H26L40 32H33L48 16 63 32H56L70 49H61L74 65H52V78Z', c),
+  ingot: c => path('M23 23Q48 35 73 23Q61 48 73 73Q48 61 23 73Q35 48 23 23Z', c),
+  helmet: c => path('M28 65V44A22 22 0 0 1 72 44V54H61V42H53V77H43V54H35V65ZM22 76V36Q24 18 49 17V24Q29 25 29 39V76Z', c),
+  altar: c => path('M24 40H72V48H56V68H68V76H28V68H40V48H24ZM48 17 59 30 53 37H41L37 30Z', c),
+  'tanit': c => ring(48, 27, 8, c, 5) + line('M24 42H72', c, 5) + path('M48 44 71 77H25ZM48 56 38 71H58Z', c).replace('stroke-width=', 'fill-rule="evenodd" stroke-width='),
+  labyrinth: c => line('M24 74V22H74V74H38V36H60V60H48V48', c, 5),
+  triskele: c => [0,120,240].map(a => `<g transform="rotate(${a} 48 48)">${line('M48 48C37 38 40 22 53 22C67 22 70 37 61 43', c, 5)}</g>`).join(''),
+  rose: c => [0,72,144,216,288].map(a => `<g transform="rotate(${a} 48 48)">${path('M43 45Q28 27 42 20Q57 15 57 32L53 45Z', c)}</g>`).join('') + circle(48,48,8,c),
+};
+const COURT_DEVICES = {
+  MIZ:'crown', DMS:'lightning', TYR:'triskele', PLS:'helmet', MOB:'stele', AMO:'gate', EDM:'mountain', HMT:'wing', QDR:'bow', URA:'tree', PHR:'cap', LYD:'axe', ELA:'serpent', MDA:'dagger', TAB:'branch', CRC:'rose',
+  PAR:'bow', NAB:'ingot', ARM:'mountain', AGR:'diadem', HYR:'palm', ARI:'dagger', OSR:'crescent-star', ADI:'crown', CHX:'sail', CMG:'mountain', CYZ:'anchor', ITU:'bow', ATG:'temple', PNT:'crescent-star', GHA:'cross', RSH:'spear', GRC:'branch',
+  ETR:'lightning', SMN:'spears', TRT:'prow', SRD:'tower', IBE:'spear', MAC:'sun', ATH:'helmet', SPT:'lambda', COR:'koppa', ACH:'knot', RHO:'rose', CRT:'labyrinth', SYC:'wheel', TAR:'trident', CYR:'branch', MIL:'rosette', PRG:'cup', BIT:'prow',
+  PRJ:'temple', RPJ:'cup', EPJ:'seal', KGJ:'diadem', PKJ:'cap', JEM:'crown', LUK:'axe',
+  CAR:'tanit', NUM:'spear', MAU:'crescent', GRM:'wheel', MAS:'sail', CTB:'spears', LUS:'dagger', AVN:'torc', AED:'torc', SEQ:'trident', BLG:'spears', ARO:'sail', AQT:'branch', NOR:'dagger', BOI:'horns', BRT:'triskele', CAL:'v-rod', HIB:'triskele',
+  SUE:'knot', CHE:'lightning', CHA:'sabre', FRS:'tower', CIM:'horns', SCN:'sail', GOT:'spear', AES:'rosette', DLM:'gate', SCO:'sabre', DRD:'tower', THR:'crescent', DAC:'tamga', BOS:'trident', SCY:'bow', SRM:'tamga', VEN:'tree',
+  OST:'wing', VAN:'sail', VIS:'crown', FRK:'axe', BGD:'book', GEP:'wing', LMB:'diadem', SAX:'dagger', AVA:'trident', SLV:'axe', TRK:'tamga', BGR:'iyi-tamga',
+  KSH:'pyramid', NOB:'bow', BLM:'spears', AXM:'stele', SAB:'horns', HMY:'wing', HDR:'altar', OMA:'sail', SAK:'cap', GBA:'rosette', CHO:'gate', HEP:'tamga',
+  REB:'torch', USR:'crown', USV:'diadem', LST:'sabre', PIR:'prow',
+};
+// Keep the map's regional hue families, but use saturated flag colours
+// rather than darkening every RGB channel into the same dusty palette.
+const RICH_FIELDS = {
+  MIZ: '#1468bb', QDR: '#bc2948', SAB: '#007d65', NAB: '#bc3b24',
+  NUM: '#006c67', MAU: '#8a2376', GRM: '#b43c24', RHO: '#bd2445',
+  PRG: '#146eae', TRT: '#7e278a', SCY: '#ac2c39', SRM: '#0b7c69',
+  AXM: '#6331ac', HMY: '#a6223a', KSH: '#0c709c', HDR: '#813098',
+};
+function richField(rgb) {
+  const [r,g,b] = rgb.map(v => v / 255), hi = Math.max(r,g,b), lo = Math.min(r,g,b), d = hi-lo, l = (hi+lo)/2;
+  let h = 0;
+  if (d) h = (hi === r ? ((g-b)/d + 6) % 6 : hi === g ? (b-r)/d + 2 : (r-g)/d + 4) * 60;
+  const saturation = d ? d / (1 - Math.abs(2*l-1)) : 0;
+  return `hsl(${h.toFixed(2)} ${(62 + saturation * 26).toFixed(2)}% ${(27 + l * 22).toFixed(2)}%)`;
+}
+for (const [tag, emblem] of Object.entries(COURT_DEVICES)) {
+  const field = RICH_FIELDS[tag] || richField(DEFINES.TAGS[tag].color);
+  FLAT_FLAGS[tag] = standard(field, DEVICES[emblem](G), { emblem, dx: emblem === 'prow' ? -1.5 : 0,
+    dy: ({ diadem: -6, temple: -5, prow: -6.5, seal: -5, 'v-rod': -3 })[emblem] || 0 });
+}
 
 // Preserve the designs of actual modern flags; their geometry is the design.
 const MODERN = new Set(('ISR EGY JOR SYR LEB IRQ TUR SAU IRN UK ITA UAR SAR HEZ EGY_REP SYR_BAATH SYR_FAR IRN_IR IRQ_BAATH GRC_MOD IRQ_REP FRA SPA POR NLD BEL LUX DEN SWE POL CZE SOV GER AUT HUN YUG ALB BUL ROU IRL SUI USA ETH YEM AFG PAK LBR HEJ KUR ALW DRZ').split(' '));
@@ -167,10 +251,7 @@ export function presentFlag(key, art, color) {
   const normalized = `<g transform="scale(${24 / w} ${24 / h}) translate(${-x} ${-y})">${raw}</g>`;
   // Existing modern designs have a .6-unit inset; extend them to the edge.
   const body = MODERN.has(key) ? `<g transform="translate(-0.63 -0.63) scale(1.0526)">${normalized}</g>`
-    : `<g>${rect(0, 0, 24, 24, validColor(color))}${rect(0, 0, 2.3, 24, '#3b3340')}${rect(21.7, 0, 2.3, 24, '#3b3340')}
-      <path d="M1.1 1.1H22.9V22.9H1.1Z" fill="none" stroke="${G}" stroke-width="0.55"/>
-      <path d="M3 1.5V3H4.5M19.5 3H21V1.5M3 22.5V21H4.5M19.5 21H21V22.5" fill="none" stroke="${P}" stroke-width="0.65"/>
-      <g transform="translate(2.3 2.3) scale(.8083)">${normalized}</g></g>`;
+    : `<g>${rect(0, 0, 24, 24, validColor(color))}<g data-insignia transform="translate(-.72 -.72) scale(1.06)">${normalized}</g></g>`;
   return { viewBox, body: `<g transform="translate(${x} ${y}) scale(${w / 24} ${h / 24})">${body}</g>` };
 }
 
@@ -178,7 +259,6 @@ export function presentFlag(key, art, color) {
 // and get a deterministic vector banner instead of a missing-art text chip.
 export function legacyCourtFlag(tag, identity, color) {
   const h = hash(identity || tag), petals = 5 + h % 5, width = 8 + (h >>> 8) % 8;
-  const device = star(48, 46, petals, 23, width, P) + circle(48, 46, 6, G)
-    + line(`M${26 + h % 5} 77H${68 - h % 5}`, P, 3);
-  return standard(validColor(color), device, { trim: h % 2 ? 'diamonds' : 'corners', field: rect(0, 65, 96, 31, '#373341') });
+  const device = star(48, 48, petals, 29, width, P);
+  return standard(validColor(color), device, { emblem: 'saved-court' });
 }

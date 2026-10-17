@@ -63,7 +63,7 @@ console.log('== the banner exists, and nobody flies it by default ==');
 {
   ok(!!DEFINES.TAGS.USR && DEFINES.TAGS.USR.name === 'The Rival Purple',
     'USR is a court in the definitions');
-  ok(typeof FLAGS.USR === 'string' && FLAGS.USR.length > 60, '  with an emblem of its own');
+  ok((typeof FLAGS.USR === 'string' ? FLAGS.USR : FLAGS.USR?.body)?.length > 60, '  with an emblem of its own');
   ok(DEFINES.GOV_OF.USR === 'monarchy', '  and a government (acclamation, held by the army)');
   for (const era of ERAS) {
     ok((era.bookmark.activeTags || []).indexOf('USR') < 0,

@@ -1,193 +1,102 @@
-# Court emblem brief — Judaea Universalis
+# Court insignia brief — Judaea Universalis
 
-A brief for drawing the small heraldic emblem that identifies a court in this
-game. Everything below is the actual contract in `js/ui/icons.js`, not a
-description of one.
+The current direction is **one large, centered insignia on a solid field**.
+Use rich, saturated colours and broad geometric shapes. Review the actual rendered flag
+at 14, 24 and 34px in [`tools/flags.html`](tools/flags.html).
 
----
+## 1. Artwork and rendering
 
-## 1. What you are producing
-
-Every catalog or revival court needs its own entry in the `FLAGS` table in
-`js/ui/icons.js`. New full-field designs live in `js/ui/flag_art.js` and are
-spread into that table. Either of the two shapes below is supported.
-
-**The rich shape** — use this one. The flag brings its own coordinate space
-and its own palette:
+Every catalog and revival court needs explicit artwork in `FLAGS`.
+Full-field designs live in `js/ui/flag_art.js` and are spread into the table
+in `js/ui/icons.js`. Use the module's `standard(field, motif, options)` helper:
 
 ```js
-  XXX: {
-    viewBox: '0 0 96 96',
-    flatBanner: true,
-    body: `<rect …/><g>…</g><path …/>`,
-  },
+XXX: standard('#234e87', device, { emblem: 'device-name', scale: 1.18 }),
 ```
 
-**The plain shape** — a bare string, which is read as body content on a 24x24
-grid. Every emblem drawn before this brief existed uses it, and it still works:
+The result uses `{viewBox: '0 0 96 96', flatBanner: true, body}`. `body` is
+SVG content; the app provides the outer SVG. Legacy bare SVG strings still
+work on their original 24-unit grid. New art should use full-field standards.
 
-```js
-  XXX: `<path d="…" ${SIL}/>`,
-```
+## 2. Composition
 
-Either way, `body` is SVG **content**, not a document: the app supplies the
-`<svg>` element and you supply what goes inside it. Allowed and encouraged:
-`<path>`, `<circle>`, `<rect>`, `<ellipse>`, `<polygon>`, `<g>`, `<defs>`,
-`<mask>`, `<clipPath>` and solid colours. Use flat vector fills and crisp
-outlines. Omit cloth textures, folds, lighting, gradients, shadows, raster
-images and filters. Keep small marks legible at game sizes.
+- Fill the square with one solid background colour.
+- Place one device in the center; aim for 60–80% of the square's width or
+  height, keeping clear space around it.
+- Use one ink, normally bright gold, ivory or white. Use the field colour for open
+  spaces inside a device when needed.
+- Omit borders, corner brackets, edge patterns, scattered stars, wreaths,
+  decorative stripes and extra badges on ancient standards.
+- Keep modern national flag layouts where specified; their stripes and
+  cantons are part of the flag itself.
 
-A nested `<svg>`, external file references, `<script>`, and network loads
-are also prohibited. The renderer retains support for older rich SVG shapes;
-new production flags follow the flat-colour direction above.
+The browser check measures the transformed device bounds to catch small,
+off-center or edge-filling artwork. Optical adjustments can use `dx`/`dy`.
+A larger viewBox provides drawing coordinates, not more display pixels.
 
-**Ids are yours to name freely.** Every emblem on a page shares one document,
-so two of them reaching for `id="a"` would share the same SVG definition. The app rewrites every id per emblem on the way out — `id="a"` becomes
-`id="fjdh-a"`, and `url(#a)`, `href="#a"` and `xlink:href="#a"` are rewritten
-to match. Write whatever reads well; collisions are handled.
+## 3. Drawing style
 
----
+Use solid silhouettes and broad strokes. Do not put dark outlines around
+light shapes. Avoid eyes, faces, drawn fur, tiny limbs and pictorial scenes.
+An animal that reads as clip art should become an abstract regional mark or
+an object such as a bow, spear, anchor, altar or torc.
 
-## 2. The frame, and the thing that has not changed
+No cloth, folds, lighting, shading, gradients, filters, shadows, raster images,
+external references or network loads. SVG paths, rectangles, circles, polygons
+and groups suffice. The renderer scopes IDs for older rich SVG artwork;
+that compatibility is not a reason to add effects to new flags.
 
-The `<svg>` you fill occupies a rounded square backed by **the court's own
-colour** (its "field"). Each court's field colour is in the table below. Your
-flag can fill this field completely, as the full-field standards and modern
-national flags do.
-The SVG fills the chip; `flatBanner: true` opts out of the legacy glyph frame.
+## 4. Required prominent designs
 
-**The square is drawn at 14px to 34px in the game.** That is the entire range across the
-whole UI, and it is the one constraint that is not negotiable by writing
-different SVG.
+| Court | Device and field |
+| --- | --- |
+| Byzantium | Gold Chi-Rho alone on purple |
+| Modern Israel | White field, two blue stripes, blue Magen David |
+| Kingdom of Israel | Gold Magen David on blue |
+| Judaea | Broad Arch of Titus menorah with a polygonal stepped base, gold on blue |
+| Hasmonean Judaea | Cornucopias and pomegranate, entirely gold on blue |
+| Galilee | Earlier beige zodiac roundel on baby blue |
+| Phoenicia | Gold angular Phoenician letter on purple, matching the supplied reference |
+| Rome | Gold SPQR on red, without an eagle or wreath |
+| Assyria / Persia | Simplified winged figure and disc |
+| Babylonia | Gold eight-pointed star on blue |
+| Samaria | Geometric Mount Gerizim on green |
+| Qedar | Drawn bow; no small camel illustration |
+| Saba | Abstract horns and disc; no frontal bull face |
 
-This is worth being precise about, because it is the thing most likely to be
-misunderstood: **a larger `viewBox` does not buy more pixels.** `0 0 96 96`
-drawn at 34px has exactly the same pixel budget as `0 0 24 24` drawn at 34px.
-A viewBox is a coordinate space, not a resolution, and SVG coordinates were
-already floats. What the larger frame actually buys is convenience — round
-numbers to work in — and what the richer format buys is **colour, grouping, field divisions and masking**.
+## 5. Identity and coverage
 
-So: use the freedom for richness, not for detail. A design that needs 60px to
-resolve will not resolve.
+All 210 catalog/revival courts need their own artwork. Related courts may
+share a device with distinct fields; compare courts that appear together.
+Runtime rebrands, chapter overrides and saved-game identities must continue
+to work. Known courts must never use the synthetic saved-court fallback.
 
----
+`smoke186` and `smoke213` check completeness, uniqueness, both SVG data shapes,
+old saves and runtime identity. `uitest72` checks SVG validity, actual sizes,
+centering, monochrome Hasmonean art and real desktop/mobile UI consumers.
 
-## 3. The house palette — now a default, not a rule
+## 6. Subject matter
 
-```js
-const FP = '#e8dcc0';              // parchment — the main silhouette fill
-const FG = '#e6c554';              // gold — the accent fill
-const FO = 'rgba(20,16,11,0.55)';  // dark ink — every outline, and solid voids
-```
+Ancient and alternative banners are original game insignia inspired by period
+motifs. Do not present them as attested historical flags. Follow the user's
+specified designs even where they deliberately use a later symbol. Distinguish
+a documented motif from an invented game device in explanatory notes.
 
-Most of the table is parchment + gold + dark outline on the court's field, and
-that hand is why the set reads as one system. Depart from it deliberately and
-for a reason, not by accident. If a court's emblem has real historical colours
-— a national flag, a known polychrome standard — use them.
+## 7. Review
 
----
-
-## 4. The three idioms, for anything drawn in the house hand
-
-```js
-const S   = `stroke="${FO}" stroke-linecap="round" stroke-linejoin="round"`;
-const SIL = `fill="${FP}" ${S} stroke-width="0.9"`;  // a parchment shape
-const ACC = `fill="${FG}" ${S} stroke-width="0.8"`;  // a gold shape
-const DET = `fill="none" ${S} stroke-width="0.7"`;   // an interior detail line
-```
-
-Those stroke widths are tuned for the 24x24 grid. **On a larger viewBox, scale
-them:** on `0 0 96 96` the equivalents are 3.6, 3.2 and 2.8. A 0.9-unit stroke
-on a 96-unit grid is invisible at every size this is drawn at.
-
-Two conventions worth keeping whatever palette you use:
-
-- **Heavy dark under light** makes a line read on any field: draw the shape
-  twice, once thick in `FO`, once thin in the light colour.
-- **Solid dark shapes** (`fill="${FO}" stroke="none"`) are for voids — an open
-  mouth, an eye socket, a gap.
-
-A worked example in the plain shape:
-
-```js
-  // Seleucids: the dynastic anchor of Seleucus I, gold ring and stock.
-  SEL:
-    `<circle cx="12" cy="4.6" r="1.5" fill="none" stroke="${FO}" stroke-width="2.6"/>` +
-    `<circle cx="12" cy="4.6" r="1.5" fill="none" stroke="${FG}" stroke-width="1.3"/>` +
-    `<path d="M11.1 6.7h1.8v11h-1.8Z" ${SIL}/>` +
-    `<rect x="7.3" y="8.6" width="9.4" height="1.7" rx="0.85" ${ACC}/>` +
-    `<path d="M12 20.1c-3.1-.3-5.4-1.9-6.8-4.8l2.6-1c1 2 2.4 3.1 4.2 3.5 1.8-.4 3.2-1.5 4.2-3.5l2.6 1c-1.4 2.9-3.7 4.5-6.8 4.8Z" ${SIL}/>`,
-```
-
----
-
-## 5. Hard requirements — a test enforces these
-
-`tools/tests/smoke186.mjs` fails the build unless:
-
-1. Every catalog and revival court has an emblem. There is no skipping one.
-2. No emblem's body is under 100 characters (i.e. is not a stub).
-3. The body has at least one `<path|circle|rect|g>` and **no** `<svg>` tag.
-4. **No two courts anywhere in the table share identical art.**
-5. Both shapes are accepted, and the rich one's viewBox, gradients, colours
-   and id-scoping are all covered by their own checks. `smoke213.mjs` also
-   checks flat production artwork, formation targets, runtime variants and old saves.
-
----
-
-## 6. Design rules — each learned by getting it wrong
-
-These are not stylistic preferences. Each is a failure that shipped.
-
-**1. No frontal faces.** A front-facing animal with two eyes reads as a
-sticker at every size, whatever it is a drawing of. The existing table never
-does it: Rome's aquila and Ptolemy's eagle are both in profile with one eye.
-
-**2. No full quadrupeds, especially not several.** At this size the bull, the
-lion, the stag and the camel all become the same blob with four stubby legs.
-Three courts ended up not tellable apart.
-
-**3. Objects beat creatures.** Everything in this table that works is a thing
-rather than a beast — an anchor, a menorah, a bow, a stele, a lamp, an altar.
-If an animal will not resolve, find the object carrying the same meaning.
-
-**4. Judge the silhouette with the subject forgotten.** These read as SHAPES
-first and subjects second. One emblem was a bull's mask — a pale tapering
-muzzle with a gold lobe curling off each side — and on the card it was
-unmistakably something else. Knowing what you meant to draw makes you unable
-to see what you drew, so this check must be deliberate.
-
-**5. If you must draw a beast, draw it as a flat silhouette with no interior.**
-No eye, no nose, no drawn mane. One shape. The eye completes the animal from
-the outline; this is why heraldry has drawn beasts this way since it started
-putting them on seals. Concretely: a mane drawn as a ring is a sun, a muzzle
-drawn long is a sheep, a muzzle drawn open is a beak, and an eye and nose on a
-head this small is a cartoon.
-
-**6. Distinctness is a requirement.** Israel and Judah share a map, at war,
-from the first month of their chapter. Check each design against its
-neighbours in the list, not only on its own.
-
----
-
-## 7. Subject matter
-
-Draw from what that court actually put on its own seals, gate reliefs, coins,
-standards or cult — not a modern national symbol, not a generic idea of the
-region. Where the game's own text already names a thing for a court, prefer
-it: Judah's standing modifier in one chapter is literally "The Lamp of David",
-and Israel's own faction quarrel is named `altars_and_the_house`.
-
----
+Inspect the full roster and the 14/24/34px samples, not just enlarged artwork.
+Look for cramped shapes, faces, accidental visual jokes, poor contrast and
+edge ornaments. Keep the requested centered composition through every UI
+consumer.
 
 ## 8. The courts
 
 The complete current roster is in [`tools/flags.html`](tools/flags.html):
 210 catalog/revival courts with 96px previews and 14/24/34px samples.
-`js/ui/flag_art.js` supplies forty new full-field designs. The table below
+`js/ui/flag_art.js` supplies 171 full-field designs. The table below
 is an older motif reference, rather than the coverage checklist.
 
-`NEW` marks the 23 most recently drawn — the ones under review. Everything
+`NEW` is a marker from the older reference table, not the current review status. Everything
 else is long-standing and is listed so you can match the house hand and avoid
 collisions.
 
@@ -358,17 +267,8 @@ collisions.
 
 ## 9. How to hand work back
 
-One entry per court, in this exact shape, ready to paste into the `FLAGS`
-object in `js/ui/icons.js`:
-
-```js
-  // <Court>: one or two lines saying what the device is and where it comes
-  // from — a real source, not a vibe.
-  XXX:
-    `<path d="..." ${SIL}/>` +
-    `<path d="..." ${ACC}/>` +
-    `<path d="..." ${DET}/>`,
-```
-
-Keep the comment. Every entry in the table has one, and it is how the next
-person knows whether a device was chosen or guessed.
+Add or revise the entry in `js/ui/flag_art.js`, preserving explicit tag
+assignments and the current renderer contract. Add a short note where the
+motif needs explanation; label invented game devices accurately. Verify
+coverage with `smoke213` and inspect the gallery at game sizes. Do not copy
+an old outlined glyph from `icons.js` as a new full-field design.

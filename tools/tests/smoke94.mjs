@@ -173,7 +173,7 @@ const GALILEE_CHAPTERS = new Set(['351ce', '529ce']);
 console.log('== the banner travels with the name (SPEC §236) ==');
 {
   const { FLAGS } = await import(R + '/js/ui/icons.js');
-  ok(typeof FLAGS.GAL === 'string' && FLAGS.GAL.length > 80,
+  ok((typeof FLAGS.GAL === 'string' ? FLAGS.GAL : FLAGS.GAL?.body)?.length > 80,
     'the Galilee has an emblem of its own in the flag table');
   const seats = { '351ce': 'Sepphoris', '529ce': 'Tiberias' };
   for (const id of GALILEE_CHAPTERS) {
@@ -211,10 +211,10 @@ console.log('== the banner travels with the name (SPEC §236) ==');
   const { flagChip } = await import(R + '/js/ui/icons.js');
   const bm = ERAS.find((e) => e.bookmark.id === '529ce').bookmark;
   const chip = flagChip('JUD', DEFINES, 34, false, null, tagDef({ DEFINES, bookmark: bm }, 'JUD'));
-  ok(chip.includes('124,196,214') && chip.includes(FLAGS.GAL.slice(0, 60)),
+  ok(chip.includes('124,196,214') && chip.includes((typeof FLAGS.GAL === 'string' ? FLAGS.GAL : FLAGS.GAL.body).slice(0, 60)),
     'the start screen\'s own chip flies the Galilee before there is a game to read');
   const bare = flagChip('JUD', DEFINES, 34);
-  ok(bare.includes('36,82,158') && bare.includes(FLAGS.JUD.slice(0, 60)),
+  ok(bare.includes('36,82,158') && bare.includes((typeof FLAGS.JUD === 'string' ? FLAGS.JUD : FLAGS.JUD.body).slice(0, 60)),
     '  and the same chip with no lens is still Judaea\'s menorah on Judaea\'s blue');
 }
 

@@ -138,7 +138,7 @@ console.log('== §270: the richer emblem shape, and the trap that comes with it 
   const rich = { viewBox: '0 0 96 96',
     body: '<defs><linearGradient id="a"><stop offset="0" stop-color="#123456"/></linearGradient></defs>'
       + '<rect x="0" y="0" width="96" height="96" fill="url(#a)"/>' };
-  const legacy = FLAGS.PNT;
+  const legacy = FLAGS.UK;
   try {
     FLAGS.__RICH_PROBE = rich;
     const probe = flagChip('__RICH_PROBE', DEFINES, 40);
@@ -153,7 +153,7 @@ console.log('== §270: the richer emblem shape, and the trap that comes with it 
   } finally {
     delete FLAGS.__RICH_PROBE;
   }
-  ok(typeof legacy === 'string' && flagChip('PNT', DEFINES, 20).includes('viewBox="0 0 24 24"'),
+  ok(typeof legacy === 'string' && flagChip('UK', DEFINES, 20).includes('viewBox="0 0 24 24"'),
     'and a plain string emblem still renders on the 24x24 grid it was drawn for');
   const shapes = Object.keys(FLAGS).map((t) => typeof FLAGS[t]);
   ok(shapes.every((x) => x === 'string' || x === 'object'),

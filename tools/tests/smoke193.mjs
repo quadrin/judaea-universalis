@@ -98,7 +98,7 @@ console.log('== every new court is a court, not a name ==');
   ok(!bad.gov.length, 'every one declares a form of government' + (bad.gov.length ? ' — ' + bad.gov.join(',') : ''));
   ok(!bad.art.length, 'and every one carries art, not three letters in text'
     + (bad.art.length ? ' — ' + bad.art.join(',') : ''));
-  const art = NEW.map((t) => String(FLAGS[t]));
+  const art = NEW.map((t) => typeof FLAGS[t] === 'string' ? FLAGS[t] : FLAGS[t].body);
   ok(new Set(art).size === NEW.length, 'no two of them wear the same emblem');
   for (const t of NEW) {
     const d = NATIONS[t];

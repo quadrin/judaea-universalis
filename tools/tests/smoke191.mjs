@@ -79,8 +79,8 @@ console.log('== the crown exists, and is told apart from the one downstream ==')
   ok(!!FLAGS.AIS, 'and an emblem of its own');
   ok(FLAGS.AIS !== FLAGS.MLI && FLAGS.AIS !== FLAGS.ISL && FLAGS.AIS !== FLAGS.JDH,
     '  told apart from Israel, Judah and the Kingdom of Israel at a glance');
-  ok(!/hexagram/.test(String(FLAGS.AIS)),
-    '  and it is not the hexagram, which is MLI\'s');
+  ok(FLAGS.AIS.emblem === 'magen-david' && FLAGS.AIS.fieldColor !== FLAGS.MLI.fieldColor,
+    '  with the requested shared Israelite device on its own blue field');
 }
 
 // ---------------------------------------------------------------------------

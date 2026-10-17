@@ -27,12 +27,33 @@ try {
     return { background: a.backgroundImage, shadow: a.boxShadow, filter: b.filter };
   });
   assert.deepEqual(styles, { background: 'none', shadow: 'none', filter: 'none' });
+  // Artwork must stay large, centered and clear of the edges. This catches
+  // both the old ornamental frames and devices that shrink into a corner.
+  const badDevices = await page.locator('article > div:first-child [data-emblem]').evaluateAll(xs => xs.filter(g => {
+    if (['coastal-state','druze-colours','sharifian-colours','kurdish-colours','israeli-flag'].includes(g.dataset.emblem)) return false;
+    const b = g.getBBox(), m = g.transform.baseVal.consolidate().matrix;
+    const a = new DOMPoint(b.x,b.y).matrixTransform(m), z = new DOMPoint(b.x+b.width,b.y+b.height).matrixTransform(m);
+    return a.x < 5 || a.y < 5 || z.x > 91 || z.y > 91 || Math.max(z.x-a.x,z.y-a.y) < 50
+      || Math.abs((a.x+z.x)/2-48) > 5 || Math.abs((a.y+z.y)/2-48) > 5;
+  }).map(g => g.closest('article').dataset.tag));
+  assert.deepEqual(badDevices, [], 'large centered devices with no edge ornaments');
+  const hasmoneanInk = await page.locator('article[data-tag="HAS"] [data-emblem]').first().evaluate(g =>
+    [...new Set([...g.querySelectorAll('[fill],[stroke]')].flatMap(x => [x.getAttribute('fill'),x.getAttribute('stroke')]).filter(c => c && c !== 'none'))]);
+  assert.deepEqual(hasmoneanInk, ['#f2c75b'], 'the complete Hasmonean device is monochrome gold');
+  assert.equal(await page.locator('article[data-tag="QDR"] [data-emblem]').first().getAttribute('data-emblem'), 'bow');
+  assert.equal(await page.locator('article[data-tag="SAB"] [data-emblem]').first().getAttribute('data-emblem'), 'horns');
+  const modernIsrael = page.locator('article[data-tag="ISR"] svg').first();
+  assert.equal(await modernIsrael.locator(':scope > rect').getAttribute('fill'), '#ffffff');
+  assert.equal(await modernIsrael.locator('rect[fill="#0038b8"]').count(), 2, 'modern Israel retains its blue stripes');
+  assert.equal(await modernIsrael.locator('path[stroke="#0038b8"]').count(), 1, 'modern Israel retains its blue star');
+  assert.equal(await page.locator('article[data-tag="MLI"] [data-emblem] path').first().getAttribute('stroke'), '#f2c75b', 'the Kingdom star is gold');
+  assert.equal(await page.locator('article[data-tag="GAL"] [data-emblem] > circle').first().getAttribute('fill'), '#f4e1b8', 'the Galilee roundel is beige');
   await page.locator('#search').fill('Phoenicia'); assert.equal(await page.locator('article').count(), 1);
   assert.equal(await page.locator('article svg').first().getAttribute('data-flag-key'), 'PHO');
   await page.locator('#search').fill('');
   await page.addStyleTag({ content: '.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}article:nth-child(n+17){display:none}article p{display:none}main>p:first-of-type{font-size:13px}article{padding:10px 6px;gap:7px}article h2{min-height:20px}' });
   if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + '/flat-court-flags.png', fullPage: true });
-  console.log('PASS all 210 courts, valid inline vectors, no textures/shading/remote assets, correct sizes and revival lookup');
+  console.log('PASS all 210 courts, valid inline vectors, no textures/shading/remote assets, centered insignia, monochrome Hasmonean art, correct sizes and revival lookup');
 
   // Same UI and real game actions used by the game, without a WebGL renderer.
   await page.evaluate(async () => {

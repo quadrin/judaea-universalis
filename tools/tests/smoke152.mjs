@@ -156,7 +156,7 @@ console.log('== §250: five forms of government, five crowns, fully outfitted ==
     // The name is the form of government and says so in plain words.
     ok(/^(Priestly )?(Republic|Kingdom|Ethnarchy) of Judaea$/.test((def || {}).name || ''),
       tag + ': is called what it IS — "' + ((def || {}).name || '?') + '"');
-    ok(typeof FLAGS[tag] === 'string' && FLAGS[tag].length > 100, tag + ': flies real emblem art');
+    ok((typeof FLAGS[tag] === 'string' ? FLAGS[tag] : FLAGS[tag]?.body)?.length > 100, tag + ': flies real emblem art');
     ok(!!DEFINES.PERSONALITIES[tag], tag + ': has an AI temper');
     ok(!!f && !f.ai, tag + ': is player-only — no AI court re-brands mid-chapter');
     const b = (f && f.bonus) || {};
@@ -620,7 +620,7 @@ console.log('== §250: the empire is reached by the map, and keeps the constitut
   for (const tag of ['JEM', 'IEM']) {
     const def = DEFINES.TAGS[tag];
     ok(!!def && /Empire$/.test(def.name || ''), tag + ': is called an empire — "' + ((def || {}).name || '?') + '"');
-    ok(typeof FLAGS[tag] === 'string' && FLAGS[tag].length > 100, tag + ': flies real emblem art');
+    ok((typeof FLAGS[tag] === 'string' ? FLAGS[tag] : FLAGS[tag]?.body)?.length > 100, tag + ': flies real emblem art');
     ok(!!DEFINES.PERSONALITIES[tag] && DEFINES.PERSONALITIES[tag].ponderous,
       tag + ': is read as a great power by the courts around it');
     ok(!DEFINES.GOV_OF[tag], tag + ': declares no government — an empire does not restyle a republic');

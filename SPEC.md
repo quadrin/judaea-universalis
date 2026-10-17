@@ -22184,25 +22184,41 @@ game abstractions. `smoke212` and `uitest71` cover the simulation and controls.
 
 ## §311 — Flat vector court flags, including every revival
 
-`ui/flag_art.js` supplies forty full-field standards: sixteen prominent
-ancient/alternative courts and twenty-four revival courts that previously
-had no art. The union of `DEFINES.TAGS` and `REVIVALS` contains 210 courts,
-excluding WASTE, and each has its own `FLAGS` entry. Revival definitions also
-supply the correct names and colours before a court has a live game state.
+`ui/flag_art.js` supplies 171 full-field standards, including every ancient
+catalog court and every revival identity. The union of `DEFINES.TAGS` and
+`REVIVALS` contains 210 courts, excluding WASTE; every court has its own
+`FLAGS` entry. Revival definitions supply names and colours before a court
+has live game state.
 
-Antipas (`HPA`) flies a reed and wreath on burgundy; Philip (`HPH`) has a
-silver temple on teal. Herod, Balas, Demetrius II and Hira have distinct
-standards. The five former borrowed-flag defaults now name their own art.
-Rendering recognizes those specific placeholders in old saves without
-mutating them; other runtime rebrands and chapter identities retain their
-normal precedence, including `JUD` wearing `GAL` in the Galilean chapters.
+Ancient standards have one large centered insignia on a solid field, with
+no border, corner marks, wreaths or decorative edge elements. Shared regional
+devices can use distinct fields. Qedar has a drawn bow; Saba uses abstract
+horns and a disc instead of a frontal animal face. The remaining small animal
+illustrations are replaced by geometric devices. Explicit assignments choose
+the motif; no known court falls back to a generated placeholder.
 
-Existing glyphs receive flat bordered fields, while modern flag geometry is
-preserved. Art consists of inline SVG with solid fills and outlines. Flags
-have no image assets, cloth textures, folds, gradients, filters or lighting.
-Legacy synthetic F-tag courts receive deterministic vector devices based on their
-saved identity; coverage tests still require explicit artwork for all known
-courts. Link targets and accessible court names remain intact.
+Byzantium uses only the Chi-Rho; Rome uses outlined SPQR lettering. Modern
+Israel keeps its white field, blue stripes and blue Magen David. The Kingdom
+of Israel uses a gold Magen David on blue. Judaea has a broad Arch of Titus
+menorah with a two-tier polygonal pedestal, gold on blue; Hasmonean Judaea has
+entirely gold cornucopias and pomegranate on blue. Galilee restores the earlier
+beige zodiac roundel on baby blue. Ancient fields use saturated regional
+colours and selected jewel tones rather than darkened map RGB values.
+Phoenicia follows the supplied
+gold letter on purple. Assyria and Persia use simplified winged figures.
+Modern flags otherwise preserve their established layouts.
+
+Antipas (`HPA`) flies a reed on burgundy; Philip (`HPH`) has a silver temple
+on teal. Herod, Balas, Demetrius II and Hira have distinct standards. The five
+former borrowed-flag defaults name their own art. Rendering recognizes those
+specific placeholders in old saves without mutation; other runtime rebrands
+and chapter identities retain their normal precedence, including `JUD`
+wearing `GAL` in the Galilean chapters.
+
+Art consists of inline SVG with flat fills and strokes, without images,
+cloth, gradients, filters or lighting. Legacy synthetic F-tags receive
+deterministic vector devices based on their saved identity. Link targets
+and accessible court names remain intact.
 
 Normal chips keep their existing dimensions; Court headers now use the
 existing 34px size. `tools/flags.html` is a searchable development gallery

@@ -21,8 +21,9 @@ and **The War of Independence, 1948** (Israel).
 Zero dependencies, no build step: browser ES modules + WebGL2.
 
 **Court flags.** All 210 catalog and releasable courts carry distinct vector
-artwork, including Antipas’s and Philip’s tetrarchies. Forty standards have
-new full-field designs. Flags use flat colours and outlines; Court headers
+artwork, including Antipas’s and Philip’s tetrarchies. Ancient flags use one
+large insignia on a solid field, without corner ornaments or decorative frames.
+Qedar has a bow; Saba has an abstract horn-and-disc mark. Court headers
 show them at 34px. Browse every design and its game-size samples in
 [`tools/flags.html`](tools/flags.html).
 

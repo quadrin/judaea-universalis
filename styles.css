@@ -1677,8 +1677,8 @@ button {
   align-items: center;
   justify-content: center;
   flex: none;
-  border: 1px solid #9d8450;
-  border-radius: 2px;
+  border: 0;
+  border-radius: 1px;
   overflow: hidden;
   color: #f0e3ba;
   background-image: none;

@@ -49,7 +49,7 @@ function armyNamed(game, tag, name) {
 console.log('== the new states have full nation definitions ==');
 for (const tag of ['CMG', 'CYZ', 'ITU']) {
   ok(!!DEFINES.TAGS[tag], tag + ' has a tag definition');
-  ok(typeof FLAGS[tag] === 'string' && FLAGS[tag].length > 20, tag + ' has a flag');
+  ok((typeof FLAGS[tag] === 'string' ? FLAGS[tag] : FLAGS[tag]?.body)?.length > 20, tag + ' has a flag');
   ok(!!DEFINES.GOV_OF[tag] && !!DEFINES.PERSONALITIES[tag],
     tag + ' has a government and AI personality');
 }
