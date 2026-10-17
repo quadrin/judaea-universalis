@@ -22199,7 +22199,9 @@ the motif; no known court falls back to a generated placeholder.
 
 Byzantium uses only the Chi-Rho; Rome uses outlined SPQR lettering. Modern
 Israel keeps its white field, blue stripes and blue Magen David. The Kingdom
-of Israel uses a gold Magen David on blue. Judaea has a broad Arch of Titus
+of Israel uses a gold Magen David on blue. Ancient Israel (`ISL`) instead
+restores its earlier four-horned altar emblem, in gold on blue.
+Judaea has a broad Arch of Titus
 menorah with a two-tier polygonal pedestal, gold on blue; Hasmonean Judaea has
 entirely gold cornucopias and pomegranate on blue. Galilee restores the earlier
 beige zodiac roundel on baby blue. Ancient fields use saturated regional

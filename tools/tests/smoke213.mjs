@@ -26,6 +26,9 @@ console.log('PASS all 210 catalogue/releasable courts, formation targets and era
 const artwork = [...courts].map(t => body(FLAGS[t])); assert.equal(new Set(artwork).size, courts.size);
 assert.notEqual(body(FLAGS.HPA), body(FLAGS.HPH)); assert.notEqual(body(FLAGS.HPA), body(FLAGS.HER));
 assert.notEqual(body(FLAGS.HPH), body(FLAGS.AGR));
+assert.equal(FLAGS.ISL.emblem, 'horned-altar', 'ancient Israel keeps its earlier altar emblem');
+assert.equal(FLAGS.MLI.emblem, 'magen-david', 'the later Kingdom of Israel keeps the Star of David');
+assert.notEqual(body(FLAGS.ISL), body(FLAGS.MLI));
 for (const [tag, old] of Object.entries(LEGACY_BORROWED_FLAGS)) {
   const game = { tags: { [tag]: { flag: old, name: tag, color: [100, 80, 90] } } }, before = JSON.stringify(game);
   assert.match(flagChip(tag, DEFINES, 24, false, game), new RegExp('data-flag-key="' + tag + '"'));

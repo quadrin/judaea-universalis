@@ -51,6 +51,7 @@ that compatibility is not a reason to add effects to new flags.
 | Court | Device and field |
 | --- | --- |
 | Byzantium | Custom gold Chi-Rho with a shaped loop and restrained terminals on purple |
+| Ancient Israel | Earlier four-horned altar emblem, gold on blue; no Star of David |
 | Modern Israel | White field, two blue stripes, blue Magen David |
 | Kingdom of Israel | Gold Magen David on blue |
 | Judaea | Broad Arch of Titus menorah with a polygonal stepped base, gold on blue |

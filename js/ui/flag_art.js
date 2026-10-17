@@ -65,6 +65,13 @@ function eagle(color = G) {
 const fireAltar = rect(36, 49, 24, 5, G) + rect(43, 54, 10, 18, G) + rect(34, 73, 28, 4, G) + rect(29, 78, 38, 5, G) + flame(48, 32);
 const ring = (x, y, r, ink = G, width = 3) => `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${ink}" stroke-width="${width}"/>`;
 const magenDavid = line('M48 18 74 63H22ZM48 78 22 33H74Z', G, 4.5);
+// Restore ancient Israel's earlier four-horned altar silhouette. Keep the
+// flat gold treatment; the Star of David belongs to the later Kingdom.
+const hornedAltar = `<g transform="translate(12 10) scale(3)">`
+  + path('M2.4 20.6H21.6V23H2.4ZM4 18.2H20V20.6H4ZM6 9.8H18L18.6 18.2H5.4ZM4 7.4H20V9.8H4Z')
+  + path('M2.9 7.4C2.7 5 3.4 3.4 4.9 2.5C5.9 3.6 6.4 5.2 6.4 7.4ZM21.1 7.4C21.3 5 20.6 3.4 19.1 2.5C18.1 3.6 17.6 5.2 17.6 7.4Z')
+  + path('M7.4 7.4C7.2 5.6 7.7 4.4 8.9 3.7C9.7 4.6 10.1 5.9 10.1 7.4ZM16.6 7.4C16.8 5.6 16.3 4.4 15.1 3.7C14.3 4.6 13.9 5.9 13.9 7.4Z') + '</g>';
+
 const GALILEE_BLUE = '#98ceec', ZODIAC_BEIGE = '#f4e1b8';
 function zodiacWheel() {
   // Twelve calm, even divisions around a sun medallion. The thin circular
@@ -105,7 +112,7 @@ export const FLAT_FLAGS = {
   ISR: standard('#ffffff', rect(0, 14, 96, 10, '#0038b8') + rect(0, 72, 96, 10, '#0038b8')
     + line('M48 30 64 57H32ZM48 66 32 39H64Z', '#0038b8', 2.6), { emblem: 'israeli-flag', scale: 1, note: 'Modern Israel: blue stripes and blue Magen David on white.' }),
   MLI: standard('#1640a5', magenDavid, { emblem: 'magen-david', note: 'Kingdom of Israel: gold Magen David on blue.' }),
-  ISL: standard('#225393', magenDavid, { emblem: 'magen-david', note: 'Gold Magen David on blue for the Kingdom of Israel.' }),
+  ISL: standard('#225393', hornedAltar, { emblem: 'horned-altar', note: 'Ancient Israel: the restored four-horned altar emblem in gold on blue.' }),
   AIS: standard('#173a73', magenDavid, { emblem: 'magen-david' }),
   IEM: standard('#243c77', magenDavid, { emblem: 'magen-david' }),
   JDH: standard('#183da0', lion, { emblem: 'lion', dx: -4.5 }),
