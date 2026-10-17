@@ -2994,6 +2994,40 @@ html, body {
 .np-reform-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; }
 .np-reform-cost { font-size: 11px; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
 
+/* Ideas: group emblems, individual idea badges, and an inspectable progression. */
+.np-idea-wallet { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--ink); font-size: 12px; }
+.np-idea-wallet > span { display: inline-flex; align-items: center; gap: 4px; }
+.np-idea-intro { margin: 7px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
+.np-idea-group { padding: 10px; border: 1px solid rgba(138, 109, 26, 0.35); border-radius: 5px; background: rgba(255, 248, 220, 0.22); }
+.np-idea-group .np-reform-head { justify-content: flex-start; }
+.np-idea-group .np-reform-head > b { flex: 1; }
+.np-idea-emblem { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; color: #725919; background: rgba(201, 162, 39, 0.17); border: 1px solid rgba(138, 109, 26, 0.35); border-radius: 50%; }
+.np-idea-emblem .icon { width: 23px; height: 23px; }
+.np-idea-count { color: var(--ink-soft); font-variant-numeric: tabular-nums; font-size: 12px; white-space: nowrap; }
+.np-idea-blurb { margin: 6px 0; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
+.np-idea-track { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; padding: 0; list-style: none; }
+.np-idea-track > li { flex: 1 1 44px; min-width: 44px; }
+.np-idea-step { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; min-width: 44px; min-height: 48px; padding: 6px; color: #817a68; background: rgba(90, 76, 46, 0.08); border: 1px solid rgba(90, 76, 46, 0.35); border-radius: 5px; }
+.np-idea-step .icon { width: 26px; height: 26px; }
+.np-idea-step.owned { color: #375b38; background: rgba(91, 139, 75, 0.15); border-color: #688255; }
+.np-idea-step.next { color: #76560d; background: rgba(201, 162, 39, 0.16); border-color: #a88124; }
+.np-idea-step[aria-pressed='true'] { box-shadow: inset 0 0 0 2px var(--gold-dim); }
+.np-idea-step:hover { filter: brightness(1.08); border-color: var(--gold-dim); }
+.np-idea-step:focus-visible { outline: 2px solid #795a14; outline-offset: 2px; }
+.np-idea-number { position: absolute; right: 3px; bottom: 1px; font-size: 10px; font-weight: 700; }
+.np-idea-detail { min-height: 65px; margin-bottom: 8px; font-size: 12px; line-height: 1.45; color: var(--ink); }
+.np-idea-detail > b { display: flex; align-items: center; gap: 5px; }
+.np-idea-detail p { margin: 4px 0; }
+.np-idea-state, .np-idea-reason { color: var(--ink-soft); font-size: 11px; }
+.np-idea-reason { margin-top: 5px; line-height: 1.4; }
+.np-idea-group .np-reform-btn { gap: 8px; min-height: 44px; font-size: 12px; }
+.np-idea-group .np-reform-btn > span:first-child { display: flex; align-items: center; gap: 5px; text-align: left; }
+.np-idea-group .np-reform-cost { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.np-idea-locked { background: rgba(90, 76, 46, 0.07); }
+.np-idea-unlock { margin: 7px 0; font-size: 12px; font-weight: 600; line-height: 1.45; color: var(--ink); }
+.np-idea-unlock > .icon { vertical-align: middle; margin-right: 4px; }
+.np-idea-unlock > span { display: block; color: var(--ink-soft); font-size: 11px; font-weight: 400; }
+
 /* --------------------------------------------- multiplayer lobby (v1.8) -- */
 #mp-lobby { position: fixed; inset: 0; z-index: 230; pointer-events: auto; }
 #mp-lobby.hidden { display: none !important; }
@@ -3909,6 +3943,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 #nation-panel[data-tab='missions'] [data-tab]:not([data-tab='missions']),
 #nation-panel[data-tab='court'] [data-tab]:not([data-tab='court']),
 #nation-panel[data-tab='tech'] [data-tab]:not([data-tab='tech']),
+#nation-panel[data-tab='ideas'] [data-tab]:not([data-tab='ideas']),
 #nation-panel[data-tab='trade'] [data-tab]:not([data-tab='trade']),
 #nation-panel[data-tab='war'] [data-tab]:not([data-tab='war']),
 #nation-panel[data-tab='faith'] [data-tab]:not([data-tab='faith']),

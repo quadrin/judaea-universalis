@@ -1,38 +1,6 @@
-// Headless regression — SPEC §203: the realm panel's last three sections are
-// filed by what they ARE, and the tab that sells the ladders is named after
-// them.
-//
-// §175 cut twenty sections into tabs and §198 finished the ideas; three
-// things were still filed by where they were first written rather than by
-// their subject. The doctrine needles sat under the Host because a war is
-// what usually moves them — but they are a portrait of the realm, not a fact
-// about the army. The world's way of doing things sat on The World among the
-// treaties — but an institution this realm has refused is a surcharge on
-// every rung of every ladder and nothing else; the red banner announcing it
-// was on one tab and the list answering it on another. And the tab holding
-// the ladders was called Coin (Economy in 1948), named for the purse that
-// pays rather than for what a player opens it to do.
-//
-// Four contracts:
-//
-//   1. THE TAB IS NAMED FOR THE LADDERS. `id: 'tech'`, label Technology,
-//      term `tabTech`; the stylesheet's filter names it; nothing anywhere
-//      still says `coin`, in the panel, the stylesheet, or a bookmark's
-//      `uiTerms` — a stale term key re-dresses a tab that no longer reads it.
-//   2. THE CHARACTER OF THE REALM IS ON CROWN. The doctrine host resolves to
-//      Crown, templated with the realm's own facts and above the Reforms it
-//      reads next to; the title still comes from `uiTerms.character`, so
-//      1948 still calls it the National Character.
-//   3. THE WORLD'S WAY OF DOING THINGS IS FOLDED IN UNDER THE LADDERS. The
-//      institutions host resolves to the technology tab, sits BELOW the
-//      `np-techs` host (template order is render order) and INSIDE the same
-//      block as the era ideas — one title, two subheads — and the World tab
-//      no longer carries it. The surcharge banner stops sending the player
-//      to another tab, and the embrace path keeps its probe.
-//   4. NOTHING WENT BLANK. Every declared tab still owns a section; the two
-//      tabs that lost one keep an anchor that renders in every chapter (the
-//      Host its unhidden vitals grid, The World its Diplomacy block); and
-//      the folded block hides only when BOTH halves have hidden themselves.
+// Panel organization: Crown retains the realm's character; Technology keeps
+// ladders and institutions; Ideas hosts reforms and era idea groups.
+// Section ownership, institutional actions and nonempty tabs remain checked.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { readFileSync } = await import('fs');
 const { ERAS } = await import(R + '/js/data/compendium.js');
@@ -118,8 +86,8 @@ console.log('== the character of the realm is on Crown ==');
   const facts = TEMPLATE.indexOf('data-ref="religion"');
   const needles = TEMPLATE.indexOf('data-ref="doctrineBlock"');
   const reforms = TEMPLATE.indexOf('data-ref="reforms"');
-  ok(facts > 0 && needles > facts && reforms > needles,
-    'drawn after the realm\'s facts and before the reforms');
+  ok(facts > 0 && needles > facts && tabOf('data-ref="reforms"') === 'ideas',
+    'drawn after the realm\'s facts, with reforms on Ideas');
 
   // A foreign court's convictions are its business — the block is templated
   // hidden and the refresh hides it again for anyone but us.
@@ -138,15 +106,10 @@ console.log('== the world\'s way of doing things folds in under the ladders ==')
   const inst = TEMPLATE.indexOf('data-ref="instBlock"');
   const eras = TEMPLATE.indexOf('data-ref="eraIdeasBlock"');
   ok(ladders > 0 && inst > ladders, 'templated BELOW the ladders it surcharges');
-  ok(eras > inst, 'and above the chapter\'s own ideas');
-  ok(blockTitleAbove('data-ref="institutions"') === 'Ideas of the Age'
-    && blockTitleAbove('data-ref="eraIdeas"') === 'Ideas of the Age',
-    'both halves sit inside ONE block, titled Ideas of the Age');
-  ok(/data-ref="instTitle">The World’s Way of Doing Things</.test(TEMPLATE)
-    && /class="np-age-sub"[^>]*data-ref="eraIdeasTitle"/.test(TEMPLATE),
-    'each half keeps its own subhead — a spread to embrace is not a tier to buy');
-  ok(/\.np-age-sub\s*\{/.test(CSS) && /\.np-age-part \+ \.np-age-part\s*\{/.test(CSS),
-    'the stylesheet knows the subhead and the gap between the halves');
+  ok(tabOf('data-ref="eraIdeas"') === 'ideas', 'era groups have their own Ideas tab');
+  ok(blockTitleAbove('data-ref="institutions"') === 'Institutions', 'the ladder surcharge is titled Institutions');
+  ok(blockTitleAbove('data-ref="eraIdeas"') === 'Ideas of the Age', 'era groups retain their own heading');
+  ok(/data-ref="instTitle">The World’s Way of Doing Things</.test(TEMPLATE), 'institutions retain their subhead');
 
   // The World keeps the treaties and loses the ladder tax.
   const world = TEMPLATE.slice(TEMPLATE.indexOf('data-tab="world"'));
@@ -155,7 +118,7 @@ console.log('== the world\'s way of doing things folds in under the ladders ==')
   // The banner and the list are one screen now, so the banner stops giving
   // directions to another one.
   ok(!/see The World tab/.test(PANEL), 'the surcharge banner stops pointing at another tab');
-  ok(/under Ideas of the Age/.test(PANEL), 'and points at the block below it instead');
+  ok(/under Institutions/.test(PANEL), 'and points at the block below it instead');
 
   // Folding a section in must not fold its lever out.
   const clickBody = PANEL.slice(PANEL.indexOf("el.addEventListener('click'"), PANEL.indexOf('function refreshTabs'));
@@ -183,19 +146,12 @@ console.log('== nothing went blank ==');
   ok(/<div class="pp-diplo" data-tab="world">/.test(TEMPLATE),
     'and The World keeps its Diplomacy block, which is never hidden');
 
-  // The block is present exactly when a half is. An OR here (or a toggle
-  // inside either half) would leave an empty title behind on a chapter with
-  // no institutions and a foreign court with no era ideas.
   const toggleAt = PANEL.indexOf("refs.ageBlock.classList.toggle('hidden'");
-  const toggle = toggleAt < 0 ? '' : PANEL.slice(toggleAt, PANEL.indexOf(';', toggleAt));
+  const toggle = PANEL.slice(toggleAt, PANEL.indexOf(';', toggleAt));
   ok(/refs\.instBlock\.classList\.contains\('hidden'\)/.test(toggle)
-    && /refs\.eraIdeasBlock\.classList\.contains\('hidden'\)/.test(toggle)
-    && toggle.includes('&&') && !toggle.includes('||'),
-    'the folded block hides only when BOTH halves have hidden themselves');
-  const order = ['refreshInstitutions(self)', 'refreshEraIdeas(t, self)', 'refs.ageBlock.classList.toggle'];
-  const at = order.map((s) => PANEL.indexOf(s));
-  ok(at.every((i) => i > 0) && at[2] > at[1] && at[1] > at[0],
-    'and it is decided after both halves have had their say');
+    && !/eraIdeasBlock/.test(toggle), 'Technology hides its institutions block solely on institutional content');
+  ok(tabOf('data-ref="reforms"') === 'ideas', 'universal ideas moved with the era groups');
+
 }
 
 console.log(failures ? failures + ' FAILURES' : 'ALL PASS');

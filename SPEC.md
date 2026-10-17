@@ -21911,3 +21911,31 @@ missing-history recovery, both split operations, map colors and the AI's full
 gateway siege and subsequent advance. `uitest67.mjs` checks the actual game
 UI, selected-army coverage, named previews and refusals, keyboard mapmode,
 province details, mobile layout and capture updates.
+
+## §304 — A dedicated Ideas panel
+
+The court panel now has a text-only **Ideas** tab. It contains the
+three universal reform groups and the chapter's era idea groups. Crown keeps
+its realm facts and character; Technology keeps its ladders, economy and
+institutions. The institutions wrapper hides according to institutional
+content independently of era ideas, and technology surcharge guidance points
+to that section.
+
+`js/ui/idea_cards.js` renders both kinds of group. Each card shows a group
+emblem, completed/total count, and an ordered row of individual idea buttons.
+Completed, next and future ideas have distinct states. Selecting an icon
+shows the idea's name, effect and progression requirement without spending
+points. Selection uses native keyboard-accessible buttons and retains focus
+after refresh. Technology-locked era groups expose their full curriculum and
+name the rung that opens them. Adoption remains a separate button using the
+existing `buyIdea` and `buyEraIdea` commands and their prices and requirements.
+The panel displays current government, influence and martial point balances.
+
+Foreign courts retain public idea inspection; point balances and adoption
+controls are absent. The tab and idea tracks wrap on narrow screens, and each
+idea inspection button has a minimum 44-pixel width and 48-pixel height. The
+new book and lock glyphs use the shared decorative inline SVG icon set.
+
+Existing panel checks (`smoke119`, `smoke131`, `smoke132`, `uitest38`) track the
+new section ownership while retaining their unlock, purchase-path, court,
+institution and technology checks.

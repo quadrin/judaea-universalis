@@ -11,6 +11,13 @@ import { unitGlyphSvg } from '../data/units.js';
 
 export const ICONS = {
   // --- mapmodes -----------------------------------------------------------
+  // Ideas: an open book, with a visible spine and written lines.
+  book:
+    '<path d="M12 6.5C9.5 4.8 6.5 4.3 3 5v14c3.5-.7 6.5-.2 9 1.5 2.5-1.7 5.5-2.2 9-1.5V5c-3.5-.7-6.5-.2-9 1.5Z"/>' +
+    '<path d="M12 6.5v14M6 8.5l3 .7M6 12l3 .7M15 9.2l3-.7M15 12.7l3-.7"/>',
+  lock:
+    '<rect x="5" y="10" width="14" height="11" rx="2"/>' +
+    '<path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
   // Political: temple front (pediment + columns)
   temple:
     '<path d="M4.5 9.5 12 4.5l7.5 5"/>' +

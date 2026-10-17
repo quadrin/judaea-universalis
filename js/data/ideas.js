@@ -9,7 +9,7 @@ import { computeProgramEffects } from './programs.js';
 
 export const IDEA_TREES = {
   mil: {
-    name: 'The Way of the Sword',
+    name: 'The Way of the Sword', icon: 'swords',
     point: 'mar',
     tiers: [
       { name: 'Drilled Ranks', desc: 'Regiments fight in step: +5% discipline.', effects: { disciplineMult: 1.05 } },
@@ -20,7 +20,7 @@ export const IDEA_TREES = {
     ],
   },
   civ: {
-    name: 'The Art of Rule',
+    name: 'The Art of Rule', icon: 'scroll',
     point: 'gov',
     tiers: [
       { name: 'Census & Taxation', desc: 'What is counted can be taxed: +10% income.', effects: { incomeMult: 1.1 } },
@@ -31,7 +31,7 @@ export const IDEA_TREES = {
     ],
   },
   rel: {
-    name: 'The Voice of Heaven',
+    name: 'The Voice of Heaven', icon: 'altar',
     point: 'infl',
     tiers: [
       { name: 'Public Rites', desc: 'The crowd sees the crown at prayer: +0.15 legitimacy a month.', effects: { legitimacyAdd: 0.15 } },

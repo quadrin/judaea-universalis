@@ -11,6 +11,7 @@ import { armGenName } from '../data/units.js';
 import { forceLimitOf, regCount, reservesTerms } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
 import { eraIdeaGroupsFor } from '../data/era_ideas.js';
+import { ideaCard, ideaTierIcon, ideaWallet } from './idea_cards.js';
 
 // The tabs (SPEC §175).
 //
@@ -45,23 +46,10 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // is living through and the tree of what the era offers — and steps aside at
 // a foreign court, and when a chapter has neither to show.
 //
-// The ideas are split by what unlocks them (SPEC §198, refining §188). The
-// chapter's Ideas of the Age are each locked behind a NAMED RUNG of a
-// technology ladder, so they stay under the Technology block — the EU4
-// window, where the lock card and the ladder that answers it are one screen.
-// The three universal REFORM trees have no such lock: they are the realm's
-// own constitution, gated by nothing but the points the crown minted, so they
-// sit on Crown with the rest of what the realm IS — faith, tongue, capital,
-// government, reforms, and the character its wars have argued it into.
-//
-// §203 finished that sort by asking of each remaining section what it is
-// rather than where it was first written: the tab is named **Technology**
-// after the ladders that are its subject and not after the purse that pays
-// for them; the DOCTRINE NEEDLES are what the realm has become and belong on
-// Crown rather than under the army that pushed them; and the WORLD'S WAY OF
-// DOING THINGS is a levels-of-gov/infl/mar affair — it taxes every rung of
-// every ladder — so it folds in beside the Ideas of the Age, under the
-// ladders it surcharges, instead of sitting a tab away among the treaties.
+// Ideas has its own tab: universal reforms and the chapter's idea groups
+// share one place to inspect and adopt them. Technology retains its ladders
+// and institutions, including the named technology requirements for ideas.
+// The realm's character stays on Crown; patterns and arms programs on Defense.
 //
 // §204 carried the same question through the last two: THE CHAPTERS is what
 // history asks of this realm, not a fact about the realm, so it joins the
@@ -69,10 +57,11 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // as, the rungs that unlock the next ones and the arms pipeline are the
 // army's own facts, bought on Technology and described on the Host.
 const TABS = [
-  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, the character its wars have given it, and the reforms it has enacted.' },
+  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, the character its wars have given it, and its government.' },
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'What history asks of this realm: the chapter it is living through, and the mission tree branch by branch with what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, their favor and their ground, the advisors, what is brewing, and the decisions in your gift.' },
-  { id: 'tech', label: 'Technology', term: 'tabTech', tt: 'The ladders and the silver that buys them: treasury, debt, the three levels, the world’s way of doing things, and the ideas of the age those rungs unlock.' },
+  { id: 'tech', label: 'Technology', term: 'tabTech', tt: 'The ladders and the silver that buys them: treasury, debt, the three levels, the world’s way of doing things, and the institutions that affect their costs.' },
+  { id: 'ideas', label: 'Ideas', term: 'tabIdeas', tt: 'National reforms and ideas of the age: inspect each idea, its effect, its progress and the points needed to adopt it.' },
   // The markets (SPEC §292): our share of the world's trade, the merchants we
   // post to collect it or steer it home, and the squadrons on the lanes.
   { id: 'trade', label: 'Trade', term: 'tabTrade', tt: 'The markets of the world: what each is worth, our share, the merchants we post to collect or steer it, and the squadrons that guard or raid the lanes.' },
@@ -115,6 +104,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // Ladders whose next level the pool can pay for (SPEC §286): the Technology
   // tab's own badge, beside the Missions tab's claims.
   let readyTech = 0;
+  const ideaSelections = new Map();
   const refs = {};
 
   function setText(node, s) {
@@ -179,12 +169,19 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="characterTitle">The Character of the Realm</div>
         <div class="np-doctrine" data-ref="doctrine"></div>
       </div>
-      <!-- The reform trees live with the crown (SPEC §198): the realm's own
-           constitution, gated by nothing but points — unlike the Ideas of the
-           Age, which stay on Technology under the ladders that unlock them. -->
-      <div class="pp-build" data-tab="crown">
+      <!-- Ideas: a single home for reforms and era idea groups. -->
+      <div class="pp-build" data-tab="ideas">
+        <div class="pp-build-title">${icon('book', 'icon-sm')} Ideas</div>
+        <div class="np-idea-wallet" data-ref="ideaWallet"></div>
+        <p class="np-idea-intro">Select an idea icon to inspect its effect. Adopt ideas in order within each group.</p>
+      </div>
+      <div class="pp-build" data-tab="ideas">
         <div class="pp-build-title">Reforms</div>
         <div class="np-reforms" data-ref="reforms"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="eraIdeasBlock" data-tab="ideas">
+        <div class="pp-build-title" data-ref="eraIdeasTitle">Ideas of the Age</div>
+        <div class="np-reforms" data-ref="eraIdeas"></div>
       </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
@@ -243,23 +240,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title">Technology</div>
         <div class="np-techs" data-ref="tech"></div>
       </div>
-      <!-- The age's own arts, in one block UNDER the ladders (SPEC §203,
-           holding §188/§198): both halves are levels-of-gov/infl/mar business.
-           The world's way of doing things is what surcharges every rung above
-           — the red banner on the ladders is this block's other end — and each
-           Idea of the Age is locked behind a named rung printed directly
-           above. The universal reform trees have no such lock and live on
-           Crown. Either half may be empty; the block itself steps aside only
-           when both are. -->
+      <!-- Institutions stay beside the technology ladders they surcharge. -->
       <div class="pp-build hidden" data-ref="ageBlock" data-tab="tech">
-        <div class="pp-build-title" data-tt="${esc('What the age itself offers (SPEC §179/§203): the ways of doing things the world has invented and this realm may take up, and the arts the chapter argued about — each unlocked by a named rung of a ladder above and bought tier by tier with its point.')}">Ideas of the Age</div>
+        <div class="pp-build-title">Institutions</div>
         <div class="np-age-part hidden" data-ref="instBlock">
           <div class="np-age-sub" data-ref="instTitle">The World’s Way of Doing Things</div>
           <div class="np-factions" data-ref="institutions"></div>
-        </div>
-        <div class="np-age-part hidden" data-ref="eraIdeasBlock">
-          <div class="np-age-sub" data-ref="eraIdeasTitle">The Arts of This Chapter</div>
-          <div class="np-reforms" data-ref="eraIdeas"></div>
         </div>
       </div>
 
@@ -412,6 +398,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       if (!(e.target instanceof Element)) return;
+      if (e.target.closest('[data-idea-inspect], [data-idea], [data-eraidea], [data-tab-go]')) {
+        // Native buttons handle activation; keep Space away from the game's
+        // pause shortcut while the player is using the Ideas panel or tabs.
+        e.stopPropagation();
+        return;
+      }
       const c = e.target.closest('[data-claim]');
       if (!c) return;
       e.preventDefault();
@@ -618,6 +610,18 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           try { actions.dismissAdvisor(dis.dataset.dismissAdv); } catch (err) { warnOnce('np-dismissAdv', err); }
         }
         refresh();
+        return;
+      }
+      const inspectIdea = e.target.closest('[data-idea-inspect]');
+      if (inspectIdea) {
+        ideaSelections.set(inspectIdea.dataset.ideaInspect, Number(inspectIdea.dataset.tier));
+        refresh();
+        // Refresh replaces the card's controls. Keep keyboard focus on the
+        // same idea so inspecting a tier does not send the player to the page.
+        el.querySelectorAll('[data-idea-inspect]').forEach(b => {
+          if (b.dataset.ideaInspect === inspectIdea.dataset.ideaInspect
+              && b.dataset.tier === inspectIdea.dataset.tier) b.focus({ preventScroll: true });
+        });
         return;
       }
       const idea = e.target.closest('[data-idea]');
@@ -1109,12 +1113,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshTrade(self);
     refreshReforms(t, self);
     refreshEraIdeas(t, self);
-    // Both halves of the age block have had their say; the block itself is
-    // present exactly when one of them is (SPEC §203). Ordered after both,
-    // never inside either — each half hides on its own evidence and neither
-    // knows the other exists.
-    refs.ageBlock.classList.toggle('hidden',
-      refs.instBlock.classList.contains('hidden') && refs.eraIdeasBlock.classList.contains('hidden'));
+    refs.ageBlock.classList.toggle('hidden', refs.instBlock.classList.contains('hidden'));
+    refs.ideaWallet.classList.toggle('hidden', !self);
+    setHtml(refs.ideaWallet, self ? ideaWallet(t.points) : '');
     refreshCourt(t, self);
 
     // The four numbers you always want, pinned above the tabs (SPEC §175).
@@ -2098,7 +2099,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     let html = '';
     if (info.instPct > 0) {
       html += `<div class="np-tech-pen" data-tt="${esc('Institutions the world has taken up and this realm has not (SPEC §166).'
-        + '\nEvery level of every ladder costs +' + info.instPct + '% until they are embraced — they are listed below, under Ideas of the Age.')}">`
+        + '\nEvery level of every ladder costs +' + info.instPct + '% until they are embraced — they are listed below, under Institutions.')}">`
         + `${icon('alert', 'icon-row')}<span>Institutions penalty</span><b>+${info.instPct}%</b></div>`;
     }
     html += info.rows.map((r) => {
@@ -2697,100 +2698,44 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.trade, h);
   }
 
-  // The reform trees (SPEC §20/§198), rendered on Crown in every bookmark:
-  // tier pips, the next reform's name and price, one buy button per tree.
-  // They are the realm's own constitution — gated by nothing but monarch
-  // points — which is why they live with faith, tongue and capital rather
-  // than with the ladders (the Ideas of the Age keep those, below, because
-  // each of THOSE is locked behind a named rung). Renders nothing on sims
-  // without getIdeas. Foreign courts show their pips read-only, straight
-  // from t.reforms.
+  // Both kinds of idea group use the same inspection cards on Ideas.
   function refreshReforms(t, self) {
     if (!refs.reforms) return;
-    if (!self) {
-      const owned = t.reforms || {};
-      setHtml(refs.reforms, Object.keys(IDEA_TREES).map((key) => {
-        const tree = IDEA_TREES[key];
-        const have = owned[key] | 0;
-        const pips = tree.tiers.map((ti, i) =>
-          `<span class="np-pip${i < have ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
-        return `<div class="np-reform"><div class="np-reform-head"><b>${esc(tree.name)}</b><span class="np-pips">${pips}</span></div></div>`;
-      }).join(''));
-      return;
+    let trees;
+    if (self) {
+      try { trees = actions?.getIdeas?.(); } catch (e) { warnOnce('np-getIdeas', e); }
+    } else {
+      trees = Object.entries(IDEA_TREES).map(([key, tree]) => ({
+        ...tree, key, owned: (t.reforms || {})[key] | 0,
+      }));
     }
-    let trees = null;
-    if (actions && typeof actions.getIdeas === 'function') {
-      try { trees = actions.getIdeas(); } catch (e) { warnOnce('np-getIdeas', e); }
-    }
-    if (!trees) { setHtml(refs.reforms, ''); return; }
-    const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
-    setHtml(refs.reforms, trees.map((tr) => {
-      const pips = tr.tiers.map((ti) =>
-        `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
-      const next = tr.tiers[tr.owned];
-      const tt = next
-        ? `${next.name} — ${next.desc}\nCosts ${tr.cost} ${ptName[tr.point] || tr.point} points.${tr.canBuy ? '' : '\n' + tr.whyNot}`
-        : tr.whyNot;
-      return `
-        <div class="np-reform">
-          <div class="np-reform-head"><b>${esc(tr.name)}</b><span class="np-pips">${pips}</span></div>
-          <button class="pp-build-btn np-reform-btn${tr.canBuy ? '' : ' disabled'}" data-idea="${esc(tr.key)}" data-tt="${esc(tt)}">
-            ${next ? `${esc(next.name)} <span class="np-reform-cost">${tr.cost} ${esc(tr.point)}</span>` : 'Complete'}
-          </button>
-        </div>`;
+    setHtml(refs.reforms, (trees || []).map(tr => {
+      const def = IDEA_TREES[tr.key];
+      const group = { ...tr, icon: def.icon, tiers: tr.tiers.map((ti, i) => ({
+        ...ti, icon: ideaTierIcon(def.tiers[i], def.icon),
+      })) };
+      return ideaCard(group, { kind: 'reform', self, selected: ideaSelections.get('reform:' + tr.key) });
     }).join(''));
   }
 
-  // The ideas of the age (SPEC §179/§198), the lower half of the age block on
-  // Technology: the chapter's own groups, each behind a named rung of its
-  // ladder. A locked group is the EU4 card — a dark slab that says what opens
-  // it, directly below the ladder that answers it — and an open one sells its
-  // tiers like any reform tree. Foreign courts show the groups they have
-  // taken up, pips only: a foreign ladder is their business. The half hides
-  // itself when there is nothing to show, and the block above it hides when
-  // both halves have.
   function refreshEraIdeas(t, self) {
     if (!refs.eraIdeas) return;
-    let html = '';
-    if (!self) {
-      const groups = eraIdeaGroupsFor(ctx && ctx.bookmark, t.tag, t);
-      const taken = groups.filter((gd) => ((t.eraIdeas || {})[gd.key] | 0) > 0);
-      html = taken.map((gd) => {
-        const n = Math.max(0, Math.min(gd.tiers.length, (t.eraIdeas || {})[gd.key] | 0));
-        const pips = gd.tiers.map((ti, i) =>
-          `<span class="np-pip${i < n ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
-        return `<div class="np-reform"><div class="np-reform-head">${icon(gd.icon || 'lamp', 'icon-k')}<b>${esc(gd.name)}</b><span class="np-pips">${pips}</span></div></div>`;
-      }).join('');
+    const defs = eraIdeaGroupsFor(ctx.bookmark, t.tag, t);
+    let groups;
+    if (self) {
+      try { groups = actions?.getEraIdeas?.(); } catch (e) { warnOnce('np-getEraIdeas', e); }
     } else {
-      let eras = null;
-      if (actions && typeof actions.getEraIdeas === 'function') {
-        try { eras = actions.getEraIdeas(); } catch (e) { warnOnce('np-getEraIdeas', e); }
-      }
-      const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
-      if (Array.isArray(eras) && eras.length) {
-        html = eras.map((er) => {
-          if (!er.unlocked) {
-            return `<div class="np-reform np-era-locked" data-tt="${esc(er.name + ' — ' + er.desc + '\n' + er.unlockDetail)}">
-              <div class="np-era-lock-name">${icon(er.icon || 'lamp', 'icon-k')}${esc(er.name)}</div>
-              <div class="np-era-lock-at">${esc(er.unlockText)}</div>
-            </div>`;
-          }
-          const pips = er.tiers.map((ti) =>
-            `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
-          const next = er.tiers[er.owned];
-          const tt = next
-            ? `${er.desc}\n${next.name} — ${next.desc}\nCosts ${er.cost} ${ptName[er.point] || er.point} points.${er.canBuy ? '' : '\n' + er.whyNot}`
-            : `${er.desc}\n${er.whyNot}`;
-          return `
-          <div class="np-reform">
-            <div class="np-reform-head">${icon(er.icon || 'lamp', 'icon-k')}<b>${esc(er.name)}</b><span class="np-pips">${pips}</span></div>
-            <button class="pp-build-btn np-reform-btn${er.canBuy ? '' : ' disabled'}" data-eraidea="${esc(er.key)}" data-tt="${esc(tt)}">
-              ${next ? `${esc(next.name)} <span class="np-reform-cost">${er.cost} ${esc(er.point)}</span>` : 'Complete'}
-            </button>
-          </div>`;
-        }).join('');
-      }
+      groups = defs.filter(gd => ((t.eraIdeas || {})[gd.key] | 0) > 0).map(gd => ({
+        ...gd, owned: (t.eraIdeas || {})[gd.key] | 0,
+      }));
     }
+    const html = (groups || []).map(group => {
+      const def = defs.find(gd => gd.key === group.key);
+      const card = { ...group, tiers: group.tiers.map((ti, i) => ({
+        ...ti, icon: ideaTierIcon(def?.tiers[i] || ti, group.icon),
+      })) };
+      return ideaCard(card, { kind: 'era', self, selected: ideaSelections.get('era:' + group.key) });
+    }).join('');
     refs.eraIdeasBlock.classList.toggle('hidden', !html);
     setHtml(refs.eraIdeas, html);
   }

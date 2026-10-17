@@ -32,9 +32,8 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
-await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
-await page.evaluate(() => localStorage.clear());
-await page.reload({ waitUntil: 'networkidle' });
+await page.addInitScript(() => localStorage.clear());
+await page.goto(process.env.JU_BASE_URL || 'http://127.0.0.1:8613/', { waitUntil: 'domcontentloaded', timeout: BOOT_MS });
 await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 // 66 CE — the chapter with a standing Temple, so the Faith tab and the High
 // Priesthood's candidate buttons are on the board to be measured. The carousel
@@ -90,35 +89,27 @@ console.log('== a tab shows its own sections and hides the rest ==');
   ok(vitalCount === 4, 'four pinned numbers: ' + vitalCount);
 }
 
-console.log('== the ideas are split by what unlocks them (SPEC §198) ==');
+console.log('== ideas have a dedicated panel ==');
 {
-  // The reform trees are the realm's own constitution and live on Crown; the
-  // Ideas of the Age are each locked behind a named rung and keep the
-  // Technology screen, where the lock card and the ladder that answers it
-  // share a window. A bounding box is the only honest answer to "which
-  // screen".
   const reforms = page.locator('#nation-panel [data-ref="reforms"]');
   const eras = page.locator('#nation-panel [data-ref="eraIdeasBlock"]');
   const tech = page.locator('#nation-panel [data-ref="tech"]');
-  await page.locator('#nation-panel .np-tab[data-tab-go="crown"]').click();
-  await page.waitForTimeout(150);
-  ok(await reforms.isVisible(), 'Crown shows the reform trees');
-  ok(!(await eras.isVisible()), '  and not the Ideas of the Age');
-  const buys = await page.locator('#nation-panel [data-idea]:visible').count();
-  ok(buys === 3, '  the three trees keep their buy buttons here: ' + buys);
-
+  await page.locator('#nation-panel .np-tab[data-tab-go="ideas"]').click();
+  ok(await reforms.isVisible() && await eras.isVisible(), 'Ideas shows reforms and era groups together');
+  ok(!(await tech.isVisible()), 'technology has its own tab');
+  ok(await page.locator('#nation-panel [data-ref="reforms"] .np-idea-step').count() === 15,
+    'the three universal groups show all fifteen idea icons');
+  const inspect = page.locator('[data-idea-inspect="reform:civ"][data-tier="4"]');
+  const pausedBefore = await page.evaluate(() => window._ctx.game.paused);
+  await inspect.focus(); await page.keyboard.press('Space');
+  ok(await page.evaluate(() => window._ctx.game.paused) === pausedBefore, 'keyboard inspection leaves the game clock alone');
+  ok((await page.locator('[data-idea-group="reform:civ"] .np-idea-detail').textContent()).includes('The Higher Law'),
+    'selecting an icon shows its name and effect');
   await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
-  await page.waitForTimeout(150);
-  ok(await tech.isVisible() && await eras.isVisible(),
-    'Technology shows the ladders and the Ideas of the Age together');
-  ok(!(await reforms.isVisible()), '  and not the reform trees');
-  const boxes = await page.evaluate(() => {
-    const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
-    return { tech: r('tech').top, eras: r('eraIdeas').top };
-  });
-  ok(boxes.eras > boxes.tech, 'and the era ideas are drawn BELOW the ladders that unlock them');
-  ok(await page.locator('#nation-panel [data-ref="eraIdeas"] .np-reform, #nation-panel [data-ref="eraIdeas"] .np-era-locked').count() >= 1,
-    'the chapter\'s curriculum is on the board (open groups or lock cards)');
+  ok(await tech.isVisible() && !(await reforms.isVisible()) && !(await eras.isVisible()),
+    'Technology hides both idea sections');
+  await page.locator('#nation-panel .np-tab[data-tab-go="crown"]').click();
+  ok(!(await reforms.isVisible()), 'Crown no longer duplicates reforms');
 }
 
 console.log('== the last three sections are filed by what they are (SPEC §203) ==');
@@ -138,10 +129,10 @@ console.log('== the last three sections are filed by what they are (SPEC §203) 
   ok(axes >= 3, '  with its needles on the board: ' + axes);
   const crownOrder = await page.evaluate(() => {
     const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
-    return { facts: r('religion').top, needles: r('doctrine').top, reforms: r('reforms').top };
+    return { facts: r('religion').top, needles: r('doctrine').top };
   });
-  ok(crownOrder.needles > crownOrder.facts && crownOrder.reforms > crownOrder.needles,
-    '  drawn between the realm\'s facts and its reforms');
+  ok(crownOrder.needles > crownOrder.facts,
+    '  drawn below the realm\'s facts');
 
   await page.locator('#nation-panel .np-tab[data-tab-go="war"]').click();
   await page.waitForTimeout(150);
@@ -161,22 +152,20 @@ console.log('== the last three sections are filed by what they are (SPEC §203) 
 
   await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
   await page.waitForTimeout(150);
-  ok(await ageBlock.isVisible(), 'Technology carries the age block');
+  ok(await ageBlock.isVisible() === await inst.isVisible(), 'Technology shows its institutions heading when the list has content');
   if (await inst.isVisible()) {
     const folded = await page.evaluate(() => {
       const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
       return {
         ladders: r('tech').bottom,
         inst: r('institutions').top,
-        eras: r('eraIdeas').top,
         titles: document.querySelectorAll('#nation-panel [data-ref="ageBlock"] .pp-build-title').length,
         subs: document.querySelectorAll('#nation-panel [data-ref="ageBlock"] .np-age-sub').length,
       };
     });
     ok(folded.inst > folded.ladders, '  the institutions are drawn below the ladders they surcharge');
-    ok(folded.eras > folded.inst, '  and the chapter\'s own ideas below them');
-    ok(folded.titles === 1 && folded.subs === 2,
-      '  one block title over two subheads: ' + folded.titles + '/' + folded.subs);
+    ok(folded.titles === 1 && folded.subs === 1,
+      '  one institutions title and subhead: ' + folded.titles + '/' + folded.subs);
     ok(await page.locator('#nation-panel [data-ref="institutions"] .np-faction').count() >= 1,
       '  with the institutions themselves listed');
   } else {
@@ -193,8 +182,8 @@ console.log('== the chapter and the patterns follow the same rule (SPEC §204) =
   await page.waitForTimeout(150);
   ok(!(await chapter.isVisible()), 'Crown no longer carries The Chapters');
   ok(await page.locator('#nation-panel [data-ref="religion"]').isVisible()
-    && await page.locator('#nation-panel [data-ref="reforms"]').isVisible(),
-    '  and still has its facts and its reforms');
+    && !(await page.locator('#nation-panel [data-ref="reforms"]').isVisible()),
+    '  and keeps its facts while reforms live on Ideas');
 
   await page.locator('#nation-panel .np-tab[data-tab-go="missions"]').click();
   await page.waitForTimeout(150);
@@ -261,7 +250,7 @@ console.log('== the High Priesthood buttons fit their labels ==');
 {
   await page.locator('#nation-panel .np-tab[data-tab-go="faith"]').click();
   await page.waitForTimeout(150);
-  const seats = page.locator('#nation-panel .np-seat-btn');
+  const seats = page.locator('#nation-panel .np-seat-btn:visible');
   const n = await seats.count();
   ok(n >= 2, 'the office offers ' + n + ' candidates');
   if (n) {

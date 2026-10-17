@@ -1,36 +1,5 @@
-// Headless regression — SPEC §198 (refining §188): the ideas are split by
-// what unlocks them, in every bookmark.
-//
-// §188 moved the whole ideas block onto the technology tab under the ladders,
-// and for the chapter's Ideas of the Age the argument was airtight: every
-// group is locked behind a NAMED RUNG, the lock card names it, and the rung
-// it names is printed directly above. For the three universal reform trees
-// the argument was only symmetry — no rung opens them, no lock card names a
-// ladder; they are the realm's own constitution and belong with the realm's
-// own facts. §198 splits the block: the reform trees come home to Crown, the
-// Ideas of the Age keep the ladders. This suite holds the split.
-//
-// §203 renamed the tab the ladders live on (Coin/Economy → Technology, id
-// `tech`) and folded the institutions in beside the era ideas; the split
-// itself is unchanged, and this suite tracks the new id. §203's own moves
-// are `smoke131`'s.
-//
-// Three contracts:
-//
-//   1. THE SPLIT, EXACTLY. The reform-tree host is on Crown; the era-idea
-//      host is on Technology, templated BELOW the `np-techs` host (template
-//      order is render order — the tab filter only hides, it never reorders),
-//      so a lock card reading "Unlocked at The Third Wall (8)" still sits
-//      below the ladder that shows the 8. Each wears its own title.
-//   2. NOTHING ELSE MOVED. Every declared tab still owns a section; Crown
-//      still opens with its unhidden vitals grid; and all three buy paths
-//      (`data-idea`, `data-eraidea`, `data-tech`) keep their probes in the
-//      delegated click chain, behind the tab probe that runs first.
-//   3. EVERY ERA IDEA IS PAID BY A LADDER PRINTED ABOVE IT — IN EVERY
-//      BOOKMARK. The §188 audit holds verbatim: the universal trees and
-//      every chapter's era groups all price and unlock off gov/infl/mar,
-//      for every playable side of every chapter. That is what keeps
-//      Technology the right screen for the half of the block that stayed.
+// Ideas panel: reforms and era groups share one tab; technology keeps its ladders.
+// The existing purchase probes and every bookmark's point/unlock contracts hold.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { readFileSync } = await import('fs');
 const { IDEA_TREES } = await import(R + '/js/data/ideas.js');
@@ -63,34 +32,15 @@ function blockTitleAbove(marker) {
 }
 
 // ---------------------------------------------------------------------------
-console.log('== §198: the reform trees are on Crown, the era ideas keep the ladders ==');
+console.log('== reforms and era ideas share the Ideas tab ==');
 {
-  const reformsTab = tabOf('data-ref="reforms"');
-  const erasTab = tabOf('data-ref="eraIdeas"');
-  const techTab = tabOf('class="np-techs"');
-  ok(reformsTab === 'crown', 'the reform-tree host is on Crown: ' + reformsTab);
-  ok(techTab === 'tech', 'the Technology block is on the Technology tab: ' + techTab);
-  ok(erasTab === 'tech', 'and the Ideas of the Age stay beside it: ' + erasTab);
-
-  // Render order is template order — the tab filter is display:none on the
-  // sections of other tabs and reorders nothing — so the lock card reading
-  // "Unlocked at The Third Wall (8)" sits below the ladder that shows the 8.
-  const techAt = TEMPLATE.indexOf('class="np-techs"');
-  const erasAt = TEMPLATE.indexOf('data-ref="eraIdeas"');
-  ok(techAt > 0 && erasAt > techAt, 'the era ideas are templated BELOW the ladders');
-
-  // Each half wears its own name now that they are two blocks.
-  ok(blockTitleAbove('data-ref="reforms"') === 'Reforms',
-    'the Crown block is titled Reforms: ' + blockTitleAbove('data-ref="reforms"'));
-  ok(blockTitleAbove('data-ref="eraIdeas"') === 'Ideas of the Age',
-    'the Technology block is titled Ideas of the Age: ' + blockTitleAbove('data-ref="eraIdeas"'));
-
-  // The tab tooltips have to own what each tab now holds, or the strip lies
-  // about where a player should look.
-  const crownTT = (PANEL.match(/id: 'crown',[^\n]*tt: '([^']*)'/) || [])[1] || '';
-  const techTT = (PANEL.match(/id: 'tech',[^\n]*tt: '([^']*)'/) || [])[1] || '';
-  ok(/reform/i.test(crownTT), 'the Crown tooltip claims the reforms: ' + crownTT);
-  ok(/idea/i.test(techTT), 'and the Technology tooltip claims the ideas of the age: ' + techTT);
+  ok(tabOf('data-ref="reforms"') === 'ideas', 'reforms are on Ideas');
+  ok(tabOf('data-ref="eraIdeas"') === 'ideas', 'era groups are on Ideas');
+  ok(tabOf('class="np-techs"') === 'tech', 'ladders stay on Technology');
+  ok(blockTitleAbove('data-ref="reforms"') === 'Reforms', 'reforms keep their heading');
+  ok(blockTitleAbove('data-ref="eraIdeas"') === 'Ideas of the Age', 'era groups keep their heading');
+  const ideasTT = (PANEL.match(/id: 'ideas',[^\n]*tt: '([^']*)'/) || [])[1] || '';
+  ok(/reform/i.test(ideasTT) && /idea/i.test(ideasTT), 'Ideas describes both kinds of group');
 }
 
 // ---------------------------------------------------------------------------
@@ -163,9 +113,9 @@ console.log('== §188 audit: for all bookmarks, every era idea is paid by a ladd
   // bookmark can set is a tab no chapter can dress.
   const techTerm = (PANEL.match(/id: 'tech', label: '([A-Za-z]+)', term: '([A-Za-z]+)'/) || []);
   ok(techTerm[1] === 'Technology' && techTerm[2] === 'tabTech',
-    'the era ideas\' tab is ' + techTerm[1] + ', read from uiTerms.' + techTerm[2]);
+    'the technology tab is ' + techTerm[1] + ', read from uiTerms.' + techTerm[2]);
   const crownTerm = (PANEL.match(/id: 'crown', label: '([A-Za-z]+)', term: '([A-Za-z]+)'/) || []);
-  ok(crownTerm[2] === 'tabCrown', 'and the reforms\' tab from uiTerms.' + crownTerm[2]);
+  ok(crownTerm[2] === 'tabCrown', 'and the Crown tab from uiTerms.' + crownTerm[2]);
   // §203 retired `tabCoin`: the tab is named for the ladders and every
   // chapter calls those the same thing. A bookmark still carrying the old
   // key would be re-dressing a tab that no longer reads it — silently.

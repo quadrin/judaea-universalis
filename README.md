@@ -35,6 +35,14 @@ batch. The **Army templates** tab saves a composition and distributes training
 across safe, connected provinces. Completed regiments march to the selected
 rally province and merge. A manual movement order takes over from the rally.
 
+**Ideas.** Open your court with the topbar flag, then select **Ideas**.
+National reforms and the era's idea groups now share this panel.
+Each idea has an icon: select it to read its effect and see whether it is
+completed, next, or locked. The adoption button shows the next idea's cost;
+the point balances and technology requirements are visible alongside the
+groups. Technology and institutions remain in **Technology**. Foreign courts
+show their ideas for inspection, with purchasing controls hidden.
+
 **Allies and settlements.** Declare War now opens a planning card showing each
 ally's trust, favors, and reasons for joining or staying home. Spend favors or
 promise a province they want. Assign promised land to the ally in the peace
