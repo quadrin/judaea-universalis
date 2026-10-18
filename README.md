@@ -133,6 +133,7 @@ on a phone's tools sheet) opens the settings: the main, effects and music
 volumes, the button clicks, the song, the yearly autosave, how long notices
 stay, and reduce motion (SPEC §289). They are kept in this browser, not in
 the save. Music volume goes up to **200%**; values above 100% boost the score.
+**Main menu** saves the current campaign on this device and returns to the bookmark screen.
 
 **Ships at sea.** Merchantmen and fleets sail where they are going: along
 the water, around capes and through straits, a little further each moment,

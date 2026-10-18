@@ -20773,6 +20773,10 @@ not also pause the campaign.
   switch still does this where an animation declares it. The map's canvas is
   not CSS; of what it draws, the ships honour both switches (§290).
 - *Defaults* puts every setting back, the two switches included.
+- *Main menu* appears during a campaign. It pauses and writes a manual local
+  save, then reloads to the bookmark screen; Continue can resume that save.
+  A failed local save leaves the campaign open and restores its pause state.
+  Returning clears pending-load and join-link state, and does not wait on a cloud copy.
 
 The settings live in `js/ui/settings.js`, in one key (`ju_settings`) in this
 browser. A save does not carry them, and a multiplayer table never sees them.

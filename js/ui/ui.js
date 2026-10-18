@@ -196,6 +196,8 @@ export function initUI(staticCtx) {
   // The settings (SPEC §289): sound, music, the autosave, the notices. The
   // song list is the score's own, read each time the window opens.
   const settings = createSettingsPanel({
+    onMainMenu: staticCtx.onMainMenu,
+    canReturnToMainMenu: () => !!state.ctx,
     getSongs: () => (window._sound && window._sound.music && window._sound.music.songs
       ? window._sound.music.songs() : []),
   });

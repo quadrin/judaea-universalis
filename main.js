@@ -104,7 +104,7 @@ async function boot() {
   const overlay = createOverlay(overlayCanvas, geom, MAP_DATA, DEFINES);
   const labels = createLabels(labelsEl, MAP_DATA, geom);
 
-  const staticCtx = { DEFINES, MAP_DATA, geom, bus, renderer, camera, overlay, labels };
+  const staticCtx = { DEFINES, MAP_DATA, geom, bus, renderer, camera, overlay, labels, onMainMenu: returnToMainMenu };
   window._camera = camera; // debug/test handle
   window._overlay = overlay; // its ships() says where each hull was drawn (SPEC §290)
   window._renderer = renderer;
@@ -638,7 +638,7 @@ async function boot() {
   // manual save (the quill) opens a new row; the yearly autosave overwrites
   // the chapter's single auto row.
   let askedToPersist = false;
-  async function doSave(silent) {
+  async function doSave(silent, { localOnly = false, requireLocal = false } = {}) {
     if (!ctx) return null;
     const now = Date.now();
     const id = silent ? autoId(ctx.game.bookmarkId)
@@ -648,11 +648,12 @@ async function boot() {
     // copies are byte-identical and a big save is not paid for twice.
     const json = JSON.stringify({ v: SAVE_VERSION, savedAt: now, game: ctx.game });
     const localOk = await localWrite(id, json, meta);
+    if (!localOk && requireLocal) throw new Error('This browser could not save the campaign. Please try again.');
     if (!silent) await pruneLocalManual();
     // The first save is the honest moment to ask the browser not to evict us.
     if (!askedToPersist) { askedToPersist = true; requestPersistence(); }
     let cloudOk = false;
-    if (isCloudOn()) {
+    if (!localOnly && isCloudOn()) {
       try {
         await cloudPutSave(id, meta, json);
         cloudOk = true;
@@ -664,7 +665,7 @@ async function boot() {
       let where;
       if (!localOk) where = 'This browser would not store it';
       else if (cloudOk) where = 'Kept on this device and in the cloud';
-      else if (isCloudOn()) where = 'Kept on this device — the cloud copy did not go through';
+      else if (!localOnly && isCloudOn()) where = 'Kept on this device — the cloud copy did not go through';
       else where = 'Kept on this device';
       bus.emit('notify', {
         title: localOk ? 'Chronicle written' : 'The chronicle would not take',
@@ -794,6 +795,33 @@ async function boot() {
     }
     loadIntoGame(loaded);
     return true;
+  }
+
+  // Rebuild through the same clean boot used by in-campaign loading. Keep a
+  // manual local save first; a slow cloud must not hold the player here.
+  let returningToMenu = false;
+  async function returnToMainMenu() {
+    if (returningToMenu) return;
+    returningToMenu = true;
+    const game = ctx && ctx.game;
+    const wasPaused = game && game.paused;
+    try {
+      if (game) {
+        game.paused = true;
+        await doSave(false, { localOnly: true, requireLocal: true });
+      }
+      try { sessionStorage.removeItem(PENDING_LOAD); } catch (e) { /* unavailable */ }
+      // An invitation URL should not reopen the multiplayer lobby on return.
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('join')) {
+        url.searchParams.delete('join');
+        window.history.replaceState(null, '', url);
+      }
+      window.location.reload();
+    } catch (e) {
+      if (game) game.paused = wasPaused;
+      throw e;
+    } finally { returningToMenu = false; }
   }
 
   async function removeSave(id) {

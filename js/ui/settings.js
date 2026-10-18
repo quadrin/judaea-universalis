@@ -98,8 +98,9 @@ if (typeof document !== 'undefined') applyMotion();
 // The settings window: a parchment card like the primer's, four sections.
 // `songs` is the score's catalogue ([{id, title, age, mood, blurb}]) and is
 // read each time the window opens, so the list is never out of date.
-export function createSettingsPanel({ getSongs } = {}) {
+export function createSettingsPanel({ getSongs, onMainMenu, canReturnToMainMenu = () => true } = {}) {
   let el = null;
+  let returningToMenu = false;
 
   function isOpen() { return !!el && !el.classList.contains('hidden'); }
   function close() { if (el) el.classList.add('hidden'); }
@@ -208,8 +209,10 @@ export function createSettingsPanel({ getSongs } = {}) {
       <div class="ev-card peace-card st-card" role="dialog" aria-label="Settings">
         <h2 class="peace-title">Settings</h2>
         <div class="st-body" data-ref="stBody"></div>
+        <p class="st-menu-error hidden" data-ref="stMenuError" role="alert"></p>
         <div class="st-foot">
           <button class="btn st-reset" data-act="reset" data-tt="Put every setting back to how it was at first">Defaults</button>
+          <button class="btn st-main-menu hidden" data-act="main-menu" data-tt="Save this campaign on this device and return to the main menu">Main menu</button>
           <button class="btn peace-cancel" data-act="close">Close</button>
         </div>
       </div>`;
@@ -240,7 +243,7 @@ export function createSettingsPanel({ getSongs } = {}) {
         try { const s = snd(); if (s) s.play('good'); } catch (err) { /* silent */ }
       }
     });
-    el.addEventListener('click', (e) => {
+    el.addEventListener('click', async (e) => {
       const t = e.target instanceof Element ? e.target : null;
       if (!t) return;
       const sw = t.closest('[data-toggle]');
@@ -258,7 +261,25 @@ export function createSettingsPanel({ getSongs } = {}) {
           setSetting('toastSecs', Number(seg.dataset.toast));
           render();
         } else if (act) {
-          if (act.dataset.act === 'close') close();
+          if (act.dataset.act === 'main-menu') {
+            if (returningToMenu || typeof onMainMenu !== 'function' || !canReturnToMainMenu()) return;
+            returningToMenu = true;
+            const error = el.querySelector('[data-ref="stMenuError"]');
+            error.classList.add('hidden');
+            act.disabled = true;
+            act.textContent = 'Saving…';
+            try {
+              await onMainMenu();
+              close();
+            } catch (err) {
+              error.textContent = 'Could not return to the main menu. Your campaign is still open. ' + (err.message || 'Please try again.');
+              error.classList.remove('hidden');
+            } finally {
+              act.disabled = false;
+              act.textContent = 'Main menu';
+              returningToMenu = false;
+            }
+          } else if (act.dataset.act === 'close') close();
           else if (act.dataset.act === 'reset') {
             resetSettings();
             if (s) { s.unmute(); if (s.music) s.music.on(); }
@@ -276,6 +297,8 @@ export function createSettingsPanel({ getSongs } = {}) {
   function open() {
     if (!el) build();
     render();
+    el.querySelector('[data-act="main-menu"]').classList.toggle('hidden', typeof onMainMenu !== 'function' || !canReturnToMainMenu());
+    el.querySelector('[data-ref="stMenuError"]').classList.add('hidden');
     el.classList.remove('hidden');
     if (!nowTimer) {
       nowTimer = setInterval(() => {
