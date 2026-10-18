@@ -9,7 +9,7 @@
 // The settings (SPEC §289) set three levels — the whole mix, the music, the
 // effects — and the score hands over to composed songs (js/data/songs.js)
 // between stretches of the open score.
-import { getSetting, onSettingChange } from './settings.js';
+import { getSetting, onSettingChange, VOLUME_LIMITS } from './settings.js';
 import { SONGS, songCatalogue, songAgeOf, warVersionOf, isWarSong } from '../data/songs.js';
 import { buildTimeline, createSongVoices } from './song_engine.js';
 
@@ -108,11 +108,12 @@ export function initSound(bus, getGame) {
 
   function ready() { return !!ac && ensureCtx(); }
 
-  // A slider's 0–100 as a gain: squared, so the travel feels even to the ear.
+  // Volume is squared, so the travel feels even to the ear. Music extends
+  // beyond 100% for a louder score; both its dry mix and reverb follow it.
   const MASTER_LVL = 0.22;
   function level(k) {
     const v = Number(getSetting(k));
-    return Number.isFinite(v) ? Math.pow(Math.max(0, Math.min(100, v)) / 100, 2) : 1;
+    return Number.isFinite(v) ? Math.pow(Math.max(0, Math.min(VOLUME_LIMITS[k], v)) / 100, 2) : 1;
   }
   function glide(param, v) {
     try { param.setTargetAtTime(v, ac.currentTime, 0.06); } catch (e) { param.value = v; }

@@ -20783,9 +20783,13 @@ switches keep their own keys (`ju_muted`, `ju_music`).
 
 **The mix.** `sound.js` now has an effects bus (with its own reverb send)
 between the effects and the master, and the score's reverb send follows the
-music level, so a silenced score leaves no tail. A slider's 0–100 is squared
-into a gain. The master is 0.22 × main, the effects bus × effects, the score
-0.55 × music.
+music level, so a silenced score leaves no tail. The slider percentage divided
+by 100 is squared into a gain. Main and effects range from 0–100%; music
+ranges from 0–200%, preserving the existing 0–100% levels and default of 70%.
+Above 100% the score and its reverb are amplified together, independently
+of effects. The master is 0.22 × main, the effects bus × effects, the score
+0.55 × music. Boosted levels persist in `ju_settings` and survive reloads;
+Defaults restores the original levels.
 
 **The songs.** Ten original compositions, written for this game, join the
 generative score (§27, §51). They are data (`js/data/songs.js`): a key, a
@@ -22221,6 +22225,15 @@ Art consists of inline SVG with flat fills and strokes, without images,
 cloth, gradients, filters or lighting. Legacy synthetic F-tags receive
 deterministic vector devices based on their saved identity. Link targets
 and accessible court names remain intact.
+
+Prominent devices include Egypt's double crown, an Athenian owl in profile,
+a Petra-inspired façade for Nabataea, a stepped Gerizim sanctuary for Samaria,
+a tall Artaxiad-inspired tiara for Armenia, the Achaean Alpha–Chi monogram
+and an upright Rhodian rose. These are original game interpretations of
+motifs, not reconstructions of ancient flags or buildings. Shared device
+families have individual silhouettes: torc collars and terminals; square,
+leather and lateen sails, rammed prows and double-ended hulls; curved swords,
+light javelins, ringed spears and different paired weapon arrangements.
 
 Normal chips keep their existing dimensions; Court headers now use the
 existing 34px size. `tools/flags.html` is a searchable development gallery

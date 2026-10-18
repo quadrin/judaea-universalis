@@ -116,7 +116,6 @@ export const FLAT_FLAGS = {
   AIS: standard('#173a73', magenDavid, { emblem: 'magen-david' }),
   IEM: standard('#243c77', magenDavid, { emblem: 'magen-david' }),
   JDH: standard('#183da0', lion, { emblem: 'lion', dx: -4.5 }),
-  SAM: standard('#008064', path('M20 73 48 30 76 73Z', P) + line('M32 64H64', '#008064', 3.5), { emblem: 'gerizim', note: 'Mount Gerizim as a geometric mountain insignia.' }),
   GAL: standard(GALILEE_BLUE, zodiacWheel(), { emblem: 'zodiac-wheel', note: 'Beige zodiac roundel on baby blue, with twelve divisions and a central sun.' }),
   GLT: standard('#238244', line('M37 72A27 27 0 1 1 59 72', G, 7) + circle(36, 72, 5) + circle(60, 72, 5), { emblem: 'torc' }),
   SEL: standard('#e4b33c', anchor('#6c217b'), { emblem: 'anchor' }),
@@ -219,14 +218,14 @@ const DEVICES = {
   rose: c => [0,72,144,216,288].map(a => `<g transform="rotate(${a} 48 48)">${path('M43 45Q28 27 42 20Q57 15 57 32L53 45Z', c)}</g>`).join('') + circle(48,48,8,c),
 };
 const COURT_DEVICES = {
-  MIZ:'crown', DMS:'lightning', TYR:'triskele', PLS:'helmet', MOB:'stele', AMO:'gate', EDM:'mountain', HMT:'wing', QDR:'bow', URA:'tree', PHR:'cap', LYD:'axe', ELA:'serpent', MDA:'dagger', TAB:'branch', CRC:'rose',
-  PAR:'bow', NAB:'ingot', ARM:'mountain', AGR:'diadem', HYR:'palm', ARI:'dagger', OSR:'crescent-star', ADI:'crown', CHX:'sail', CMG:'mountain', CYZ:'anchor', ITU:'bow', ATG:'temple', PNT:'crescent-star', GHA:'cross', RSH:'spear', GRC:'branch',
-  ETR:'lightning', SMN:'spears', TRT:'prow', SRD:'tower', IBE:'spear', MAC:'sun', ATH:'helmet', SPT:'lambda', COR:'koppa', ACH:'knot', RHO:'rose', CRT:'labyrinth', SYC:'wheel', TAR:'trident', CYR:'branch', MIL:'rosette', PRG:'cup', BIT:'prow',
+  DMS:'lightning', TYR:'triskele', PLS:'helmet', MOB:'stele', AMO:'gate', EDM:'mountain', HMT:'wing', QDR:'bow', URA:'tree', PHR:'cap', LYD:'axe', ELA:'serpent', MDA:'dagger', TAB:'branch', CRC:'rose',
+  PAR:'bow', AGR:'diadem', HYR:'palm', ARI:'dagger', OSR:'crescent-star', ADI:'crown', CMG:'mountain', CYZ:'anchor', ITU:'bow', ATG:'temple', PNT:'crescent-star', GHA:'cross', RSH:'spear', GRC:'branch',
+  ETR:'lightning', TRT:'prow', SRD:'tower', MAC:'sun', SPT:'lambda', COR:'koppa', CRT:'labyrinth', SYC:'wheel', TAR:'trident', CYR:'branch', MIL:'rosette', PRG:'cup', BIT:'prow',
   PRJ:'temple', RPJ:'cup', EPJ:'seal', KGJ:'diadem', PKJ:'cap', JEM:'crown', LUK:'axe',
-  CAR:'tanit', NUM:'spear', MAU:'crescent', GRM:'wheel', MAS:'sail', CTB:'spears', LUS:'dagger', AVN:'torc', AED:'torc', SEQ:'trident', BLG:'spears', ARO:'sail', AQT:'branch', NOR:'dagger', BOI:'horns', BRT:'triskele', CAL:'v-rod', HIB:'triskele',
-  SUE:'knot', CHE:'lightning', CHA:'sabre', FRS:'tower', CIM:'horns', SCN:'sail', GOT:'spear', AES:'rosette', DLM:'gate', SCO:'sabre', DRD:'tower', THR:'crescent', DAC:'tamga', BOS:'trident', SCY:'bow', SRM:'tamga', VEN:'tree',
+  CAR:'tanit', MAU:'crescent', GRM:'wheel', LUS:'dagger', SEQ:'trident', AQT:'branch', NOR:'dagger', BOI:'horns', BRT:'triskele', CAL:'v-rod', HIB:'triskele',
+  SUE:'knot', CHE:'lightning', CHA:'sabre', FRS:'tower', CIM:'horns', AES:'rosette', DLM:'gate', SCO:'sabre', DRD:'tower', THR:'crescent', DAC:'tamga', BOS:'trident', SCY:'bow', SRM:'tamga', VEN:'tree',
   OST:'wing', VAN:'sail', VIS:'crown', FRK:'axe', BGD:'book', GEP:'wing', LMB:'diadem', SAX:'dagger', AVA:'trident', SLV:'axe', TRK:'tamga', BGR:'iyi-tamga',
-  KSH:'pyramid', NOB:'bow', BLM:'spears', AXM:'stele', SAB:'horns', HMY:'wing', HDR:'altar', OMA:'sail', SAK:'cap', GBA:'rosette', CHO:'gate', HEP:'tamga',
+  KSH:'pyramid', NOB:'bow', BLM:'spears', AXM:'stele', SAB:'horns', HMY:'wing', HDR:'altar', SAK:'cap', GBA:'rosette', CHO:'gate', HEP:'tamga',
   REB:'torch', USR:'crown', USV:'diadem', LST:'sabre', PIR:'prow',
 };
 // Keep the map's regional hue families, but use saturated flag colours
@@ -249,6 +248,81 @@ for (const [tag, emblem] of Object.entries(COURT_DEVICES)) {
   FLAT_FLAGS[tag] = standard(field, DEVICES[emblem](G), { emblem, dx: emblem === 'prow' ? -1.5 : 0,
     dy: ({ diadem: -6, temple: -5, prow: -6.5, seal: -5, 'v-rod': -3 })[emblem] || 0 });
 }
+
+// Individual silhouettes for prominent courts and the shared device families.
+// These remain original game standards inspired by regional objects and motifs.
+const doubleCrown = path('M31 58V44C31 36 38 34 38 26C38 13 52 13 54 24C57 35 53 43 59 51L62 58Z')
+  + path('M27 51H59L64 35H70V72Q48 81 27 72Z')
+  + line('M28 55C16 55 17 40 25 40C32 40 32 47 27 47', G, 3);
+// One owl in profile, with a folded wing cut into the silhouette. No frontal
+// face, pupils or small feather marks that turn into a cartoon at game sizes.
+const athenianOwl = path('M35 25 41 29C48 23 59 25 63 32L71 36 64 41C65 47 69 53 66 62L58 74H34L36 68C26 61 25 49 30 40L32 34Z M36 44C31 57 37 67 50 70C40 60 40 52 44 44Z', P).replace('stroke-width=', 'fill-rule="evenodd" stroke-width=')
+  + line('M41 72V79H33M55 72V79H63', P, 3.2);
+const petraFacade = path('M43 20H53L51 26H45Z', P) + rect(46, 26, 4, 5, P)
+  + path('M22 45 36 31H42L29 45ZM54 31H60L74 45H67Z', P)
+  + path('M40 45V38A8 8 0 0 1 56 38V45Z', P)
+  + rect(23, 47, 50, 5, P)
+  + [27, 38, 53, 64].map(x => rect(x, 53, 5, 22, P)).join('')
+  + rect(23, 76, 50, 4, P) + rect(20, 81, 56, 3, P);
+const gerizimSanctuary = path('M18 76V69H26V62H34V55H40V49H56V55H62V62H70V69H78V76Z', P)
+  + path('M32 32 48 22 64 32V36H32Z', P)
+  + [35, 43, 51, 59].map(x => rect(x, 38, 3, 11, P)).join('') + rect(32, 49, 32, 3, P);
+const armenianTiara = path('M31 39 34 27 41 34 48 19 55 34 62 27 65 39 62 69H34Z')
+  + path('M30 44H34V68L26 79 24 70ZM62 44H66L72 70 70 79 62 68Z') + rect(31, 68, 34, 6, G)
+  + star(48, 52, 8, 10, 4.5, '#a51f3e');
+const achaeanMonogram = line('M23 76 41 22 59 76M30.3 54H51.7M49 24 74 76M74 24 49 76', G, 4.8);
+const rhodianRose = path('M48 19C58 19 63 26 62 36L68 31C73 41 66 52 51 56H45C30 52 23 41 28 31L34 36C33 26 38 19 48 19Z M48 27C40 29 40 39 48 45C56 39 56 29 48 27Z', P).replace('stroke-width=', 'fill-rule="evenodd" stroke-width=')
+  + line('M48 54V78', P, 3.5)
+  + path('M46 72C34 72 29 65 29 60C39 59 46 64 46 72ZM50 68C50 59 57 55 65 56C64 64 58 68 50 68Z', P);
+const arvernianTorc = path('M33 68C9 50 23 19 48 19S87 50 63 68L59 61C76 47 66 27 48 27S20 47 37 61Z')
+  + path('M26 66 35 60 44 69 34 78ZM52 69 61 60 70 66 62 78Z');
+const aeduanTorc = line('M35 69C16 52 25 23 48 23S80 52 61 69', G, 4.5)
+  + path('M29 67 39 65 43 74 34 80ZM53 74 57 65 67 67 62 80Z');
+const massaliotProw = path('M20 56H61V36L74 27 77 33 68 43V61L57 74H31L24 66H18Z')
+  + line('M27 46H57M32 37H57', G, 4)
+  + path('M66 54 80 50V56L65 61Z');
+const armoricanSail = path('M29 23Q48 17 67 23L72 64Q48 58 24 64Z')
+  + line('M48 20V79M27 73H69', G, 3.5);
+const suionianHull = path('M17 31 22 27 30 48Q48 58 66 48L74 27 79 31 71 61Q48 76 25 61Z')
+  + [30, 42, 54, 66].map((x, i) => line(`M${x} 55L${x - 7} ${74 - Math.abs(i - 1.5) * 2}`, G, 3)).join('');
+const characeneShip = path('M28 27Q46 32 65 27V57Q46 51 28 57Z')
+  + line('M48 19V67', G, 3.5) + path('M20 64H76L66 76H32Z');
+const omaniDhow = path('M46 21 74 58H49ZM41 33 24 60H41Z')
+  + line('M46 21V66', G, 3.5) + path('M18 65Q46 72 78 62L68 75Q43 84 27 75Z');
+const iberianFalcata = path('M42 65C33 53 34 42 42 34C53 24 58 20 55 15C72 25 68 38 57 47C47 55 44 60 48 65Z')
+  + line('M35 67H55M45 69V79', G, 4.5) + circle(45, 82, 3);
+const numidianJavelin = path('M48 17 53 38 50 44V78H46V44L43 38Z')
+  + line('M44 47H52M44 52H52', G, 2.6);
+const gothonicSpear = path('M48 19 59 35 48 49 37 35Z') + line('M48 46V79', G, 4)
+  + ring(48, 54, 6.5, G, 3);
+const samniteSpears = `<g transform="rotate(-29 48 48)">${path('M48 17C40 25 41 34 45 40V78H51V40C55 34 56 25 48 17Z')}</g>`
+  + `<g transform="rotate(29 48 48)">${path('M48 17C40 25 41 34 45 40V78H51V40C55 34 56 25 48 17Z')}</g>`;
+const celtiberianArms = `<g transform="rotate(-26 48 48)">${path('M45 21H51V64H57V69H51V79H45V69H39V64H45Z')}</g>`
+  + `<g transform="rotate(26 48 48)">${path('M48 17 55 33 50 39V79H46V39L41 33Z')}</g>`;
+const belgicJavelins = `<g transform="rotate(-14 48 77)">${path('M48 19 54 34 50 41V77H46V41L42 34Z')}</g>`
+  + `<g transform="rotate(14 48 77)">${path('M48 19 54 34 50 41V77H46V41L42 34Z')}</g>`;
+Object.assign(FLAT_FLAGS, {
+  MIZ: standard('#154a91', doubleCrown, { emblem: 'pschent', dx: 3.6, dy: 1.8, note: 'An Egyptian double-crown silhouette, in gold on deep blue.' }),
+  ATH: standard('#234f93', athenianOwl, { emblem: 'athenian-owl', dx: -1, dy: -4, note: 'An ivory owl in profile, with an open folded wing.' }),
+  NAB: standard('#a63a26', petraFacade, { emblem: 'petra-facade', dy: -4, note: 'An ivory Petra-inspired façade with a central urn and broken pediment.' }),
+  SAM: standard('#087c5c', gerizimSanctuary, { emblem: 'gerizim-sanctuary', dy: -1, note: 'An original stepped Mount Gerizim sanctuary insignia, in ivory on emerald.' }),
+  ARM: standard('#a51f3e', armenianTiara, { emblem: 'artaxiad-tiara', dy: -1, note: 'A tall Artaxiad-inspired tiara, with side lappets and an inset star.' }),
+  ACH: standard('#126b63', achaeanMonogram, { emblem: 'achaean-monogram', dx: -.5, dy: -1, note: 'An interlocking Alpha–Chi monogram inspired by Achaean coin devices.' }),
+  RHO: standard('#ad2946', rhodianRose, { emblem: 'rhodian-rose', dy: -.5, note: 'An upright ivory rose with a cut petal and paired leaves.' }),
+  AVN: standard('#326d39', arvernianTorc, { emblem: 'faceted-torc', dy: -.5, note: 'A broad collar with angular terminals, distinct from the other torcs.' }),
+  AED: standard('#176e59', aeduanTorc, { emblem: 'slender-torc', dy: -3.5 }),
+  MAS: standard('#166c94', massaliotProw, { emblem: 'rammed-prow', dx: -1, dy: -2.5 }),
+  ARO: standard('#206878', armoricanSail, { emblem: 'leather-sail', dy: -1 }),
+  SCN: standard('#285e82', suionianHull, { emblem: 'double-ended-hull', dy: -3 }),
+  CHX: standard('#117e88', characeneShip, { emblem: 'square-rigged-ship', dy: .5 }),
+  OMA: standard('#b83e29', omaniDhow, { emblem: 'lateen-dhow', dy: -2 }),
+  IBE: standard('#7e3888', iberianFalcata, { emblem: 'falcata', dx: -2, dy: -2 }),
+  NUM: standard('#006c67', numidianJavelin, { emblem: 'light-javelin', dy: .5 }),
+  GOT: standard('#365aa3', gothonicSpear, { emblem: 'ringed-spear', dy: -1 }),
+  SMN: standard('#8b3743', samniteSpears, { emblem: 'leaf-spears', dy: .5 }),
+  CTB: standard('#a24c25', celtiberianArms, { emblem: 'crossed-sword-javelin', dy: .5 }),
+  BLG: standard('#1f6a58', belgicJavelins, { emblem: 'paired-javelins', dy: -1 }),
+});
 
 // Preserve the designs of actual modern flags; their geometry is the design.
 const MODERN = new Set(('ISR EGY JOR SYR LEB IRQ TUR SAU IRN UK ITA UAR SAR HEZ EGY_REP SYR_BAATH SYR_FAR IRN_IR IRQ_BAATH GRC_MOD IRQ_REP FRA SPA POR NLD BEL LUX DEN SWE POL CZE SOV GER AUT HUN YUG ALB BUL ROU IRL SUI USA ETH YEM AFG PAK LBR HEJ KUR ALW DRZ').split(' '));

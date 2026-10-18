@@ -14,10 +14,11 @@ import { icon } from './icons.js';
 import { MESSAGE_CATEGORIES, MESSAGE_MODES, DEFAULT_MESSAGE_MODES, normalizeMessageModes } from './message_policy.js';
 
 const KEY = 'ju_settings';
+export const VOLUME_LIMITS = Object.freeze({ master: 100, music: 200, sfx: 100 });
 
 export const SETTING_DEFAULTS = Object.freeze({
   master: 80,        // 0–100, the whole mix
-  music: 70,         // 0–100, the score
+  music: 70,         // 0–200; above 100 boosts the score
   sfx: 80,           // 0–100, battles, bells, the quill
   clicks: true,      // the soft tick under every button
   song: 'auto',      // 'auto' (by the age and the mood) or a song id
@@ -32,9 +33,9 @@ const TOAST_CHOICES = [[4, 'Short'], [6, 'Normal'], [10, 'Long']];
 let cache = null;
 const listeners = new Set();
 
-function clampPct(v, d) {
+function clampPct(v, d, max = 100) {
   const n = Number(v);
-  return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : d;
+  return Number.isFinite(n) ? Math.max(0, Math.min(max, Math.round(n))) : d;
 }
 
 // Read once and repair: a hand-edited or older value falls back to its default.
@@ -44,7 +45,7 @@ function load() {
   const d = SETTING_DEFAULTS;
   return {
     master: clampPct(raw.master, d.master),
-    music: clampPct(raw.music, d.music),
+    music: clampPct(raw.music, d.music, VOLUME_LIMITS.music),
     sfx: clampPct(raw.sfx, d.sfx),
     clicks: typeof raw.clicks === 'boolean' ? raw.clicks : d.clicks,
     song: typeof raw.song === 'string' && raw.song ? raw.song : d.song,
@@ -64,12 +65,13 @@ export function getSetting(k) { return getSettings()[k]; }
 
 export function setSetting(k, v) {
   const s = getSettings();
-  if (!(k in SETTING_DEFAULTS) || s[k] === v) return;
-  s[k] = k === 'messages' ? normalizeMessageModes(v) : v;
+  const next = Object.hasOwn(VOLUME_LIMITS, k) ? clampPct(v, SETTING_DEFAULTS[k], VOLUME_LIMITS[k]) : v;
+  if (!(k in SETTING_DEFAULTS) || s[k] === next) return;
+  s[k] = k === 'messages' ? normalizeMessageModes(next) : next;
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private window: this session only */ }
   if (k === 'reduceMotion') applyMotion();
   for (const fn of listeners) {
-    try { fn(k, v); } catch (e) { warnOnce('settings:' + k, e); }
+    try { fn(k, next); } catch (e) { warnOnce('settings:' + k, e); }
   }
 }
 
@@ -115,8 +117,8 @@ export function createSettingsPanel({ getSongs } = {}) {
     const v = getSetting(key);
     return `<label class="st-row" data-tt="${esc(hint)}">
         <span class="st-label">${esc(label)}</span>
-        <input class="st-range" type="range" min="0" max="100" step="1" value="${v}" data-set="${key}" aria-label="${esc(label)}">
-        <span class="st-val" data-val="${key}">${v}</span>
+        <input class="st-range" type="range" min="0" max="${VOLUME_LIMITS[key]}" step="1" aria-valuetext="${v}%" value="${v}" data-set="${key}" aria-label="${esc(label)}">
+        <span class="st-val" data-val="${key}">${v}${key === 'music' ? '%' : ''}</span>
       </label>`;
   }
   function toggle(id, label, on, hint) {
@@ -166,7 +168,7 @@ export function createSettingsPanel({ getSongs } = {}) {
       <div class="st-sec st-music">
         <div class="peace-sec">Music</div>
         ${toggle('music', 'Music', musicOn(), 'The score. The effects stay on when it is off.')}
-        ${slider('music', 'Music volume', 'The score only.')}
+        ${slider('music', 'Music volume', 'The score only. Up to 200%; above 100% boosts the music.')}
         <label class="st-row st-row-wide" data-tt="Automatic plays the songs of the current age one after another, chosen by peace and war. Pick a song to hear only that song, or the open score to hear the score and no songs.">
           <span class="st-label">Song</span>
           <select class="st-select" data-set="song" aria-label="Song">${songOptions()}</select>
@@ -218,10 +220,11 @@ export function createSettingsPanel({ getSongs } = {}) {
     el.addEventListener('input', (e) => {
       const t = e.target;
       if (!(t instanceof HTMLInputElement) || !t.dataset.set) return;
-      const v = clampPct(t.value, SETTING_DEFAULTS[t.dataset.set]);
+      const v = clampPct(t.value, SETTING_DEFAULTS[t.dataset.set], VOLUME_LIMITS[t.dataset.set]);
       setSetting(t.dataset.set, v);
       const out = el.querySelector(`[data-val="${t.dataset.set}"]`);
-      if (out) out.textContent = String(v);
+      if (out) out.textContent = String(v) + (t.dataset.set === 'music' ? '%' : '');
+      t.setAttribute('aria-valuetext', v + '%');
     });
     el.addEventListener('change', (e) => {
       const t = e.target;

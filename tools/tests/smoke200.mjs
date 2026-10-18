@@ -193,6 +193,18 @@ console.log('== the settings store ==');
   ok(heard.join(',') === 'master=25,song=hammer', 'listeners hear each real change once: ' + heard.join(','));
   const saved = JSON.parse(mem.get('ju_settings'));
   ok(saved.master === 25 && saved.song === 'hammer' && !('nonsense' in saved), 'the change is written down');
+  st.setSetting('music', 180);
+  ok(st.getSetting('music') === 180 && JSON.parse(mem.get('ju_settings')).music === 180,
+    'music above 100 is retained and persisted');
+  const reloaded = await import(R + '/js/ui/settings.js?boosted-music');
+  ok(reloaded.getSetting('music') === 180, 'a boosted music level survives loading the store again');
+  st.setSetting('music', 999);
+  st.setSetting('master', 999);
+  st.setSetting('sfx', 999);
+  ok(st.getSetting('music') === 200 && st.getSetting('master') === 100 && st.getSetting('sfx') === 100,
+    'music caps at 200; main and effects retain their 100 limit');
+  st.setSetting('music', -20);
+  ok(st.getSetting('music') === 0, 'the music slider still reaches silence');
   st.resetSettings();
   ok(st.getSetting('master') === 80 && st.getSetting('song') === 'auto' && st.getSetting('music') === 70,
     'Defaults puts every value back');

@@ -61,14 +61,23 @@ that compatibility is not a reason to add effects to new flags.
 | Rome | Gold SPQR on red, without an eagle or wreath |
 | Assyria / Persia | Simplified winged figure and disc |
 | Babylonia | Gold eight-pointed star on blue |
-| Samaria | Geometric Mount Gerizim on green |
+| Ancient Egypt | Egyptian double crown, gold on deep blue |
+| Athens | Ivory owl in profile, with an open folded wing, on blue |
+| Nabataea | Ivory Petra-inspired façade with an urn and broken pediment, on terracotta |
+| Samaria | Stepped Mount Gerizim sanctuary, ivory on emerald |
+| Armenia | Tall Artaxiad-inspired tiara with lappets and an inset star, gold on crimson |
+| Achaean League | Interlocking Alpha–Chi monogram, gold on deep teal |
+| Rhodes | Upright ivory rose with a cut petal and paired leaves, on crimson |
 | Qedar | Drawn bow; no small camel illustration |
 | Saba | Abstract horns and disc; no frontal bull face |
 
 ## 5. Identity and coverage
 
 All 210 catalog/revival courts need their own artwork. Related courts may
-share a device with distinct fields; compare courts that appear together.
+share a device family; compare courts that appear together. Torcs should
+differ in their collars and terminals. Ships should differ in their rigs,
+hulls or prows, and weapons in their blades, shafts or arrangement. A different
+background colour alone does not give a repeated device enough character.
 Runtime rebrands, chapter overrides and saved-game identities must continue
 to work. Known courts must never use the synthetic saved-court fallback.
 
