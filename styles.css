@@ -4351,3 +4351,13 @@ html.ju-reduce-motion *, html.ju-reduce-motion *::before, html.ju-reduce-motion 
 .peace-risk { font-size: 11px; font-weight: bold; white-space: nowrap; }
 .peace-concern .campaign-table { margin-top: 7px; }
 .peace-concern td, .peace-concern th { font-size: 12px; padding: 6px; }
+
+/* Compendium chapter standards share the full game artwork. */
+.wiki-variant-previews { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 8px; }
+.wiki-variant-preview { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.wiki-standard-art { flex-wrap: wrap; }
+.wiki-standard-art .fchip { flex-shrink: 0; }
+.wiki-standard-art figcaption { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .wiki-standard-art figcaption { flex: 0 1 auto; }
+}

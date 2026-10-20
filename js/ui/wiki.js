@@ -8,6 +8,7 @@
 import { esc, rgb, fmtYear, titleCase, warnOnce } from './format.js';
 import { icon, divider, flagChip, flagInfo } from './icons.js';
 import { PLAYABLE_ERAS as ERAS, GENERIC_EVENTS } from '../data/compendium.js';
+import { REVIVALS } from '../data/revivals.js';
 import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
 import { entryFork } from '../data/chapter_paths.js';
@@ -26,13 +27,29 @@ export function createWiki({ DEFINES, getCtx }) {
   let stack = []; // [{p, a}] — page id + argument; the breadcrumb trail
 
   const MONTHS = (DEFINES && DEFINES.MONTH_NAMES) || [];
-  const TAGS = (DEFINES && DEFINES.TAGS) || {};
+  const TAGS = { ...Object.fromEntries(REVIVALS.map(r => [r.tag, r])), ...((DEFINES && DEFINES.TAGS) || {}) };
+  const formableTags = new Set(FORMABLES.map(f => f.to));
   const genericIds = new Set(GENERIC_EVENTS.map((e) => e && e.id).filter(Boolean));
 
   const eraOf = (id) => ERAS.find((e) => e.bookmark.id === id) || null;
   const scriptedOf = (era) => era.events.filter((e) => e && !genericIds.has(e.id));
   const liveGame = () => { const c = getCtx && getCtx(); return c ? c.game : null; };
-  const chip = (tag, size = 18) => flagChip(tag, DEFINES, size, false, liveGame());
+  const chip = (tag, size = 18, bookmark = null) => flagChip(tag, DEFINES, size, false,
+    bookmark ? null : liveGame(), bookmark?.tagTweaks?.[tag]);
+  // Chapter pages describe that chapter even when another campaign is loaded.
+  const chapterName = (tag, bookmark) => bookmark?.tagTweaks?.[tag]?.name || TAGS[tag]?.name || tag;
+  function chapterStandards(tag) {
+    const variants = new Map();
+    for (const { bookmark: b } of ERAS) {
+      const lens = b.tagTweaks?.[tag];
+      if (!lens?.flag) continue;
+      const info = flagInfo(tag, DEFINES, null, lens);
+      if (info.key === tag) continue;
+      if (!variants.has(info.key)) variants.set(info.key, { info, bookmark: b, years: [] });
+      variants.get(info.key).years.push(fmtYear(b.startDate.y));
+    }
+    return [...variants.values()];
+  }
   const tagName = (tag) => {
     const g = liveGame();
     return (g && g.tags[tag] && g.tags[tag].name) || (TAGS[tag] && TAGS[tag].name) || tag;
@@ -149,7 +166,7 @@ export function createWiki({ DEFINES, getCtx }) {
       const b = e.bookmark;
       const scripted = scriptedOf(e);
       const dated = scripted.filter((ev) => ev && ev.date).length;
-      const playable = (b.playableTags || []).map((p) => chip(p.tag, 16)).join(' ');
+      const playable = (b.playableTags || []).map((p) => chip(p.tag, 16, b)).join(' ');
       return `<div class="wiki-card-row wiki-link" data-go="era:${esc(b.id)}">
         <div class="wiki-row-year">${esc(fmtYear(b.startDate.y))}</div>
         <div class="wiki-row-main">
@@ -191,6 +208,8 @@ export function createWiki({ DEFINES, getCtx }) {
     const era = eraOf(id);
     if (!era) return pageHome();
     const b = era.bookmark;
+    const chip = (tag, size = 18) => flagChip(tag, DEFINES, size, false, null, b.tagTweaks?.[tag]);
+    const tagName = tag => chapterName(tag, b);
     const scripted = scriptedOf(era);
     const world = scripted.filter((ev) => ev.world === true).length;
     const guide = CAMPAIGN_GUIDANCE[b.id] || {};
@@ -415,6 +434,9 @@ export function createWiki({ DEFINES, getCtx }) {
       }
     });
     for (const f of FORMABLES) if (TAGS[f.to] && !seen.has(f.to)) seen.set(f.to, 99);
+    // Event successors and releasable courts need entries even when no
+    // bookmark seats them on its opening day (Herod and the tetrarchies).
+    for (const tag of Object.keys(TAGS)) if (tag !== 'WASTE' && !seen.has(tag)) seen.set(tag, 100);
     return [...seen.entries()].sort((a, b2) => a[1] - b2[1] || a[0].localeCompare(b2[0])).map((e) => e[0]);
   }
 
@@ -423,14 +445,21 @@ export function createWiki({ DEFINES, getCtx }) {
       const def = TAGS[tag] || {};
       const eras = ERAS.filter((e) => (e.bookmark.activeTags || []).includes(tag));
       const playable = ERAS.filter((e) => (e.bookmark.playableTags || []).some((p) => p.tag === tag));
-      const formableOnly = !eras.length;
+      const formableOnly = !eras.length && formableTags.has(tag);
+      const laterCourt = !eras.length && !formableOnly;
+      const variants = chapterStandards(tag);
+      const primary = eras[0]?.bookmark;
+      const additional = variants.filter(v => v.info.key !== flagInfo(tag, DEFINES, null, primary?.tagTweaks?.[tag]).key);
+      const previews = additional.map(v => `<span class="wiki-variant-preview">${chip(tag, 32, v.bookmark)}<span>${esc(v.years.join(' · '))}</span></span>`).join('');
       return `<div class="wiki-card-row wiki-link" data-go="nation:${esc(tag)}">
-        <div class="wiki-row-year wiki-court-standard">${chip(tag, 52)}</div>
+        <div class="wiki-row-year wiki-court-standard">${chip(tag, 52, primary)}</div>
         <div class="wiki-row-main"><div class="wiki-row-title">${esc(def.name || tag)}
           ${playable.length ? '<span class="wiki-badge">playable</span>' : ''}
-          ${formableOnly ? '<span class="wiki-badge wiki-badge-world">formable</span>' : ''}</div>
+          ${formableOnly ? '<span class="wiki-badge wiki-badge-world">formable</span>' : ''}
+          ${laterCourt ? '<span class="wiki-badge">event or release</span>' : ''}</div>
           <div class="wiki-dim">${formableOnly ? 'A crown that exists only if someone forms it.'
-    : eras.map((e) => esc(fmtYear(e.bookmark.startDate.y))).join(' · ')}</div></div>
+    : laterCourt ? 'Appears through events or release.' : eras.map((e) => esc(fmtYear(e.bookmark.startDate.y))).join(' · ')}</div>
+          ${previews ? `<div class="wiki-variant-previews">${previews}</div>` : ''}</div>
         <div class="wiki-row-go">›</div>
       </div>`;
     }).join('');
@@ -462,12 +491,16 @@ export function createWiki({ DEFINES, getCtx }) {
     }
     const ideas = ideaLines(def.ideas);
     const standard = flagInfo(tag, DEFINES, liveGame());
-    const artwork = `<figure class="wiki-standard">
-      ${chip(tag, 160)}
-      <figcaption><div class="wiki-row-title">Court standard</div>
-        ${standard.note ? `<p>${esc(standard.note)}</p>` : ''}
-        ${standard.source ? `<a href="${esc(standard.source[1])}" target="_blank" rel="noopener noreferrer">${esc(standard.source[0])}</a>` : ''}
+    const variants = chapterStandards(tag);
+    const standardFigure = (info, image, label) => `<figure class="wiki-standard wiki-standard-art">
+      ${image}
+      <figcaption><div class="wiki-row-title">${esc(label)}</div>
+        ${info.note ? `<p>${esc(info.note)}</p>` : ''}
+        ${info.source ? `<a href="${esc(info.source[1])}" target="_blank" rel="noopener noreferrer">${esc(info.source[0])}</a>` : ''}
       </figcaption></figure>`;
+    const artwork = standardFigure(standard, chip(tag, 160), liveGame()?.tags?.[tag] ? 'Current court standard' : variants.length ? 'General court standard' : 'Court standard')
+      + variants.map(v => standardFigure(v.info, chip(tag, 160, v.bookmark),
+        v.years.join(' · ') + ' — ' + v.bookmark.name)).join('');
     const eras = ERAS.filter((e) => (e.bookmark.activeTags || []).includes(tag));
     const eraRows = eras.map((e) => {
       const b = e.bookmark;
@@ -503,7 +536,7 @@ export function createWiki({ DEFINES, getCtx }) {
         ${artwork}
         ${kv(meta)}
         ${ideas.length ? `<div class="wiki-sec">National character</div><div class="wiki-ideas">${ideas.map((line) => `<span class="wiki-idea">${esc(line)}</span>`).join('')}</div>` : ''}
-        ${eraRows ? `<div class="wiki-sec">Chapters</div>${eraRows}` : '<div class="wiki-dim">This banner flies only if a court forms it.</div>'}
+        ${eraRows ? `<div class="wiki-sec">Chapters</div>${eraRows}` : `<div class="wiki-dim">${formableTags.has(tag) ? 'This banner flies when a court forms it.' : 'This court appears through events or release.'}</div>`}
         ${crowns ? `<div class="wiki-sec">Crowns</div>${crowns}` : ''}`,
     };
   }
