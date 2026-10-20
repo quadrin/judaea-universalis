@@ -89,7 +89,7 @@ function anyFlag(ctx, ...keys) {
 }
 
 export const BOOKMARK_132 = {
-  // The lulav-zuz device follows this chapter into its formable crowns.
+  // The coin harp device follows this chapter into its formable crowns.
   tagTweaks: {
     JUD: { flag: 'JUD_BK' },
     EPJ: { flag: 'EPJ_BK' },

@@ -18,7 +18,7 @@ for (const [tag, emblem] of Object.entries({
   HER: 'herodian-helmet', ATG: 'antigonus-coin-menorah',
   HPA: 'antipas-reed-wreath', HPH: 'philip-coin-temple', AGR: 'agrippa-neronian-wreath',
   HYR: 'hasmonean-cornucopias-wreath', ARI: 'hasmonean-cornucopias-beads',
-  JUD_REVOLT: 'first-revolt-chalice', JUD_BK: 'bar-kokhba-lulav-zuz',
+  JUD_REVOLT: 'first-revolt-vine-leaf', JUD_BK: 'bar-kokhba-coin-harp',
 })) {
   const art = FLAT_FLAGS[tag];
   assert.equal(art.emblem, emblem);
@@ -32,8 +32,9 @@ for (const [tag, emblem] of Object.entries({
 assert.match(FLAT_FLAGS.HYR.note, /not an attribution/);
 assert.match(FLAT_FLAGS.ARI.note, /not an attribution of an Aristobulus I coin/);
 assert.match(FLAT_FLAGS.AGR.note, /Neronian/);
-assert.match(FLAT_FLAGS.JUD_BK.note, /standalone lulav/);
-assert(!FLAT_FLAGS.JUD_BK.body.includes('temple'), 'BK uses the requested lulav zuz');
+assert.match(FLAT_FLAGS.JUD_BK.note, /three strings/);
+assert.match(FLAT_FLAGS.JUD_REVOLT.note, /vine leaf/);
+assert(!FLAT_FLAGS.JUD_BK.body.includes('temple'), 'BK uses the requested coin harp');
 assert.equal(FLAT_FLAGS.JUD.emblem, 'menorah', 'the general Judaean banner remains available');
 
 const bus = { emit() {}, on() { return () => {}; } };

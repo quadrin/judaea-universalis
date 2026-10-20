@@ -18,8 +18,8 @@ export const JUDAEAN_COIN_SOURCES = {
   antipas: ['Oxford RPC I 4918 · Antipas reed and Tiberias wreath', 'https://rpc.ashmus.ox.ac.uk/coins/1/4918'],
   philip: ['British Museum · Philip’s tetrastyle temple coin', 'https://www.britishmuseum.org/collection/object/C_1947-0606-1273'],
   agrippa: ['Oxford RPC I 4989 · Agrippa II’s Neronian wreath type', 'https://rpc.ashmus.ox.ac.uk/coins/1/4989'],
-  revolt: ['Walters 59.518 · First Revolt shekel with chalice', 'https://art.thewalters.org/object/59.518/'],
-  lulav: ['Zissu et al. · Meʿarat Ha-Teʾomim zuz finds, nos. A33–A42', "https://www.researchgate.net/publication/285890131_Coins_from_the_Bar_Kokhba_Revolt_Hidden_in_Me'arat_Ha-Te'omim_Mugharet_Umm_et_Tueimin_Western_Jerusalem_Hills"],
+  revolt: ['British Museum · First Revolt vine-leaf prutah, 1908,0110.623', 'https://www.britishmuseum.org/collection/object/C_1908-0110-623'],
+  harp: ['Center for Jewish Art · Bar Kokhba three-string lyre denar, 27505', 'https://cja.huji.ac.il/?id=27505&mode=set'],
 };
 
 function beads(radius = 77, n = 56, ink = G) {
@@ -148,30 +148,35 @@ function agrippaWreath() {
     + l('M62 98H130', G, .85);
 }
 
-function revoltChalice(field) {
-  const bowl = p('M49 59H143C142 95 125 111 102 116H90C67 111 50 95 49 59Z', S)
-    + l('M55 64C57 89 70 104 89 109M137 64C135 89 122 104 103 109M62 68Q96 77 130 68', B, 1.2)
-    + rect(47, 54, 98, 7, I) + rect(46, 61, 100, 4, S)
-    + repeat(12, i => c(51 + i * 8.2, 56, 2.4, G));
-  const foot = p('M89 115H103V141Q115 145 131 146V153H61V146Q77 145 89 141Z', S)
-    + l('M94 118V141M99 118V141M67 148H125', B, 1.2)
-    + l('M70 153V160H122V153', I, 2.1)
-    + rect(64, 160, 64, 4, G);
-  return beads() + bowl + foot;
+function revoltLeaf() {
+  // Vine leaf, branching veins and curling tendril from the bronze prutah.
+  // Unequal serrated lobes preserve the botanical device of the coin.
+  const leaf = p('M96 57C86 49 79 39 77 30L69 39 57 35 59 48 45 46 49 59 32 61 42 73 29 81 45 89 35 101 52 104 48 119 65 117 65 132 78 126 83 146 96 160 105 144 108 127 122 134 123 119 139 124 135 108 152 106 142 94 160 85 147 77 158 65 141 62 145 49 130 51 132 38 119 43 115 30 106 43Z', G)
+    + l('M96 60C92 92 95 125 96 153M95 85 76 62 67 49M94 97 65 82 47 67M94 113 67 105 48 100M95 132 79 121 65 119M96 85 118 63 126 50M95 99 125 83 144 69M95 115 125 105 142 99M96 133 111 121 123 122', D, 2)
+    + l('M76 62 73 46M65 82 52 81M67 105 57 113M118 63 116 46M125 83 140 83M125 105 135 115', B, 1.15)
+    + l('M99 68C97 93 99 124 99 146', I, 1.25);
+  const stem = l('M96 62C105 42 102 28 90 23C81 19 70 22 70 29C70 36 79 39 83 34', G, 3.2)
+    + l('M101 44C117 22 139 24 143 39C148 57 124 59 123 45C122 38 131 35 135 40', G, 2.3);
+  return beads() + stem + leaf;
 }
 
-function lulav() {
-  // Standalone palm frond of the silver zuz, not the temple/sela reverse or
-  // the separate jug-and-branch type. No invented year or Hebrew legend.
-  const leaf = p('M94 165C96 121 92 77 97 24C102 65 102 119 99 165Z', S)
-    + l('M97 31V161', I, 1.2)
-    + repeat(18, i => {
-      const y = 42 + i * 5.7, width = 7 + Math.sin(i / 17 * Math.PI) * 24;
-      return p(`M96 ${y + 8}Q${96 - width} ${y + 1} ${96 - width - 3} ${y - 8}Q${96 - width + 9} ${y - 4} 96 ${y + 3}Z`, S)
-        + p(`M99 ${y + 8}Q${99 + width} ${y + 1} ${99 + width + 2} ${y - 7}Q${99 + width - 8} ${y - 4} 99 ${y + 3}Z`, S)
-        + l(`M${96 - width + 2} ${y - 4} 95 ${y + 5}M${99 + width - 2} ${y - 3} 100 ${y + 5}`, B, .8);
-    });
-  return beads(76, 56, G) + leaf + rect(92, 150, 12, 3, G) + rect(92, 156, 12, 3, G);
+function barKokhbaHarp(field) {
+  // The coin's lyre (the requested David-harp motif), with horn arms,
+  // three strings, a bridge and four incised marks on the bowl soundbox.
+  const arm = p('M71 119C61 96 64 70 59 54C56 44 48 39 42 40C49 28 65 31 71 43C78 59 74 88 82 114Z', G)
+    + l('M49 38C60 37 66 47 67 61C70 80 67 98 76 115', I, 1.7)
+    + l('M62 47C71 66 66 95 74 111', D, 1.2);
+  const body = p('M70 111Q96 122 122 111L133 126C137 148 117 164 96 165C75 164 55 148 59 126Z', G)
+    + p('M75 121Q96 130 117 121L123 132C123 147 109 156 96 156C83 156 69 147 69 132Z', B)
+    + l('M67 126C61 143 79 160 96 160C113 160 131 143 125 126M76 125Q96 133 116 125', I, 1.5)
+    + repeat(4, i => l(`M${82 + i * 9} 139v8`, D, 2.1));
+  const yoke = p('M55 48Q96 39 137 48L135 57Q96 50 57 57Z', G)
+    + l('M59 50Q96 43 133 50', I, 1.4)
+    + repeat(11, i => c(62 + i * 6.8, 51 - Math.sin(i * Math.PI / 10) * 3.2, 1.4, D));
+  const strings = [84, 96, 108].map(x => l(`M${x} 53V130`, I, 1.6)
+    + c(x, 53, 2.3, G)).join('');
+  return beads() + mirror(arm) + body + strings + yoke
+    + rect(78, 129, 36, 4, I) + l('M80 133H112', D, 1.1);
 }
 
 function coinStandard(fieldColor, emblem, drawing, note, source) {
@@ -189,7 +194,7 @@ function inheritedStandard(base, fieldColor, kingdom) {
     ? `<path d="M7 19V7H19M77 7H89V19M89 77V89H77M19 89H7V77" fill="none" stroke="${G}" stroke-width="1.4"/>`
     : repeat(4, side => group(repeat(7, i => c(8 + i * 3.5, 7, .7, G)), `rotate(${side * 90} 48 48)`));
   return { ...base, fieldColor, emblem, detailed: true,
-    note: `${kingdom ? 'Kingdom' : 'Ethnarchy'} of Judaea: the complete ${base.emblem === 'bar-kokhba-lulav-zuz' ? 'Bar Kokhba lulav-zuz device' : 'Judaean menorah'}, with an invented ${kingdom ? 'corner-band' : 'beaded-corner'} border. The source motif follows the founding chapter. ${base.note}`,
+    note: `${kingdom ? 'Kingdom' : 'Ethnarchy'} of Judaea: the complete ${base.emblem === 'bar-kokhba-coin-harp' ? 'Bar Kokhba coin harp/lyre' : 'Judaean menorah'}, with an invented ${kingdom ? 'corner-band' : 'beaded-corner'} border. The source motif follows the founding chapter. ${base.note}`,
     body: rect(0, 0, 96, 96, fieldColor) + `<g data-emblem="${emblem}" transform="translate(0 0)">${drawing}${border}</g>` };
 }
 
@@ -207,10 +212,10 @@ export function enrichJudaeanStandards(flags) {
     if (!flags[tag]?.fieldColor) throw new Error(`Coin standard has no base court: ${tag}`);
     flags[tag] = coinStandard(flags[tag].fieldColor, emblem, draw, note, source);
   }
-  flags.JUD_REVOLT = coinStandard(flags.JUD.fieldColor, 'first-revolt-chalice', revoltChalice,
-    'A silver chalice with a pearled rim, shaped bowl, stem and raised foot, after First Revolt shekels. The cited specimen is dated 69–70 CE; the motif is used across the 66 CE chapter without copying its year-four legend. Colours and the dotted border are game choices.', 'revolt');
-  flags.JUD_BK = coinStandard(flags.JUD.fieldColor, 'bar-kokhba-lulav-zuz', lulav,
-    'The standalone lulav (palm frond) of Bar Kokhba silver zuzim, with individual leaflets, central rib and stalk. The Meʿarat Ha-Teʾomim finds include this reverse in 133–134 CE; used across the 132 CE chapter. The border is a game composition and no coin legend is fabricated.', 'lulav');
+  flags.JUD_REVOLT = coinStandard(flags.JUD.fieldColor, 'first-revolt-vine-leaf', revoltLeaf,
+    'A lobed vine leaf on a branch with curling tendril and a dotted border, after the First Revolt bronze prutah, British Museum 1908,0110.623. The specimen dates to 67–68 CE; its motif is used across the 66 CE chapter. Vein detail and banner colours are artistic adaptations; no year or coin legend is reproduced.', 'revolt');
+  flags.JUD_BK = coinStandard(flags.JUD.fieldColor, 'bar-kokhba-coin-harp', barKokhbaHarp,
+    'The requested David-harp motif, drawn as the lyre on Bar Kokhba’s silver denar: curved horn arms, three strings, raised yoke, bridge and four incisions on the bowl-shaped soundbox. CJA 27505 dates to 133–134 CE; used across the 132 CE chapter. The ancient instrument’s precise name is uncertain. Colours and arrangement are game choices; no coin legend is fabricated.', 'harp');
   for (const [tag, kingdom] of [['EPJ', false], ['KGJ', true]]) {
     flags[tag] = inheritedStandard(flags.JUD, flags[tag].fieldColor, kingdom);
     flags[`${tag}_BK`] = inheritedStandard(flags.JUD_BK, flags[tag].fieldColor, kingdom);

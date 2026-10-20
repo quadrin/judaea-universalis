@@ -56,7 +56,7 @@ try {
   await page.locator('#chapter').selectOption('132ce');
   assert.equal(await page.locator('article[data-tag="JUD"] svg').first().getAttribute('data-flag-key'), 'JUD_BK');
   assert.equal(await page.locator('article[data-tag="EPJ"] svg').first().getAttribute('data-flag-key'), 'EPJ_BK');
-  assert.match(await page.locator('article[data-tag="JUD"] p').first().textContent(), /lulav/);
+  assert.match(await page.locator('article[data-tag="JUD"] p').first().textContent(), /harp/);
   await page.locator('#chapter').selectOption('66ce');
   assert.equal(await page.locator('article[data-tag="JUD"] svg').first().getAttribute('data-flag-key'), 'JUD_REVOLT');
   await page.locator('#chapter').selectOption('base');

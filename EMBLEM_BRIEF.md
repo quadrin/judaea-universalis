@@ -20,8 +20,8 @@ derived Ethnarchy/Kingdom standards. Its enrichment runs last. Hasmonean
 Judaea (`HAS`) remains exactly unchanged, including its gold palette and note.
 The general Judaean menorah also remains available.
 
-The 66 CE chapter assigns `JUD_REVOLT` (chalice); the 132 CE chapter assigns
-`JUD_BK` (the standalone lulav on a silver zuz). The latter chapter also
+The 66 CE chapter assigns `JUD_REVOLT` (vine leaf); the 132 CE chapter assigns
+`JUD_BK` (the harp/lyre on a silver denar). The latter chapter also
 assigns `EPJ_BK` and `KGJ_BK` so formation retains the whole founding device
 with a distinct game border. Chapter lenses and saved court identities use
 the established `flagChip`/`flagInfo` lookup. The gallery's chapter selector
@@ -105,8 +105,8 @@ Judaean references live in `JUDAEAN_COIN_SOURCES` in `judaean_standards.js`.
 - Antipas: [Oxford RPC I 4918](https://rpc.ashmus.ox.ac.uk/coins/1/4918), reed and wreath, 20/21 CE. Combining both sides into one banner is invented; this later type is retrospective when the tetrarchy first appears.
 - Philip: [British Museum, 1947,0606.1273](https://www.britishmuseum.org/collection/object/C_1947-0606-1273), four-column temple on a raised platform and its central circular object. Do not identify it as the Jerusalem Temple.
 - Agrippa II: [Oxford RPC I 4989](https://rpc.ashmus.ox.ac.uk/coins/1/4989), Neronian wreath issue. The vector Greek excerpts `ΒΑΣΙΛΕ / ΑΓΡΙΠΠ` retain the recorded abbreviations, in an invented arrangement. The 66 CE opening does not borrow his later Flavian Victory types.
-- First Revolt: [Walters, 59.518](https://art.thewalters.org/object/59.518/), chalice, pearled rim and raised foot. The cited specimen is year four, 69–70 CE; the chapter-wide motif does not copy that date legend.
-- Bar Kokhba: [Zissu et al., Coins from Meʿarat Ha-Teʾomim](https://www.researchgate.net/publication/285890131_Coins_from_the_Bar_Kokhba_Revolt_Hidden_in_Me'arat_Ha-Te'omim_Mugharet_Umm_et_Tueimin_Western_Jerusalem_Hills), catalogue A33–A42. The silver zuz reverse has a standalone palm frond (lulav); it is distinct from the jug-and-branch type and the Temple/sela type. A33–A37 are dated 133–134 CE; the game uses the motif across the 132 CE chapter. No Hebrew legend or regnal date is fabricated.
+- First Revolt: [British Museum, 1908,0110.623](https://www.britishmuseum.org/collection/object/C_1908-0110-623), bronze prutah with a vine leaf on a branch, curling tendril and dotted border. The specimen dates to 67–68 CE; the motif serves the whole 66 CE chapter without copying the year legend.
+- Bar Kokhba: [Center for Jewish Art, 27505](https://cja.huji.ac.il/?id=27505&mode=set), silver denar of 133–134 CE. The requested David-harp motif is rendered as the coin’s three-string lyre with curved horn arms, raised yoke, bridge and four incisions on a bowl-shaped soundbox. Its ancient classification as kinnor or nevel remains uncertain. The motif serves the 132 CE chapter and its formable Judaean crowns. No coin legend is fabricated.
 
 ## Review and compatibility
 
