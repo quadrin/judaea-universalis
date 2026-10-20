@@ -4,6 +4,7 @@
 import { DEFINES } from '../data/defines.js';
 import { REVIVALS } from '../data/revivals.js';
 import { enrichCourtStandards } from './court_standards.js';
+import { enrichJudaeanStandards } from './judaean_standards.js';
 
 export const REVIVAL_FLAGS = Object.fromEntries(REVIVALS.map(r => [r.tag, r]));
 export const LEGACY_BORROWED_FLAGS = { HPA: 'HER', HPH: 'HER', BAL: 'SEL', DMT: 'SEL', LKH: 'GHA' };
@@ -327,6 +328,7 @@ Object.assign(FLAT_FLAGS, {
 // Keep the complete relief/coin-inspired drawing at every size. Enlarged
 // Compendium views use these same paths; there is no reduced-detail variant.
 enrichCourtStandards(FLAT_FLAGS);
+enrichJudaeanStandards(FLAT_FLAGS);
 
 // Preserve the designs of actual modern flags; their geometry is the design.
 const MODERN = new Set(('ISR EGY JOR SYR LEB IRQ TUR SAU IRN UK ITA UAR SAR HEZ EGY_REP SYR_BAATH SYR_FAR IRN_IR IRQ_BAATH GRC_MOD IRQ_REP FRA SPA POR NLD BEL LUX DEN SWE POL CZE SOV GER AUT HUN YUG ALB BUL ROU IRL SUI USA ETH YEM AFG PAK LBR HEJ KUR ALW DRZ').split(' '));

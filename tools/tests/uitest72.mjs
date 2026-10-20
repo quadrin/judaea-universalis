@@ -14,7 +14,7 @@ try {
   await page.goto((process.env.JU_BASE_URL || 'http://127.0.0.1:8641/') + 'tools/flags.html');
   await page.waitForSelector('article[data-tag="HPA"]');
   assert.equal(await page.locator('article').count(), 205);
-  assert.equal(await page.locator('article svg').count(), 1050);
+  assert.equal(await page.locator('article svg').count(), 1025);
   assert.equal(await page.locator('article image,article filter,article linearGradient,article radialGradient,article .fchip-abbr').count(), 0);
   const malformed = await page.locator('article svg').evaluateAll(xs => xs.filter(x => new DOMParser().parseFromString(x.outerHTML, 'image/svg+xml').querySelector('parsererror')).length);
   assert.equal(malformed, 0, 'every flag is valid SVG');
@@ -53,6 +53,13 @@ try {
   assert.equal(await modernIsrael.locator('path[stroke="#0038b8"]').count(), 1, 'modern Israel retains its blue star');
   assert.equal(await page.locator('article[data-tag="MLI"] [data-emblem] path').first().getAttribute('stroke'), '#f2c75b', 'the Kingdom star is gold');
   assert.equal(await page.locator('article[data-tag="GAL"] [data-emblem] > circle').first().getAttribute('fill'), '#f4e1b8', 'the Galilee roundel is beige');
+  await page.locator('#chapter').selectOption('132ce');
+  assert.equal(await page.locator('article[data-tag="JUD"] svg').first().getAttribute('data-flag-key'), 'JUD_BK');
+  assert.equal(await page.locator('article[data-tag="EPJ"] svg').first().getAttribute('data-flag-key'), 'EPJ_BK');
+  assert.match(await page.locator('article[data-tag="JUD"] p').first().textContent(), /lulav/);
+  await page.locator('#chapter').selectOption('66ce');
+  assert.equal(await page.locator('article[data-tag="JUD"] svg').first().getAttribute('data-flag-key'), 'JUD_REVOLT');
+  await page.locator('#chapter').selectOption('base');
   await page.locator('#search').fill('Phoenicia'); assert.equal(await page.locator('article').count(), 1);
   assert.equal(await page.locator('article svg').first().getAttribute('data-flag-key'), 'PHO');
   await page.locator('#search').fill('');

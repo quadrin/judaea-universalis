@@ -89,6 +89,12 @@ function anyFlag(ctx, ...keys) {
 }
 
 export const BOOKMARK_132 = {
+  // The lulav-zuz device follows this chapter into its formable crowns.
+  tagTweaks: {
+    JUD: { flag: 'JUD_BK' },
+    EPJ: { flag: 'EPJ_BK' },
+    KGJ: { flag: 'KGJ_BK' },
+  },
   id: '132ce',
   name: 'The Bar Kokhba Revolt',
   startDate: { y: 132, m: 4, d: 1 },

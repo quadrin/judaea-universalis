@@ -4,9 +4,10 @@ import { DEFINES } from '../../js/data/defines.js';
 import { FLAGS, flagChip, flagInfo } from '../../js/ui/icons.js';
 import { FLAT_FLAGS } from '../../js/ui/flag_art.js';
 import { STANDARD_SOURCES } from '../../js/ui/court_standards.js';
+import { JUDAEAN_COIN_SOURCES } from '../../js/ui/judaean_standards.js';
 
 const detailed = Object.entries(FLAT_FLAGS).filter(([, a]) => a.detailed);
-assert.equal(detailed.length, 101);
+assert.equal(detailed.length, 114);
 for (const [tag, a] of detailed) {
   assert(a.note.length > 40, tag + ': explain the motif and its interpretation');
   const drawings = [14, 24, 34, 52, 160, 320].map(size => {
@@ -17,7 +18,7 @@ for (const [tag, a] of detailed) {
   assert.equal(new Set(drawings).size, 1, tag + ': complete source at every size');
   assert.equal(flagInfo(tag, DEFINES).note, a.note);
   if (a.source) {
-    assert(Object.values(STANDARD_SOURCES).includes(a.source));
+    assert(Object.values({ ...STANDARD_SOURCES, ...JUDAEAN_COIN_SOURCES }).includes(a.source));
     const url = new URL(a.source[1]);
     assert.equal(url.protocol, 'https:');
   }
@@ -56,5 +57,5 @@ assert.equal(flagInfo('TYR', DEFINES, game).note, FLAGS.TYR.note);
 const oldSave = { tags: { HPA: { flag: 'HER' } } };
 assert.equal(flagInfo('HPA', DEFINES, oldSave).key, 'HPA');
 assert.equal(flagInfo('missing', DEFINES).note, '');
-console.log('PASS 101 interpreted court drawings, complete SVG source at six sizes, distinct regional constructions and identity-aware notes');
+console.log('PASS 114 interpreted court drawings and variants, complete SVG source at six sizes, distinct regional constructions and identity-aware notes');
 console.log('ALL PASS');

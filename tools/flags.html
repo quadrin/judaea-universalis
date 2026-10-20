@@ -10,6 +10,7 @@
   h1 { margin:0 0 8px; font-size:30px; }
   p { max-width:70ch; line-height:1.5; }
   input { box-sizing:border-box; width:100%; padding:12px; margin:12px 0; color:#32261f; background:#fff7e6; border:1px solid #aa9368; font:inherit; }
+  select { padding:8px; margin:0 0 12px 8px; color:#32261f; background:#fff7e6; border:1px solid #aa9368; font:inherit; }
   .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
   article { display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:16px 8px; border:1px solid #c8b68e; background:#f8efd9; }
   article h2 { font-size:14px; margin:0; min-height:34px; display:flex; align-items:center; }
@@ -22,13 +23,15 @@
   <h1>Court flags</h1>
   <p>Court standards drawn from coins, reliefs, architecture and regional objects. Ancient and alternative banners are original game compositions. Notes identify regional analogies and retrospective motifs. Every size uses the complete vector drawing, including the engraved detail.</p>
   <label for="search">Find a court</label><input id="search" type="search" placeholder="Name or tag">
+  <label for="chapter">Judaean chapter</label><select id="chapter"><option value="base">General standards</option><option value="66ce">66 CE · First Revolt</option><option value="132ce">132 CE · Bar Kokhba</option></select>
   <p id="count"></p><div class="gallery" id="gallery"></div>
 </main>
 <script type="module">
   import { DEFINES } from '../js/data/defines.js';
   import { REVIVALS } from '../js/data/revivals.js';
-  import { FLAT_FLAGS } from '../js/ui/flag_art.js';
-  import { flagChip } from '../js/ui/icons.js';
+  import { flagChip, flagInfo } from '../js/ui/icons.js';
+  import { BOOKMARK_66 } from '../js/data/bookmark_66ce.js';
+  import { BOOKMARK_132 } from '../js/data/bookmark_132ce.js';
   const courts = new Map(REVIVALS.map(r => [r.tag, r]));
   for (const [tag, def] of Object.entries(DEFINES.TAGS)) if (tag !== 'WASTE') courts.set(tag, def);
   const first = ['ISR','MLI','JUD','GAL','QDR','SAB','BYZ','HAS','PHO','ASR','BBL','PAS','SAS','ROM','SAM','HPA','HPH','SEL','PTO'];
@@ -38,19 +41,21 @@
   });
   function render() {
     const search = document.getElementById('search').value.trim().toLowerCase(), host = document.getElementById('gallery');
+    const chapter = { '66ce': BOOKMARK_66, '132ce': BOOKMARK_132 }[document.getElementById('chapter').value];
     host.replaceChildren(); let n = 0;
     for (const [tag, def] of entries) {
       if (search && !(tag + ' ' + def.name).toLowerCase().includes(search)) continue;
       const card = document.createElement('article'); card.dataset.tag = tag;
+      const lens = chapter?.tagTweaks?.[tag], info = flagInfo(tag, DEFINES, null, lens);
       const name = document.createElement('h2'); name.textContent = def.name;
-      const big = document.createElement('div'); big.innerHTML = flagChip(tag, DEFINES, 160);
+      const big = document.createElement('div'); big.innerHTML = flagChip(tag, DEFINES, 160, false, null, lens);
       const samples = document.createElement('div'); samples.className = 'samples';
-      samples.innerHTML = [14,24,34,52].map(size => flagChip(tag, DEFINES, size)).join('');
+      samples.innerHTML = [14,24,34,52].map(size => flagChip(tag, DEFINES, size, false, null, lens)).join('');
       const key = document.createElement('span'); key.className = 'tag'; key.textContent = tag;
       card.append(big,name,samples,key);
-      if (FLAT_FLAGS[tag]?.note) { const note = document.createElement('p'); note.textContent = FLAT_FLAGS[tag].note; card.append(note); }
-      if (FLAT_FLAGS[tag]?.source) {
-        const [label, url] = FLAT_FLAGS[tag].source, link = document.createElement('a');
+      if (info.note) { const note = document.createElement('p'); note.textContent = info.note; card.append(note); }
+      if (info.source) {
+        const [label, url] = info.source, link = document.createElement('a');
         link.textContent = label; link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
         const reference = document.createElement('p'); reference.append(link); card.append(reference);
       }
@@ -59,5 +64,6 @@
     document.getElementById('count').textContent = n + ' / ' + courts.size + ' courts · 160px preview and 14 / 24 / 34 / 52px game sizes';
   }
   document.getElementById('search').addEventListener('input',render); render();
+  document.getElementById('chapter').addEventListener('change',render);
 </script>
 </html>

@@ -170,6 +170,8 @@ function fireEventById(ctx, eventId) {
 }
 
 export const BOOKMARK_66 = {
+  // The revolt's own silver coin device, shared by all flag consumers.
+  tagTweaks: { JUD: { flag: 'JUD_REVOLT' } },
   id: '66ce',
   name: 'The Great Revolt',
   startDate: { y: 66, m: 6, d: 1 },
