@@ -13,9 +13,14 @@ distinctness checks. `uitest72.mjs` checks actual SVG rendering, flat styles,
 start-screen identities, Herodian partitions and mobile Court headers.
 
 Open `tools/flags.html` through the development server to review all flags.
-Each card shows a 96px preview and the 14/24/34px game sizes. The search
+Each card shows a 160px preview and the 14/24/34/52px game sizes. The search
 accepts court names or tags. This is a development gallery and requires no
 image files or external services.
+
+`node tools/tests/smoke215.mjs` checks the cultural motif metadata, complete
+source retention at every size and identity-aware notes for rebranded courts.
+The Nations roster displays 52px art and individual pages display 160px art
+with interpretation notes and checked references where available.
 
 ## Historical crises checks
 

@@ -10,7 +10,7 @@
   h1 { margin:0 0 8px; font-size:30px; }
   p { max-width:70ch; line-height:1.5; }
   input { box-sizing:border-box; width:100%; padding:12px; margin:12px 0; color:#32261f; background:#fff7e6; border:1px solid #aa9368; font:inherit; }
-  .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(154px,1fr)); gap:12px; }
+  .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
   article { display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:16px 8px; border:1px solid #c8b68e; background:#f8efd9; }
   article h2 { font-size:14px; margin:0; min-height:34px; display:flex; align-items:center; }
   .samples { display:flex; align-items:center; gap:8px; }
@@ -20,7 +20,7 @@
 </style>
 <main>
   <h1>Court flags</h1>
-  <p>One large insignia on a solid field. Ancient and alternative banners are original game designs inspired by period motifs, rather than claims that these exact flags existed. The Kingdom of Israel uses a gold Magen David on blue. Modern Israel retains its white flag with blue stripes and star.</p>
+  <p>Court standards drawn from coins, reliefs, architecture and regional objects. Ancient and alternative banners are original game compositions. Notes identify regional analogies and retrospective motifs. Every size uses the complete vector drawing, including the engraved detail.</p>
   <label for="search">Find a court</label><input id="search" type="search" placeholder="Name or tag">
   <p id="count"></p><div class="gallery" id="gallery"></div>
 </main>
@@ -43,15 +43,20 @@
       if (search && !(tag + ' ' + def.name).toLowerCase().includes(search)) continue;
       const card = document.createElement('article'); card.dataset.tag = tag;
       const name = document.createElement('h2'); name.textContent = def.name;
-      const big = document.createElement('div'); big.innerHTML = flagChip(tag, DEFINES, 96);
+      const big = document.createElement('div'); big.innerHTML = flagChip(tag, DEFINES, 160);
       const samples = document.createElement('div'); samples.className = 'samples';
-      samples.innerHTML = [14,24,34].map(size => flagChip(tag, DEFINES, size)).join('');
+      samples.innerHTML = [14,24,34,52].map(size => flagChip(tag, DEFINES, size)).join('');
       const key = document.createElement('span'); key.className = 'tag'; key.textContent = tag;
       card.append(big,name,samples,key);
       if (FLAT_FLAGS[tag]?.note) { const note = document.createElement('p'); note.textContent = FLAT_FLAGS[tag].note; card.append(note); }
+      if (FLAT_FLAGS[tag]?.source) {
+        const [label, url] = FLAT_FLAGS[tag].source, link = document.createElement('a');
+        link.textContent = label; link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        const reference = document.createElement('p'); reference.append(link); card.append(reference);
+      }
       host.append(card); n++;
     }
-    document.getElementById('count').textContent = n + ' / ' + courts.size + ' courts · 96px preview and 14 / 24 / 34px game sizes';
+    document.getElementById('count').textContent = n + ' / ' + courts.size + ' courts · 160px preview and 14 / 24 / 34 / 52px game sizes';
   }
   document.getElementById('search').addEventListener('input',render); render();
 </script>
