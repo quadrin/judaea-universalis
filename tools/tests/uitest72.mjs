@@ -129,7 +129,31 @@ try {
     assert(await page.locator('.wiki-body').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
     if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + `/court-standard-wiki-${width}.png` });
   }
+  // The Compendium must expose event courts and chapter-specific standards,
+  // even when it is opened while a differently branded campaign exists.
+  await page.evaluate(() => window.flagTest.wiki.open('nations'));
+  assert.equal(await page.locator('.wiki-card-row[data-go^="nation:"]').count(), 205);
+  const judaea = page.locator('.wiki-card-row[data-go="nation:JUD"]');
+  assert.equal(await judaea.locator('[data-flag-key="JUD_REVOLT"]').count(), 1);
+  assert.equal(await judaea.locator('[data-flag-key="JUD_BK"]').count(), 1);
+  for (const [tag, emblem] of [['HER', 'herodian-helmet'], ['ATG', 'antigonus-coin-menorah'],
+    ['HPA', 'antipas-reed-wreath'], ['HPH', 'philip-coin-temple']]) {
+    await page.evaluate(tag => window.flagTest.wiki.open('nation', tag), tag);
+    assert.equal(await page.locator(`.wiki-standard-art [data-emblem="${emblem}"]`).count(), 1);
+  }
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.evaluate(() => window.flagTest.wiki.open('nation', 'JUD'));
+    for (const key of ['JUD_REVOLT', 'JUD_BK', 'GAL']) {
+      assert.equal(await page.locator(`.wiki-standard-art [data-flag-key="${key}"]`).count(), 1);
+    }
+    assert(await page.locator('.wiki-body').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
+  }
+  for (const [era, key] of [['66ce', 'JUD_REVOLT'], ['132ce', 'JUD_BK'], ['351ce', 'GAL']]) {
+    await page.evaluate(era => window.flagTest.wiki.open('era', era), era);
+    assert.equal(await page.locator(`.wiki-standard-head [data-flag-key="${key}"]`).count(), 1);
+  }
   assert.deepEqual(errors, []); assert.deepEqual(foreign, []);
-  console.log('PASS 52px Nations roster, 160px standard, interpretation and reference on desktop/mobile');
+  console.log('PASS complete Nations roster, event courts, chapter standards and 160px artwork on desktop/mobile');
   console.log('ALL PASS');
 } finally { await browser.close(); }
