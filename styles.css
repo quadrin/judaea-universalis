@@ -3875,6 +3875,20 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   color: #8a6d1a;
 }
 .wiki-row-main { flex: 1; min-width: 0; }
+.wiki-court-standard { padding: 4px 0; }
+.wiki-standard {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 8px 0 20px;
+}
+.wiki-standard figcaption { max-width: 48ch; font-size: 13px; line-height: 1.5; }
+.wiki-standard p { margin: 6px 0; }
+.wiki-standard a { color: #655016; text-decoration: underline; }
+@media (max-width: 520px) {
+  .wiki-standard { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .wiki-court-standard { width: 54px; }
+}
 .wiki-row-title { font-size: 14px; font-weight: 600; color: var(--ink); }
 .wiki-row-go { flex: none; color: #8a6d1a; font-size: 16px; }
 .wiki-world-row .wiki-row-year { color: #315f73; }

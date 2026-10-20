@@ -14,7 +14,7 @@ try {
   await page.goto((process.env.JU_BASE_URL || 'http://127.0.0.1:8641/') + 'tools/flags.html');
   await page.waitForSelector('article[data-tag="HPA"]');
   assert.equal(await page.locator('article').count(), 210);
-  assert.equal(await page.locator('article svg').count(), 840);
+  assert.equal(await page.locator('article svg').count(), 1050);
   assert.equal(await page.locator('article image,article filter,article linearGradient,article radialGradient,article .fchip-abbr').count(), 0);
   const malformed = await page.locator('article svg').evaluateAll(xs => xs.filter(x => new DOMParser().parseFromString(x.outerHTML, 'image/svg+xml').querySelector('parsererror')).length);
   assert.equal(malformed, 0, 'every flag is valid SVG');
@@ -27,8 +27,8 @@ try {
     return { background: a.backgroundImage, shadow: a.boxShadow, filter: b.filter };
   });
   assert.deepEqual(styles, { background: 'none', shadow: 'none', filter: 'none' });
-  // Artwork must stay large, centered and clear of the edges. This catches
-  // both the old ornamental frames and devices that shrink into a corner.
+  // Inspect the complete master, including object ornament and internal
+  // detail. All sizes use these same paths, with clear margins and centering.
   const badDevices = await page.locator('article > div:first-child [data-emblem]').evaluateAll(xs => xs.filter(g => {
     if (['coastal-state','druze-colours','sharifian-colours','kurdish-colours','israeli-flag'].includes(g.dataset.emblem)) return false;
     const b = g.getBBox(), m = g.transform.baseVal.consolidate().matrix;
@@ -36,12 +36,17 @@ try {
     return a.x < 5 || a.y < 5 || z.x > 91 || z.y > 91 || Math.max(z.x-a.x,z.y-a.y) < 50
       || Math.abs((a.x+z.x)/2-48) > 5 || Math.abs((a.y+z.y)/2-48) > 5;
   }).map(g => g.closest('article').dataset.tag));
-  assert.deepEqual(badDevices, [], 'large centered devices with no edge ornaments');
+  assert.deepEqual(badDevices, [], 'complete centered artwork with clear margins');
   const hasmoneanInk = await page.locator('article[data-tag="HAS"] [data-emblem]').first().evaluate(g =>
     [...new Set([...g.querySelectorAll('[fill],[stroke]')].flatMap(x => [x.getAttribute('fill'),x.getAttribute('stroke')]).filter(c => c && c !== 'none'))]);
   assert.deepEqual(hasmoneanInk, ['#f2c75b'], 'the complete Hasmonean device is monochrome gold');
-  assert.equal(await page.locator('article[data-tag="QDR"] [data-emblem]').first().getAttribute('data-emblem'), 'bow');
-  assert.equal(await page.locator('article[data-tag="SAB"] [data-emblem]').first().getAttribute('data-emblem'), 'horns');
+  assert.equal(await page.locator('article[data-tag="QDR"] [data-emblem]').first().getAttribute('data-emblem'), 'qedar-bow');
+  assert.equal(await page.locator('article[data-tag="SAB"] [data-emblem]').first().getAttribute('data-emblem'), 'sabaean-bull');
+  for (const tag of ['TYR','COR','CYR','DAC','GBA','AXM','SEQ','SAB']) {
+    const drawings = await page.locator(`article[data-tag="${tag}"] [data-emblem]`).evaluateAll(xs => xs.map(x => x.outerHTML));
+    assert.equal(new Set(drawings).size, 1, tag + ': every size retains the whole master drawing');
+  }
+  assert.equal(await page.locator('article[data-tag="TYR"] a').count(), 1, 'motif references appear with the art');
   const modernIsrael = page.locator('article[data-tag="ISR"] svg').first();
   assert.equal(await modernIsrael.locator(':scope > rect').getAttribute('fill'), '#ffffff');
   assert.equal(await modernIsrael.locator('rect[fill="#0038b8"]').count(), 2, 'modern Israel retains its blue stripes');
@@ -53,7 +58,7 @@ try {
   await page.locator('#search').fill('');
   await page.addStyleTag({ content: '.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}article:nth-child(n+17){display:none}article p{display:none}main>p:first-of-type{font-size:13px}article{padding:10px 6px;gap:7px}article h2{min-height:20px}' });
   if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + '/flat-court-flags.png', fullPage: true });
-  console.log('PASS all 210 courts, valid inline vectors, no textures/shading/remote assets, centered insignia, monochrome Hasmonean art, correct sizes and revival lookup');
+  console.log('PASS all 210 courts, complete inline vectors at every size, centered artwork, motif references, preserved Hasmonean art and revival lookup');
 
   // Same UI and real game actions used by the game, without a WebGL renderer.
   await page.evaluate(async () => {
@@ -97,5 +102,27 @@ try {
   if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + '/tetrarchy-flat-flag-mobile.png' });
   assert.deepEqual(errors, []); assert.deepEqual(foreign, []);
   console.log('PASS actual Herodian partition, saved borrowed flags, enlarged Court flags and mobile layout without browser errors');
+
+  await page.evaluate(async () => {
+    const [{ DEFINES }, { createWiki }] = await Promise.all([import('/js/data/defines.js'), import('/js/ui/wiki.js')]);
+    window.flagTest.wiki = createWiki({ DEFINES, getCtx: () => null });
+    window.flagTest.wiki.open('nations');
+  });
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.evaluate(() => window.flagTest.wiki.open('nations'));
+    const row = page.locator('.wiki-card-row[data-go="nation:TYR"]');
+    assert.equal(await row.locator('.fchip').evaluate(el => el.getBoundingClientRect().width), 52);
+    await row.click();
+    const art = page.locator('.wiki-standard');
+    assert.equal(await art.locator('.fchip').evaluate(el => el.getBoundingClientRect().width), 160);
+    assert.match(await art.locator('figcaption').textContent(), /murex/i);
+    assert.match(await art.locator('a').getAttribute('href'), /marinersmuseum/);
+    assert.equal(await art.locator('a').getAttribute('rel'), 'noopener noreferrer');
+    assert(await page.locator('.wiki-body').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
+    if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + `/court-standard-wiki-${width}.png` });
+  }
+  assert.deepEqual(errors, []); assert.deepEqual(foreign, []);
+  console.log('PASS 52px Nations roster, 160px standard, interpretation and reference on desktop/mobile');
   console.log('ALL PASS');
 } finally { await browser.close(); }

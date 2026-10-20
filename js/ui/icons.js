@@ -1896,7 +1896,7 @@ function scopeIds(body, key) {
 // bare tag, so a chapter that seats JUD as Galilee on the lake's own blue
 // still showed Judaea's menorah on Judaea's deep blue in the one place a
 // player picks a chapter. A live game still wins over both.
-export function flagChip(tag, DEFINES, size = 20, link = false, game = null, lens = null) {
+function resolveFlag(tag, DEFINES, game = null, lens = null) {
   const t = String(tag || '');
   const base = (DEFINES && DEFINES.TAGS && Object.hasOwn(DEFINES.TAGS, t) && DEFINES.TAGS[t])
     || (Object.hasOwn(REVIVAL_FLAGS, t) && REVIVAL_FLAGS[t]) || {};
@@ -1904,7 +1904,6 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null, len
   const live = (game && game.tags && game.tags[t]) || null;
   const c = live && Array.isArray(live.color) && live.color.length >= 3 ? live.color
     : Array.isArray(def.color) && def.color.length >= 3 ? def.color : [110, 100, 82];
-  const s = Math.max(12, Math.round(Number(size) || 20));
   // Own-key lookups only: tag and t.flag ride saves, and a hand-edited file
   // must fall back to the base emblem (or the text chip), never surface a
   // prototype-chain member as the SVG body.
@@ -1912,8 +1911,20 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null, len
   const savedFlag = live && Object.hasOwn(LEGACY_BORROWED_FLAGS, t) && live.flag === LEGACY_BORROWED_FLAGS[t] ? t : live?.flag;
   const key = (own(savedFlag) && savedFlag) || (own(def.flag) && def.flag) || (own(t) && t) || '';
   const art = own(key) || (live && t !== 'WASTE' ? legacyCourtFlag(t, live.releaseIdentity, c) : null);
+  return { t, c, key, art, dispName: (live && live.name) || def.name || t };
+}
+
+// Resolve notes through exactly the same identity path as the picture, so a
+// live rebrand, chapter override or upgraded old save cannot show stale prose.
+export function flagInfo(tag, DEFINES, game = null, lens = null) {
+  const { key, art } = resolveFlag(tag, DEFINES, game, lens);
+  return { key, note: art?.note || '', source: art?.source || null, detailed: !!art?.detailed };
+}
+
+export function flagChip(tag, DEFINES, size = 20, link = false, game = null, lens = null) {
+  const { t, c, key, art, dispName } = resolveFlag(tag, DEFINES, game, lens);
+  const s = Math.max(12, Math.round(Number(size) || 20));
   const banner = art && presentFlag(key, art, c);
-  const dispName = (live && live.name) || def.name || t;
   const inner = art
     ? `<svg viewBox="${escText(viewBoxOf(banner))}" aria-hidden="true" focusable="false" data-flag-key="${escText(key || t)}">${scopeIds(bodyOf(banner), key || t)}</svg>`
     : `<span class="fchip-abbr">${escText(t || '—')}</span>`;

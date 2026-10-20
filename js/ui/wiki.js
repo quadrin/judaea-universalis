@@ -6,7 +6,7 @@
 // chrome has the floor. getCtx() is consulted when a game happens to exist,
 // the data modules always.
 import { esc, rgb, fmtYear, titleCase, warnOnce } from './format.js';
-import { icon, divider, flagChip } from './icons.js';
+import { icon, divider, flagChip, flagInfo } from './icons.js';
 import { PLAYABLE_ERAS as ERAS, GENERIC_EVENTS } from '../data/compendium.js';
 import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
@@ -425,7 +425,7 @@ export function createWiki({ DEFINES, getCtx }) {
       const playable = ERAS.filter((e) => (e.bookmark.playableTags || []).some((p) => p.tag === tag));
       const formableOnly = !eras.length;
       return `<div class="wiki-card-row wiki-link" data-go="nation:${esc(tag)}">
-        <div class="wiki-row-year">${chip(tag, 22)}</div>
+        <div class="wiki-row-year wiki-court-standard">${chip(tag, 52)}</div>
         <div class="wiki-row-main"><div class="wiki-row-title">${esc(def.name || tag)}
           ${playable.length ? '<span class="wiki-badge">playable</span>' : ''}
           ${formableOnly ? '<span class="wiki-badge wiki-badge-world">formable</span>' : ''}</div>
@@ -461,6 +461,13 @@ export function createWiki({ DEFINES, getCtx }) {
       meta.push(['Temperament', words.join('; ') || 'unremarkable']);
     }
     const ideas = ideaLines(def.ideas);
+    const standard = flagInfo(tag, DEFINES, liveGame());
+    const artwork = `<figure class="wiki-standard">
+      ${chip(tag, 160)}
+      <figcaption><div class="wiki-row-title">Court standard</div>
+        ${standard.note ? `<p>${esc(standard.note)}</p>` : ''}
+        ${standard.source ? `<a href="${esc(standard.source[1])}" target="_blank" rel="noopener noreferrer">${esc(standard.source[0])}</a>` : ''}
+      </figcaption></figure>`;
     const eras = ERAS.filter((e) => (e.bookmark.activeTags || []).includes(tag));
     const eraRows = eras.map((e) => {
       const b = e.bookmark;
@@ -493,6 +500,7 @@ export function createWiki({ DEFINES, getCtx }) {
       sub: def.description || '',
       titleChip: chip(tag, 30),
       body: `
+        ${artwork}
         ${kv(meta)}
         ${ideas.length ? `<div class="wiki-sec">National character</div><div class="wiki-ideas">${ideas.map((line) => `<span class="wiki-idea">${esc(line)}</span>`).join('')}</div>` : ''}
         ${eraRows ? `<div class="wiki-sec">Chapters</div>${eraRows}` : '<div class="wiki-dim">This banner flies only if a court forms it.</div>'}
