@@ -185,7 +185,7 @@ function computeTradeNow(ctx) {
   for (const n of TRADE_NODES) {
     nodes[n.id] = {
       id: n.id, local: 0, incoming: 0, value: 0, out: {}, power: {}, raid: {},
-      collect: {}, steer: {}, collected: {}, stolen: {}, totalPower: 0, totalRaid: 0, merchants: {}, protect: {},
+      collect: {}, steer: {}, collected: {}, stolen: {}, totalPower: 0, totalRaid: 0, merchants: {}, protect: {}, concessions: {},
     };
   }
   const homes = {};
@@ -215,6 +215,18 @@ function computeTradeNow(ctx) {
     let pw = provPower(ctx, p);
     if (TRADE_NODE_BY_ID[nid].center === (p.canon || p.name) || nodeCenterId(ctx, nid) === i) pw += TRADE.centerPower;
     N.power[p.owner] = num(N.power[p.owner]) + pw;
+  }
+  // Foreign factors buy real power and collection rights in an existing node.
+  // Occupation, blockade or hostility suspends them immediately between ticks.
+  for (const [tag, t] of Object.entries(g.tags)) {
+    if (!t?.alive) continue;
+    for (const [id, v] of Object.entries(t.nationalStrategy?.ports || {})) {
+      const p = ctx.byId(Number(id)), N = p && nodes[nodeOfProv(ctx, p.id)];
+      if (!N || !v.active || p.owner !== v.host || p.controller !== v.host || p.siege
+          || isHostile(ctx, tag, v.host) || num(g.tags[v.host]?.opinion?.[tag]) < -25 || blockadedBy(ctx, p.id)) continue;
+      N.power[tag] = num(N.power[tag]) + (v.level >= 2 ? 24 : 12);
+      N.concessions[tag] = true;
+    }
   }
   // merchants posted
   for (const m of g.merchants || []) {
@@ -272,7 +284,7 @@ function computeTradeNow(ctx) {
         const share = V * (N.power[tag] / P);
         const ms = N.merchants[tag] || [];
         const steerM = ms.find((m) => m.order === 'steer' && to.indexOf(m.steerTo) >= 0);
-        const collects = !to.length || home(tag) === id || customs[id] === tag || ms.some((m) => m.order === 'collect');
+        const collects = !to.length || home(tag) === id || customs[id] === tag || N.concessions[tag] || ms.some((m) => m.order === 'collect');
         if (collects && !steerM) {
           N.collect[tag] = share;
           N.collected[tag] = share;

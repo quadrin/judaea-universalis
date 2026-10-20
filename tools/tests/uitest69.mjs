@@ -47,6 +47,25 @@ try {
   }
   console.log('PASS eleven visible bookmarks, merged succession card and all chapter menus including legacy saves');
   await page.evaluate(() => window.loadChapter('931bce'));
+  assert(await page.evaluate(() => {
+    const tree = document.querySelector('[data-ref="missionsBlock"]');
+    const strategy = document.querySelector('[data-ref="chapterStrategyBlock"]');
+    return !!(tree.compareDocumentPosition(strategy) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }), 'the mission tree precedes chapter actions');
+  const info = page.locator('details[data-cs-info="levy_charter"]');
+  assert(!(await info.evaluate(el => el.open)), 'action explanations start collapsed');
+  await info.locator('summary').focus(); await page.keyboard.press('Enter');
+  assert(await info.evaluate(el => el.open), 'keyboard users can inspect the complete action');
+  assert(await info.locator('.chapter-action-description').isVisible());
+  await page.evaluate(() => window.chapterTest.panel.refresh());
+  assert(await info.evaluate(el => el.open), 'refresh preserves the expanded explanation');
+  await page.evaluate(() => {
+    window.chapterControl = document.querySelector('[data-cs-target="levy_charter"]');
+    window.chapterTest.panel.refresh();
+  });
+  assert(await page.evaluate(() => window.chapterControl === document.querySelector('[data-cs-target="levy_charter"]')),
+    'an unchanged refresh preserves the live target control');
+  await info.locator('summary').click();
   const select = page.locator('[data-cs-target="levy_charter"]');
   await select.focus();
   const province = await select.inputValue();
@@ -59,7 +78,7 @@ try {
   await page.evaluate(() => { const { panel, ctx } = window.chapterTest; panel.open(ctx.game.playerTag === 'ISL' ? 'JDH' : 'ISL', 'missions'); });
   assert(!(await page.locator('[data-ref="chapterStrategyBlock"]').isVisible()));
   await page.evaluate(() => window.chapterTest.panel.open(null, 'missions'));
-  console.log('PASS real charter enactment, exact cost, repeat refusal, focus and foreign read-only view');
+  console.log('PASS tree-first layout, keyboard action details, stable controls, real charter enactment, exact cost, repeat refusal and foreign read-only view');
   await page.evaluate(() => window.loadChapter('597bce'));
   await page.locator('[data-cs-act="restore_farms"]').click();
   assert.equal(await page.locator('.chapter-progress progress').count(), 1);

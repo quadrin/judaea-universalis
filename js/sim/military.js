@@ -2743,6 +2743,16 @@ export function switchTagCore(ctx, from, to) {
     if (Array.isArray(t.allies)) t.allies = t.allies.map((x) => (x === from ? to : x));
     if (Array.isArray(t.guarantees)) t.guarantees = t.guarantees.map((x) => (x === from ? to : x));
     if (t.overlord === from) t.overlord = to;
+    if (t.heir?.nationalSponsor === from) t.heir.nationalSponsor = to;
+    const national = t.nationalStrategy;
+    if (national) {
+      for (const port of Object.values(national.ports || {})) if (port.host === from) port.host = to;
+      for (const network of Object.values(national.networks || {})) if (network.host === from) network.host = to;
+      if (national.claimants?.[from]) { national.claimants[to] = national.claimants[from]; delete national.claimants[from]; }
+      for (const key of Object.keys(national.cooldowns || {})) {
+        if (key.endsWith(':' + from)) { national.cooldowns[key.slice(0, -from.length) + to] = national.cooldowns[key]; delete national.cooldowns[key]; }
+      }
+    }
     const chapter = t.chapterStrategy;
     if (chapter) {
       if (chapter.patron?.tag === from) chapter.patron.tag = to;
@@ -8662,6 +8672,10 @@ function _bal(ctx, key, fallback) {
 }
 export function establishRuleTerms(ctx, p) {
   const cost = Math.round(25 + _bal(ctx, 'establishRuleCostPerDev', 2) * devTotal(p));
+  const national = ctx.game.tags[p?.owner]?.nationalStrategy;
+  if (national?.cities?.[p?.id] || national?.colonies?.[p?.id]) {
+    return { can: false, cost, why: 'This province has negotiated privileges. Integrate its city charter or military district through Ideas first.' };
+  }
   const cd = _bal(ctx, 'establishRuleCooldownMonths', 12);
   if (p && p.ruleTightened && monthsBetween(p.ruleTightened, ctx.game.date) < cd) {
     const left = cd - monthsBetween(p.ruleTightened, ctx.game.date);

@@ -11,6 +11,7 @@ import { unitGlyphSvg } from '../data/units.js';
 import { FLAT_FLAGS, REVIVAL_FLAGS, LEGACY_BORROWED_FLAGS, presentFlag, legacyCourtFlag } from './flag_art.js';
 
 export const ICONS = {
+  dagger: '<path d="M15 3 8 12l4 3 6-10ZM6 11l8 6M9 15l-4 5M4 18l3 3"/>',
   // --- mapmodes -----------------------------------------------------------
   // Ideas: an open book, with a visible spine and written lines.
   book:

@@ -75,6 +75,8 @@ export function chapterActionInfo(ctx, tag, key, args = {}) {
   const s = read(t), p = ctx.byId(Number(args.province)), partner = String(args.partner || '');
   const cost = effectiveCost(ctx, tag, key);
   let why = costWhy(t, cost);
+  if (!why && ['levy_charter', 'tax_charter', 'municipal_charter', 'regional_command', 'direct_rule'].includes(key)
+      && (t.nationalStrategy?.colonies?.[p?.id] || t.nationalStrategy?.cities?.[p?.id])) why = 'Integrate the existing national-path charter through Ideas first.';
   if (!why && ['province', 'port'].includes(def.target) && (!p || p.impassable || p.owner !== tag || p.controller !== tag || p.siege)) why = 'Choose an owned, controlled province without a siege.';
   if (!why && def.target === 'occupation' && (!p || p.impassable || p.controller !== tag || p.owner === tag || !hostile(ctx, tag, p.owner))) why = 'Choose occupied enemy territory.';
   if (!why && def.target === 'estate' && !definitions(ctx, tag).some(d => d.id === args.estate)) why = 'Choose one of this court’s estates.';

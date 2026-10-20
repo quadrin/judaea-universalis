@@ -18,6 +18,7 @@ import { armGenName } from '../data/units.js';
 import { createCampaignTools } from './campaign_tools.js';
 import { createMessages } from './messages.js';
 import { renderPeaceStrategy } from './peace_strategy.js';
+import { generalStarsHtml, generalDescription } from './general_rating.js';
 
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
@@ -985,7 +986,7 @@ export function initUI(staticCtx) {
         : '';
       const st = a.inBattle ? ' — in battle' : a.retreating ? ' — retreating' : '';
       const gen = a.general
-        ? `${icon('helmet', 'icon-sm')} ${esc(a.general.name)} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})`
+        ? `${generalStarsHtml(a.general)} ${esc(a.general.name)} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})`
         : '<span class="peace-dim">no general</span>';
       // supply (SPEC §82): the line's state, printed where the army is read
       const sup = a.supplyText
@@ -1059,7 +1060,7 @@ export function initUI(staticCtx) {
       // "8 infantry" — each army remembers what it was raised as. Since
       // SPEC §191 there are three arms to speak for, and an arm nobody
       // brought is left out rather than printed as a zero.
-      const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})` : '';
+      const gen = a.general ? '\n' + generalDescription(a.general) : '\nNo general';
       const comp = [
         a.inf ? `${a.inf} × ${armGenName(a.gen || 0, 'inf')}` : '',
         a.cav ? `${a.cav} × ${armGenName(a.gen || 0, 'cav')}` : '',
@@ -1067,7 +1068,7 @@ export function initUI(staticCtx) {
       ].filter(Boolean).join(', ') || 'a skeleton formation';
       return `
       <div class="bw-army" data-tt="${esc(`${a.name} — ${comp}\nMorale: ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${gen}`)}">
-        <span class="bw-aname">${a.general ? icon('helmet', 'icon-row') + ' ' : ''}${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
+        ${generalStarsHtml(a.general)}<span class="bw-aname">${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
         <span class="bw-men">${fmtMen(a.men)}</span>
         ${moraleBar(a.morale, a.maxMorale)}
       </div>`;

@@ -10,6 +10,7 @@ import { seaFightsLive } from '../sim/navy.js';
 // The land roster (SPEC §191): every banner wears the face of the arm that
 // leads it, at the pattern it was raised to.
 import { dominantArm, unitGlyphKey, unitGlyphPath } from '../data/units.js';
+import { generalRating, GENERAL_STAR_PATH } from '../data/general_rating.js';
 
 // Wider since SPEC §191: the standard now carries a soldier's face as well as
 // a strength, and both have to be legible at strategic zoom.
@@ -21,6 +22,7 @@ const FLEET_H = 28;
 const WING_W = 32;
 const WING_H = 24;
 const CULL_MARGIN = 90;
+const GENERAL_STAR = new Path2D(GENERAL_STAR_PATH);
 // Touch screens get fatter hit targets (drawing unchanged). Live MediaQueryList:
 // .matches is read per hit test, so plugging in a mouse/touchscreen updates behavior.
 const TOUCH_HIT_PAD = 8;
@@ -1574,8 +1576,8 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   }
 
   // Army standard: pole + swallow-tailed pennant in the tag color. The cloth
-  // ripples while marching (and breathes gently at rest); the hit box is
-  // unchanged from the old rounded-rect chips, so picking is unaffected.
+  // ripples while marching (and breathes gently at rest). The stars above
+  // the cloth are also part of the stack's click target.
   function drawChip(game, ch, timeMs) {
     const a = ch.army;
     const col = tagColor(game, a.tag);
@@ -1643,11 +1645,27 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.lineJoin = 'round';
     x2.stroke();
 
-    // finial: gold when a general carries the standard
-    x2.fillStyle = a.general ? '#e7c34c' : '#8a7a55';
+    // A stack shows its best-rated general, even if the largest host is unled.
+    const stars = ch.armies.reduce((best, army) => Math.max(best, generalRating(army.general)), 0);
+    x2.fillStyle = stars ? '#e7c34c' : '#8a7a55';
     x2.beginPath();
     x2.arc(poleX, y - 4, 2.2, 0, Math.PI * 2);
     x2.fill();
+
+    if (stars) {
+      x2.save();
+      x2.fillStyle = '#f1cf62';
+      x2.strokeStyle = '#302311';
+      x2.lineWidth = 1.6;
+      for (let i = 0; i < stars; i++) {
+        x2.save();
+        x2.translate(x + ch.w / 2 + (i - (stars - 1) / 2) * 11, y - 8);
+        x2.stroke(GENERAL_STAR);
+        x2.fill(GENERAL_STAR);
+        x2.restore();
+      }
+      x2.restore();
+    }
 
     x2.fillStyle = '#fff';
     x2.font = 'bold 11px Georgia, serif';
@@ -1989,7 +2007,10 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
 
       // army chips on top
       const chips = chipList(game, camera);
-      labelObstacles.push(...chips.map(c => ({ x: c.x - 3, y: c.y - 2, w: c.w + 6, h: c.h + 4 })));
+      labelObstacles.push(...chips.map(c => {
+        const head = c.armies.some(a => a.general) ? 14 : 2;
+        return { x: c.x - 3, y: c.y - head, w: c.w + 6, h: c.h + head + 2 };
+      }));
       for (const chp of chips) drawChip(game, chp, timeMs);
       drawTradeLabels(camera); // the trade map mode only (SPEC §292)
 
@@ -2024,8 +2045,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     const chips = chipList(game, camera);
     for (let i = chips.length - 1; i >= 0; i--) { // topmost first
       const c = chips[i];
+      const head = c.armies.some(a => a.general) ? 14 : 0;
       if (sx >= c.x - pad && sx <= c.x + c.w + pad &&
-          sy >= c.y - pad && sy <= c.y + c.h + pad) return c;
+          sy >= c.y - head - pad && sy <= c.y + c.h + pad) return c;
     }
     return null;
   }

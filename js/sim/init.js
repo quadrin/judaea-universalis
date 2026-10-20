@@ -43,6 +43,7 @@ import { ARMS, armGenName, unitMoveCue, dominantArm as dominantArmOf } from '../
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { eraIdeaGroupsFor, eraIdeaUnlocked, eraIdeaCost, ERA_IDEA_TIERS } from '../data/era_ideas.js';
+import { nationalIdeasInfo, buyNationalIdea, nationalStrategyView, nationalActionInfo, runNationalAction } from './national_ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName, computeTechEffects, DOCTRINES, techLevelName } from '../data/tech.js';
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
@@ -3279,6 +3280,21 @@ export function gameActions(ctx) {
         t.advisors[kind] = null;
         if (t.courtCand) t.courtCand[kind] = [];
       } catch (e) { warnOnce('dismissAdvisor', 'dismissAdvisor failed', e); }
+    },
+
+    // National paths keep all mutations behind the current player's action API.
+    getNationalIdeas() { return nationalIdeasInfo(ctx); },
+    getNationalStrategy() { return nationalStrategyView(ctx); },
+    getNationalActionInfo(key, args) { return nationalActionInfo(ctx, g.playerTag, key, args); },
+    buyNationalIdea(key) {
+      const result = buyNationalIdea(ctx, g.playerTag, key);
+      if (!result.ok) say('Idea unavailable', result.why, 'bad');
+      return result;
+    },
+    runNationalAction(key, args) {
+      const result = runNationalAction(ctx, g.playerTag, key, args);
+      if (!result.ok) say('Action unavailable', result.why, 'bad');
+      return result;
     },
 
     // ---- reforms (idea trees) ----------------------------------------------------

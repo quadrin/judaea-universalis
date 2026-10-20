@@ -13,6 +13,7 @@ import { IDEA_TREES } from '../data/ideas.js';
 import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 import { ideaCard, ideaTierIcon, ideaWallet } from './idea_cards.js';
 import { createChapterStrategyPanel } from './chapter_strategy.js';
+import { createNationalIdeasPanel } from './national_ideas.js';
 
 // The tabs (SPEC §175).
 //
@@ -108,6 +109,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   const ideaSelections = new Map();
   const refs = {};
   let chapterStrategyPanel = null;
+  let nationalIdeasPanel = null;
 
   function setText(node, s) {
     if (node && node.textContent !== s) node.textContent = s;
@@ -175,7 +177,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build" data-tab="ideas">
         <div class="pp-build-title">${icon('book', 'icon-sm')} Ideas</div>
         <div class="np-idea-wallet" data-ref="ideaWallet"></div>
-        <p class="np-idea-intro">Select an idea icon to inspect its effect. Adopt ideas in order within each group.</p>
+        <p class="np-idea-intro">Choose national paths to unlock new actions. Select an idea icon to inspect it.</p>
+      </div>
+      <div class="pp-build" data-tab="ideas">
+        <div class="pp-build-title">National Paths</div>
+        <div data-ref="nationalIdeas" class="national-ideas"></div>
       </div>
       <div class="pp-build" data-tab="ideas">
         <div class="pp-build-title">Reforms</div>
@@ -187,22 +193,18 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
-      <!-- What history asks of this realm, in both tenses (SPEC §204): the
-           chapter it is living through now, above the tree of everything the
-           era offers it. The Chapters block sat on Crown, which is the
-           realm's own facts, and the two questions are different ones —
-           what this realm IS, and what is being asked of it. -->
-      <div class="pp-build hidden" data-ref="chapterStrategyBlock" data-tab="missions">
-        <div class="pp-build-title">Chapter strategy</div>
-        <div class="chapter-strategy" data-ref="chapterStrategy"></div>
+      <!-- Lead with the mission tree; supporting chapter actions follow it. -->
+      <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
+        <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
+        <div class="np-mtree-host" data-ref="missions"></div>
       </div>
       <div class="pp-build hidden" data-ref="chapterBlock" data-tab="missions">
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
-      <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
-        <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
-        <div class="np-mtree-host" data-ref="missions"></div>
+      <div class="pp-build hidden" data-ref="chapterStrategyBlock" data-tab="missions">
+        <div class="pp-build-title">Chapter strategy</div>
+        <div class="chapter-strategy" data-ref="chapterStrategy"></div>
       </div>
 
       <!-- ── THE COURT ─────────────────────────────────────────────────── -->
@@ -343,6 +345,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
     chapterStrategyPanel = createChapterStrategyPanel(refs.chapterStrategy, () => actions);
+    nationalIdeasPanel = createNationalIdeasPanel(refs.nationalIdeas, () => actions);
     el.dataset.tab = tab;
 
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
@@ -427,7 +430,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const tb = e.target.closest('[data-tab-go]');
       if (tb) {
         const id = tb.dataset.tabGo;
-        if (id && id !== tab) { tab = id; refreshTabs(); el.scrollTop = 0; }
+        if (id && id !== tab) { tab = id; refresh(); el.scrollTop = 0; }
         return;
       }
       // One command, one order (SPEC §246). Single orders are NOT armed the
@@ -1122,6 +1125,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshTrade(self);
     refreshReforms(t, self);
     refreshEraIdeas(t, self);
+    if (tab === 'ideas') nationalIdeasPanel.refresh(t, self);
     refs.ageBlock.classList.toggle('hidden', refs.instBlock.classList.contains('hidden'));
     refs.ideaWallet.classList.toggle('hidden', !self);
     setHtml(refs.ideaWallet, self ? ideaWallet(t.points) : '');

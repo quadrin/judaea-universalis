@@ -877,6 +877,13 @@ renderer.render → overlay.draw → labels.update.
   Engineer gives +30% siege progress live. One advisor seat per point pool: +skill
   (1-3)/month, wage skill×2 talents (deep debt empties the court), two culture-named
   candidates per empty seat.
+  Generals show one to three gold stars on map standards, in the outliner,
+  unit inspection and battle rows. The display rating sums fire, shock and
+  maneuver: 0–5 pips gives one star, 6–9 gives two, and 10+ gives three.
+  Unled armies have no stars; stacked map standards show the best rating
+  present. Tooltips retain the name, individual skills, traits and rating
+  thresholds. Ratings derive from current skills, including earned increases,
+  without extra combat bonuses or new saved state.
 - **Navies** (`js/sim/navy.js`; geometry.js coastal detection): open sea = any id-0
   component ≥1% of the map (the Med is an INTERIOR sea on this land-framed map; the
   Dead Sea and Galilee are specks and don't count); coastal provinces get an offshore
@@ -21989,7 +21996,16 @@ selection case reproduces the former card replacement before the fix.
 `js/data/chapter_strategy.js` defines 34 decisions across eleven profiles.
 `js/sim/chapter_strategy.js` validates and executes them through
 `getChapterStrategy`, `getChapterDecision` and `runChapterStrategy`. Their
-controls live under Court → Missions. Queries do not create persistent state.
+controls live under Court → Missions, below the mission tree and chapter
+objectives. The tree is the first block in that tab. Chapter actions use short
+names, large identifying icons, icon-and-number costs and inline target
+selectors with compact enact controls. Descriptions, full prices and refusal
+reasons remain available through a keyboard- and touch-accessible details
+control; construction durations, upkeep and active agreements use labelled
+icon counters. The overview and recent decisions start collapsed. Refreshes
+preserve target selection, expanded explanations, focus and scroll position;
+unchanged markup does not replace live controls. Phone controls retain 44px
+touch targets. Queries do not create persistent state.
 All prices and availability are checked again when a command executes.
 
 Province charters trade autonomy for production, annual levies and estate
@@ -22246,3 +22262,113 @@ designs are identified as original game art inspired by period motifs,
 without asserting that these exact flags existed. `smoke186`, `smoke213`
 and `uitest72` cover roster completeness, uniqueness, old saves, runtime
 identity, SVG validity, flat styling, start-screen consumers and mobile UI.
+
+## §312 — National paths with playable systems
+
+The Ideas panel starts with five national paths. A court can choose two;
+government technology three levels above the bookmark's starting baseline
+opens a third slot. Each path has three sequential ideas, costing 60, 100
+and 150 of its associated point. The first purchase occupies a slot and
+immediately unlocks actions. Existing universal reforms, era ideas, purchased
+tiers and national bonuses retain their progression and effects.
+
+`data/national_ideas.js` defines the paths and action terms;
+`sim/national_ideas.js` owns live validation, transfers, monthly progression
+and reports. `tag.nationalIdeas` stores tiers and `tag.nationalStrategy`
+stores contracts, candidates, projects, local reserves, networks, loyalty,
+cooldowns and recent developments. Reads do not allocate state. A saved
+month stamp prevents repeating monthly payments and project progress.
+Ordinary JSON saves preserve active work. Forming a nation retains its paths
+and remaps host courts, networks, claimants, sponsored heirs and cooldowns.
+
+| Path | First idea | Second idea | Third idea |
+| --- | --- | --- | --- |
+| Maritime Leagues | Rent up to four foreign warehouses | Upgrade harbor concessions into sea supply bases | Invite smaller courts, commission league ships and contest rival concessions |
+| Dynastic Ambition | Shelter two named claimants | Negotiate succession compacts with friendly allied heirless crowns | Declare claimant wars and install a candidate through an accepted client peace |
+| Military Colonies | Build veteran settlements and accumulate local recruits | Establish districts with named commanders | Commission their generals into field armies or integrate loyal districts |
+| Subversion | Fund provincial networks and counterintelligence | Prepare rebellions where local conditions support them | Prepare siege collaboration or negotiate a frontier governor's defection |
+| Federated Rule | Grant fiscal, levy or naval city charters | Pool willing cities' recruits into a federal army | Negotiate integration, fund supporters or renew privileges |
+
+**Ports.** Warehouses grant 12 trade power and collection rights in their
+existing trade node; concessions grant 24. Rent transfers 2 or 3 talents
+monthly to the host, and regular payment improves host opinion up to 70.
+Hostility, loss of the host's ownership or opinion below −25 revokes the
+agreement. Occupation, blockade or unpaid rent suspends it. League loyalty
+falls during blockade, arrears or hostility; below 20 a member withdraws.
+A two-ship league squadron requires resources from both courts, six months
+of fitting out and a two-year cooldown. Rival concessions can be contested
+only with low loyalty and a substantial host-opinion advantage. Foreign
+harbors connect to the actual sea-supply trace; a fleet, open sea lane and
+valid supply chain are still required.
+
+**Crowns.** Claimant households cost 2 talents monthly and leave after three
+unpaid months. Succession compacts require an existing alliance, 100 opinion,
+a smaller independent hereditary realm and no heir. They appoint the named
+candidate as a real heir and last ten years. A ruler's ordinary death can
+therefore seat the candidate; protection then uses the normal clientship
+offer, influence cost and acceptance rules. Pressing a claim checks foreign
+policy, truces, alliances, recognition and ceasefires. Installing a claimant
+requires the ordinary peace evaluator to accept actual subjugation terms.
+The resulting client retains its realm, army and political interests; a
+powerful or hostile restored ruler loses loyalty and the existing client
+independence systems respond. Chapters without client kingdoms cannot adopt
+Dynastic Ambition.
+
+**Local military power.** A colony spends 1,000 manpower and takes six
+months; occupation pauses it. It maintains a 40% autonomy floor and saves
+100 recruits monthly, capped at 2,000. Districts double growth and capacity,
+cost 2 talents monthly and appoint a general. Local recruits enter the real
+recruitment queue at the current military pattern. A field commission
+spends 2,000 reserves and transfers the district's general into a real host;
+a new commander must be appointed before another commission. Low loyalty
+can produce an armed mutiny. Integrating a loyal district ends the autonomy
+privilege and transfers its remaining reserves into ordinary manpower.
+
+**Networks.** Each of three possible networks costs 2 talents monthly.
+Strength accumulates over time; stable targets slow it, and counterintelligence
+slows it further while increasing exposure. Six-month rising preparations
+need unrest or a weak throne and use the existing rebellion machinery.
+Three-month siege operations require an actual besieging army throughout;
+completion removes 75% of the garrison and adds 25 siege progress. Prepared
+governor defections need six months, 80 network strength and a disaffected
+enemy border province with at least 40% autonomy, at most 15 development and
+fort level one or less. Capitals and a realm's final province cannot defect.
+Changed conditions or a purge cancel preparations; success transfers the
+province through the ordinary owner/controller hooks and adds aggression.
+Prepared operations consume network strength. At 100 exposure the target purges the
+network, relations fall and aggression increases. AI targets fund purges
+from their own treasury after detecting substantial exposure. Human courts
+can be targeted only during war, receive a warning once a network develops,
+and can use counterintelligence; these networks end when the war ends.
+
+**Cities.** Up to five non-capital cities retain a 45% autonomy floor and
+part of their production under a charter. Councils accumulate finite funds
+and recruits. Fiscal service transfers saved money; levy and naval service
+spend local reserves through actual recruitment queues, with naval service
+requiring a shipyard. A federal muster pools willing cities' existing recruits.
+Cities below 60 loyalty refuse service. Integration takes twelve months,
+reduces loyalty and becomes harder during war exhaustion or local unrest;
+support and renewed privileges provide responses. A council whose loyalty
+falls to 20 raises rebels. Completed integration closes the charter, removes
+its production modifier and transfers the remaining reserves. Ordinary
+Establish Rule and chapter charter actions cannot bypass national privileges.
+
+AI courts make occasional affordable public path purchases and developments
+through the same validators. They can maintain ports, join leagues and
+establish colonies or city charters. They do not launch hidden offensive
+networks against the player. Negotiated agreements and claimant manipulation
+are restricted to AI counterparts; wartime spying supports human opponents.
+
+`ui/national_ideas.js` provides compact expandable path cards, three idea
+icons, numeric resource badges and expandable actions. Details support mouse,
+keyboard and touch; target/service selections, expanded sections, focus and
+panel scroll survive refreshes. Unchanged markup keeps live controls.
+Foreign-court inspection shows adopted paths without private records or
+action controls. Mobile controls have at least 44px touch targets.
+
+`smoke214` exercises real trade and rent, blocked supply, delayed fleets,
+peaceful and military accessions, finite local musters, exposed networks,
+siege collaboration, city integration and rebellion, AI purchases, nation
+formation, old saves and active-project persistence. `uitest75` checks actual
+adoption and actions, keyboard use, refusal reasons, stable controls, foreign
+privacy and mobile layout across all bookmarks.

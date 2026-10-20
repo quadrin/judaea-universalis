@@ -5,6 +5,7 @@ import { armGenName, dominantArm } from '../data/units.js';
 // The pace a column keeps (SPEC §191) — the sim's own function, so the number
 // the outliner prints is the number `hopDays` actually divides by.
 import { armSpeedOf } from '../sim/military.js';
+import { generalStarsHtml, generalDescription } from './general_rating.js';
 
 // The armies list is a roster, largest first (SPEC §264): the host that
 // decides a campaign sits at the top, the militia at the bottom, ties by
@@ -25,7 +26,7 @@ export function armyCompositionHtml(a, tail) {
   const gen = (a && a.gen) | 0;
   const parts = ['inf', 'cav', 'art'].filter((k) => (regs[k] | 0) > 0)
     .map((k) => `<span class="ol-arm" data-arm="${k}">${unitIcon(gen, k, 'icon-row')}${regs[k] | 0}</span>`);
-  return `<span class="ol-comp">${parts.join('') || '<span class="ol-arm ol-arm-none">no regiments</span>'}${tail || ''}</span>`;
+  return `<span class="ol-comp">${generalStarsHtml(a && a.general)}${parts.join('') || '<span class="ol-arm ol-arm-none">no regiments</span>'}${tail || ''}</span>`;
 }
 
 export function createOutliner(el, {
@@ -266,8 +267,7 @@ export function createOutliner(el, {
       const aa = sel ? armyActionsOf(a) : null;
       const moralePct = Math.max(0, Math.min(100, ((a.morale || 0) / Math.max(0.01, a.maxMorale || 1)) * 100));
       const regs = a.regiments || {};
-      const gtr = a.general && Array.isArray(a.general.traits) && a.general.traits.length ? ', ' + a.general.traits.join(', ') : '';
-      const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire || 0}/${a.general.shock || 0}/${a.general.maneuver || 0}${gtr})` : '';
+      const gen = a.general ? '\n' + generalDescription(a.general) : '\nNo general';
       // Supply (SPEC §82): a cut line is printed where the army is read, and
       // selecting the army draws the traced route (and its break) on the map.
       const oos = (a.oosMonths | 0) > 0;

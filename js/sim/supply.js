@@ -17,7 +17,7 @@
 // overlay may call it with a mini-ctx.
 
 import { num, isHostile, sameSide } from './military.js';
-import { isCoastal } from './navy.js';
+import { isCoastal, blockadedBy } from './navy.js';
 
 function S(ctx, key, fallback) {
   const sup = ctx.DEFINES && ctx.DEFINES.SUPPLY;
@@ -29,7 +29,13 @@ function S(ctx, key, fallback) {
 function chainPass(ctx, tag, id) {
   const p = ctx.byId(id);
   if (!p || p.impassable) return false;
-  return p.controller === tag || sameSide(ctx, tag, p.controller);
+  return p.controller === tag || sameSide(ctx, tag, p.controller) || concessionPort(ctx, tag, id);
+}
+function concessionPort(ctx, tag, id) {
+  const p = ctx.byId(id), v = ctx.game.tags[tag]?.nationalStrategy?.ports?.[id];
+  return !!v?.active && v.level >= 2 && p?.owner === v.host && p.controller === v.host && !p.siege
+    && !isHostile(ctx, tag, v.host) && num(ctx.game.tags[v.host]?.opinion?.[tag]) >= -25
+    && !blockadedBy(ctx, id) && !seaLaneCut(ctx, tag, id);
 }
 // Controlled home territory: the army's own land, in its own hands.
 function isHomeSource(ctx, tag, id) {
@@ -54,7 +60,7 @@ function embarkPort(ctx, tag, id) {
 function homePortOf(ctx, tag) {
   const g = ctx.game;
   for (let i = 1; i < g.provinces.length; i++) {
-    if (isHomeSource(ctx, tag, i) && isCoastal(ctx, i) && !seaLaneCut(ctx, tag, i)) return i;
+    if ((isHomeSource(ctx, tag, i) || concessionPort(ctx, tag, i)) && isCoastal(ctx, i) && !seaLaneCut(ctx, tag, i)) return i;
   }
   return 0;
 }

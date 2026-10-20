@@ -707,6 +707,62 @@ button {
 .ol-comp { display: flex; gap: 8px; font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 1px; }
 .ol-arm { display: inline-flex; align-items: center; gap: 2px; }
 .ol-arm .icon-row { margin-right: 0; opacity: 0.75; }
+.general-stars { display: inline-flex; flex: none; align-items: center; gap: 1px; color: #9b7419; vertical-align: middle; line-height: 1; }
+.general-stars svg { width: 12px; height: 12px; fill: currentColor; }
+#outliner .general-stars { color: #f1cf62; }
+
+/* National paths: compact groups; details and action selectors open on demand. */
+.national-ideas { display: grid; gap: 7px; font-size: 12px; }
+.ni-slots, .ni-stats, .ni-stat { display: flex; align-items: center; gap: 5px; }
+.ni-slots { flex-wrap: wrap; gap: 12px; margin-bottom: 3px; }
+.ni-stat { display: inline-flex; flex: none; gap: 2px; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ni-stat .icon { width: 13px; height: 13px; }
+.ni-path { border: 1px solid rgba(120, 89, 24, .4); border-radius: 4px; background: rgba(250, 242, 217, .2); }
+.ni-path.adopted { border-color: #9c7c32; background: rgba(209, 177, 88, .12); }
+.ni-path > summary { display: flex; align-items: center; gap: 7px; padding: 7px; cursor: pointer; list-style: none; }
+.ni-path > summary::-webkit-details-marker, .ni-action > summary::-webkit-details-marker { display: none; }
+.ni-path > summary::after, .ni-action > summary::after { content: '▸'; margin-left: auto; }
+.ni-path[open] > summary::after, .ni-action[open] > summary::after { content: '▾'; }
+.ni-path > summary b { flex: 1; font-size: 13px; }
+.ni-emblem { display: inline-flex; flex: none; color: #86651d; }
+.ni-emblem .icon { width: 26px; height: 26px; }
+.ni-pips { display: flex; gap: 3px; }
+.ni-pips i { width: 7px; height: 7px; border: 1px solid #947a42; border-radius: 50%; }
+.ni-pips i.filled { background: #a17e22; }
+.ni-path-body { padding: 0 8px 8px; }
+.ni-tiers { display: flex; gap: 6px; align-items: stretch; }
+.ni-tiers button { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 37px; min-height: 37px; padding: 5px; border: 1px solid #ab9257; border-radius: 3px; background: rgba(250, 242, 217, .3); color: var(--ink); cursor: pointer; }
+.ni-tiers button > .icon { width: 24px; height: 24px; }
+.ni-tiers button > span:not(.ni-stat) { position: absolute; bottom: 0; right: 2px; font-size: 9px; }
+.ni-tiers button.owned { color: #416c38; background: rgba(85, 126, 64, .12); }
+.ni-tiers button[aria-pressed="true"] { outline: 2px solid #95711e; outline-offset: 1px; }
+.ni-tiers button.ni-adopt { margin-left: auto; gap: 3px; }
+.ni-tiers button.ni-adopt > .icon { width: 16px; height: 16px; }
+.national-ideas button:disabled { opacity: .48; cursor: default; }
+.ni-idea-detail { padding: 7px 0; font-size: 11.5px; }
+.ni-idea-detail p, .ni-action-body p { margin: 3px 0; line-height: 1.35; }
+.ni-reason { display: block; margin: 2px 0 5px; color: #815b35; font-size: 11px; }
+.ni-records { margin: 4px 0 7px; border-top: 1px solid rgba(120, 89, 24, .25); }
+.ni-record { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 5px 0; border-bottom: 1px solid rgba(120, 89, 24, .2); }
+.ni-record > span:first-child { flex: 1; min-width: 80px; }
+.ni-record progress { width: 100%; height: 4px; accent-color: #a58431; }
+.ni-action { margin-top: 4px; border: 1px solid rgba(120, 89, 24, .3); border-radius: 3px; }
+.ni-action > summary { display: flex; align-items: center; gap: 5px; padding: 6px; cursor: pointer; list-style: none; font-size: 11.5px; }
+.ni-action > summary > span:not(.ni-stats) { flex: 1; }
+.ni-action > summary > .icon { flex: none; }
+.ni-action-body { padding: 0 6px 6px; font-size: 11px; }
+.ni-controls { display: flex; gap: 4px; margin: 3px 0 6px; }
+.ni-controls select { flex: 1; min-width: 0; width: 0; min-height: 32px; padding: 3px; font: inherit; color: var(--ink); background: #e9daba; border: 1px solid #ac966c; }
+.ni-controls button { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 32px; min-height: 32px; border: 1px solid #957e46; background: rgba(159, 124, 41, .18); color: #6a4c19; border-radius: 3px; cursor: pointer; }
+.national-ideas summary:focus-visible, .national-ideas button:focus-visible, .national-ideas select:focus-visible { outline: 2px solid #95711e; outline-offset: 2px; }
+.ni-log { font-size: 11px; }
+.ni-log summary { cursor: pointer; }
+.ni-log p { margin: 5px 0; }
+@media (max-width: 600px), (pointer: coarse) {
+  .ni-path > summary, .ni-action > summary { min-height: 44px; box-sizing: border-box; }
+  .ni-tiers button, .ni-controls select, .ni-controls button { min-height: 44px; }
+  .ni-controls button { width: 44px; }
+}
 .ol-row.sel .ol-comp { color: var(--parch-dark); }
 /* split by type (SPEC §297): a small button at the end of the unit line */
 .ol-comp { align-items: center; }
@@ -4209,19 +4265,64 @@ html.ju-reduce-motion *, html.ju-reduce-motion *::before, html.ju-reduce-motion 
 .np-tr-node:hover { color: var(--red-deep); }
 #nation-panel .np-tr-row .pos { color: var(--green); }
 
-/* Chapter decisions share the court's parchment and remain usable on phones. */
-.chapter-strategy { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
-.chapter-strategy h3 { font-size: 15px; margin-bottom: 6px; }
+/* The mission tree leads; chapter actions use compact, inspectable icon rows. */
+.chapter-strategy { font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.chapter-overview { margin: 2px 0 7px; }
+.chapter-overview > summary { font-size: 13px; font-weight: bold; cursor: pointer; }
 .chapter-strategy p { margin: 6px 0; }
-.chapter-status, .chapter-cost { color: var(--ink-soft); }
-.chapter-action, .chapter-agreement, .chapter-progress { padding: 10px; margin: 9px 0; border: 1px solid #8b775455; border-radius: 4px; background: #c9a2270a; }
-.chapter-action h4 { display: flex; gap: 6px; align-items: center; font-size: 13px; }
-.chapter-action label { display: flex; flex-direction: column; margin: 7px 0; gap: 4px; }
-.chapter-action select { width: 100%; min-width: 0; min-height: 44px; font: inherit; padding: 6px; color: var(--ink); background: #e8d9b8; border: 1px solid #8b775477; }
-.chapter-action button { width: 100%; min-height: 44px; margin-top: 7px; }
-.chapter-action button:disabled { opacity: .5; cursor: default; }
-.chapter-reason { font-size: 11px; color: var(--ink-soft); margin-top: 5px; }
-.chapter-progress progress { display: block; width: 100%; margin: 6px 0; accent-color: #917122; }
+.chapter-stats, .chapter-stat { display: inline-flex; align-items: center; }
+.chapter-stats { gap: 5px 10px; flex-wrap: wrap; }
+.chapter-stat { gap: 3px; white-space: nowrap; color: var(--ink-soft); font-size: 11px; }
+.chapter-stat .icon { width: 14px; height: 14px; flex: none; }
+.chapter-stat b { font-weight: normal; font-variant-numeric: tabular-nums; }
+.chapter-status { margin: 0 0 6px; }
+.chapter-actions { display: grid; gap: 6px; margin-top: 7px; }
+.chapter-action, .chapter-agreement, .chapter-progress { border: 1px solid #8b775455; border-radius: 3px; background: #c9a2270a; }
+.chapter-action { position: relative; padding: 8px; }
+.chapter-action-head { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; padding-right: 28px; align-items: start; }
+.chapter-emblem { position: relative; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--ink); background: #c9a22722; border-radius: 3px; }
+.chapter-emblem > .icon { width: 23px; height: 23px; }
+.chapter-emblem > .chapter-lock { position: absolute; width: 11px; height: 11px; right: -3px; bottom: -3px; background: var(--parch); border-radius: 2px; }
+.chapter-action h4 { display: flex; align-items: center; gap: 5px; margin: 0; font-size: 12px; line-height: 1.35; }
+.chapter-cost { margin-top: 4px; gap: 4px 9px; }
+.chapter-controls { display: flex; align-items: center; gap: 6px; margin-top: 7px; min-width: 0; }
+.chapter-target { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; margin: 0; }
+.chapter-target > .icon { width: 14px; height: 14px; flex: none; color: var(--ink-soft); }
+.chapter-action select { width: 100%; min-width: 0; min-height: 32px; font: inherit; padding: 4px 5px; color: var(--ink); background: #e8d9b8; border: 1px solid #8b775477; border-radius: 2px; }
+.chapter-action button { min-height: 32px; margin: 0; }
+.chapter-action .chapter-enact { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px; width: 32px; padding: 5px; }
+.chapter-enact .icon { width: 18px; height: 18px; }
+.chapter-action button:disabled { opacity: .45; cursor: default; }
+.chapter-realm { flex: 1; display: inline-flex; align-items: center; gap: 5px; color: var(--ink-soft); font-size: 11px; }
+.chapter-action-info { margin: 0; }
+.chapter-action-info > summary { position: absolute; right: 5px; top: 5px; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; cursor: pointer; color: var(--ink-soft); border-radius: 2px; list-style: none; }
+.chapter-action-info > summary::-webkit-details-marker { display: none; }
+.chapter-action-info > summary:hover, .chapter-action-info[open] > summary { color: var(--ink); background: #c9a22724; }
+.chapter-action-info > summary:focus-visible, .chapter-overview > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.chapter-action-description { margin-top: 8px; padding-top: 7px; border-top: 1px solid #8b775444; font-size: 11.5px; }
+.chapter-action-description > b { font-size: 12px; }
+.chapter-reason { display: flex; align-items: center; gap: 4px; color: var(--ink-soft); font-size: 11px; }
+.chapter-agreement { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; padding: 5px 7px; margin: 5px 0; }
+.chapter-record-name { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font-size: 11.5px; }
+.chapter-record-name .icon { flex: none; }
+.chapter-progress { padding: 6px 8px; margin: 6px 0; }
+.chapter-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.chapter-progress-head > b { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+.chapter-project-site { display: block; margin-top: 2px; font-size: 11px; color: var(--ink-soft); }
+.chapter-progress progress, .political-investments progress { display: block; width: 100%; height: 5px; margin: 5px 0 0; accent-color: #917122; }
+.chapter-log, .chapter-investment-info { margin-top: 7px; font-size: 11px; }
+.chapter-log > summary, .chapter-investment-info > summary { cursor: pointer; color: var(--ink-soft); }
+.chapter-commitments { margin: 3px 0; }
+.political-investments { margin: 6px 0; }
+.political-investments > .chapter-stats { margin: 5px 0; }
+.chapter-action .chapter-invest { flex: 0 0 auto; width: auto; display: inline-flex; gap: 4px; align-items: center; padding: 4px 8px; }
+.chapter-action .chapter-compromise { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px 9px; margin-top: 6px; }
+@media (max-width: 600px), (pointer: coarse) {
+  .chapter-action select, .chapter-action button { min-height: 44px; }
+  .chapter-action .chapter-enact { flex-basis: 44px; width: 44px; }
+  .chapter-action-head { padding-right: 42px; }
+  .chapter-action-info > summary { width: 44px; height: 44px; right: 2px; top: 2px; }
+}
 
 .peace-strategy summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .peace-strategy summary > span:first-child, .peace-stat, .peace-stats > span, .peace-court, .peace-risk { display: inline-flex; align-items: center; gap: 5px; }
