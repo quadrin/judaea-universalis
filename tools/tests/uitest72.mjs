@@ -13,7 +13,7 @@ try {
   await page.route('**/favicon.ico', r => r.fulfill({ status: 204, body: '' }));
   await page.goto((process.env.JU_BASE_URL || 'http://127.0.0.1:8641/') + 'tools/flags.html');
   await page.waitForSelector('article[data-tag="HPA"]');
-  assert.equal(await page.locator('article').count(), 210);
+  assert.equal(await page.locator('article').count(), 205);
   assert.equal(await page.locator('article svg').count(), 1050);
   assert.equal(await page.locator('article image,article filter,article linearGradient,article radialGradient,article .fchip-abbr').count(), 0);
   const malformed = await page.locator('article svg').evaluateAll(xs => xs.filter(x => new DOMParser().parseFromString(x.outerHTML, 'image/svg+xml').querySelector('parsererror')).length);
@@ -58,7 +58,7 @@ try {
   await page.locator('#search').fill('');
   await page.addStyleTag({ content: '.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}article:nth-child(n+17){display:none}article p{display:none}main>p:first-of-type{font-size:13px}article{padding:10px 6px;gap:7px}article h2{min-height:20px}' });
   if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + '/flat-court-flags.png', fullPage: true });
-  console.log('PASS all 210 courts, complete inline vectors at every size, centered artwork, motif references, preserved Hasmonean art and revival lookup');
+  console.log('PASS all 205 courts, complete inline vectors at every size, centered artwork, motif references, preserved Hasmonean art and revival lookup');
 
   // Same UI and real game actions used by the game, without a WebGL renderer.
   await page.evaluate(async () => {

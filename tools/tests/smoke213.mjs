@@ -8,7 +8,7 @@ import { FLAGS, flagChip } from '../../js/ui/icons.js';
 import { LEGACY_BORROWED_FLAGS, FLAT_FLAGS } from '../../js/ui/flag_art.js';
 const body = a => typeof a === 'string' ? a : a.body;
 const courts = new Set([...Object.keys(DEFINES.TAGS), ...REVIVALS.map(r => r.tag)]); courts.delete('WASTE');
-assert.equal(courts.size, 210);
+assert.equal(courts.size, 205);
 for (const tag of courts) {
   assert(Object.hasOwn(FLAGS, tag), tag + ' needs its own artwork');
   const html = flagChip(tag, DEFINES, 24);
@@ -22,7 +22,7 @@ for (const era of ERAS) for (const [tag, def] of Object.entries(era.bookmark.tag
   if (def.flag) { lenses++; assert(FLAGS[def.flag], era.bookmark.id + ': ' + tag + ' era flag'); }
 }
 assert(lenses >= 2, 'exercise the chapter flag overrides');
-console.log('PASS all 210 catalogue/releasable courts, formation targets and era identities have flat vector flags');
+console.log('PASS all 205 catalogue/releasable courts, formation targets and era identities have flat vector flags');
 const artwork = [...courts].map(t => body(FLAGS[t])); assert.equal(new Set(artwork).size, courts.size);
 assert.notEqual(body(FLAGS.HPA), body(FLAGS.HPH)); assert.notEqual(body(FLAGS.HPA), body(FLAGS.HER));
 assert.notEqual(body(FLAGS.HPH), body(FLAGS.AGR));

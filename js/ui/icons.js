@@ -698,34 +698,7 @@ export const FLAGS = {
     `<rect x="6.4" y="8.4" width="11.2" height="1.6" rx="0.8" ${ACC}/>` +
     hexagram(12, 15.9, 5.1, FO, 2.5) +
     hexagram(12, 15.9, 5.1, FG, 1.3),
-  // ---- the five crowns of government (SPEC §250) ----------------------------
-  // Five banners over the same city, in the same faith, in the same blue-ish
-  // corner of the palette — so each emblem says the FORM OF GOVERNMENT rather
-  // than the country: what is at the head of this state, and whether anything
-  // is above it. None of the five repeats Judaea's menorah or Israel's
-  // hexagram; those two are the faith and the kingdom, and these are offices.
-
-  // The Priestly Republic: the facade of the House as the tetradrachms drew
-  // it — four columns, the architrave, the doorway, the rosette in it. The
-  // executive of this state is the man who goes in through that door.
-  PRJ:
-    `<path d="M4.4 8.4 12 3.6l7.6 4.8Z" ${SIL}/>` +
-    `<rect x="4.4" y="8.4" width="15.2" height="1.4" ${ACC}/>` +
-    `<path d="M5.6 9.8h1.8v7.8H5.6ZM8.4 9.8h1.8v7.8H8.4ZM13.6 9.8h1.8v7.8h-1.8ZM16.4 9.8h1.8v7.8h-1.8Z" ${SIL}/>` +
-    `<circle cx="11.8" cy="13.6" r="1.4" ${ACC}/>` +
-    `<rect x="4.4" y="17.6" width="15.2" height="1.5" ${SIL}/>` +
-    `<rect x="3.6" y="19.1" width="16.8" height="1.3" rx="0.6" ${ACC}/>`,
-  // The Republic: the chalice of the revolt's own silver — the only coinage of
-  // the ancient world that names no man — and the year counted above it in
-  // three points rather than in anybody's reign.
-  RPJ:
-    `<circle cx="8.8" cy="4.6" r="0.9" ${ACC}/>` +
-    `<circle cx="12" cy="3.8" r="0.9" ${ACC}/>` +
-    `<circle cx="15.2" cy="4.6" r="0.9" ${ACC}/>` +
-    `<rect x="7.6" y="7" width="8.8" height="1.5" rx="0.75" ${ACC}/>` +
-    `<path d="M8.2 8.5h7.6l-1 5.1a2.9 2.9 0 0 1-5.6 0Z" ${SIL}/>` +
-    `<path d="M11.2 16.4h1.6v3.2h-1.6Z" ${SIL}/>` +
-    `<rect x="8.6" y="19.4" width="6.8" height="1.5" rx="0.75" ${ACC}/>`,
+  // ---- Judaean government crowns (SPEC §250) -------------------------------
   // The Ethnarchy: the letter under seal. It is the office's whole instrument,
   // and the reason the office outlived the state that adopted it by three
   // centuries — there is no crown anywhere in the design, on purpose.
@@ -745,38 +718,6 @@ export const FLAGS = {
     `<circle cx="12" cy="20.4" r="1.5" ${ACC}/>` +
     `<path d="M5.2 9.2c2-1.6 4.3-2.4 6.8-2.4s4.8.8 6.8 2.4l-1.1 1.9c-1.7-1.3-3.6-2-5.7-2s-4 .7-5.7 2Z" ${ACC}/>` +
     `<path d="M5.8 10.6c-.8 1.4-1 2.9-.6 4.4M18.2 10.6c.8 1.4 1 2.9.6 4.4" ${DET}/>`,
-  // The Priestly Kingdom: one head, two offices — the diadem above, the mitre
-  // with its gold plate beneath, and the objection is the gap between them.
-  PKJ:
-    `<path d="M4.8 6.8c2.2-2.1 4.6-3.2 7.2-3.2s5 1.1 7.2 3.2l-1.1 2c-1.9-1.8-3.9-2.7-6.1-2.7s-4.2.9-6.1 2.7Z" ${ACC}/>` +
-    `<path d="M6.6 17.2c0-4.1 2.4-7 5.4-7s5.4 2.9 5.4 7Z" ${SIL}/>` +
-    `<path d="M9.2 12.8c1.7-1.1 3.9-1.1 5.6 0" ${DET}/>` +
-    `<rect x="8.2" y="14.8" width="7.6" height="2.1" rx="1.05" ${ACC}/>` +
-    `<rect x="6.1" y="17.2" width="11.8" height="1.8" rx="0.9" ${SIL}/>`,
-  // ---- the two empires (SPEC §250) ------------------------------------------
-  // Both wear the wreath, because that is the one device on this map that
-  // means hegemony rather than office. What sits inside it is the difference:
-  // the Judaean empire encloses the seats it annexed, four towers on the
-  // ring road; the Israelite one encloses the hexagram, because that realm
-  // answered the question of what it is before it answered how big it is.
-  JEM:
-    `<path d="M4.4 5.2c-2 4.2-1.4 9.4 1.8 13.4l1.9-1.4c-2.6-3.3-3.1-7.5-1.5-11Z" ${SIL}/>` +
-    `<path d="M19.6 5.2c2 4.2 1.4 9.4-1.8 13.4l-1.9-1.4c2.6-3.3 3.1-7.5 1.5-11Z" ${SIL}/>` +
-    `<path d="M7.6 6.4 8.4 3.4l2 1.7L12 2.6l1.6 2.5 2-1.7.8 3Z" ${ACC}/>` +
-    `<rect x="7.3" y="6.4" width="9.4" height="1.5" rx="0.75" ${ACC}/>` +
-    `<rect x="8" y="12.4" width="2.4" height="6.2" ${SIL}/>` +
-    `<rect x="13.6" y="12.4" width="2.4" height="6.2" ${SIL}/>` +
-    `<rect x="10.8" y="10.2" width="2.4" height="8.4" ${SIL}/>` +
-    `<rect x="6.8" y="18.6" width="10.4" height="1.5" rx="0.75" ${ACC}/>`,
-  IEM:
-    `<path d="M4.4 5.2c-2 4.2-1.4 9.4 1.8 13.4l1.9-1.4c-2.6-3.3-3.1-7.5-1.5-11Z" ${SIL}/>` +
-    `<path d="M19.6 5.2c2 4.2 1.4 9.4-1.8 13.4l-1.9-1.4c2.6-3.3 3.1-7.5 1.5-11Z" ${SIL}/>` +
-    `<path d="M7.6 6.4 8.4 3.4l2 1.7L12 2.6l1.6 2.5 2-1.7.8 3Z" ${ACC}/>` +
-    `<rect x="7.3" y="6.4" width="9.4" height="1.5" rx="0.75" ${ACC}/>` +
-    hexagram(12, 14, 4.4, FO, 2.2) +
-    hexagram(12, 14, 4.4, FG, 1.1) +
-    `<rect x="6.8" y="19.2" width="10.4" height="1.5" rx="0.75" ${ACC}/>`,
-
   // United Arab Republic (formable): the two-star pan-Arab tricolor.
   UAR:
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +

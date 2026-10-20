@@ -115,9 +115,10 @@ console.log('== it is offered to Judah in the Iron Age and nowhere else ==');
   ok(JSON.stringify(ENTRY.bookmarks) === JSON.stringify(['931bce', '732bce', '597bce']),
     'in exactly the three Iron Age chapters');
   ok(!ENTRY.ai, 'and it is player-only, like the other restorations');
-  // No other chapter's list changed: MLI is still what the later chapters offer.
+  // Later chapters retain Israel routes from the four surviving source states.
   const mli = FORMABLES.filter((f) => f.to === 'MLI');
-  ok(mli.length >= 5, 'the MLI roads are untouched (' + mli.length + ')');
+  ok(JSON.stringify(mli.map((f) => f.from).sort()) === JSON.stringify(['EPJ', 'HAS', 'JUD', 'KGJ']),
+    'MLI remains reachable from Judaea, the Hasmoneans, the Ethnarchy and the Kingdom');
   ok(!mli.some((f) => (f.bookmarks || []).some((b) => /^(931|732|597)bce$/.test(b))),
     'and none of them reaches into the Iron Age');
   ok(!FORMABLES.some((f) => f !== ENTRY && f.to === 'AIS'),
