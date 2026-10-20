@@ -131,21 +131,28 @@ function philipTemple(field) {
     + rect(24, 164, 144, 5, stone) + l('M40 152H152M33 159H159M28 167H164', B, .9);
 }
 
-// Vector letterforms for two exact excerpts from RPC I 4989. They are Greek
-// abbreviations in the recorded legend, not a reconstructed full inscription.
+// Expand the abbreviated royal title/name recorded by RPC I 4989.
+// Complete local vector letters retain their strokes at every display size.
 const GREEK = {
-  'Β': 'M1 16V0H6Q13 0 11 5L8 8Q14 9 12 13Q11 16 6 16Z M2 8H8',
-  'Α': 'M0 16 6 0 12 16M3 10H9', 'Σ': 'M12 0H0L7 8 0 16H12',
-  'Ι': 'M3 0H9M6 0V16M3 16H9', 'Λ': 'M0 16 6 0 12 16',
-  'Ε': 'M12 0H0V16H12M0 8H10', 'Γ': 'M0 16V0H12',
-  'Ρ': 'M0 16V0H7Q14 0 12 5Q11 8 7 8H0', 'Π': 'M0 16V0H12V16',
+  'Β': 'M0 16V0H4Q10 0 8 5L5 8Q10 9 8 13Q7 16 4 16Z M0 8H5',
+  'Α': 'M0 16 4 0 8 16M2 10H6', 'Σ': 'M8 0H0L5 8 0 16H8',
+  'Ι': 'M1 0H7M4 0V16M1 16H7', 'Λ': 'M0 16 4 0 8 16',
+  'Ε': 'M8 0H0V16H8M0 8H6', 'Γ': 'M0 16V0H8',
+  'Ρ': 'M0 16V0H4Q10 0 8 5Q7 8 4 8H0', 'Π': 'M0 16V0H8V16',
+  'Ω': 'M0 16H3V13C-1 11-1 1 4 1C9 1 9 11 5 13V16H8',
 };
 function greekWord(word, y) {
-  return [...word].map((letter, i) => group(l(GREEK[letter], I, 1.8), `translate(${(192 - word.length * 17) / 2 + i * 17} ${y})`)).join('');
+  const advance = 11, width = (word.length - 1) * advance + 8;
+  return `<g data-word="${word}">` + [...word].map((letter, i) =>
+    group(l(GREEK[letter], I, 1.7), `translate(${(192 - width) / 2 + i * advance} ${y})`)).join('') + '</g>';
 }
 function agrippaWreath() {
-  return wreath() + greekWord('ΒΑΣΙΛΕ', 77) + greekWord('ΑΓΡΙΠΠ', 103)
-    + l('M62 98H130', G, .85);
+  // Open the wreath sideways to leave clear space beside both full words.
+  // The leaves and ribbon retain every path of the original master.
+  return group(wreath(), 'translate(-9.6 0) scale(1.1 1)')
+    + '<g data-inscription="ΒΑΣΙΛΕΩΣ ΑΓΡΙΠΠΑ">'
+    + greekWord('ΒΑΣΙΛΕΩΣ', 77) + greekWord('ΑΓΡΙΠΠΑ', 103)
+    + l('M62 98H130', G, .85) + '</g>';
 }
 
 function revoltLeaf() {
@@ -206,7 +213,7 @@ export function enrichJudaeanStandards(flags) {
     ATG: ['antigonus-coin-menorah', antigonusMenorah, 'The seven-branched menorah with broad lamp cups and a conical foot, after Mattathias Antigonus’ 40–37 BCE prutah. Its base and sockets distinguish it from the stepped-base Judaean menorah. The coin legends are not reproduced.', 'antigonus'],
     HPA: ['antipas-reed-wreath', reed, 'A jointed reed with pointed leaves, inside a tied wreath. Combines the two sides of Antipas’ Tiberias coin, RPC I 4918, dated 20/21 CE; retrospective when the tetrarchy first appears in 4 BCE. Colours and the combined composition are game inventions.', 'antipas'],
     HPH: ['philip-coin-temple', philipTemple, 'Philip’s four-column temple on a high stepped platform, with column capitals, fluting, pediment and central round object. Based on his early-first-century coin type; retrospective when the tetrarchy first appears. This is not a claim that Philip used a Jerusalem Temple banner.', 'philip'],
-    AGR: ['agrippa-neronian-wreath', agrippaWreath, 'A tied wreath with the exact Greek excerpts ΒΑΣΙΛΕ / ΑΓΡΙΠΠ from the longer royal legend of RPC I 4989, under Nero. The excerpt arrangement is invented. This Neronian type suits the 66 CE chapter; later Flavian Victory coins are not used.', 'agrippa'],
+    AGR: ['agrippa-neronian-wreath', agrippaWreath, 'A tied wreath surrounding the complete royal title and name ΒΑΣΙΛΕΩΣ / ΑΓΡΙΠΠΑ (of King Agrippa), expanded from the abbreviated ΒΑΣΙΛΕ / ΑΓΡΙΠΠ recorded in RPC I 4989, under Nero. The two-line arrangement and expanded spelling are game adaptations. This Neronian type suits the 66 CE chapter; later Flavian Victory coins are not used.', 'agrippa'],
   };
   for (const [tag, [emblem, draw, note, source]] of Object.entries(designs)) {
     if (!flags[tag]?.fieldColor) throw new Error(`Coin standard has no base court: ${tag}`);
