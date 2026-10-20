@@ -32,6 +32,9 @@ for (const [tag, emblem] of Object.entries({
 assert.match(FLAT_FLAGS.HYR.note, /not an attribution/);
 assert.match(FLAT_FLAGS.ARI.note, /not an attribution of an Aristobulus I coin/);
 assert.match(FLAT_FLAGS.AGR.note, /Neronian/);
+assert.match(FLAT_FLAGS.AGR.body, /data-inscription="ΒΑΣΙΛΕΩΣ ΑΓΡΙΠΠΑ"/);
+for (const word of ['ΒΑΣΙΛΕΩΣ', 'ΑΓΡΙΠΠΑ']) assert(FLAT_FLAGS.AGR.body.includes(`data-word="${word}"`));
+assert.match(FLAT_FLAGS.AGR.note, /expanded from the abbreviated/);
 assert.match(FLAT_FLAGS.JUD_BK.note, /three strings/);
 assert.match(FLAT_FLAGS.JUD_REVOLT.note, /vine leaf/);
 assert(!FLAT_FLAGS.JUD_BK.body.includes('temple'), 'BK uses the requested coin harp');
