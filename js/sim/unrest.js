@@ -27,14 +27,10 @@ function U(ctx, key, fallback) {
 // Judaea region even after losing every bordering province. This deliberately
 // excludes diaspora kingdoms (ADI) and modern Israel (ISR): outside the ancient
 // revolt bookmarks, ordinary risings still have to touch the country's border.
-// The five crowns of government and the two empires (SPEC §250) are the same
-// country under a name for how it is governed and how far it reaches, so they
-// belong here for the same reason MLI does — a priestly republic that has been
-// driven out of the coastal plain is still a state the Judaean hills rise
-// inside, and so is an empire that has just lost everything but them.
+// The Ethnarchy and Kingdom retain the same Judaean homeland eligibility.
 const JUDAEAN_HOMELAND_TAGS = new Set([
   'JUD', 'HAS', 'HYR', 'ARI', 'HER', 'ATG', 'MLI',
-  'PRJ', 'RPJ', 'EPJ', 'KGJ', 'PKJ', 'JEM', 'IEM',
+  'EPJ', 'KGJ',
 ]);
 
 function bordersTag(ctx, p, tag) {

@@ -172,22 +172,9 @@ export const DEFINES = {
     GLT: { aggression: 1.3, caution: 0.8 },
     MLI: { aggression: 1.0, caution: 1.0 },
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
-    // The crowns of government (SPEC §250). All five are player-only, so these
-    // are the tempers a HUMAN realm is read with by the courts around it
-    // rather than plans anybody executes — and they say what the form of
-    // government is: the priestly republic is the most careful court on the
-    // map, the republic of the Zealot settlements does not stop, and the two
-    // crowned states take the field the way crowned states do.
-    PRJ: { aggression: 0.6, caution: 1.4 },
-    RPJ: { aggression: 1.3, caution: 0.9 },
+    // Personalities of the two player-only Judaean formable crowns.
     EPJ: { aggression: 0.7, caution: 1.3 },
     KGJ: { aggression: 1.2, caution: 0.9 },
-    PKJ: { aggression: 1.3, caution: 0.8 },
-    // The empires (SPEC §250): a hegemon is slow to anger and needs a bigger
-    // edge to move, which is what `ponderous` means everywhere else on this
-    // table — Rome, Parthia and the Seleucid throne wear it too.
-    JEM: { aggression: 1.1, caution: 1.0, ponderous: true },
-    IEM: { aggression: 1.1, caution: 1.0, ponderous: true },
     // A usurper fights: he has to win before the legitimate court can bring
     // the eastern armies west, and he knows it (SPEC §239).
     USR: { aggression: 1.2, caution: 0.8 },
@@ -455,15 +442,8 @@ export const DEFINES = {
     TAR: 'republic', CYR: 'monarchy', MIL: 'republic', PRG: 'monarchy',
     BIT: 'monarchy', GLT: 'tribal',
     MLI: 'monarchy', AIS: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
-    // The five crowns of government and the two empires (SPEC §250) are
-    // ABSENT from this table, and that absence is the section's whole
-    // plumbing. §227's ten each declared a constitution here, so proclaiming
-    // one adopted it; these are named FOR the constitution the realm already
-    // has, and switchTagCore leaves `govType` alone where this table is
-    // silent. A priestly republic filled from the urn and one filled by the
-    // four houses fly the same banner and remain two different states — which
-    // is the right way round, and the reason PRJ/RPJ/EPJ/KGJ/PKJ/JEM/IEM must
-    // never be given a line here.
+    // EPJ and KGJ inherit their existing government when formed (SPEC §250).
+    // Keep both absent from GOV_OF so switchTagCore preserves govType.
     HEZ: 'theocracy', // wilayat al-faqih, and a shura that chooses successors
     REB: 'tribal',
     // A claimant rules by acclamation and holds it by the army (SPEC §239).
@@ -1247,27 +1227,8 @@ export const DEFINES = {
       description: 'One nation from the Gulf to the sea — for as long as its generals agree.',
       ideas: { manpowerMult: 1.2, incomeMult: 1.05 },
     },
-    // ---- the five crowns of government (SPEC §250) ------------------------
-    // One banner per FORM of government rather than per constitution, which is
-    // what §227's ten had become: two axes, crowned or not and priestly or
-    // not, and the uncrowned hereditary prince under the word this country's
-    // own history uses for him. Each is a formable crown like the two above —
-    // never in a bookmark's activeTags — and, unlike §227's, none of them
-    // declares a government in GOV_OF: the crown is named for the
-    // constitution the realm already has, and taking it does not change it.
-    // The ideas are the form of government's own dividend and its own price,
-    // and they fold in ON TOP of what GOV_TYPES already grants, so they are
-    // deliberately on a different axis rather than a second helping.
-    PRJ: {
-      name: 'Priestly Republic of Judaea', adj: 'Judaean', color: [58, 96, 132], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
-      description: 'A commonwealth whose head of state is the High Priest and whose assembly is not: the only arrangement in the room with four centuries of practice behind it.',
-      ideas: { incomeMult: 1.08, unrestAll: -0.25, legitimacyAdd: 0.05, manpowerMult: 0.9 },
-    },
-    RPJ: {
-      name: 'Republic of Judaea', adj: 'Judaean', color: [150, 60, 54], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
-      description: 'An assembly at the top and nothing above it: no crown, no mitre, nothing inherited, and a countryside that owns what it fights for.',
-      ideas: { manpowerMult: 1.14, growthMult: 1.08, moraleMult: 1.06, incomeMult: 0.9 },
-    },
+    // ---- Judaean government crowns (SPEC §250) ----------------------------
+    // Player-only formables; neither changes the adopted constitution.
     EPJ: {
       name: 'Ethnarchy of Judaea', adj: 'Judaean', color: [104, 126, 66], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'A house that succeeds itself and is bound in writing not to become a monarchy: heard wherever the letters of the Nasi are read.',
@@ -1277,27 +1238,6 @@ export const DEFINES = {
       name: 'Kingdom of Judaea', adj: 'Judaean', color: [164, 120, 40], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'A crown with no priestly title under it: every chancery understands a king, and the objection is made at home, in writing, in every generation.',
       ideas: { moraleMult: 1.1, disciplineMult: 1.05, manpowerMult: 0.95 },
-    },
-    PKJ: {
-      name: 'Priestly Kingdom of Judaea', adj: 'Hasmonean', color: [126, 66, 150], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
-      description: 'The high priest of the Jews wearing a crown as well — a peer of every chancery, and a quarrel with the schools that will outlive the house.',
-      ideas: { moraleMult: 1.08, convertMult: 1.1, legitimacyAdd: 0.05 },
-    },
-    // ---- the empires (SPEC §250) ------------------------------------------
-    // The crown above the crown, reached by the map rather than by a
-    // constitution or a dynasty: the land bridge from the River of Egypt to
-    // the desert road, and four of the seats the world is administered from.
-    // Two names for one thing, so that proclaiming it never overwrites the
-    // answer the campaign has already given about what this country is.
-    JEM: {
-      name: 'Judaean Empire', adj: 'Judaean', color: [86, 62, 148], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
-      description: 'A crown with other crowns under it, run out of Jerusalem: the chanceries have been using the word about us for a generation.',
-      ideas: { incomeMult: 1.12, manpowerMult: 1.1, diploSeats: 1 },
-    },
-    IEM: {
-      name: 'Israelite Empire', adj: 'Israelite', color: [30, 52, 150], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
-      description: 'Solomon\'s border formula, held: from the River of Egypt to the desert road, with the seats of the earth inside it.',
-      ideas: { incomeMult: 1.12, manpowerMult: 1.1, moraleMult: 1.06, diploSeats: 1 },
     },
     // The state that walks out of that union (SPEC §105). Syria kept the
     // name it took in 1961 for the rest of the century, through eight

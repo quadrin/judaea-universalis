@@ -1,53 +1,5 @@
-// Headless regression — SPEC §250: the crown is the form of government.
-//
-// §227 gave every Jewish constitution a banner of its own — ten crowns, ten
-// colours, ten trees — and it was too many and named wrong. The Commonwealth
-// of the Lot and the Two Houses are the mechanism of a decision, not the thing
-// a chancery writes on an envelope, and ten banners over one city is a table
-// nobody can hold in their head.
-//
-// §250 cuts them to five, names each for the FORM of government, and puts an
-// empire above the lot. The contracts:
-//
-//   THE TABLE — five crowns on two axes (crowned or not, priestly or not),
-//   every adoptable Jewish constitution reaching exactly one of them, each
-//   crown fully outfitted (a tag def, an emblem, an AI temper, a payoff, a
-//   chain), no two sharing three letters, a name, a colour or an emblem, and
-//   none of §227's ten surviving anywhere in the data.
-//
-//   THE PLUMBING, INVERTED — this is the load-bearing claim. §227's crowns
-//   each declared a constitution in GOV_OF, so proclaiming one ADOPTED it.
-//   These declare none: the government decides what the crown is called, and
-//   taking the name changes nothing about how the state is governed — the
-//   election clock keeps running, the heirless stay heirless, and two realms
-//   under one banner remain two different constitutions.
-//
-//   THE GATE — the first requirement of every crown is the form of government,
-//   read off govType as a SET. A realm that answered the fork the other way
-//   sees the rival crowns of its own chapter unticked.
-//
-//   FORK TO CROWN, LIVE — the four settlements of 71 fired through the real
-//   event cards: two of them land on the priestly republic and two on the
-//   republic, and each opens exactly one crown.
-//
-//   FIVE DIFFERENT TREES — every crown carries a chain; every node is dressed,
-//   seated and reachable; no node waits on one that does not exist; and the
-//   five branches share no node with each other.
-//
-//   PAY — every node of every crown AND of both empires completes in a maximal
-//   realm. A node that cannot pay there is dead content.
-//
-//   THE ROAD ONWARD — the greater crown is not closed off by naming the lesser
-//   one: every crown of government keeps a Kingdom of Israel formable, and
-//   proclaiming it DOES end the constitution, because MLI declares a monarchy
-//   in GOV_OF and these five declare nothing.
-//
-//   THE EMPIRE — the crown above the crown, reached by the map: the heartland,
-//   the land bridge from the River of Egypt to the desert road, four of the
-//   seats of the world annexed, fifty-five provinces and a first-three
-//   standing. Shut on a realm that holds only its own country, open on one
-//   that holds the world; Israel's own empire restyles its head of state and
-//   the Judaean one deliberately does not.
+// Regression coverage for the remaining Judaean crowns and retired states.
+// Keep constitution forks, government inheritance and mission payouts covered.
 import { readFileSync, readdirSync } from 'fs';
 import { DEFINES } from '../../js/data/defines.js';
 import { MAP_DATA } from '../../js/data/map_data.js';
@@ -67,40 +19,13 @@ const ok = (cond, msg) => {
   else { failures++; console.error('  FAIL', msg); }
 };
 
-// The section's own table, written out here rather than derived from the file
-// under test: a suite that reads its expectations out of the data it is
-// checking proves only that the data equals itself.
-//
-// One row per ROAD — a form of government may be reached out of more than one
-// court, and the priestly republic is, which is the whole reason the crowns
-// are fewer than the constitutions.
 const ROADS = [
-  { id: 'form_prj_jud', tag: 'PRJ', from: 'JUD', govs: ['sanhedrin', 'lot'], chapters: ['66ce'] },
-  // The diadem is offered between 128 and 95 BCE, and the 167 court is not the
-  // same court on day one: the Hasideans are gone by 140 and the Pharisees and
-  // Sadducees take their chairs (SPEC §127). A crown taken at the chapter's
-  // opening month would be judged against a room that does not exist when the
-  // fork actually fires, so the two Hasmonean roads run on the fork's clock.
-  { id: 'form_prj_has', tag: 'PRJ', from: 'HAS', govs: ['gerousia'], chapters: ['167bce'], year: -100 },
-  { id: 'form_rpj_jud', tag: 'RPJ', from: 'JUD', govs: ['jubilee', 'noRuler'], chapters: ['66ce'] },
   { id: 'form_epj_jud', tag: 'EPJ', from: 'JUD', govs: ['nasi', 'dyarchy'], chapters: ['132ce'] },
   { id: 'form_kgj_jud', tag: 'KGJ', from: 'JUD', govs: ['diadem', 'davidic'], chapters: ['132ce', '614ce'] },
-  { id: 'form_pkj_has', tag: 'PKJ', from: 'HAS', govs: ['priestKing'], chapters: ['167bce'], year: -100 },
 ];
-const CROWNS = ['PRJ', 'RPJ', 'EPJ', 'KGJ', 'PKJ'];
-// The ten banners this section retires. Nothing may answer to them anywhere.
-const RETIRED = ['SNH', 'GRL', 'YVL', 'HRZ', 'KHN', 'GRS', 'KTR', 'BTD', 'SHB', 'NSI'];
-// The empires, and every crown that can reach one.
-const EMPIRES = [
-  { id: 'form_iem_mli', tag: 'IEM', from: 'MLI', chapter: '132ce', styles: true },
-  { id: 'form_jem_jud', tag: 'JEM', from: 'JUD', chapter: '132ce', styles: false },
-  { id: 'form_jem_prj', tag: 'JEM', from: 'PRJ', chapter: '66ce', styles: false },
-];
-// The republic is constituted on the refusal of ties, so "every dial at its
-// stop" means something different for it: a maximal Republic of Judaea has no
-// allies by construction, and a fixture that forced allies on would report the
-// form of government's own dividend as dead content.
-const ISOLATIONISTS = new Set(['RPJ']);
+const CROWNS = ['EPJ', 'KGJ'];
+const RETIRED = ['SNH', 'GRL', 'YVL', 'HRZ', 'KHN', 'GRS', 'KTR', 'BTD', 'SHB', 'NSI',
+  'PRJ', 'RPJ', 'PKJ', 'JEM', 'IEM'];
 
 const N = MAP_DATA.provinces.length;
 const geom = {
@@ -122,23 +47,20 @@ const roadOf = (id) => FORMABLES.find((f) => f && f.id === id);
 const doneIds = (t) => new Set(t.missionsDone || []);
 
 // ------------------------------------------------------------------ the table
-console.log('== §250: five forms of government, five crowns, fully outfitted ==');
+console.log('== §250: remaining crowns and retired identities ==');
 {
-  // Every non-starting Jewish constitution reaches exactly one crown, and no
-  // crown names a government that does not exist. The four a bookmark boots
-  // with keep no banner of their own — a realm does not "become" a monarchy.
+  // Only hereditary ethnarchies and non-priestly kingdoms have separate tags.
   const STARTING = new Set(['monarchy', 'republic', 'theocracy', 'tribal']);
   const adopted = Object.keys(DEFINES.GOV_TYPES).filter((k) => !STARTING.has(k) && k !== 'company');
   const reached = new Map();
   for (const r of ROADS) for (const g of r.govs) reached.set(g, (reached.get(g) || []).concat(r.tag));
-  const uncrowned = adopted.filter((g) => !reached.has(g));
-  ok(!uncrowned.length, 'every one of the ' + adopted.length + ' adoptable constitutions reaches a crown ('
-    + (uncrowned.join(', ') || 'all covered') + ')');
-  const doubled = [...reached.entries()].filter(([, tags]) => new Set(tags).size > 1);
-  ok(!doubled.length, 'and no constitution reaches two ('
-    + (doubled.map(([g, t]) => g + '→' + t.join('/')).join(', ') || 'each has one form') + ')');
-  ok(CROWNS.length === 5 && adopted.length === 10,
-    'ten constitutions, five crowns — the trim this section is (' + adopted.length + '→' + CROWNS.length + ')');
+  const uncrowned = adopted.filter((g) => !reached.has(g)).sort();
+  ok(JSON.stringify(uncrowned) === JSON.stringify(['sanhedrin', 'lot', 'jubilee', 'noRuler', 'priestKing', 'gerousia'].sort()),
+    'priestly and republican settlements retain the existing state identity');
+  ok([...reached.values()].every((tags) => new Set(tags).size === 1),
+    'each remaining constitution reaches one formable crown');
+  ok(CROWNS.length === 2 && adopted.length === 10,
+    'two formable crowns remain while all ten adoptable constitutions remain');
   const invented = [...reached.keys()].filter((g) => !DEFINES.GOV_TYPES[g]);
   ok(!invented.length, 'no crown gates on a constitution the table does not have ('
     + (invented.join(', ') || 'all real') + ')');
@@ -182,13 +104,11 @@ console.log('== §250: five forms of government, five crowns, fully outfitted ==
     }
   }
   ok(!dupes.length, 'no two crowns share three letters, a name, a colour or an emblem ('
-    + (dupes.join('; ') || 'all five distinct') + ')');
+    + (dupes.join('; ') || 'both distinct') + ')');
   const borrowed = CROWNS.filter((t) => FLAGS[t] === FLAGS.JUD || FLAGS[t] === FLAGS.MLI);
   ok(!borrowed.length, 'no crown borrows Judaea\'s menorah or Israel\'s hexagram');
 
-  // And the ten are gone — from the catalog, the emblems, the tempers, the
-  // constitution table and the formables alike. A banner half-retired is a
-  // banner a save can still be holding.
+  // Retired states have no catalog, flag, personality or formation entry.
   const ghosts = [];
   for (const t of RETIRED) {
     if (DEFINES.TAGS[t]) ghosts.push(t + '/TAGS');
@@ -197,8 +117,14 @@ console.log('== §250: five forms of government, five crowns, fully outfitted ==
     if (FLAGS[t]) ghosts.push(t + '/FLAGS');
     if (FORMABLES.some((f) => f && (f.to === t || f.from === t))) ghosts.push(t + '/FORMABLES');
   }
-  ok(!ghosts.length, 'none of §227\'s ten survives anywhere ('
-    + (ghosts.join(', ') || 'all ten retired') + ')');
+  ok(!ghosts.length, 'retired identities have no catalog, government, personality, flag or formation entry ('
+    + (ghosts.join(', ') || 'all retired') + ')');
+  const w = boot(eraOf('132ce'), 'JUD');
+  const before = JSON.stringify(w.game);
+  for (const tag of RETIRED) {
+    ok(!switchTagCore(w.ctx, 'JUD', tag), tag + ': direct formation is rejected');
+  }
+  ok(JSON.stringify(w.game) === before, 'rejected formations preserve the campaign state');
 }
 
 // -------------------------------------------------------------- the plumbing
@@ -239,18 +165,15 @@ for (const r of ROADS) {
   }
 }
 {
-  // Two realms, one banner, two constitutions — which is the sentence the
-  // whole inversion exists to make true.
-  const era = eraOf('66ce');
+  const era = eraOf('132ce');
   const a = boot(era, 'JUD');
   const b = boot(era, 'JUD');
-  a.ctx.helpers.setGovernment(a.ctx, 'JUD', 'sanhedrin');
-  b.ctx.helpers.setGovernment(b.ctx, 'JUD', 'lot');
-  switchTagCore(a.ctx, 'JUD', 'PRJ');
-  switchTagCore(b.ctx, 'JUD', 'PRJ');
-  ok(a.game.tags.PRJ.govType === 'sanhedrin' && b.game.tags.PRJ.govType === 'lot',
-    'two priestly republics under one banner stay two different states ('
-    + a.game.tags.PRJ.govType + ' / ' + b.game.tags.PRJ.govType + ')');
+  a.ctx.helpers.setGovernment(a.ctx, 'JUD', 'nasi');
+  b.ctx.helpers.setGovernment(b.ctx, 'JUD', 'dyarchy');
+  switchTagCore(a.ctx, 'JUD', 'EPJ');
+  switchTagCore(b.ctx, 'JUD', 'EPJ');
+  ok(a.game.tags.EPJ.govType === 'nasi' && b.game.tags.EPJ.govType === 'dyarchy',
+    'two ethnarchies under one banner preserve their distinct constitutions');
 }
 
 // ------------------------------------------------------------------ the gate
@@ -275,44 +198,31 @@ for (const r of ROADS) {
   }
 }
 
-// ------------------------------------------------------- fork to crown, live
-// The four settlements of 71 through the REAL cards. This is the join between
-// §214 and §250: the card writes the constitution, the constitution opens one
-// crown and no other — and two roads now share a crown, because two roads are
-// two versions of the same form of government.
-console.log('== §250: the settlement of 71, fired live, opens exactly one crown ==');
+// Republican and priestly settlements still apply through the real event.
+console.log('== settlements keep Judaea without offering a retired formable ==');
 {
   const era = eraOf('66ce');
   const card = era.events.find((e) => e && e.id === 'ev_s_the_second_government');
   ok(!!card && card.options.length === 4, 'the second government still offers four settlements');
-  const SETTLEMENTS = [
-    { i: 0, gov: 'sanhedrin', tag: 'PRJ' },
-    { i: 1, gov: 'lot', tag: 'PRJ' },
-    { i: 2, gov: 'jubilee', tag: 'RPJ' },
-    { i: 3, gov: 'noRuler', tag: 'RPJ' },
-  ];
-  for (const s of SETTLEMENTS) {
+  for (const [i, gov] of ['sanhedrin', 'lot', 'jubilee', 'noRuler'].entries()) {
     const w = boot(era, 'JUD');
-    card.options[s.i].effects(w.ctx);
-    const t = w.game.tags.JUD;
-    ok(t.govType === s.gov, 'road ' + s.i + ': the realm becomes a ' + t.govType);
-    ok(w.ctx.helpers.constitutionOf(w.ctx, '66ce'),
-      'road ' + s.i + ': §130\'s store still records the settlement ('
-      + w.ctx.helpers.constitutionOf(w.ctx, '66ce') + ')');
-    const open = ROADS.filter((o) => o.chapters.indexOf('66ce') >= 0
+    card.options[i].effects(w.ctx);
+    ok(w.game.tags.JUD.govType === gov && w.game.playerTag === 'JUD',
+      gov + ': settlement applies while keeping Judaea');
+    ok(w.ctx.helpers.constitutionOf(w.ctx, '66ce'), gov + ': constitution store records settlement');
+    const open = ROADS.filter((o) => o.chapters.includes('66ce')
       && roadOf(o.id).requires[0].check(w.ctx, 'JUD'));
-    ok(open.length === 1 && open[0].tag === s.tag,
-      'road ' + s.i + ': opens ' + s.tag + ' and nothing else ('
-      + (open.map((o) => o.tag).join(', ') || 'none') + ')');
+    ok(open.length === 0 && RETIRED.every((tag) => !w.game.tags[tag]),
+      gov + ': no retired state is offered or created');
   }
 }
 
-// ------------------------------------------------------- five different trees
-console.log('== §250: five crowns, five chains, and no two of them the same ==');
+// ------------------------------------------------------- remaining mission trees
+console.log('== §250: two crowns with separate mission chains ==');
 {
   const STRANDS = { govt: 0, region: 1, court: 2 };
   const branchIds = new Map();
-  const trees = CROWNS.concat(['JEM', 'IEM']);
+  const trees = CROWNS;
   for (const tag of trees) {
     const list = formableFor(tag).missions;
     ok(Array.isArray(list) && list.length >= 7,
@@ -362,16 +272,11 @@ console.log('== §250: five crowns, five chains, and no two of them the same =='
     }
   }
   ok(!shared.length, 'no two crowns share a branch node ('
-    + (shared.join(', ') || 'five distinct branches') + ')');
+    + (shared.join(', ') || 'two distinct branches') + ')');
   const branchSizes = CROWNS.map((t) => branchIds.get(t).size);
   ok(Math.min(...branchSizes) >= 6,
     'every branch is at least six nodes deep (smallest ' + Math.min(...branchSizes) + ')');
-  // The two empires read ONE tree under two names, on purpose: what a hegemon
-  // has to do is the same act whoever is styled at the top of it.
-  const jem = formableFor('JEM').missions;
-  const iem = formableFor('IEM').missions;
-  ok(jem.length === iem.length && jem[0].id !== iem[0].id,
-    'the empires read the same seven rungs under their own two names');
+
 }
 
 // ------------------------------------------------------------ the reward keys
@@ -390,8 +295,7 @@ console.log('== §250: every reward seats keys the engine reads ==');
   ok(TAG_KEYS.size > 15, 'the engine\'s modifier vocabulary was read from the sim ('
     + TAG_KEYS.size + ' keys)');
   const PROV_ONLY = new Set(['taxMult', 'unrest']);
-  const SUBJECTS = ROADS.map((r) => ({ tag: r.tag, from: r.from, chapter: r.chapters[0], gov: r.govs[0], year: r.year }))
-    .concat(EMPIRES.map((e) => ({ tag: e.tag, from: e.from, chapter: e.chapter })));
+  const SUBJECTS = ROADS.map((r) => ({ tag: r.tag, from: r.from, chapter: r.chapters[0], gov: r.govs[0], year: r.year }));
   for (const s of SUBJECTS) {
     const f = formableFor(s.tag);
     const dead = [];
@@ -402,8 +306,8 @@ console.log('== §250: every reward seats keys the engine reads ==');
     }
     const era = eraOf(s.chapter);
     for (const m of f.missions) {
-      const w = boot(era, s.from === 'MLI' || s.from === 'PRJ' ? 'JUD' : s.from);
-      const from = s.from === 'MLI' || s.from === 'PRJ' ? 'JUD' : s.from;
+      const w = boot(era, s.from);
+      const from = s.from;
       switchTagCore(w.ctx, from, s.tag);
       w.game.playerTag = s.tag;
       const t = w.game.tags[s.tag];
@@ -429,17 +333,14 @@ console.log('== §250: every reward seats keys the engine reads ==');
 console.log('== §250: no crown\'s modifier lands on top of another package\'s ==');
 {
   const src = readFileSync(new URL('../../js/data/formables.js', import.meta.url), 'utf8');
-  const head = src.indexOf('// ---- the crown is the form of government');
+  const head = src.indexOf('// ---- Judaean government crowns');
   const tail = src.indexOf('export const FORMABLES = [');
   ok(head > 0 && tail > head, 'the section\'s own block was located in the source');
   const mine = new Set([...src.slice(head, tail).matchAll(/id: '([a-zA-Z0-9_]+)', name: '/g)]
     .map((m) => m[1]));
-  ok(mine.size >= 40, 'the section seats ' + mine.size + ' named modifiers of its own');
-  // The Kingdom of Israel's own pair is shared with the older MLI formables on
-  // purpose — the same crown, the same two permanent modifiers — and so is the
-  // empire's, which is one crown wearing two names.
-  const SHARED = new Set(['crown_of_david', 'the_law_is_the_charter',
-    'from_the_river_to_the_river', 'the_seats_of_the_world']);
+  ok(mine.size >= 12, 'the section seats ' + mine.size + ' named modifiers of its own');
+  // The Kingdom of Israel shares its formation modifiers across source tags.
+  const SHARED = new Set(['crown_of_david', 'the_law_is_the_charter']);
   const dataDir = new URL('../../js/data/', import.meta.url);
   const clashes = [];
   for (const f of readdirSync(dataDir)) {
@@ -488,16 +389,14 @@ function remax(w, tag) {
     mar: { name: 'The Marshal', skill: 6 },
   };
   t.messianic = 100;
-  // A maximal realm of a constitution that inherits nothing has NO heir, the
-  // same way a maximal Republic of Judaea has no allies: the fixture may not
-  // hand a state the one thing its own form of government abolished.
+  // A maximal realm still respects its constitution’s inheritance rules.
   const heirless = ((DEFINES.GOV_TYPES[t.govType] || {}).heirless) === true;
   if (heirless) { t.heir = null; t.regency = false; }
   else if (!t.heir) t.heir = { name: 'The Heir', gov: 4, infl: 4, mar: 4, age: 24 };
   t.ruler = { ...(t.ruler || { name: 'The Incumbent', title: 'Ruler', age: 40 }), gov: 6, infl: 6, mar: 6 };
   const others = Object.keys(g.tags).filter((k) => k !== tag && g.tags[k]);
   g.standing = { order: [tag, ...others], score: { [tag]: 9999 }, month: 0 };
-  t.allies = ISOLATIONISTS.has(tag) ? [] : others.slice(0, 4);
+  t.allies = others.slice(0, 4);
   for (const k of others) g.tags[k].opinion = { ...(g.tags[k].opinion || {}), [tag]: 100 };
   t.opinion = t.opinion || {};
   for (const k of others.slice(0, 6)) t.opinion[k] = 100;
@@ -521,17 +420,13 @@ function maximalGround(w, tag) {
   const jer = g.provinces.find((p) => p && p.canon === 'Jerusalem');
   if (jer) jer.wonder = 'temple';
   try {
-    // An empire garrisons where a kingdom marches, and its tree says so —
-    // the host has to be an empire's host or that rung reads as dead content.
     ctx.helpers.spawnArmy(ctx, tag, (jer && jer.name) || g.provinces[1].name, { inf: 120, name: 'The Host' });
   } catch (e) { /* geometry-free boot */ }
 }
-// Proclaim the crown the way a campaign does: the chapter's own side answers
-// its fork and then takes the name. An empire is proclaimed over whatever
-// crown it grew out of, which for PRJ means two switches.
+// Adopt the constitution, then proclaim the corresponding remaining crown.
 function proclaim(chapterId, s) {
   const era = eraOf(chapterId);
-  const start = s.from === 'MLI' || s.from === 'PRJ' ? 'JUD' : s.from;
+  const start = s.from;
   const w = boot(era, start);
   w.game.wars = [];
   for (const k of Object.keys(w.game.tags)) if (w.game.tags[k]) w.game.tags[k].atWarWith = [];
@@ -546,7 +441,7 @@ function proclaim(chapterId, s) {
 }
 const SUBJECTS = ROADS.flatMap((r) => r.chapters.map((c) => ({
   tag: r.tag, from: r.from, chapter: c, gov: r.govs[0], year: r.year,
-}))).concat(EMPIRES.map((e) => ({ tag: e.tag, from: e.from, chapter: e.chapter })));
+})));
 
 // ------------------------------------------------------------------ no free lunch
 console.log('== §250: nothing on a crown is free on the day it is proclaimed ==');
@@ -605,68 +500,13 @@ for (const r of ROADS) {
     ok(!!mli && mli.bookmarks.indexOf(c) >= 0, r.tag + ': offered in ' + c + ', where the crown is');
   }
   // Proclaiming Israel DOES end the constitution — MLI declares a monarchy in
-  // GOV_OF and these five declare nothing, so the asymmetry is the point.
+  // GOV_OF and these two declare nothing, so the asymmetry is the point.
   const w = proclaim(r.chapters[0], { tag: r.tag, from: r.from, gov: r.govs[0], year: r.year });
   ok(switchTagCore(w.ctx, r.tag, 'MLI'), r.tag + ': the kingdom may be proclaimed over it');
   ok(w.game.tags.MLI.govType === 'monarchy',
     r.tag + ': and the form of government ends with it (' + w.game.tags.MLI.govType + ')');
   ok(w.game.tagAliases[r.tag] === 'MLI' && w.game.tagAliases[r.from] === 'MLI',
     r.tag + ': the forwarding chain collapses rather than walking');
-}
-
-// ---------------------------------------------------------------- the empire
-console.log('== §250: the empire is reached by the map, and keeps the constitution ==');
-{
-  for (const tag of ['JEM', 'IEM']) {
-    const def = DEFINES.TAGS[tag];
-    ok(!!def && /Empire$/.test(def.name || ''), tag + ': is called an empire — "' + ((def || {}).name || '?') + '"');
-    ok((typeof FLAGS[tag] === 'string' ? FLAGS[tag] : FLAGS[tag]?.body)?.length > 100, tag + ': flies real emblem art');
-    ok(!!DEFINES.PERSONALITIES[tag] && DEFINES.PERSONALITIES[tag].ponderous,
-      tag + ': is read as a great power by the courts around it');
-    ok(!DEFINES.GOV_OF[tag], tag + ': declares no government — an empire does not restyle a republic');
-  }
-  // Israel's empire is Israel's alone; every other Jewish crown reaches the
-  // Judaean one, and no crown reaches both.
-  const iemFrom = FORMABLES.filter((f) => f.to === 'IEM').map((f) => f.from);
-  const jemFrom = FORMABLES.filter((f) => f.to === 'JEM').map((f) => f.from);
-  ok(JSON.stringify(iemFrom) === JSON.stringify(['MLI']),
-    'the Israelite Empire is proclaimed out of the Kingdom of Israel alone (' + iemFrom.join(', ') + ')');
-  ok(!jemFrom.some((t) => iemFrom.indexOf(t) >= 0) && jemFrom.length >= 6,
-    'and the Judaean Empire out of the ' + jemFrom.length + ' other Jewish crowns');
-  const both = CROWNS.concat(['JUD', 'HAS']).filter((t) => jemFrom.indexOf(t) < 0);
-  ok(!both.length, 'every Jewish crown short of Israel can reach it (' + (both.join(', ') || 'all covered') + ')');
-  ok(FORMABLES.find((f) => f.id === 'form_iem_mli').bonus.rulerTitle === 'King of Kings of Israel',
-    'Israel\'s emperor is styled for it');
-  ok(!FORMABLES.find((f) => f.id === 'form_jem_prj').bonus.rulerTitle,
-    'and a priestly republic that conquers the East keeps its High Priest');
-
-  // The gate: shut on the country, open on the world.
-  const s = { tag: 'JEM', from: 'JUD', chapter: '132ce' };
-  const shut = proclaim('132ce', s);
-  // proclaim() switches the banner; the requirement rows are asked of the tag
-  // that has not yet taken it, so boot a clean campaign for the reading.
-  const w = boot(eraOf('132ce'), 'JUD');
-  const f = FORMABLES.find((x) => x.id === 'form_jem_jud');
-  const rowsOn = (world) => f.requires.map((q) => {
-    let v = false;
-    try { v = !!q.check(world.ctx, 'JUD'); } catch (e) { v = false; }
-    return v;
-  });
-  ok(rowsOn(w).some((v) => !v), 'the empire is shut on the chapter\'s opening realm');
-  maximalGround(w, 'JUD');
-  remax(w, 'JUD');
-  const open = rowsOn(w);
-  ok(open.every((v) => v), 'and open on a realm that holds the heartland, the bridge, the seats and the world ('
-    + open.filter((v) => !v).length + ' rows still unmet)');
-  // The land bridge and the seats are real asks: drop one seat and it shuts.
-  for (const name of ['Antioch', 'Alexandria', 'Memphis', 'Babylon', 'Seleucia-Ctesiphon', 'Roma']) {
-    const p = w.ctx.prov(name);
-    if (p) { p.owner = 'REB'; p.controller = 'REB'; }
-  }
-  ok(!rowsOn(w).every((v) => v), 'losing the seats of the world shuts it again');
-  ok(shut.game.tags.JEM.govType === w.game.tags.JUD.govType,
-    'and proclaiming it leaves the constitution exactly where it was ('
-    + shut.game.tags.JEM.govType + ')');
 }
 
 // ------------------------------------------------- §214 and §22 pass unmoved
@@ -686,10 +526,10 @@ console.log('== §250: the fork, the store and the older crowns are untouched ==
   const booted = [];
   for (const e of ERAS) {
     const active = new Set(e.bookmark.activeTags || []);
-    for (const t of CROWNS.concat(['JEM', 'IEM'])) if (active.has(t)) booted.push(e.bookmark.id + '/' + t);
+    for (const t of CROWNS.concat(RETIRED)) if (active.has(t)) booted.push(e.bookmark.id + '/' + t);
   }
-  ok(!booted.length, 'no chapter boots a crown of government or an empire ('
-    + (booted.join(', ') || 'all seven are formable only') + ')');
+  ok(!booted.length, 'no chapter boots a government crown or retired state ('
+    + (booted.join(', ') || 'none active') + ')');
 }
 
 console.log(failures ? `smoke152: ${failures} FAIL` : 'smoke152: ALL PASS');
