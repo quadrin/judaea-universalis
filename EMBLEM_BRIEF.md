@@ -12,6 +12,9 @@ identify the subject. The earlier silhouette-only direction is superseded.
 coin-, relief-, architecture- and object-inspired drawings. The enrichment
 runs after the base assignments, before `FLAGS` receives the final artwork.
 The remaining explicit art, modern flags and identity lookups remain supported.
+`js/ui/standard_figures.js` supplies 15 refined figure drawings on a 192-unit
+grid, scaled into the established 96-unit viewBox. These preserve anatomy,
+metalwork, garment folds and feathering in the same master at every size.
 
 Each standard supplies `{viewBox, flatBanner, fieldColor, emblem, note, body}`.
 The richer entries also supply `detailed` and an optional `[label, URL]` source.
@@ -61,7 +64,7 @@ in the development gallery and the relevant nation's Compendium page.
 
 - Tyre: [Mariners’ Museum, CL3826](https://catalogs.marinersmuseum.org/object/CL3826), murex shells and purple production.
 - Etruria: [Met, terracotta antefix](https://www.metmuseum.org/art/collection/search/252929), terracotta Medusa antefix.
-- Corinth: [British Museum, 1947,0407.9](https://www.britishmuseum.org/collection/object/C_1947-0407-9), Pegasus coin.
+- Corinth: [Cleveland Museum of Art, 1916.984](https://www.clevelandart.org/art/1916.984), Pegasus flying left on a Corinthian stater.
 - Cyrene: [British Museum, EH,p697.3.Cyr](https://www.britishmuseum.org/collection/object/C_EH-p697-3-Cyr), silphium coin.
 - Tarentum: [British Museum, EH,p87.24.Tar](https://www.britishmuseum.org/collection/object/C_EH-p87-24-Tar), dolphin rider with trident.
 - Lydia: [British Museum, 1877,0201.1](https://www.britishmuseum.org/collection/object/C_1877-0201-1), facing lion and bull.
@@ -77,12 +80,18 @@ in the development gallery and the relevant nation's Compendium page.
 - Saba regional comparison: [Met, standing bull](https://www.metmuseum.org/art/collection/search/328941), South Arabian bull sculpture.
 - Pergamon: [Berlin Münzkabinett, 18204058](https://ikmk.smb.museum/object?id=18204058&lang=en), cista mystica and serpent.
 - Syracuse: [British Museum, 1946,0101.1403](https://www.britishmuseum.org/collection/object/C_1946-0101-1403), Arethusa surrounded by four dolphins.
+- Ostrogoths: [Met, 95.15.100a](https://www.metmuseum.org/art/collection/search/468991), silver and garnet eagle buckle from Crimea, dated 500–700.
+- Gepid regional comparison: [Walters, 54.423](https://art.thewalters.org/object/54.423/), Visigothic eagle fibula. The object is Visigothic; its assignment as a Gepid game device is invented.
+- Sasanian Persia: [British Museum, 1930,0708.4](https://www.britishmuseum.org/collection/object/C_1930-0708-4), fire altar with diadem ties and two staff-bearing attendants.
+- Himyar: [Paul Yule, Late Himyarite Vulture Reliefs](https://archiv.ub.uni-heidelberg.de/propylaeumdok/111/1/Yule_Eagle2005.pdf), later Zafar bird-of-prey reliefs. This is a retrospective motif; the crown and crescent are game additions.
 
 ## Review and compatibility
 
 Run `node tools/tests/smoke213.mjs` and `node tools/tests/smoke186.mjs` for
 coverage of all 210 catalog/revival courts, formations, chapter overrides,
 borrowed-flag saves, runtime rebrands and synthetic old-save courts.
+`node tools/tests/smoke215.mjs` checks retained SVG detail, distinct drawings,
+sources and identity-aware notes.
 `uitest72.mjs` checks the complete SVG gallery, bounds, real chip sizes,
 Compendium display, start-screen identities, Court headers and mobile layout.
 

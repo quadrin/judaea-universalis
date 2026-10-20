@@ -40,6 +40,7 @@ for (const group of [
   ['MAS','ARO','SCN','CHX','OMA','VAN','TRT','BIT'],
   ['AMO','DRD','DLM','CHO','LKH','SRD'],
   ['PAR','QDR','ITU','SCY','NOB'], ['AED','GLT'], ['BOI','CIM','SAB'],
+  ['OST','GEP','HMT','HMY'],
 ]) assert.equal(new Set(group.map(drawing)).size, group.length, group.join('/') + ': distinct constructions');
 
 const game = { tags: { TYR: { flag: 'GAL', name: 'A changed court', color: [30,70,90] } } };

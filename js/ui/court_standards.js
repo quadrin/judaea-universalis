@@ -1,6 +1,7 @@
 // Engraved court devices. All detail stays in the SVG at every display size.
 // The compositions and colours are game inventions; an object-derived motif
 // does not establish that its owners used this banner. See EMBLEM_BRIEF.md.
+import { FIGURE_REFINEMENTS } from './standard_figures.js';
 const gold = '#f2c75b', ivory = '#f4e6be', bronze = '#cf9350', red = '#be4547';
 const p = (d, fill = gold) => `<path d="${d}" fill="${fill}"/>`;
 const l = (d, ink = gold, width = 1.5) => `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -42,17 +43,6 @@ function bull(f, longHorns = false) {
     + mirror(l('M35 32 31 26 25 23M36 34 30 30M32 39 29 38M37 49 39 52 40 58M39 53 41 55M36 47 39 48M40 40 44 42M39 37 45 39M43 60 43 63M39 67 42 71M44 70 46 72',f,.55))
     + l('M46 43 48 50 50 43M46 53 48 57 50 53M44 75H52',ivory,.7);
 }
-function horse(f, winged = false) {
-  const wings = p('M44 46C32 33 31 21 38 13C39 21 43 24 47 25L55 21 53 27 61 23 57 32 63 29C61 40 56 45 50 49Z', ivory)
-    + l('M38 18C36 30 42 38 48 44M41 23Q40 32 47 39M45 28 49 38M49 29 51 35M54 30 53 36M57 34 54 39M41 28Q50 40 57 35', f, .65);
-  return (winged ? wings : '')
-    + p('M24 46C29 38 44 37 53 42C58 41 57 33 61 27L62 18 66 25 71 23 70 31 79 37 77 42 68 40C64 45 65 54 57 58L51 61 58 69 69 71 71 76 57 75 44 62 35 61C32 66 30 70 25 73L22 78 17 78 20 72 26 66 27 57C20 54 20 50 24 46Z')
-    + p('M31 55 36 57 35 67 31 76 25 79 23 77 28 73 30 65ZM52 56 56 59 47 69 42 78 36 78 36 75 41 74 44 67Z',bronze)
-    + l('M25 47C12 42 18 30 12 29M60 31Q54 38 57 43', gold, 2)
-    + l('M28 44C25 46 25 52 29 55M32 44Q43 39 51 46M32 48Q36 55 42 56M47 45Q49 49 47 54M57 47Q62 42 61 37M58 32 66 35 70 31M65 29 66 33M70 38H75M62 24 64 27M30 60 33 61M47 63 49 65M56 70 60 72', f, .65) + c(69, 33, .9, f)
-    + l('M25 39C19 38 19 33 18 30M23 42C17 41 17 37 16 35M58 34 61 28M57 37 60 33M57 41 59 38',ivory,.65)
-    + l('M22 81H73', ivory, 1);
-}
 function boar(f) {
   return p('M20 54C21 39 30 33 49 34L52 25 57 34 62 31 65 41 78 44 79 54 69 58 66 67 58 67 56 62 37 64 34 71 26 71 27 61Z')
     + p('M29 34 32 26 37 32 41 24 44 32 48 26 49 34Z', ivory)
@@ -62,16 +52,6 @@ function boar(f) {
     + r(44, 68, 4, 15, bronze) + r(25, 82, 42, 2, gold)
     + repeat(9,i=>l(`M${28+i*3} ${40+Math.sin(i*.5)*2}l-1 3m2 2 1 3`,bronze,.55))
     + l('M29 48Q25 56 31 58M50 48Q55 52 55 59M59 41 62 36M66 51 70 52M30 66H33M60 65H64M43 74H49M43 78H49',f,.55);
-}
-function bird(f, gems = false) {
-  const wing = p('M42 39C30 29 18 29 12 21L15 52 23 49 25 60 33 55 39 65 45 53Z');
-  return mirror(wing)
-    + p('M42 34V26Q47 17 54 24L62 27 54 32 54 53 60 75 48 82 36 75 42 53Z')
-    + mirror(l('M18 31 24 44M25 34 30 48M32 37 37 53M40 60 43 73', f, 1.6))
-    + l('M48 38V68M43 74H53', f) + c(50, 26, 1.1, f)
-    + (gems ? mirror(jewel(29, 41) + jewel(38, 50)) + jewel(48, 54) : '')
-    + mirror(repeat(6,i=>l(`M${18+i*3.5} ${32+i*1.1}l${3+i*.15} ${11+i*1.2}m-1-9 2 4`,ivory,.55)))
-    + repeat(5,i=>l(`M44 ${42+i*5}l4 3 4-3`,bronze,.6));
 }
 function caetra(f, pattern = 0) {
   return c(48, 48, 24, ivory) + ring(48, 48, 21, bronze, 3) + ring(48, 48, 17, f)
@@ -149,29 +129,6 @@ function bow(f, type) {
     + p('M72 43 82 48 72 53Z') + p('M20 44 30 48 20 52Z', bronze)
     + l('M39 43 42 46M39 53 42 50', f, 1.2);
 }
-function dragon(f) {
-  return p('M17 30 28 24 39 28 43 22 46 32 43 41 34 44 29 38 19 39 22 34 14 35Z', ivory)
-    + p('M43 31C58 25 79 31 79 48C79 63 64 63 62 69C61 73 71 75 77 68C75 83 54 84 52 73C49 61 68 56 67 47C67 39 54 39 44 43Z')
-    + l('M49 34 50 40M57 33 57 39M64 35 62 41M70 38 66 45M73 46 68 48M72 54 66 53M64 60 60 57M57 65 61 66M56 72 61 71', f, 1.5)
-    + p('M20 40 24 36 25 41 29 37 29 43Z', gold) + c(33, 31, 1.5, f)
-    + l('M33 44V83', bronze, 3) + l('M30 50H36M30 54H36', gold, 1.3);
-}
-function elephant(f) {
-  return p('M17 67V47C17 32 34 27 49 31C62 28 74 34 76 47L77 62Q79 68 83 63C84 77 68 79 68 63L65 56 60 60V77H51V62H35V77H26V59L24 68Z', ivory)
-    + p('M56 37C39 31 40 57 57 58Q65 48 56 37Z', bronze)
-    + l('M54 38Q45 45 55 54M24 39Q16 47 12 41M31 62V73M56 62V73', gold, 1.2)
-    + p('M68 50Q67 62 79 56Q74 67 67 57Z') + c(68, 42, 1.5, f)
-    + l('M26 29H51L48 20H33ZM38 21V15M32 26H47', gold, 2) + l('M18 82H80', ivory, 1)
-    + l('M24 39Q32 34 42 37M23 43Q20 51 24 57M29 40 28 58M35 36 34 50M48 39Q40 46 47 55M52 39Q47 45 52 50M62 36 65 40M68 47 73 48M70 60 74 61M72 65 76 66M72 68 78 70M53 74H58M28 74H33',bronze,.6);
-}
-function gorgon(f) {
-  return mirror(repeat(4, i => g(p('M29 50C9 44 13 26 27 27Q15 31 26 39Z', bronze), `rotate(${i*22-30} 48 48)`)))
-    + p('M30 29Q48 16 66 29L69 50Q64 70 48 78Q32 70 27 50Z', ivory)
-    + mirror(p('M32 41Q38 34 44 42L42 49 34 48Z', f) + c(38, 43, 2, gold))
-    + p('M46 42 42 55H54L50 42Z', bronze) + p('M33 59Q48 50 63 59L59 69H37Z', f)
-    + p('M40 60H56V64H40Z', ivory) + p('M45 64H51V75Q48 81 45 75Z', red)
-    + l('M34 29Q48 22 62 29M34 32 31 39M62 32 65 39', gold, 1.4);
-}
 function silphium(f) {
   return l('M48 82V26', ivory, 3) + mirror(repeat(3, i => g(p('M46 43C37 27 21 36 19 43C31 38 33 52 46 47Z', gold)
     + l('M23 42Q35 39 45 46', f, .9), `translate(0 ${i*13})`)))
@@ -195,7 +152,7 @@ function owl(f) {
 export const STANDARD_SOURCES = {
   murex: ['Mariners’ Museum · Tyrian murex on coinage', 'https://catalogs.marinersmuseum.org/object/CL3826'],
   gorgon: ['Met · Etruscan terracotta Medusa antefix', 'https://www.metmuseum.org/art/collection/search/252929'],
-  pegasus: ['British Museum · Corinthian Pegasus stater', 'https://www.britishmuseum.org/collection/object/C_1947-0407-9'],
+  pegasus: ['Cleveland Museum of Art · Corinthian Pegasus stater', 'https://www.clevelandart.org/art/1916.984'],
   silphium: ['British Museum · Cyrene silphium coin', 'https://www.britishmuseum.org/collection/object/C_EH-p697-3-Cyr'],
   dolphin: ['British Museum · Tarentine dolphin rider', 'https://www.britishmuseum.org/collection/object/C_EH-p87-24-Tar'],
   lydia: ['British Museum · Lydian lion and bull coin', 'https://www.britishmuseum.org/collection/object/C_1877-0201-1'],
@@ -210,37 +167,30 @@ export const STANDARD_SOURCES = {
   arabia: ['Met · South Arabian bull sculpture', 'https://www.metmuseum.org/art/collection/search/328941'],
   pergamon: ['Berlin Münzkabinett · Pergamene cista and serpent', 'https://ikmk.smb.museum/object?id=18204058&lang=en'],
   syracuse: ['British Museum · Arethusa with four dolphins', 'https://www.britishmuseum.org/collection/object/C_1946-0101-1403'],
+  ostrogothicBuckle: ['Met · Ostrogothic eagle buckle, 95.15.100a', 'https://www.metmuseum.org/art/collection/search/468991'],
+  fibulaComparison: ['Walters Art Museum · Migration-period eagle fibula comparison', 'https://art.thewalters.org/object/54.423/'],
+  sasanianCoin: ['British Museum · Fire altar and staff-bearing attendants', 'https://www.britishmuseum.org/collection/object/C_1930-0708-4'],
+  himyarRelief: ['Paul Yule · Late Himyarite bird-of-prey reliefs from Zafar', 'https://archiv.ub.uni-heidelberg.de/propylaeumdok/111/1/Yule_Eagle2005.pdf'],
 };
 
 // [device identifier, drawing, interpretation, optional object reference]
 const DESIGNS = {
   TYR: ['murex-shell', shell, 'A spined murex shell with its spiral, ribs and long siphonal canal; a reference to Phoenician purple production.', 'murex'],
   CRC: ['kubaba-pomegranate', pomegranate, 'A pomegranate with a lobed crown and visible seeds. An original device referring to Kubaba’s fruit attribute.'],
-  ETR: ['etruscan-gorgoneion', gorgon, 'A terracotta gorgoneion with curled hair, tusks and protruding tongue, after Etruscan architectural antefixes.', 'gorgon'],
+  ETR: ["etruscan-gorgoneion", FIGURE_REFINEMENTS.ETR, "A terracotta gorgoneion with curled hair, tusks and protruding tongue, after Etruscan architectural antefixes.", "gorgon"],
   ATH: ['athenian-owl', owl, 'A frontal owl with facial discs, patterned breast, talons and an olive sprig; a coin-inspired game composition.'],
-  COR: ['corinthian-pegasus', f => horse(f, true), 'Pegasus with an arched feathered wing and articulated legs, following Corinthian coin imagery.', 'pegasus'],
+  COR: ["corinthian-pegasus", FIGURE_REFINEMENTS.COR, "Pegasus in flight to the left, with extended forelegs, folded hind legs and layered wing feathers, following the Corinthian stater in Cleveland.", "pegasus"],
   CYR: ['cyrene-silphium', silphium, 'The branching silphium plant, including its flower umbels and paired leaves, after Cyrene’s coin types.', 'silphium'],
-  TAR: ['taras-dolphin', f => p('M15 59C26 45 48 44 69 51L81 44 77 55 84 61 70 61C52 75 31 64 19 67L24 62Z', ivory)
-    + p('M39 48 48 38 54 50Z') + l('M26 58Q44 50 64 56M65 57 72 54', f, 1.2)+c(25,57,1.2,f)
-    + c(47,23,4,ivory)+l('M47 28 43 39 56 44 60 54M44 37 35 48M46 30 63 32M63 32V17M58 17V22H68V17',gold,2.7)+wave(80),
-    'A dolphin rider holding a trident, with the animal’s curved back and flukes retained; based on Tarentine coin types.', 'dolphin'],
-  LYD: ['lydian-lion-bull', f => g(p('M15 65 17 40 26 26 38 22 44 32 40 40 47 46 44 54 35 50 34 61 42 67 40 75 25 74Z')
-    + l('M23 34 29 40M20 44 28 48M21 57 28 58M31 32 36 36M37 44 43 46',f,1.6)+c(36,39,1.5,f)
-    + p('M81 64 79 39 69 29 65 16 61 18 64 31 56 36 50 47 53 55 62 52 65 65 57 70 59 75 76 75Z',ivory)
-    + l('M68 36 71 45 70 58M58 47H63',bronze,1.5)+c(60,41,1.5,f), 'translate(0 -1)'),
-    'Facing lion and bull foreparts, with the lion’s incised mane and the bull’s horn; an adaptation of Lydian coin imagery.', 'lydia'],
+  TAR: ["taras-dolphin", FIGURE_REFINEMENTS.TAR, "A dolphin rider holding a trident, with the animal’s curved back and flukes retained; based on Tarentine coin types.", "dolphin"],
+  LYD: ["lydian-lion-bull", FIGURE_REFINEMENTS.LYD, "Facing lion and bull foreparts, with the lion’s incised mane and the bull’s horn; an adaptation of Lydian coin imagery.", "lydia"],
   SRD: ['nuragic-tower', f => masonry(f,'nuraghe'), 'A battered Nuragic stone tower with projecting parapet, corbelled entrance and masonry courses. The tower model is an archaeological reference.', 'sardinia'],
-  NUM: ['numidian-horse', horse, 'A free horse with mane, raised foreleg and flowing tail. An original composition referring to Numidian equestrian culture.'],
+  NUM: ["numidian-horse", FIGURE_REFINEMENTS.NUM, "A free horse with mane, raised foreleg and flowing tail. An original composition referring to Numidian equestrian culture."],
   AVN: ['gaulish-boar-standard', boar, 'A bristled boar on a standard, with curled tail and tusk. A regional La Tène analogy; its use by this particular court is invented.'],
   BOI: ['boian-bull', f => bull(f, false), 'A bull with short horns, muzzle and engraved forehead. An invented pastoral device, without a claim of a documented Boii banner.'],
   CIM: ['cimbrian-bull', f => bull(f, true) + r(45,75,6,9,bronze), 'A long-horned bull head mounted on a pole; an original interpretation of the bull associated with Cimbrian traditions.'],
-  SEQ: ['boar-headed-carnyx', f => l('M43 80V44Q42 37 48 34',gold,5)
-    + p('M46 39 38 31 39 23 45 27 54 20 63 25 74 22 77 31 66 36 62 44 54 40Z',ivory)
-    + p('M43 23 45 15 50 21 54 14 58 20Z')+l('M52 29 57 31M61 34H74M43 52H47M43 62H47M43 72H47',f,1.5)
-    + c(62,27,1.5,f)+p('M66 34Q70 45 72 35Z',red)+r(34,82,20,2,gold),
-    'A boar-headed carnyx with open jaws and tube joints. The Deskford reconstruction supplies a regional comparison, not evidence for a Sequani standard.', 'carnyx'],
-  DAC: ['dacian-draco', dragon, 'A wolf-headed draco with open jaws, ribbed windsock and standard pole. An original drawing of the regional military motif.', 'draco'],
-  GBA: ['bactrian-elephant', elephant, 'An elephant with trunk, tusk, folded ear and bell-like fittings. The elephant motif occurs on Bactrian coinage; this complete device is invented.', 'bactria'],
+  SEQ: ["boar-headed-carnyx", FIGURE_REFINEMENTS.SEQ, "A boar-headed carnyx with open jaws and tube joints. The Deskford reconstruction supplies a regional comparison, not evidence for a Sequani standard.", "carnyx"],
+  DAC: ["dacian-draco", FIGURE_REFINEMENTS.DAC, "A wolf-headed draco with open jaws, ribbed windsock and standard pole. An original drawing of the regional military motif.", "draco"],
+  GBA: ["bactrian-elephant", FIGURE_REFINEMENTS.GBA, "An elephant with an Asian elephant’s small folded ear, separated legs, tusk and pendant bell. The head motif occurs on Bactrian coinage; this complete animal composition is invented.", "bactria"],
   ELA: ['elamite-serpent', f => l('M24 72C78 91 84 55 51 55C16 55 16 32 43 30L59 29',gold,9)
     + p('M54 22 68 20 76 27 67 35 54 34Z',ivory)+c(66,25,1.4,f)
     + l('M27 73 28 79M37 76 37 82M48 76 49 82M60 72 64 78M67 63 74 65M63 58 66 53M49 54V59M35 50 31 56M29 42 23 42M33 33 30 28M43 30V25M63 31H71',f,1.3),
@@ -298,13 +248,13 @@ const DESIGNS = {
   PHR: ['phrygian-cap', f => p('M23 74C29 58 32 49 32 36C32 21 47 13 64 15C52 20 49 30 56 39C66 51 72 60 74 74Z',ivory)
     + p('M22 74H75V81H22Z')+l('M41 33C39 49 49 59 59 67M29 72H68M28 77H69',bronze,1.5), 'A soft forward-folded cap with a stitched brim and curved fabric seams, treated as a regional dress motif.'],
   SAB: ['sabaean-bull', f => bull(f,true)+c(48,15,4,gold), 'A long-horned bull head with muzzle and incised facial planes. An original South Arabian religious-art analogy.', 'arabia'],
-  HMY: ['himyarite-eagle', f => bird(f)+p('M38 19 40 12 48 17 56 12 58 19Z',ivory)+l('M33 77Q48 91 63 77',ivory,3), 'An eagle with separated flight feathers, crown and crescent. A game interpretation of South Arabian royal imagery.'],
+  HMY: ["himyarite-eagle", FIGURE_REFINEMENTS.HMY, "A hooked-beaked bird of prey with spread wings, inspired by reliefs from Zafar and its surroundings. The crown and crescent are game additions. The late or post-Himyarite reliefs provide a retrospective motif for earlier chapters.", "himyarRelief"],
   HDR: ['hadrami-incense-burner', f => altar(f,true), 'A moulded incense burner with pedestal, rim, coals and curling smoke, referring to Hadramawt’s incense trade.'],
-  SAS: ['sasanian-fire-altar', f => altar(f)+mirror(p('M20 48 24 38 28 48 26 74H21Z',bronze)+c(24,33,4,ivory)+l('M24 40 31 49M24 75V82',gold,2)), 'A stepped fire altar flanked by two attendants, recalling Sasanian drachm reverses. The relief-like details remain in the master drawing.'],
+  SAS: ["sasanian-fire-altar", FIGURE_REFINEMENTS.SAS, "A stepped fire altar between crowned attendants holding staffs, with garment folds, diadem ties and separate altar mouldings, after Sasanian drachm reverses.", "sasanianCoin"],
   ARM: ['artaxiad-tiara', f => tiara(f), 'A tall Artaxiad-inspired tiara with serrated crown, star, lappets, bead band and engraved panels.'],
   ADI: ['adiabene-royal-tiara', f => tiara(f,false)+c(48,46,3,ivory), 'A low royal tiara with lappets, inset roundel and jewelled band. An original court design, distinct from the Artaxiad crown.'],
-  OST: ['ostrogothic-cloisonne-eagle', f => bird(f,true), 'An eagle brooch with segmented wings and red cloisonné-like cells. A late antique metalwork analogy; no claim of an exclusive Amal emblem.'],
-  GEP: ['gepid-eagle-buckle', f => g(bird(f,true),'translate(8 6) scale(.83)')+ring(48,70,11,ivory,3)+r(46,67,4,15,bronze), 'An eagle-shaped fitting above a buckle loop and tongue. Regional grave metalwork supplies the analogy; the court assignment is invented.'],
+  OST: ["ostrogothic-eagle-buckle", FIGURE_REFINEMENTS.OST, "A chased silver buckle plate with spiral ornament, garnet settings, loop and hooked eagle terminal, after the Met’s Ostrogothic buckle. The banner composition is invented.", "ostrogothicBuckle"],
+  GEP: ["gepid-eagle-fibula", FIGURE_REFINEMENTS.GEP, "An eagle fibula with a hooked profile head, garnet compartments and pearl pendants. The Walters object is Visigothic and supplies a regional Migration-period comparison; its assignment to the Gepids is invented.", "fibulaComparison"],
   SAX: ['paired-seaxes', f => mirror(g(p('M36 35 44 35 44 68 35 81 33 67Z',ivory)+r(35,17,7,17,bronze)+r(31,32,15,4,gold)
     + l('M37 40V65M37 20H40M37 25H40M37 29H40',f,1), 'rotate(-16 48 48)')), 'Paired single-edged seaxes with angled tips, fullers and bound grips. A regional weapon composition, rather than later territorial heraldry.'],
   FRK: ['frankish-francisca', f => l('M39 36 30 82',bronze,6)+p('M37 33C29 22 40 13 54 16L71 27Q59 46 40 42Z',ivory)
@@ -354,9 +304,7 @@ const DESIGNS = {
   AVA: ['avar-horsetail-standard', f => l('M48 17V83',gold,3)+ring(48,20,7,ivory,2)
     +mirror(p('M45 29C31 33 29 44 33 59L23 74Q41 70 43 51L46 38Z',bronze)+l('M40 34Q31 48 29 64M43 35Q38 54 33 65',ivory,1))
     +r(42,28,12,4,gold)+jewel(48,31,red), 'A horse-tail standard with a ring finial, binding and individual hanging strands. An invented steppe court device.'],
-  TRK: ['ashina-wolf-standard', f => l('M46 36V83',bronze,4)+p('M29 33 29 22 37 27 50 22 60 27 73 26 77 32 68 39 54 37 46 43 37 39Z',ivory)
-    +p('M34 24 32 14 42 24Z')+c(58,29,1.3,f)+l('M61 35H71M36 34 42 31M27 65Q47 47 69 65M27 65 48 73 69 65',gold,2.3)
-    +l('M43 50H49M43 54H49',ivory,1), 'A wolf-head finial above a composite bow, with ears, jaws and staff bindings. An original device referring to Ashina wolf traditions.'],
+  TRK: ["ashina-wolf-standard", FIGURE_REFINEMENTS.TRK, "A wolf-head finial above a composite bow, with ears, jaws and staff bindings. An original device referring to Ashina wolf traditions."],
   BGR: ['bulgar-tamga-fitting', f => p('M25 18 20 24V73L25 79 30 73V24ZM66 24 71 18 76 24V73L71 79 66 73Z',ivory)
     +l('M37 24 48 42 59 24M48 42V76',gold,5)+jewel(48,57,red)+l('M24 28V68M72 28V68',bronze,1), 'The IYI-shaped mark interpreted as an engraved metal fitting. Its meaning and specific dynastic attribution remain uncertain; this is an invented standard.'],
   SRM: ['sarmatian-ring-tamga', f => ring(48,30,13,ivory,4)+l('M48 43V70M48 62 28 80M48 62 68 80',gold,4)
@@ -380,7 +328,7 @@ const DESIGNS = {
   EDM: ['edomite-sela', f => p('M15 81 27 28 40 18 49 48 61 26 73 37 82 81Z',bronze)
     +p('M28 29 40 18 43 51 36 76H24ZM61 26 64 61 72 76 77 76 71 38Z',ivory)
     +l('M30 41 34 31M28 53 31 46M55 68 60 46M44 63 50 56M18 83H81',gold,1.4), 'Split sandstone cliffs with a narrow cleft, ledges and cut rock planes. An invented geographic device referring to Sela and Edomite highlands.'],
-  HMT: ['hamath-winged-solar-device', f => bird(f)+ring(48,50,12,ivory,2), 'A feathered winged solar device in a Syro-Anatolian relief idiom. An invented regional composition, without claiming a documented Hamath eagle banner.'],
+  HMT: ["hamath-winged-solar-device", FIGURE_REFINEMENTS.HMT, "A solar disc between layered feathered wings and a pendant tail in a Syro-Anatolian relief idiom. An invented regional composition for Hamath."],
   URA: ['urartian-sacred-tree', f => l('M48 82V18',bronze,4)+repeat(4,i=>mirror(g(l('M47 44 32 35 27 26',gold,2)+p('M27 27C18 26 17 17 22 15C23 21 27 21 27 27ZM30 30C29 20 36 17 40 21C34 22 34 28 30 30Z',ivory),`translate(0 ${i*14})`)))
     +p('M48 14C35 22 38 31 48 35C58 31 61 22 48 14Z')+l('M48 19V29',f,1)+r(33,82,30,3,gold), 'A tiered sacred tree with palmettes, curling side branches and a stepped foot. A regional Urartian art analogy, rather than a generic conifer.'],
   TAB: ['ivriz-grain-grapes', f => l('M32 81V24M33 62 57 39M57 79V30',gold,2.2)+repeat(5,i=>g(mirror(p('M47 42C35 40 38 32 40 29C46 31 48 36 47 42Z',ivory)+l('M40 33 46 40',bronze,.55)),`translate(-16 ${i*8})`))
@@ -398,8 +346,7 @@ const DESIGNS = {
     +p('M24 27 19 19 28 22 31 16 33 27Z'), 'A woven cista mystica with a curling serpent and ivy leaf, referring to Pergamene cistophoric coin imagery.', 'pergamon'],
   SYC: ['syracusan-arethusian-dolphins', f => ring(48,48,22,gold,2)+repeat(4,i=>g(p('M35 19C46 11 59 15 64 25L70 22 67 29 71 35 63 33C55 41 43 30 37 31L40 27Z',ivory)
     +c(42,22,1,f),`rotate(${i*90} 48 48)`))+c(48,48,7,bronze)+star(48,48,8,5,2,ivory), 'Four dolphins around a central water roundel, referring to the dolphin surrounds of Syracusan coinage. An original composition.', 'syracuse'],
-  MIL: ['milesian-lion-star', f => p('M19 73V47L29 27 43 22 51 30 48 39 59 46 55 56 45 50 42 63 53 74 48 80H31Z')
-    +l('M26 37 34 41M23 47 33 49M25 58 33 57M39 31 43 35M46 45 54 47',f,1.5)+c(43,39,1.4,f)+star(69,28,8,12,4,ivory), 'A lion forepart beside a stellate device, referring to Milesian coin imagery, with the mane and open jaw retained.'],
+  MIL: ["milesian-lion-star", FIGURE_REFINEMENTS.MIL, "A lion forepart beside a stellate device, referring to Milesian coin imagery, with the mane and open jaw retained."],
   SPT: ['spartan-shield', f => caetra(f)+p('M45 30H51L65 66H58L48 40 38 66H31Z',f), 'A bronze-rimmed shield bearing lambda, with boss and rivets. Lambda is a later Classical convention used retrospectively for early chapters.'],
   CRT: ['cretan-labyrinth', f => r(17,17,62,62,bronze)+l('M22 74V22H74V74H34V34H62V62H46V46H50V54H54V42H42V66H66V30H30V70H70V26H26V74',ivory,2)
     +c(19,80,2,gold)+c(77,16,2,gold), 'A square labyrinth with multiple continuous turns, inspired by Cretan coin types. The complete path remains visible when enlarged.'],
@@ -413,8 +360,9 @@ export function enrichCourtStandards(flags) {
   for (const [tag, [emblem, draw, note, source]] of Object.entries(DESIGNS)) {
     const prior = flags[tag];
     if (!prior?.fieldColor) throw new Error(`Detailed court standard has no base field: ${tag}`);
-    const [dx, dy] = ({ ATH: [8, -2.5], SEQ: [-7, -1.5], AES: [0, -9], SCN: [0, -9],
-      TRT: [0, -5], DAC: [0, -5.2], GEP: [0, -4.8], SAB: [0, 4.8], AVN: [0, -6] })[tag] || [0, 0];
+    const refined = FIGURE_REFINEMENTS[tag];
+    const [dx, dy] = refined ? (({ GBA: [0,-5.5], DAC: [0,-5.8], HMT: [0,-5.4] })[tag] || [0, 0]) : (({ ATH: [8, -2.5], SEQ: [-7, -1.5], AES: [0, -9], SCN: [0, -9],
+      TRT: [0, -5], DAC: [0, -5.2], GEP: [0, -4.8], SAB: [0, 4.8], AVN: [0, -6] })[tag] || [0, 0]);
     flags[tag] = { ...prior, emblem, note, source: source ? STANDARD_SOURCES[source] : null, detailed: true,
       body: r(0,0,96,96,prior.fieldColor) + `<g data-emblem="${emblem}" transform="translate(${dx} ${dy})">${draw(prior.fieldColor)}</g>` };
   }
