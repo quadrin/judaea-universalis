@@ -87,6 +87,12 @@ const RISING_LABELS = {
           <button class="pp-dev" data-dev="prod" data-tt="+1 production development (50 influence points)">${icon('plus', 'icon-plus')}P</button>
           <button class="pp-dev" data-dev="mp" data-tt="+1 manpower development (50 martial points)">${icon('plus', 'icon-plus')}M</button>
         </span></div>
+        <div class="pp-investment hidden" data-ref="investBlock">
+          <div class="pp-build-grid pp-build-one">
+            <button class="pp-build-btn" data-ref="investBtn" data-invest="1">${icon('bricks')}<span>Invest in Province</span><span data-ref="investCost"></span></button>
+          </div>
+          <div class="pp-constr hidden" data-ref="investProgress"></div>
+        </div>
         <div class="pp-row"><span class="pp-k">Autonomy</span><span class="pp-v" data-ref="autonomy"></span></div>
         <div class="pp-row hidden" data-ref="siteRow"><span class="pp-k">Sites</span><span class="pp-v pp-gold" data-ref="site"></span></div>
       </div>
@@ -103,13 +109,11 @@ const RISING_LABELS = {
       <div class="pp-build hidden" data-ref="integBlock">
         <div class="pp-build-title">Integration</div>
         <div class="pp-constr hidden" data-ref="convRow"></div>
-        <div class="pp-constr hidden" data-ref="settleRow"></div>
         <div class="pp-constr hidden" data-ref="integProgRow"></div>
         <div class="pp-build-grid">
           <button class="pp-build-btn" data-integ="rule" data-ref="integRule">${icon('scales')}<span>Establish Rule</span></button>
           <button class="pp-build-btn" data-integ="convert" data-ref="integConv">${icon('altar')}<span>Convert Faith</span></button>
           <button class="pp-build-btn" data-integ="integrate" data-ref="integInteg">${icon('scroll')}<span>Integrate</span></button>
-          <button class="pp-build-btn hidden" data-open-ideas="colonies" data-ref="integSettle">${icon('grain')}<span>Military Colonies</span></button>
         </div>
       </div>
       <div class="pp-build hidden" data-ref="releaseBlock">
@@ -257,6 +261,11 @@ const RISING_LABELS = {
       if (!b || b.classList.contains('disabled') || !actions) return;
       if (typeof actions.askCommunity !== 'function') return;
       try { actions.askCommunity(provId, b.dataset.dia); } catch (err) { warnOnce('dia-ask', err); }
+      refresh();
+    });
+    refs.investBtn.addEventListener('click', () => {
+      if (refs.investBtn.disabled || !actions?.investProvince) return;
+      actions.investProvince(provId);
       refresh();
     });
     refs.integBlock.addEventListener('click', (e) => {
@@ -689,6 +698,7 @@ const RISING_LABELS = {
     if (actions && typeof actions.getIntegration === 'function') {
       try { info = actions.getIntegration(provId); } catch (e) { warnOnce('getIntegration', e); info = null; }
     }
+    refs.investBlock.classList.toggle('hidden', !info || !(info.showSettle || info.settling));
     refs.integBlock.classList.toggle('hidden', !info);
     if (!info) return;
     const ruleTerms = `Establish Rule — ${info.establishCost || 25} governance points\n−15% autonomy (more of the province's taxes reach the crown); +2 unrest for 6 months while the locals adjust. Once a year per province.`;
@@ -719,19 +729,22 @@ const RISING_LABELS = {
         `${icon('altar')}<span class="pp-constr-name">Conversion under way</span>` +
         `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
     }
-    // Settlement (SPEC §43): raise this province one habitation tier.
-    const showSettle = !!info.showSettle && !info.settling;
-    refs.integSettle.classList.toggle('hidden', !showSettle);
-    if (showSettle) {
-      refs.integSettle.classList.remove('disabled');
-      refs.integSettle.dataset.ideasProvince = String(provId);
-      refs.integSettle.dataset.tt = 'Develop settlements and station veterans in Ideas → Military Colonies.';
-    }
-    refs.settleRow.classList.toggle('hidden', !info.settling);
-    if (info.settling) {
+    // Civilian investment shares the habitation engine with frontier camps.
+    const running = !!info.settling;
+    refs.investBtn.classList.toggle('hidden', running);
+    refs.investBtn.disabled = !info.canSettle;
+    refs.investBtn.classList.toggle('disabled', !info.canSettle);
+    setHtml(refs.investCost, `${icon('dove')} ${info.settleCost}`);
+    const reward = info.settleReward || {};
+    const gains = [['tax', 'tax'], ['prod', 'production'], ['mp', 'manpower']]
+      .filter(([key]) => reward[key]).map(([key, name]) => `+${reward[key]} ${name}`).join(', ');
+    const terms = `Invest in Province — ${info.settleCost} influence points\nLocal works: ${info.settleToName} in ${info.settleMonths} months; ${gains} development. Local communities grow without changing their culture or faith.\n+1 unrest for 6 months. Occupation or loss of the province cancels the project.`;
+    refs.investBtn.dataset.tt = info.canSettle ? terms : `${info.whyNotSettle}\n${terms}`;
+    refs.investProgress.classList.toggle('hidden', !running);
+    if (running) {
       const m = Math.max(0, info.settling.monthsLeft | 0);
-      setHtml(refs.settleRow,
-        `${icon('bricks')}<span class="pp-constr-name">Settlers arriving</span>` +
+      setHtml(refs.investProgress,
+        `${icon('bricks')}<span class="pp-constr-name">Investment under way</span>` +
         `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
     }
   }

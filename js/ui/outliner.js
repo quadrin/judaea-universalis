@@ -436,16 +436,17 @@ export function createOutliner(el, {
     if (wars.length) {
       html += `<div class="ol-sec">Wars <span class="ol-count">${wars.length}</span></div>`;
       for (const w of wars) {
-        const ws = Math.round(warscoreFor(w, player));
+        const score = actions?.getWarScore?.(w.id);
+        const ws = score?.warScore ?? warscoreFor(w, player);
         const cls = ws > 0 ? 'pos' : ws < 0 ? 'neg' : '';
         const peaceBtn = `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace${w.noNegotiation ? ' — a fight to the death, but envoys may still be sent' : ''}">${icon('dove')}</button>`;
         // Lead enemy's flag before the war name (falls back to the flame glyph).
         const opp = (w.attackers || []).includes(player) ? (w.defenders || [])[0] : (w.attackers || [])[0];
         const lead = opp ? flagChip(opp, ctx.DEFINES, 14, true, ctx.game) : icon('flame', 'icon-row');
         html += `
-          <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%\nClick for the war overview">
+          <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws, 1)}%${score ? '\nMilitary score ' + signed(score.militaryWarScore, 1) + '; war enthusiasm ' + signed(score.acceptanceAdjustment, 1) : ''}\nClick for the war overview">
             <span class="ol-name">${lead} ${esc(w.name || 'War')}</span>
-            <span class="ol-sub ${cls}">${signed(ws)}%</span>
+            <span class="ol-sub ${cls}">${signed(ws, 1)}%</span>
             ${peaceBtn}
           </div>`;
       }

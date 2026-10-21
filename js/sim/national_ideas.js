@@ -92,7 +92,9 @@ export function nationalActionInfo(ctx, tag, key, args = {}) {
     const cost = key === 'expedition' ? { gold: probe.cost, manpower: probe.men }
       : { [key === 'settle' ? 'infl' : 'gov']: probe.cost };
     const why = nationalIdeaLevel(t, 'colonies') < 1 ? 'Requires Veterans on the Land.'
-      : probe.can ? '' : probe.why || 'Choose an eligible frontier province.';
+      : key === 'settle' && !(ctx.byId(Number(args.province))?.owner === 'WASTE' && ctx.byId(Number(args.province))?.expedition?.by === tag)
+        ? 'Choose a frontier expedition camp. Invest in owned provinces from their development controls.'
+        : probe.can ? '' : probe.why || 'Choose an eligible frontier province.';
     return { ok: !why, why, cost };
   }
   const s = read(t), p = ctx.byId(Number(args.province)), target = String(args.target || p?.owner || '');
@@ -245,7 +247,7 @@ export function consolidateNationalPaths(ctx) {
     }
   }
   for (const p of ctx.game.provinces) {
-    const by = p?.settlement?.by || p?.expedition?.by;
+    const by = p?.expedition?.by || (p?.settlement?.kind !== 'investment' && p?.settlement?.by);
     if (ctx.game.tags[by]) grant(ctx.game.tags[by], 'colonies', 1);
   }
   // Grandfather existing investments even if their combination exceeds today's
@@ -535,7 +537,7 @@ function optionsFor(ctx, tag, d) {
     return g.provinces.filter(p => p && p.settleable !== false && (d.target === 'frontier'
       ? p.owner === 'WASTE' && p.impassable && !p.expedition && [...(ctx.geom.neighbors[p.id] || [])].some(id => ctx.byId(id)?.controller === tag)
       : d.target === 'expedition_camp' ? p.owner === 'WASTE' && p.expedition?.by === tag
-        : (p.owner === tag && !p.impassable || p.owner === 'WASTE' && p.expedition?.by === tag)
+        : (p.owner === 'WASTE' && p.expedition?.by === tag)
           && habLevel(ctx, p) < (ctx.DEFINES.SETTLEMENT?.maxTier ?? 3)))
       .map(p => ({ id: String(p.id), name: p.name, args: { province: p.id } }));
   }
@@ -557,7 +559,7 @@ export function nationalStrategyView(ctx, tag = ctx.game.playerTag) {
   }));
   const records = [];
   const add = (group, id, name, icon, stats, tip, progress) => records.push({ group, id, name, icon, stats, tip, progress });
-  for (const p of ctx.game.provinces) if (p?.settlement?.by === tag || p?.expedition?.by === tag) {
+  for (const p of ctx.game.provinces) if (p?.owner === 'WASTE' && p?.expedition?.by === tag) {
     const left = p.settlement?.by === tag ? Math.max(0, p.settlement.monthsLeft) : null;
     const total = Math.max(left || 0, ctx.DEFINES.SETTLEMENT?.months || 6);
     add('colonies', 'frontier:' + p.id, p.name, left !== null ? 'bricks' : 'flag',

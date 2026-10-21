@@ -69,24 +69,45 @@ try {
 
   await page.evaluate(() => window.loadNational('66ce'));
   const settlement = await page.evaluate(() => {
-    const { ctx, panel } = window.nationalTest;
+    const { ctx, panel, provincePanel } = window.nationalTest;
     const p = ctx.prov('Jericho'); p.habitation = 'frontier';
-    panel.open(null, 'ideas', 'colonies', p.id);
+    panel.close(); provincePanel.open(p.id);
     return p.id;
   });
-  await path('colonies').locator('[data-ni-buy]').click();
-  await page.evaluate(id => window.nationalTest.provincePanel.open(id), settlement);
-  assert.equal(await page.locator('#province-panel [data-open-ideas="colonies"]:visible').count(), 1);
-  assert.equal(await page.locator('#province-panel [data-integ="settle"], #province-panel [data-waste]').count(), 0);
-  assert(await path('colonies').evaluate(el => el.open));
-  assert.equal(await page.locator('[data-ni-target="settle"]').inputValue(), String(settlement));
-  await page.evaluate(() => window.nationalTest.provincePanel.close());
-  await page.locator('[data-ni-open="action:settle"] > summary').click();
+  const invest = page.locator('#province-panel [data-invest]');
+  assert(await invest.isVisible()); assert(await invest.isEnabled());
+  assert.match(await invest.textContent(), /Invest in Province/);
+  assert.equal(await page.locator('#province-panel [data-open-ideas="colonies"]:visible').count(), 0);
+  assert.equal(await page.locator('#province-panel [data-ref="integBlock"] [data-invest]').count(), 0);
   const influence = await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl);
-  await page.locator('[data-ni-act="settle"]').click();
-  assert(await page.evaluate(id => window.nationalTest.ctx.byId(id).settlement?.by === 'JUD', settlement));
-  assert((await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl)) < influence);
-  assert(await path('colonies').locator('.ni-record progress').count());
+  await page.evaluate(() => {
+    const { ctx, provincePanel } = window.nationalTest;
+    ctx.game.tags.JUD.points.infl = 0; provincePanel.refresh();
+  });
+  assert(await invest.isDisabled());
+  assert.match(await invest.getAttribute('data-tt'), /Needs 110 influence/);
+  await page.evaluate(n => {
+    const { ctx, provincePanel } = window.nationalTest;
+    ctx.game.tags.JUD.points.infl = n; provincePanel.refresh();
+  }, influence);
+  assert(await invest.isEnabled());
+  if (process.env.JU_OUT) await page.locator('#province-panel').screenshot({ path: process.env.JU_OUT + '/provincial-investment-desktop.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert(await page.locator('#province-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
+  if (process.env.JU_OUT) await page.locator('#province-panel').screenshot({ path: process.env.JU_OUT + '/provincial-investment-mobile.png' });
+  await invest.click();
+  assert(await page.evaluate(id => window.nationalTest.ctx.byId(id).settlement?.kind === 'investment', settlement));
+  assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl), influence - 110);
+  assert.match(await page.locator('[data-ref="investProgress"]').textContent(), /Investment under way.*6 months/);
+  await page.evaluate(() => {
+    const { ctx, panel, provincePanel } = window.nationalTest;
+    if (ctx.game.tags.JUD.nationalIdeas?.colonies) throw Error('Civilian investment unlocked Military Colonies');
+    provincePanel.close(); panel.open(null, 'ideas', 'colonies');
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await path('colonies').locator('[data-ni-buy]').click();
+  assert(!await page.evaluate(id => window.nationalTest.actions.getNationalStrategy().actions.find(a => a.key === 'settle').options.some(o => o.args.province === id), settlement));
+  assert.equal(await path('colonies').locator('.ni-record progress').count(), 0);
   await page.evaluate(() => {
     const { ctx, provincePanel } = window.nationalTest;
     const p = ctx.game.provinces.find(p => p?.owner === 'WASTE');
@@ -105,7 +126,7 @@ try {
   assert.equal(await page.locator('[data-intrigue="subvert"], [data-intrigue="pretender"]').count(), 0);
   assert.equal(await page.locator('#nation-panel [data-open-ideas="subversion"]').count(), 1);
   assert.equal(await page.locator('#nation-panel [data-open-ideas="dynasty"]').count(), 1);
-  console.log('PASS frontier actions live in Military Colonies, province shortcuts preserve targets, real settlement starts and foreign intrigue has no duplicate controls');
+  console.log('PASS civilian investment works without ideas, live costs, desktop/mobile layout, no duplicate owned target; frontier camps remain in Military Colonies');
 
   await page.evaluate(() => window.loadNational('66ce'));
   await path('federation').locator(':scope > summary').click();

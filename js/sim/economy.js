@@ -502,7 +502,7 @@ export function developCore(ctx, tag, provId, kind) {
 }
 
 // ---------------------------------------------------------------- settlement
-// A settlement project (actions.settleProvince, SPEC §43) raises a settleable
+// A habitation project (civilian investment locally, settlement on the frontier) raises a settleable
 // province one habitation tier over a few months: empty land is claimed, a
 // frontier is planted, a town takes root. It spends influence and grants a
 // little development on completion. Only prosperity (yearly growth + develop)
@@ -536,17 +536,19 @@ export function settlementInfo(ctx, tag, provId) {
   // yet: the pitched camp stands in for ownership and passability.
   const camp = p.owner === 'WASTE' && !!p.expedition && p.expedition.by === tag && p.controller === tag;
   let why = '';
-  if (!nationalIdeaLevel(t, 'colonies')) why = 'Requires Veterans on the Land in Ideas → Military Colonies.';
+  if (p.owner !== tag && !camp) why = 'Not our province.';
+  else if (camp && !nationalIdeaLevel(t, 'colonies')) why = 'Requires Veterans on the Land in Ideas → Military Colonies.';
   else if (p.settleable === false) why = 'This land cannot support a permanent settlement.';
   else if (p.impassable && !camp) why = 'The land is currently impassable.';
   else if (level >= maxTier) why = 'A thriving town already — only prosperity makes it a city.';
-  else if (p.owner !== tag && !camp) why = 'Not our province.';
   else if (p.controller !== tag) why = 'Occupied — drive the enemy out first.';
   else if (p.siege) why = 'Under siege.';
-  else if (p.settlement) why = 'A settlement project is already under way.';
+  else if (p.settlement) why = 'A development project is already under way.';
   else if (num(t.points.infl) < cost) why = 'Needs ' + cost + ' influence points.';
   return {
-    can: !why, why, cost, pool: 'infl',
+    can: !why, why, cost, pool: 'infl', kind: p.owner === tag ? 'investment' : 'frontier',
+    months: Math.max(1, num(settlementCfg(ctx).months, 6) | 0),
+    reward: { ...(settlementCfg(ctx).devReward || {}) },
     toLevel: level + 1, toTier: target.key, toName: target.name,
   };
 }
@@ -557,14 +559,14 @@ export function settlementStart(ctx, tag, provId) {
   const t = ctx.game.tags[tag];
   const s = settlementCfg(ctx);
   t.points.infl = num(t.points.infl) - info.cost;
-  p.settlement = { by: tag, monthsLeft: Math.max(1, num(s.months, 6) | 0), toTier: info.toTier };
+  p.settlement = { by: tag, monthsLeft: info.months, toTier: info.toTier, kind: info.kind };
   const um = Math.max(0, num(s.unrestMonths, 6) | 0);
   const uu = num(s.unrest, 1);
   if (uu > 0 && um > 0) {
     p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'settling');
-    p.modifiers.push({ id: 'settling', name: 'Newcomers Settling', months: um, effects: { unrest: uu } });
+    p.modifiers.push({ id: 'settling', name: info.kind === 'investment' ? 'Local Works' : 'Newcomers Settling', months: um, effects: { unrest: uu } });
   }
-  return { ok: true, cost: info.cost, toName: info.toName };
+  return { ok: true, cost: info.cost, toName: info.toName, kind: info.kind, months: info.months };
 }
 // Monthly: advance every province's settlement project. Occupation, loss of the
 // province, a change of owner, or the land turning impassable/unsettleable voids
@@ -603,7 +605,24 @@ export function monthlySettlement(ctx) {
       // settler nation's own community at the head of the makeup — settled
       // land comes to speak the settler's tongue and pray at their altar.
       const settler = g.tags[c.by];
-      if (settler && settler.religion && settler.culture) {
+      if (c.kind === 'investment') {
+        // Civilian works support the local population; they are not a means
+        // of replacing its culture or faith with that of the owner.
+        const grown = Math.round(POP_PER_DEV
+          * Math.max(1, num(reward.tax) + num(reward.prod) + num(reward.mp)));
+        const locals = (p.pop || []).filter(e => num(e.n) > 0).map(e => ({ ...e }));
+        const total = locals.reduce((n, e) => n + e.n, 0);
+        if (total > 0) {
+          let remaining = grown;
+          locals.forEach((e, index) => {
+            const n = index === locals.length - 1 ? remaining : Math.floor(grown * e.n / total);
+            remaining -= n;
+            addPopulation(p, { r: e.r, c: e.c, n });
+          });
+        } else if (p.religion && p.culture) {
+          addPopulation(p, { r: p.religion, c: p.culture, n: grown });
+        }
+      } else if (settler && settler.religion && settler.culture) {
         const grown = Math.round(POP_PER_DEV
           * Math.max(1, num(reward.tax) + num(reward.prod) + num(reward.mp)));
         if (Array.isArray(p.pop) && p.pop.length) {
@@ -624,7 +643,7 @@ export function monthlySettlement(ctx) {
       if ((camp ? c.by : p.owner) === g.playerTag) {
         const def = ctx.DEFINES.HABITATION && ctx.DEFINES.HABITATION[p.habitation];
         ctx.bus.emit('notify', {
-          title: p.name + ' takes root',
+          title: c.kind === 'investment' ? 'Investment completed in ' + p.name : p.name + ' takes root',
           text: p.name + ' grows into a ' + (((def && def.name) || p.habitation).toLowerCase()) + '.',
           type: 'good', provName: p.name,
         });

@@ -56,7 +56,7 @@ import {
 import { TRADE_NODE_BY_ID } from '../data/trade_nodes.js';
 import { migrateTradeState, tradeView, merchantTargets, provinceTrade, buildSites, buildMerchantCore, buildMerchantInfo, sendMerchantCore as sendTradeMerchantCore, recallMerchantCore, setFleetMissionCore, merchantsOf, touchTrade } from './trade.js';
 import { navalGenName } from '../data/tech.js';
-import { maxManpowerOf, explainIncome, incomeBreakdown, buildingIncomeDelta, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
+import { maxManpowerOf, explainIncome, incomeBreakdown, buildingIncomeDelta, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, habLevel, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked, missionPaceMonths, missionClosedSet, missionForkState, missionForkLedger, claimMission } from './realm.js';
 import { missionCosts, costBand } from './mission_cost.js';
@@ -75,7 +75,7 @@ import {
 } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
-import { offensiveCall, diplomaticCredit } from './strategy.js';
+import { offensiveCall, diplomaticCredit, peaceWarScore } from './strategy.js';
 import { armyTemplatePlan, recruitTemplate as recruitTemplateCore } from './muster.js';
 import { fortBlockReason, fortRegions, fortControl } from './fort_control.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
@@ -2855,6 +2855,12 @@ export function gameActions(ctx) {
     // Everything the war panel shows: sides, the player's score broken into
     // battles / occupation / events (net of the enemy's same components),
     // who occupies what, duration, CB, and whether the dove can fly.
+    getWarScore(warId, enemyTag, tag = g.playerTag) {
+      const war = g.wars.find(w => w?.id === warId);
+      if (!war || !g.tags[tag] || !war.attackers.includes(tag) && !war.defenders.includes(tag)) return null;
+      const info = peaceDealInfo(ctx, war, tag, enemyTag);
+      return peaceWarScore(ctx, war, info.enemyLeader, tag, info.myWs);
+    },
     getWarInfo(warId) {
       try {
         const war = g.wars.find((w) => w && w.id === warId);
@@ -2901,6 +2907,7 @@ export function gameActions(ctx) {
           months: Math.max(0, monthsBetween(war.started, g.date)),
           mySide: mySide.map(sideRow), theirSide: theirSide.map(sideRow),
           myWs: Math.round(num(war.warscore && war.warscore[me])),
+          peaceScore: actions.getWarScore(war.id),
           breakdown: {
             battles: Math.round(mine.battles - theirs.battles),
             occupation: Math.round(mine.occupation - theirs.occupation),
@@ -3831,7 +3838,7 @@ export function gameActions(ctx) {
         const settle = settlementInfo(ctx, g.playerTag, provId);
         // Hide the settlement control entirely on land that can never take a
         // project (unsettleable), so it only appears where it means something.
-        const showSettle = p.settleable !== false;
+        const showSettle = p.settleable !== false && habLevel(ctx, p) < num(ctx.DEFINES.SETTLEMENT?.maxTier, 3);
         // Integration (SPEC §56): the modern answer where conversion is
         // era-gated off, a gentler tool beside it everywhere else.
         const tension = popTotal(p) > 0 ? popTension(ctx, p, t) : null;
@@ -3859,7 +3866,7 @@ export function gameActions(ctx) {
           converting: p.conversion ? { monthsLeft: Math.max(0, num(p.conversion.monthsLeft) | 0) } : null,
           showSettle,
           canSettle: settle.can, whyNotSettle: settle.why,
-          settleCost: settle.cost, settleToName: settle.toName,
+          settleCost: settle.cost, settleToName: settle.toName, settleMonths: settle.months, settleReward: settle.reward,
           settling: p.settlement
             ? { monthsLeft: Math.max(0, num(p.settlement.monthsLeft) | 0) } : null,
         };
@@ -3916,15 +3923,26 @@ export function gameActions(ctx) {
           + '; in a year its communities will stand closer to the state. Old hands grumble meanwhile.', 'good');
       } catch (e) { warnOnce('integrateProvince', 'integrateProvince failed', e); }
     },
+    investProvince(provId) {
+      const p = ctx.byId(provId);
+      if (!p || p.owner !== g.playerTag) return { ok: false, why: 'Choose a province we own.' };
+      const res = settlementStart(ctx, g.playerTag, provId | 0);
+      if (!res.ok) { say('Provincial investment', res.why, 'bad'); return res; }
+      say('Investment begun', 'Local works in ' + p.name + ' will raise it to a '
+        + String(res.toName).toLowerCase() + ' in ' + res.months + ' months ('
+        + res.cost + ' influence points).', 'good');
+      return res;
+    },
     settleProvince(provId) {
-      try {
-        const p = ctx.byId(provId);
-        const res = settlementStart(ctx, g.playerTag, provId | 0);
-        if (!res.ok) { say('Settlement', res.why || 'The land will not take it.', 'bad'); return; }
-        say('Settlers set out', 'Surveyors and settlers make for ' + (p ? p.name : 'the frontier')
-          + '; in a few months it will grow into a ' + String(res.toName || 'settlement').toLowerCase()
-          + ' (' + res.cost + ' influence points).', 'good');
-      } catch (e) { warnOnce('settleProvince', 'settleProvince failed', e); }
+      // Compatibility entry point; owned land uses the same civilian project.
+      const p = ctx.byId(provId);
+      const res = settlementStart(ctx, g.playerTag, provId | 0);
+      if (!res.ok) { say('Development project', res.why, 'bad'); return res; }
+      say(res.kind === 'investment' ? 'Investment begun' : 'Settlers set out',
+        (p ? p.name : 'The frontier') + ' will grow into a '
+        + String(res.toName).toLowerCase() + ' in ' + res.months + ' months ('
+        + res.cost + ' influence points).', 'good');
+      return res;
     },
 
     // ---- the unclaimed waste (SPEC §64) --------------------------------------

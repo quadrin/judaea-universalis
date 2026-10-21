@@ -5,14 +5,22 @@ const FACTORS = {
   'Capital occupied': 'temple', 'Length of war': 'hourglass', 'Forces still in the field': 'helmet',
 };
 const signed = v => (v >= 0 ? '+' : '') + Number(v).toFixed(1);
+export const peaceScoreText = value => String(Number(Number(value || 0).toFixed(1)));
+export function renderPeaceWarScore(score, { enemyName, separate = false } = {}) {
+  const total = score.warScore ?? score.acceptanceBudget ?? 0;
+  const cls = total > 0 ? 'pos' : total < 0 ? 'neg' : '';
+  const label = separate ? 'Separate war score' : 'War score';
+  const tip = 'Includes military results and the enemy’s willingness to settle. Expand war enthusiasm below to see the calculation.';
+  return `<span title="${esc(tip)}" data-tt="${esc(tip)}">${label}${enemyName ? ' against ' + esc(enemyName) : ''}: <b class="${cls}" data-peace-score="${peaceScoreText(total)}">${total > 0 ? '+' : ''}${peaceScoreText(total)}%</b></span>`;
+}
 export function renderPeaceStrategy(ev, ctx) {
-  const math = ev.enthusiasm ? `Willingness ${signed(ev.enthusiasm.willingness)} after base reluctance 4. Applied adjustment ${signed(ev.acceptanceAdjustment)}. Positive adjustment is capped at 25% of war score; total victory permits demands up to 100.` : '';
+  const military = ev.militaryWarScore ?? ev.acceptanceBudget - ev.acceptanceAdjustment;
+  const math = ev.enthusiasm ? `Military score ${peaceScoreText(military)} + war enthusiasm ${signed(ev.acceptanceAdjustment)} = war score ${peaceScoreText(ev.warScore ?? ev.acceptanceBudget)}. Willingness ${signed(ev.enthusiasm.willingness)} after base reluctance 4. Positive adjustment is capped at 25% of military score; total victory permits demands up to 100.${ev.unifyCrown ? ' Taking a crown requires military score; enthusiasm does not lower that threshold.' : ''}` : '';
   return (ev.enthusiasm ? `<details open class="peace-factors"><summary>
-    <span>${icon('dove', 'icon-sm')}Enemy war enthusiasm: ${esc(ev.enthusiasm.level)}</span>
-    <span class="peace-stat" title="Maximum demand cost the enemy will accept, after war score and enthusiasm adjustments">${icon('scales', 'icon-sm')}Limit ${Math.round(ev.acceptanceBudget)}</span></summary>
+    <span>${icon('dove', 'icon-sm')}Enemy war enthusiasm: ${esc(ev.enthusiasm.level)}</span></summary>
     <div class="peace-stats" title="${esc(math)}" data-tt="${esc(math)}">
-      <span>${icon('dove', 'icon-sm')}Willingness <b>${signed(ev.enthusiasm.willingness)}</b></span>
-      <span>${icon('scales', 'icon-sm')}Applied <b>${signed(ev.acceptanceAdjustment)}</b></span>
+      <span>${icon('swords', 'icon-sm')}Military <b>${peaceScoreText(military)}</b></span>
+      <span>${icon('dove', 'icon-sm')}Enthusiasm <b>${signed(ev.acceptanceAdjustment)}</b></span>
       <span>${icon('alert', 'icon-sm')}Cap <b>25%</b></span></div>
     <div class="peace-factor-grid">${ev.enthusiasm.factors.map(r => `<div class="peace-factor" title="${esc(r.label)} contributes ${signed(r.value)} to willingness to settle">
       ${icon(FACTORS[r.label] || 'scales', 'icon-sm')}<span>${esc(r.label)}</span><b class="${r.value >= 0 ? 'pos' : 'neg'}">${signed(r.value)}</b></div>`).join('')}</div></details>` : '')

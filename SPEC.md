@@ -22390,3 +22390,65 @@ It audits 829 bookmark and chapter-filtered formable mission entries against
 the vertical-predecessor rule. `uitest77` verifies locked medallions and named
 requirements, rejects stale clickable markup, claims parents and children
 through the actual panel with mouse/keyboard, and checks the mobile tree.
+
+## §316 — War enthusiasm is included in the displayed war score
+
+The war score shown in peace negotiations includes the enemy's willingness
+adjustment. For example, 37 military score plus 9.25 enthusiasm produces
+46.25 war score, displayed as 46.3; a 42-point demand fits. The peace headline,
+demand-cost sentence, war overview, outliner and Court war rows all use this
+calculation. The former separate Limit badge is removed. Military score and
+the applied enthusiasm adjustment remain visible in the breakdown, with the
+25% positive cap explained in its tooltip. Fractional scores display one
+decimal rather than rounding a different limit on each surface.
+
+`sim/strategy.js:peaceWarScore` owns the shared calculation. It returns military
+score, adjusted war score, enthusiasm, applied adjustment and the nonnegative
+acceptance budget. `evaluatePeaceDeal` consumes that result directly and
+`getWarScore` supplies the same result to UI readers, including selected
+separate-peace opponents and foreign-court inspection. The military ledger
+remains the input: repainting or reopening a dialog cannot apply a bonus twice.
+Positive adjustments retain the 25% military-score cap; reluctance can reduce
+the total, total victory remains capped at 100, and crown settlements retain
+their military threshold. Concession amounts and restoration prerequisites
+that use military results identify that score explicitly.
+
+`smoke219` reproduces the screenshot's 37/42 case, checks the exact acceptance
+boundary, zero/negative scores, total victory, crown thresholds, live reluctance,
+separate opponents and repeated-read purity. `uitest78` exercises the actual
+outliner, Court war row, war overview and peace builder, verifies agreement
+between the displayed score and accepted/refused terms, and checks live updates
+and mobile layout.
+
+## §317 — Civilian investment in local provinces
+
+Owned provinces below town habitation have an **Invest in Province** button
+beside the normal +T/+P/+M development controls. It starts local works directly,
+without requiring Military Colonies. The button shows the influence price,
+explains the target habitation, duration and development reward in its tooltip,
+and becomes a months-left readout during construction. It is absent from
+foreign provinces, sealed land and provinces already at town or urban tier.
+The old Military Colonies shortcut is removed from the local Integration block.
+
+Civilian investment reuses the existing habitation project engine and costs:
+40 + 35 × target tier influence, six months, +1 tax and +1 production development,
+with +1 local unrest during the works. It supports existing communities in their
+current proportions, preserving their culture and religion. Only prosperity
+can create an urban center. Ownership, occupation, siege, funds and an existing
+project are revalidated on the action; occupation or loss of the province cancels
+construction. `investProvince` handles local orders; the compatibility
+`settleProvince` entry point starts the same civilian project on owned land.
+
+Military Colonies retains expeditions, **Settle frontier camp**, frontier
+annexation and veteran settlements. Its settlement action accepts expedition
+camps only; its options and records no longer duplicate local investment.
+Frontier settlement retains its military idea prerequisite and settler community
+behavior. Projects store `kind: investment` or `frontier`; older projects keep
+their progress and original completion behavior, and previously acquired ideas
+are retained. Civilian construction never grants a military idea on migration.
+
+`smoke220` checks actual investment, charges, six-month completion, mixed local
+populations, saved progress, cancellation and frontier gates. Updated `smoke216`,
+`smoke41` and `smoke42` cover the civilian/frontier distinction and legacy saves.
+`uitest75` checks direct investment without ideas, live affordability, progress,
+desktop/mobile layout and absence of duplicate targets in Military Colonies.

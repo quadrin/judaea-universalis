@@ -171,3 +171,14 @@ export function warEnthusiasm(ctx, war, enemy, byTag) {
   return { enemy, name: t.name || enemy, factors, willingness,
     level: willingness >= 12 ? 'Low' : willingness >= 3 ? 'Medium' : 'High' };
 }
+
+// One score calculation for peace acceptance and the scores shown to players.
+// The military ledger remains the input, so repeated reads cannot add the
+// willingness adjustment again. Crown settlements use their military threshold.
+export function peaceWarScore(ctx, war, enemy, byTag, militaryWarScore, unifyCrown = false) {
+  const enthusiasm = warEnthusiasm(ctx, war, enemy, byTag);
+  const acceptanceAdjustment = unifyCrown || militaryWarScore >= 99 ? 0
+    : clamp(enthusiasm.willingness, -10, Math.max(0, militaryWarScore) * .25);
+  const warScore = clamp(militaryWarScore + acceptanceAdjustment, -100, 100);
+  return { militaryWarScore, warScore, enthusiasm, acceptanceAdjustment, acceptanceBudget: Math.max(0, warScore) };
+}

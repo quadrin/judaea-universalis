@@ -17,7 +17,7 @@ export const NATIONAL_IDEAS = {
   colonies: { name: 'Military Colonies', icon: 'helmet', point: 'mar',
     desc: 'Settle soldiers, build local reserves and decide how much power their commanders should keep.',
     tiers: [
-      { name: 'Veterans on the Land', icon: 'grain', desc: 'Unlock frontier expeditions, settlement growth and annexation. Station veterans in settled provinces to build local reserves, in exchange for 40% autonomy.' },
+      { name: 'Veterans on the Land', icon: 'grain', desc: 'Unlock frontier expeditions, frontier settlement and annexation. Station veterans in settled provinces to build local reserves, in exchange for 40% autonomy.' },
       { name: 'Military Districts', icon: 'helmet', desc: 'Give a colony a named commander and larger reserves. Districts cost upkeep; unpaid or alienated commanders can mutiny.' },
       { name: 'The Common Command', icon: 'swords', desc: 'Mobilize a district under its own general, or negotiate its return to central administration. Integrating an unwilling commander risks a rising.' },
     ] },
@@ -47,7 +47,7 @@ export function nationalIdeaSlots(tag, bookmark) {
 // Costs are paid only after live validation; the same definitions drive the UI.
 export const NATIONAL_ACTIONS = {
   expedition: { group: 'colonies', tier: 1, name: 'Frontier expedition', icon: 'flag', target: 'frontier', cost: {}, desc: 'Detach soldiers from an adjacent army to establish a supplied frontier camp. The camp needs a controlled border province to survive.' },
-  settle: { group: 'colonies', tier: 1, name: 'Develop settlement', icon: 'bricks', target: 'settlement', cost: {}, desc: 'Raise a province or expedition camp by one habitation tier over six months, gaining development. Only prosperity creates an urban center.' },
+  settle: { group: 'colonies', tier: 1, name: 'Settle frontier camp', icon: 'bricks', target: 'settlement', cost: {}, desc: 'Raise an expedition camp by one habitation tier over six months, gaining development before annexation. Invest in owned provinces from their development controls.' },
   annex_frontier: { group: 'colonies', tier: 1, name: 'Annex settled frontier', icon: 'scales', target: 'expedition_camp', cost: {}, desc: 'Bring a planted frontier camp into the realm. Its routes open and its development counts toward the state.' },
   warehouse: { group: 'maritime', tier: 1, name: 'Foreign warehouse', icon: 'amphora', target: 'foreign_port', cost: { gold: 80, infl: 25 }, desc: 'Rent a warehouse: 12 trade power and collection rights in this market, for 2 talents a month paid to its host. Requires a home port and host opinion of at least 0.' },
   harbor: { group: 'maritime', tier: 2, name: 'Harbor concession', icon: 'anchor', target: 'warehouse', cost: { gold: 100, infl: 40 }, desc: 'Upgrade to 24 trade power and a sea supply base. Rent rises to 3 talents a month; the host must have at least 25 opinion.' },

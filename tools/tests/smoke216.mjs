@@ -51,7 +51,7 @@ function months(s, count, recruit = false) {
   const before = JSON.stringify(s.game);
   assert(!s.actions.getNationalActionInfo('expedition', { province: p.id }).ok);
   assert(!expeditionStart(s.ctx, s.tag, p.id).ok);
-  assert(!settlementStart(s.ctx, s.tag, home.id).ok);
+  assert(!settlementStart(s.ctx, s.tag, p.id).ok);
   assert.equal(JSON.stringify(s.game), before, 'locked old and new entry points have no side effects');
   adopt(s, 'colonies', 1);
   assert(s.actions.getNationalStrategy().actions.some(a => a.key === 'expedition' && a.options.some(o => o.args.province === p.id)));

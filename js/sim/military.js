@@ -19,7 +19,7 @@ import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 import { royalBattleRisk, royalArmyRemoved, royalCanReturn } from './royal_command.js';
 import { combatFrontage, fieldStrength } from './frontage.js';
 import { landRoutes, fortControl, fortStep, fortApproachFor } from './fort_control.js';
-import { offensiveCall, commitAllyCall, settlePromises, rememberAllianceBreak, expansionPreview, applyExpansion, warEnthusiasm } from './strategy.js';
+import { offensiveCall, commitAllyCall, settlePromises, rememberAllianceBreak, expansionPreview, applyExpansion, peaceWarScore } from './strategy.js';
 // The month of the year (SPEC §272). seasons.js imports nothing from the sim
 // precisely so that this file, navy.js and weather.js may all consult it
 // without a cycle: it is date arithmetic and a table, nothing else.
@@ -6463,7 +6463,7 @@ function revivalBlock(ctx, def, war, byTag, enemyTag, idx, myWs) {
   const missing = def.cores.filter((n) => !idx.held.has(n));
   if (missing.length) return 'They do not hold ' + missing.join(', ') + '.';
   if (num(myWs) < num(def.minWs)) {
-    return 'The war has not gone far enough: ' + Math.round(num(myWs))
+    return 'The war has not gone far enough: military score ' + Math.round(num(myWs))
       + '% of ' + def.minWs + '% needed to raise a kingdom.';
   }
   return '';
@@ -7285,14 +7285,8 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
   // Preserve the signed result used by surrender handling and AI descriptions,
   // without letting concessions buy extra demands (even in an invalid deal).
   const net = hasDemands ? cost : -offered;
-  const enthusiasm = warEnthusiasm(ctx, war, info.enemyLeader, byTag);
-  // Exhaustion improves a real bargaining position; a skirmish cannot buy
-  // an empire merely because its treasury and reserves are empty.
-  // A crown war's authored threshold settles the dynastic question itself;
-  // enthusiasm changes ordinary terms, not that campaign's victory contract.
-  const acceptanceAdjustment = unifyCrown || info.myWs >= 99 ? 0
-    : clamp(enthusiasm.willingness, -10, Math.max(0, info.myWs) * 0.25);
-  const acceptanceBudget = Math.max(0, Math.min(100, info.myWs + acceptanceAdjustment));
+  const score = peaceWarScore(ctx, war, info.enemyLeader, byTag, info.myWs, unifyCrown);
+  const { enthusiasm, acceptanceBudget } = score;
   let acceptable, reason;
   if (mixedTerms) {
     acceptable = false;
@@ -7353,7 +7347,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
           : 'Our position compels them to accept.')
         : unifyCrown
           ? `A crown is not signed away by a court that still believes in the next campaign (${net} war score asked, ${Math.max(0, info.myWs)} held).`
-          : `They will bear ${Math.round(acceptanceBudget)} war score of demands (${net} asked; enthusiasm ${enthusiasm.level.toLowerCase()}).`;
+          : `They will bear ${Math.round(acceptanceBudget * 10) / 10} war score of demands (${net} asked; enthusiasm ${enthusiasm.level.toLowerCase()}).`;
     } else {
       // We are the ones paying (SPEC §222). A court accepts what covers what
       // it has already won — no more, and no less. Offering past their score
@@ -7370,7 +7364,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
   return {
     cost, net, offered, mixedTerms, acceptable, reason, gold, humiliate, subjugate, reparations,
     chapterSettlement: chapterSettlement?.key || null,
-    enthusiasm, acceptanceBudget, acceptanceAdjustment,
+    ...score,
     expansion: options.consequences === false ? [] : expansionPreview(ctx, byTag, [...new Set([
       ...chosen.map(p => p.id),
       ...(whole ? ctx.game.provinces.filter(p => p && p.owner === info.enemyLeader).map(p => p.id) : []),

@@ -1999,7 +1999,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     html += `<div class="np-dip-sec">Wars</div>`;
     if (wars.length) {
       for (const w of wars) {
-        const ws = Math.round((w.warscore && w.warscore[who]) || 0);
+        const ws = actions?.getWarScore?.(w.id, undefined, who)?.warScore ?? ((w.warscore && w.warscore[who]) || 0);
         const opp = (w.attackers || []).indexOf(who) >= 0 ? (w.defenders || [])[0] : (w.attackers || [])[0];
         // The overview and the dove are the player's: shown only for wars we
         // fight in ourselves (getWarInfo answers from our side of the table).
@@ -2008,10 +2008,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           ? `<button class="ol-peace np-dove" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`
           : '';
         const warAttr = mine ? ` data-war="${esc(w.id)}"` : '';
-        html += `<div class="np-dip-row${mine ? ' np-war' : ''}"${warAttr} data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws)}%${mine ? '\nClick for the war overview' : ''}">`
+        html += `<div class="np-dip-row${mine ? ' np-war' : ''}"${warAttr} data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws, 1)}%${mine ? '\nClick for the war overview' : ''}">`
           + (opp ? chip(opp) : icon('flame', 'icon-row'))
           + `<span class="np-dip-name">${esc(w.name || 'War')}</span>`
-          + `<span class="np-dip-ws ${ws > 0 ? 'pos' : ws < 0 ? 'neg' : ''}">${signed(ws)}%</span>${dove}</div>`;
+          + `<span class="np-dip-ws ${ws > 0 ? 'pos' : ws < 0 ? 'neg' : ''}">${signed(ws, 1)}%</span>${dove}</div>`;
       }
     } else {
       html += `<div class="np-dip-none">At peace</div>`;

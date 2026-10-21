@@ -57,7 +57,7 @@ g.tags.EGY.nationalIdeas = { colonies: 1 };
 const prov = (name) => g.provinces[idOf(name)];
 const runSettlementMonths = (n) => { for (let i = 0; i < n; i++) monthlySettlement(ctx); };
 
-console.log('== settlement plants the settler\'s people ==');
+console.log('== local investment grows the existing community ==');
 {
   const p = prov('Kiryat Gat');
   ok(p.religion === 'islam' && p.culture === 'arab_modern' && p.habitation === 'frontier',
@@ -65,13 +65,13 @@ console.log('== settlement plants the settler\'s people ==');
   p.owner = 'ISR'; p.controller = 'ISR'; // Yoav has come and gone
   g.tags.ISR.points.infl = 300;
   const res = settlementStart(ctx, 'ISR', idOf('Kiryat Gat'));
-  ok(res.ok, 'the conquered frontier takes an Israeli settlement project');
+  ok(res.ok && res.kind === 'investment', 'owned frontier land takes a civilian investment project');
   runSettlementMonths(7);
   ok(p.habitation === 'rural', 'the project raises the tier: frontier -> rural');
-  ok(p.religion === 'judaism' && p.culture === 'israeli',
-    'the settled land now speaks the settler\'s tongue: religion/culture flip to the settler nation');
-  ok(Array.isArray(p.pop) && p.pop.length && p.pop[0].r === 'judaism' && p.pop[0].c === 'israeli',
-    'the settlers are a real community leading the makeup, not repainted locals');
+  ok(p.religion === 'islam' && p.culture === 'arab_modern',
+    'local investment preserves the existing religion and culture');
+  ok(Array.isArray(p.pop) && p.pop.length && p.pop[0].r === 'islam' && p.pop[0].c === 'arab_modern',
+    'local communities grow without being replaced by settlers');
 }
 
 console.log('== the unclaimed waste: occupy, plant, annex ==');

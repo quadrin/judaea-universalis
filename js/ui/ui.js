@@ -17,7 +17,7 @@ import { icon, flagChip, unitIcon } from './icons.js';
 import { armGenName } from '../data/units.js';
 import { createCampaignTools } from './campaign_tools.js';
 import { createMessages } from './messages.js';
-import { renderPeaceStrategy } from './peace_strategy.js';
+import { renderPeaceStrategy, renderPeaceWarScore, peaceScoreText } from './peace_strategy.js';
 import { generalStarsHtml, generalDescription } from './general_rating.js';
 
 const MAPMODES = [
@@ -380,7 +380,6 @@ export function initUI(staticCtx) {
         info.provinces.map((p) => p.id).concat(freed, transferred),
         deal.provinces.concat(freed, transferred));
     };
-    const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
     // A coalition can be talked out of the war one court at a time: chips
     // switch the table between the whole congress and each separate corridor.
     const targetChips = (info.separateTargets || []).length
@@ -395,7 +394,7 @@ export function initUI(staticCtx) {
       ? ' and its clients (' + t.withNames.join(', ') + ') — they leave the war together, the rest fight on.'
         + '\nA client follows its lord out of a war as it followed him in.'
       : ' alone — they leave the war, the rest fight on.')
-    + '\nWar score against them: ' + signed(t.ws) + '%')}">${esc(t.name)}${
+    + '\nMilitary score against them: ' + signed(t.ws) + '%')}">${esc(t.name)}${
   (t.withNames && t.withNames.length) ? ` <span class="peace-dim">+${t.withNames.length}</span>` : ''
 } <span class="peace-dim">${signed(t.ws)}%</span></button>`).join('')}
         </div>`
@@ -450,7 +449,7 @@ export function initUI(staticCtx) {
           + 'The rest of the coalition fights on, and every other front keeps its lines.'
         : (info.enemyName || 'They') + ' would leave the war alone — the rest of the coalition fights on, and every other front keeps its lines.')
       : 'The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.'}</div>
-        <div class="peace-ws">${info.separate ? 'Separate war score' : 'War score'} against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
+        <div class="peace-ws" data-ref="peaceScore"></div>
         <div class="peace-hint">Choose demands or concessions. Clear selected terms to switch.</div>
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
         <div class="peace-sec">${info.exit ? 'Keep what our men hold' : 'Demand provinces'}</div>
@@ -547,7 +546,7 @@ export function initUI(staticCtx) {
           ${info.releasableLocked.map((r) =>
     `<label class="peace-prov peace-off" data-tt="${esc(r.name + ' — ' + r.reason
       + '\n\nIts country is ' + r.cores.join(' and ') + '.'
-      + '\nRaising it asks for ' + r.minWs + '% war score, and would take '
+      + '\nRaising it asks for ' + r.minWs + '% military score, and would take '
       + r.dev + ' development out of ' + (info.enemyName || 'their realm') + '.'
       + (r.basis ? '\n\n' + r.basis : ''))}">
             <input type="checkbox" disabled>
@@ -597,6 +596,7 @@ export function initUI(staticCtx) {
       let ev = null;
       try { ev = actions.evaluatePeace(warId, deal); } catch (e) { warnOnce('evaluatePeace', e); }
       if (!ev) { closePeaceDialog(); return; }
+      peaceEl.querySelector('[data-ref="peaceScore"]').innerHTML = renderPeaceWarScore(ev, { enemyName: info.enemyName || 'the enemy', separate: info.separate });
       goldV.textContent = String(deal.gold);
       // Subjugation replaces province demands and releases: a client keeps
       // its lands whole. Taking the crown (SPEC §226) replaces the whole
@@ -673,10 +673,10 @@ export function initUI(staticCtx) {
           ? 'A clean withdrawal: occupations between us and the enemy revert; the war goes on without us.'
           : 'A white peace: every occupation reverts, nothing changes hands.')
         : ev.net > 0
-          ? `Demands cost ${ev.net} war score — we hold ${Math.max(0, info.myWs)}.`
+          ? `Demands cost ${ev.net} war score — we have ${peaceScoreText(ev.acceptanceBudget)}.`
           : ev.offered > 0
-            ? `We offer ${ev.offered} war score of our own land — their war has earned ${Math.max(0, -info.myWs)}.`
-            : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
+            ? `We offer ${ev.offered} war score of our own land — their military score is ${Math.max(0, -info.myWs)}.`
+            : `Demands cost ${ev.cost} war score — we have ${peaceScoreText(ev.acceptanceBudget)}.`;
       verdictEl.textContent = ev.acceptable ? 'They will accept these terms.' : ev.reason;
       const strategy = peaceEl.querySelector('[data-ref="strategy"]');
       if (strategy) strategy.innerHTML = renderPeaceStrategy(ev, state.ctx);
@@ -852,9 +852,9 @@ export function initUI(staticCtx) {
       : `<span class="peace-dim">${none}</span>`;
     const bd = info.breakdown;
     const bdRow = (label, v, tt) =>
-      `<div class="pp-row" data-tt="${esc(tt)}"><span class="pp-k">${esc(label)}</span><span class="pp-v ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${signed(v)}</span></div>`;
-    const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
-    const barPct = Math.round(((info.myWs + 100) / 200) * 100);
+      `<div class="pp-row" data-tt="${esc(tt)}"><span class="pp-k">${esc(label)}</span><span class="pp-v ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${signed(v, 1)}</span></div>`;
+    const score = info.peaceScore || { warScore: info.myWs, acceptanceAdjustment: 0 };
+    const barPct = Math.round(((score.warScore + 100) / 200) * 100);
     // SPEC §275. A client has no table here: its lord signs for it. What it
     // has is the petition — influence spent to put one more voice in its
     // lord's council, which shortens the war the lord will sit through.
@@ -893,12 +893,13 @@ export function initUI(staticCtx) {
           <div class="wo-vs">against</div>
           <div class="wo-side">${sideHtml(info.theirSide)}</div>
         </div>
-        <div class="peace-sec">War score: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
+        <div class="peace-sec">${renderPeaceWarScore(score)}</div>
         <div class="bar wo-bar"><div class="bar-fill" style="width:${barPct}%"></div></div>
         ${bdRow('From battles', bd.battles, 'Field victories, net of theirs: each scores the loser’s losses, 1,500 men a point (½ to 4 a battle; each side caps at 40)')}
         ${bdRow('From occupation', bd.occupation, 'Enemy development under our control, net of theirs (each side caps at 60)')}
         ${info.goal ? bdRow('From war goal', bd.goal, 'Holding the declared objective after its six-month grace period (caps at 25)') : ''}
         ${bd.events ? bdRow('From events', bd.events, 'Scripted swings of history') : ''}
+        ${bdRow('From war enthusiasm', score.acceptanceAdjustment, 'Enemy willingness to settle, included in the war score above; positive adjustments are capped at 25% of military score')}
         ${goalHtml}
         <div class="peace-sec">We hold</div>
         <div class="wo-hold">${holdHtml(info.weHold, 'None of their land')}</div>

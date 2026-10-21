@@ -1955,6 +1955,8 @@ button {
   border-radius: 3px;
   background: rgba(120, 90, 40, 0.08);
 }
+.pp-investment { margin: 6px 0; }
+.pp-investment .pp-constr { margin: 0; }
 .pp-constr .icon { width: 13px; height: 13px; flex: none; }
 .pp-constr-name { font-weight: 600; color: var(--ink); }
 .pp-constr-left { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }

@@ -99,13 +99,15 @@ console.log('== a change of hands reverts the label ==');
     'won back by the sword, the province arrives unintegrated and keeps its original name');
 }
 
-console.log('== settlement brings the settlers; the schoolhouse still follows ==');
+console.log('== legacy settlement completion retains its population and naming behavior ==');
 {
   const kg = prov('Kiryat Gat');
   kg.owner = 'ISR'; kg.controller = 'ISR';
   g.tags.ISR.points.infl = 300;
   const res = settlementStart(ctx, 'ISR', idOf('Kiryat Gat'));
   ok(res.ok && kg.name === 'al-Faluja', 'the project begins in al-Faluja');
+  // Simulate a settlement already running in an older save, before civilian investments.
+  delete kg.settlement.kind;
   for (let i = 0; i < 7; i++) monthlySettlement(ctx);
   ok(kg.culture === 'israeli' && kg.name === 'al-Faluja',
     'peopled by its settlers but unintegrated, the town is still al-Faluja');
