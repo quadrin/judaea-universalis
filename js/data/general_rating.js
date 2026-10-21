@@ -1,12 +1,15 @@
 // A display rating derived from the existing skills; never stored in saves.
-// Six pips earns two stars; ten earns three. Earned skill gains count too.
+// With the recruitment rolls, these thresholds give about 85% one-star,
+// 13% two-star and 2% three-star generals. Earned skill gains count too.
+export const GENERAL_STAR_THRESHOLDS = Object.freeze({ two: 9, three: 11 });
+
 export function generalRating(general) {
   if (!general) return 0;
   const total = ['fire', 'shock', 'maneuver'].reduce((sum, key) => {
     const value = Number(general[key]);
     return sum + (Number.isFinite(value) ? Math.max(0, Math.min(6, Math.floor(value))) : 0);
   }, 0);
-  return total >= 10 ? 3 : total >= 6 ? 2 : 1;
+  return total >= GENERAL_STAR_THRESHOLDS.three ? 3 : total >= GENERAL_STAR_THRESHOLDS.two ? 2 : 1;
 }
 
 // Shared by the canvas counters and inline SVG badges.

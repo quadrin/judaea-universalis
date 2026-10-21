@@ -9,7 +9,7 @@ const price = cost => Object.entries(cost || {}).filter(([, n]) => n).map(([k, n
 const metricName = { laurel: 'Loyalty', coins: 'Treasury / rent', spears: 'Stored recruits', hourglass: 'Months remaining', quill: 'Network strength', alert: 'Exposure' };
 
 export function createNationalIdeasPanel(el, getActions) {
-  const picks = {}, tiers = {}, services = {};
+  const picks = {}, tiers = {}, services = {}, provinces = {};
   let self = false, binding = null, lastHtml = '', lastTag = null;
   el.addEventListener('change', e => {
     if (!self) return;
@@ -42,6 +42,7 @@ export function createNationalIdeasPanel(el, getActions) {
     if (binding !== actions || lastTag?.tag !== tag?.tag || self !== isSelf) {
       binding = actions; lastHtml = ''; for (const k of Object.keys(picks)) delete picks[k];
       for (const k of Object.keys(tiers)) delete tiers[k];
+      for (const k of Object.keys(provinces)) delete provinces[k];
     }
     lastTag = tag; self = isSelf;
     if (!tag) return;
@@ -58,6 +59,7 @@ export function createNationalIdeasPanel(el, getActions) {
       const selected = Math.max(0, Math.min(2, tiers[key] ?? Math.min(owned, 2))), idea = ideas[selected];
       const records = report.records.filter(r => r.group === key).map(r => `<div class="ni-record" title="${esc(r.tip)}" data-tt="${esc(r.tip)}"><span>${icon(r.icon, 'icon-sm')}${esc(r.name)}</span><span class="ni-stats">${r.stats.map(([ico, val]) => stat(ico, val, (metricName[ico] || ico) + ': ' + val)).join('')}</span>${r.progress ? `<progress max="${r.progress.total}" value="${r.progress.done}" aria-label="${esc(r.name + ' progress')}"></progress>` : ''}</div>`).join('');
       const operations = report.actions.filter(a => a.group === key).map(a => {
+        if (!picks[a.key] && a.options.some(o => o.args.province === provinces[key])) picks[a.key] = String(provinces[key]);
         const choice = a.options.find(o => o.id === picks[a.key]) || a.options.find(o => o.ok) || a.options[0];
         picks[a.key] = choice?.id || '';
         const args = { ...choice?.args, ...(a.key === 'charter' ? { service: services.charter || 'fiscal' } : {}) };
@@ -75,5 +77,16 @@ export function createNationalIdeasPanel(el, getActions) {
     }
     if (panel) panel.scrollTop = scroll;
   }
-  return { refresh };
+  function focusPath(key, province) {
+    if (!Object.hasOwn(NATIONAL_IDEAS, key)) return;
+    if (province) {
+      provinces[key] = province;
+      const report = getActions()?.getNationalStrategy?.();
+      for (const a of report?.actions || []) if (a.group === key && a.options.some(o => o.args.province === province)) picks[a.key] = String(province);
+      refresh(lastTag, self);
+    }
+    const path = el.querySelector(`[data-ni-open="path:${key}"]`);
+    if (path) { path.open = true; path.querySelector('summary')?.focus({ preventScroll: true }); path.scrollIntoView({ block: 'start' }); }
+  }
+  return { refresh, focusPath };
 }

@@ -12,6 +12,7 @@ import { genUpkeepMult } from '../data/tech.js';
 // still in the shops bills monthly. Pure data, so no cycle.
 import { programStrain } from '../data/programs.js';
 import { pilgrimageIncome } from './sacred.js';
+import { nationalIdeaLevel } from '../data/national_ideas.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
 export const LOAN_INTEREST_PER_MONTH = 3; // talents per loan per month
@@ -535,7 +536,8 @@ export function settlementInfo(ctx, tag, provId) {
   // yet: the pitched camp stands in for ownership and passability.
   const camp = p.owner === 'WASTE' && !!p.expedition && p.expedition.by === tag && p.controller === tag;
   let why = '';
-  if (p.settleable === false) why = 'This land cannot support a permanent settlement.';
+  if (!nationalIdeaLevel(t, 'colonies')) why = 'Requires Veterans on the Land in Ideas → Military Colonies.';
+  else if (p.settleable === false) why = 'This land cannot support a permanent settlement.';
   else if (p.impassable && !camp) why = 'The land is currently impassable.';
   else if (level >= maxTier) why = 'A thriving town already — only prosperity makes it a city.';
   else if (p.owner !== tag && !camp) why = 'Not our province.';
@@ -675,7 +677,8 @@ export function expeditionInfo(ctx, tag, provId) {
   if (p.settleable === false) return out;               // a sealed frontier
   out.show = true;
   const base = expeditionBase(ctx, tag, provId);
-  if (p.expedition && p.expedition.by === tag) out.why = 'Our expedition already holds this waste.';
+  if (!nationalIdeaLevel(t, 'colonies')) out.why = 'Requires Veterans on the Land in Ideas → Military Colonies.';
+  else if (p.expedition && p.expedition.by === tag) out.why = 'Our expedition already holds this waste.';
   else if (p.expedition) out.why = 'Another power\'s expedition holds this waste.';
   else if (!base.adjacent) out.why = 'We control no province on this border.';
   else if (!base.army || num(base.army.men) <= men) {
@@ -753,7 +756,10 @@ export function annexInfo(ctx, tag, provId) {
   if (!p || !t) return out;
   if (p.owner !== 'WASTE' || !p.expedition || p.expedition.by !== tag) return out;
   out.show = true;
-  if (habLevel(ctx, p) < 1) out.why = 'Plant a settlement first — the flag follows the plough.';
+  if (!nationalIdeaLevel(t, 'colonies')) out.why = 'Requires Veterans on the Land in Ideas → Military Colonies.';
+  else if (p.controller !== tag) out.why = 'Regain control of the frontier camp first.';
+  else if (p.settlement) out.why = 'Wait for the settlement project to finish.';
+  else if (habLevel(ctx, p) < 1) out.why = 'Plant a settlement first — the flag follows the plough.';
   else if (num(t.points.gov) < cost) out.why = 'Needs ' + cost + ' governance points.';
   else out.can = true;
   return out;

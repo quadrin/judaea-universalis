@@ -17,7 +17,7 @@ export const NATIONAL_IDEAS = {
   colonies: { name: 'Military Colonies', icon: 'helmet', point: 'mar',
     desc: 'Settle soldiers, build local reserves and decide how much power their commanders should keep.',
     tiers: [
-      { name: 'Veterans on the Land', icon: 'grain', desc: 'Fund a six-month settlement using 1,000 manpower. Each colony accumulates local recruits, but reserves 40% autonomy.' },
+      { name: 'Veterans on the Land', icon: 'grain', desc: 'Unlock frontier expeditions, settlement growth and annexation. Station veterans in settled provinces to build local reserves, in exchange for 40% autonomy.' },
       { name: 'Military Districts', icon: 'helmet', desc: 'Give a colony a named commander and larger reserves. Districts cost upkeep; unpaid or alienated commanders can mutiny.' },
       { name: 'The Common Command', icon: 'swords', desc: 'Mobilize a district under its own general, or negotiate its return to central administration. Integrating an unwilling commander risks a rising.' },
     ] },
@@ -40,11 +40,15 @@ export const NATIONAL_IDEAS = {
 export const nationalIdeaCost = owned => [60, 100, 150][owned] || 0;
 export const nationalIdeaLevel = (tag, key) => Math.max(0, Math.min(3, tag?.nationalIdeas?.[key] | 0));
 export function nationalIdeaSlots(tag, bookmark) {
-  return (tag?.tech?.gov || 0) >= (bookmark?.techBase || 0) + 3 ? 3 : 2;
+  return Math.max(tag?.nationalPathLegacySlots || 0,
+    (tag?.tech?.gov || 0) >= (bookmark?.techBase || 0) + 3 ? 3 : 2);
 }
 
 // Costs are paid only after live validation; the same definitions drive the UI.
 export const NATIONAL_ACTIONS = {
+  expedition: { group: 'colonies', tier: 1, name: 'Frontier expedition', icon: 'flag', target: 'frontier', cost: {}, desc: 'Detach soldiers from an adjacent army to establish a supplied frontier camp. The camp needs a controlled border province to survive.' },
+  settle: { group: 'colonies', tier: 1, name: 'Develop settlement', icon: 'bricks', target: 'settlement', cost: {}, desc: 'Raise a province or expedition camp by one habitation tier over six months, gaining development. Only prosperity creates an urban center.' },
+  annex_frontier: { group: 'colonies', tier: 1, name: 'Annex settled frontier', icon: 'scales', target: 'expedition_camp', cost: {}, desc: 'Bring a planted frontier camp into the realm. Its routes open and its development counts toward the state.' },
   warehouse: { group: 'maritime', tier: 1, name: 'Foreign warehouse', icon: 'amphora', target: 'foreign_port', cost: { gold: 80, infl: 25 }, desc: 'Rent a warehouse: 12 trade power and collection rights in this market, for 2 talents a month paid to its host. Requires a home port and host opinion of at least 0.' },
   harbor: { group: 'maritime', tier: 2, name: 'Harbor concession', icon: 'anchor', target: 'warehouse', cost: { gold: 100, infl: 40 }, desc: 'Upgrade to 24 trade power and a sea supply base. Rent rises to 3 talents a month; the host must have at least 25 opinion.' },
   league: { group: 'maritime', tier: 3, name: 'Invite port court', icon: 'ship', target: 'warehouse', cost: { gold: 100, infl: 50 }, desc: 'Invite an independent port court no larger than your realm. Requires a harbor concession and 60 opinion. League loyalty falls during blockades or diplomatic hostility.' },
@@ -57,7 +61,7 @@ export const NATIONAL_ACTIONS = {
   install_claimant: { group: 'dynasty', tier: 3, name: 'Install claimant', icon: 'laurel', target: 'claimant', cost: {}, desc: 'Conclude the claimant’s war with an accepted client-kingdom settlement and seat your candidate. The normal peace acceptance and warscore rules apply.' },
   protect_heir: { group: 'dynasty', tier: 2, name: 'Offer royal protection', icon: 'shield', target: 'claimant', cost: {}, desc: 'After peaceful accession, offer the new ruler clientship through the normal diplomatic acceptance rules and influence price.' },
   dismiss_claimant: { group: 'dynasty', tier: 1, name: 'Dismiss claimant', icon: 'xmark', target: 'claimant', cost: {}, desc: 'Stop paying the household. Withdraw a pending succession compact; a claimant already crowned keeps their throne.' },
-  colony: { group: 'colonies', tier: 1, name: 'Veteran settlement', icon: 'grain', target: 'own_province', cost: { gold: 100, manpower: 1000, mar: 25 }, desc: 'Build a military colony over six months. It accumulates 100 local recruits monthly, up to 2,000, and reserves 40% autonomy. At most four colonies.' },
+  colony: { group: 'colonies', tier: 1, name: 'Station veterans', icon: 'grain', target: 'own_province', cost: { gold: 100, manpower: 1000, mar: 25 }, desc: 'Establish a military colony in inhabited land over six months. It accumulates 100 local recruits monthly, up to 2,000, and reserves 40% autonomy. At most four colonies.' },
   colony_muster: { group: 'colonies', tier: 1, name: 'Call local recruits', icon: 'spears', target: 'colony', cost: {}, desc: 'Spend 1,000 stored recruits on an infantry regiment through the province’s recruitment queue. Ordinary recruitment time still applies.' },
   district: { group: 'colonies', tier: 2, name: 'Military district', icon: 'helmet', target: 'colony', cost: { gold: 80, mar: 40 }, desc: 'Appoint a named commander; reserves grow by 200 monthly to 4,000. The district costs 2 talents a month and depends on its commander’s loyalty.' },
   district_army: { group: 'colonies', tier: 3, name: 'Commission field command', icon: 'swords', target: 'colony', cost: { gold: 40, mar: 30 }, desc: 'Spend 2,000 stored recruits to raise a two-regiment host led by the district commander. That commander leaves the district for the field. Once every two years.' },

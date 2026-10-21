@@ -710,6 +710,22 @@ button {
 .general-stars { display: inline-flex; flex: none; align-items: center; gap: 1px; color: #9b7419; vertical-align: middle; line-height: 1; }
 .general-stars svg { width: 12px; height: 12px; fill: currentColor; }
 #outliner .general-stars { color: #f1cf62; }
+.royal-command { margin-bottom: 7px; padding: 8px; border: 1px solid #8b775455; border-radius: 3px; font-size: 12px; }
+.royal-command-head { display: flex; align-items: center; gap: 5px; }
+.royal-command-head b { flex: 1; }
+.royal-command-status { margin: 4px 0 6px; color: var(--ink-soft); font-size: 11px; }
+.royal-command-controls { display: flex; gap: 5px; }
+.royal-command-controls select { flex: 1; min-width: 0; width: 0; min-height: 32px; padding: 4px; background: #e8d9b8; color: var(--ink); font: inherit; border: 1px solid #8b775477; }
+.royal-command-controls .pp-build-btn { flex: none; width: auto; min-height: 32px; padding: 5px 8px; margin: 0; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.royal-command button:disabled, .royal-command select:disabled { opacity: .45; cursor: default; }
+.royal-command-reason { display: block; margin-top: 5px; font-size: 11px; color: #815b35; }
+.royal-command details { margin-top: 7px; font-size: 11px; }
+.royal-command summary { cursor: pointer; }
+.royal-command details p { margin: 5px 0 0; line-height: 1.4; }
+@media (max-width: 600px), (pointer: coarse) {
+  .royal-command-controls select, .royal-command-controls .pp-build-btn { min-height: 44px; }
+  .royal-command summary { min-height: 44px; display: flex; align-items: center; gap: 5px; }
+}
 
 /* National paths: compact groups; details and action selectors open on demand. */
 .national-ideas { display: grid; gap: 7px; font-size: 12px; }

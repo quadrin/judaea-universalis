@@ -986,16 +986,13 @@ export const BOOKMARK_167 = {
       // Everything above is the war and the ground it took. These three
       // strands are the other half of the century: what the state became
       // (col 0), where it stood among the kings (col 1), and who was in the
-      // room when it decided anything (col 2). None of them waits on the war
-      // — no root here declares a prerequisite, because Simon was writing to
-      // Rome while the Akra was still garrisoned. Columns 0 and 1 read state
-      // the AI keeps too (SPEC §102); column 2 reads the court, which the
-      // engine ticks for the player alone (SPEC §34), so nothing outside it
-      // depends on it and an AI chain never stalls there.
+      // room when it decided anything (col 2). Each strand continues the
+      // mission directly above it. Columns 0 and 1 read state the AI keeps;
+      // column 2 reads the player's court, so nothing outside it depends on it.
       {
         id: 'hm_chancery_of_simon', name: 'The Chancery of Simon',
         civil: 'govt',
-        icon: 'quill', col: 0, row: 6,
+        icon: 'quill', col: 0, row: 6, requires: ['hm_desert_keys'],
         desc: 'Embrace three institutions of the age: a rising in the hills discovering that a '
           + 'state is mostly clerks, and that the clerks must be ours.',
         rewardText: '"The Clerks of the Nation": administration costs −10% permanently, +60 governance points.',
@@ -1043,7 +1040,7 @@ export const BOOKMARK_167 = {
       {
         id: 'hm_among_the_powers', name: 'A People the Chanceries Have Heard Of',
         civil: 'region',
-        icon: 'flag', col: 1, row: 6,
+        icon: 'flag', col: 1, row: 6, requires: ['hm_hired_ranks'],
         desc: 'Stand among the five first courts of the world — the standing the realm panel '
           + 'prints, which counts development.',
         rewardText: '"Friends of the Senate and People": +1 diplomatic seat, +50 influence points.',
@@ -1094,7 +1091,7 @@ export const BOOKMARK_167 = {
       {
         id: 'hm_great_assembly', name: 'The Bronze Tablets',
         civil: 'court',
-        icon: 'speaker', col: 2, row: 6,
+        icon: 'speaker', col: 2, row: 6, requires: ['hm_queens_peace'],
         desc: 'Bring both halves of the court to 65 approval at once: the pious party and the '
           + 'great houses, under whichever names the year gives them.',
         rewardText: '"The Decree of the Assembly": +0.25 legitimacy a month and −0.5 unrest everywhere, permanently.',

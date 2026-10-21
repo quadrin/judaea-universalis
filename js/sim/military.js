@@ -16,6 +16,7 @@ import {
   MOUNTED_TERRAIN, armGenName,
 } from '../data/units.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
+import { royalBattleRisk, royalArmyRemoved, royalCanReturn } from './royal_command.js';
 import { combatFrontage, fieldStrength } from './frontage.js';
 import { landRoutes, fortControl, fortStep, fortApproachFor } from './fort_control.js';
 import { offensiveCall, commitAllyCall, settlePromises, rememberAllianceBreak, expansionPreview, applyExpansion, warEnthusiasm } from './strategy.js';
@@ -743,10 +744,11 @@ export function spawnArmy(ctx, tag, provName, opts) {
   engageIfNeeded(ctx, army);
   return id;
 }
-export function removeArmy(ctx, armyId) {
+export function removeArmy(ctx, armyId, destroyed = false) {
   const g = ctx.game;
   const a = g.armies[armyId];
   if (!a) return;
+  royalArmyRemoved(ctx, a, destroyed || a.men <= 0);
   delete g.armies[armyId];
   if (g.ui && g.ui.selectedArmy === armyId) g.ui.selectedArmy = null;
   if (g.ui && Array.isArray(g.ui.selectedArmies)) {
@@ -774,6 +776,7 @@ export function disbandArmyCore(ctx, army) {
     return { ok: false, why: 'A routed army must reform before it can stand down.' };
   }
   if (army.aboard) return { ok: false, why: 'An embarked army must return to land first.' };
+  if (army.general?.royalId && !royalCanReturn(ctx, army)) return { ok: false, why: 'A ruler or heir must return to controlled home territory before their army can disband.' };
   const t = g.tags[army.tag];
   if (!t) return { ok: false, why: 'The army has no realm to return to.' };
   const p = ctx.byId(army.prov);
@@ -990,7 +993,7 @@ function routArmy(ctx, army) {
     if (army.tag === ctx.game.playerTag) {
       ctx.bus.emit('notify', { title: 'Army destroyed', text: army.name + ' was wiped out with no line of retreat.', type: 'bad' });
     }
-    removeArmy(ctx, army.id);
+    removeArmy(ctx, army.id, true);
     return;
   }
   army.path = path;
@@ -1008,6 +1011,7 @@ function battleRound(ctx, b) {
     return;
   }
   if (!atk.length || !def.length) { endBattle(ctx, b, atk.length ? 'atk' : 'def'); return; }
+  for (const a of atk.concat(def)) royalBattleRisk(ctx, a);
   const p = ctx.byId(b.prov);
   const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
   const defBonus = terr ? num(terr.defBonus, 0) : 0;
@@ -1086,7 +1090,7 @@ function battleRound(ctx, b) {
       if (a.tag === g.playerTag) {
         ctx.bus.emit('notify', { title: 'Army annihilated', text: a.name + ' was destroyed to the last man at ' + (p ? p.name : 'the field') + '.', type: 'bad', provName: p ? p.name : undefined });
       }
-      removeArmy(ctx, a.id);
+      removeArmy(ctx, a.id, true);
     }
   } else {
     for (const a of losers.slice()) routArmy(ctx, a);
@@ -1597,6 +1601,7 @@ export function battleInfo(ctx, provId) {
         morale: num(a.morale), maxMorale: Math.max(0.01, num(a.maxMorale, 1)),
         general: a.general ? {
           name: a.general.name,
+          royalRole: a.general.royalRole || null,
           fire: num(a.general.fire), shock: num(a.general.shock), maneuver: num(a.general.maneuver),
         } : null,
       });
@@ -2581,6 +2586,7 @@ export function mergeInto(ctx, fromId, intoId) {
   if (!f || !into || f === into) return false;
   if (f.tag !== into.tag || f.prov !== into.prov) return false;
   if (f.inBattle || into.inBattle || f.retreating || into.retreating) return false;
+  if (f.general?.royalId && into.general && !royalCanReturn(ctx, f)) return false;
   const totalMen = f.men + into.men;
   into.morale = totalMen > 0 ? (num(f.morale) * f.men + num(into.morale) * into.men) / totalMen : into.morale;
   // Mixed patterns blend by weight of men — merging levies into legions dilutes them.
@@ -2705,6 +2711,8 @@ export function switchTagCore(ctx, from, to) {
     if (p.controller === from) p.controller = to;
     if (p.siege && p.siege.by === from) p.siege.by = to;
     if (p.conversion && p.conversion.by === from) p.conversion.by = to;
+    if (p.settlement?.by === from) p.settlement.by = to;
+    if (p.expedition?.by === from) p.expedition.by = to;
     for (const mod of p.modifiers || []) if (mod.chapterOwner === from) mod.chapterOwner = to;
     for (const order of p.unitQueue || []) if (order.tag === from) order.tag = to;
   }

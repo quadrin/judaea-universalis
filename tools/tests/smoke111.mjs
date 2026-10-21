@@ -63,21 +63,16 @@ const { game, ctx, actions } = boot('JUD', 42);
   // the five roads not taken.
   const WAR = 16, CIVIL = 22;
   ok(v.length === 27, 'twenty-seven nodes (the §192/§197 tree + the §211 civil band + the §183/§192 roads not taken): ' + v.length);
-  // Only the chain's own root is workable among the war objectives; the §211
-  // strand roots are workable from turn one by design (they wait on nothing),
-  // and the §183 hypotheticals are standing invitations, so their roots open.
+  // Only the top of a column can be an independent root. Civil objectives
+  // continue the war objectives displayed above them.
   ok(v[0].status === 'current' && v.slice(1, WAR).every((m) => m.status === 'locked'),
     'only the root is workable among the war objectives at start: ' + v.map((m) => m.status).join(','));
-  ok(v.slice(WAR, CIVIL).every((m) => m.civil)
-    && v[WAR].status === 'current' && v[WAR + 1].status === 'locked'
-    && v[WAR + 2].status === 'current' && v[WAR + 3].status === 'locked'
-    && v[WAR + 4].status === 'current' && v[WAR + 5].status === 'locked',
-    'each civil strand opens at its root and its second node waits: '
-    + v.slice(WAR, CIVIL).map((m) => m.id + '=' + m.status).join(','));
+  ok(v.slice(WAR, CIVIL).every(m => m.civil && m.status === 'locked'),
+    'civil continuations wait for the mission above them');
   ok(v[CIVIL].hypothetical && v[CIVIL].status === 'current'
     && v[CIVIL + 1].status === 'locked' && v[CIVIL + 2].status === 'locked'
-    && v[CIVIL + 3].status === 'current' && v[CIVIL + 4].status === 'current',
-    'the hypothetical roots stand open (the §192 forks are roots too), the children wait: '
+    && v[CIVIL + 3].status === 'locked' && v[CIVIL + 4].status === 'locked',
+    'only the top hypothetical is a root; lower nodes wait: '
     + v.slice(CIVIL).map((m) => m.id + '=' + m.status).join(','));
   ok(v.slice(0, CIVIL).every((m) => !m.hypothetical) && v.slice(CIVIL).every((m) => m.hypothetical),
     'the roads not taken are flagged hypothetical, the objectives are not');
@@ -85,13 +80,9 @@ const { game, ctx, actions } = boot('JUD', 42);
     'requires resolved to ids');
   ok(v[1].requiresNames.join(',') === 'Arm the Nation', 'and to names for the tooltip');
   ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,0,2,1,0,2,1,2,0,0,0,1,1,2,2,4,4,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
-  // §254: a row is the band the difficulty ladder measured for the mission's
-  // own check, relaxed down so no child draws above a prerequisite and packed
-  // so no two share a cell. What the ladder cannot price — a flag, a date, a
-  // court's own politics, which is what the §183 hypotheticals in column four
-  // are — keeps the row its author wrote.
-  ok(v.map((m) => m.row).join(',') === '1,2,2,4,3,4,3,6,5,3,4,6,5,5,7,7,1,3,6,7,8,9,0,1,2,3,4',
-    'rows are the ladder\'s, not the author\'s: ' + v.map((m) => m.row).join(','));
+  ok(v.every(m => !v.some(p => p.col === m.col && p.row < m.row)
+    || m.requires.includes(v.filter(p => p.col === m.col && p.row < m.row).sort((a, b) => b.row - a.row)[0].id)),
+    'the mission drawn immediately above is always a prerequisite');
   ok(v.every((m) => m.icon), 'every node wears an icon');
 }
 
@@ -107,11 +98,8 @@ console.log('== branches advance independently; the prefix does not lie ==');
   ok(realm.claimMission(ctx, 'jm_arm_the_nation').ok, 'and the hand on the panel banks it');
   ok(actions.getMissions()[0].status === 'done', 'the root completes when it is claimed');
   const open = actions.getMissions().filter((m) => m.status === 'current').map((m) => m.id);
-  ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,'
-    + 'jm_the_generals_of_the_districts,jm_the_third_power,jm_the_altar_and_the_knives,'
-    + 'hy_house_stands,hy_royal_robes,hy_granaries',
-    'three war branches open at once, plus the three §211 strand roots and the '
-    + 'standing hypotheticals: ' + open.join(','));
+  ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,hy_house_stands',
+    'three war columns open independently while lower civil and hypothetical missions wait: ' + open.join(','));
   // Complete a LATER branch first: the Parthian mission, by opinion. One
   // month, one claim — the point of the block is that a branch deep in the
   // table can be banked while its neighbours wait, not how fast either goes.

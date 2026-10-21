@@ -43,26 +43,23 @@ assert(ERAS.find(e => e.bookmark.id === '40bce').legacy);
 assert.match(ERAS.find(e => e.bookmark.id === '67bce').bookmark.name, /Struggle/);
 for (const era of ERAS) {
   const s = scene(era.bookmark.id), before = JSON.stringify(s.game), report = s.actions.getChapterStrategy();
-  assert(report?.actions.length >= 4, era.bookmark.id);
+  assert(report?.actions.length >= 2, era.bookmark.id);
   for (const action of report.actions) assert(CHAPTER_ACTIONS[action.key]);
   assert.equal(JSON.stringify(s.game), before, 'chapter queries must not mutate saves');
   assert(!s.actions.runChapterStrategy('made_up', {}).ok);
 }
 console.log('PASS eleven visible bookmarks, legacy 40 BCE, complete menus and read-only queries');
 {
-  const s = scene('931bce'), p = s.places[0], before = s.t.manpower;
-  enact(s, 'levy_charter', { province: p.id }); assert(p.autonomy >= .4);
-  months(s.ctx, 12); assert.equal(s.t.manpower, before + 500);
-  enact(s, 'direct_rule', { province: p.id }); assert(p.modifiers.some(m => m.id === 'chapter_revocation'));
-  assert(p.autonomy < .4);
-  enact(s, 'tax_charter', { province: p.id }); assert(p.modifiers.some(m => m.id === 'chapter_charter' && m.effects.prodMult === 1.25));
+  const s = scene('931bce'), p = s.places[0];
+  assert(!s.actions.runChapterStrategy('levy_charter', { province: p.id }).ok);
+  assert(!s.actions.runChapterStrategy('tax_charter', { province: p.id }).ok);
   const capital = s.places.find(v => v.name !== s.t.capital);
   enact(s, 'capital', { province: capital.id });
   capital.controller = 'REB'; months(s.ctx, 2); assert.equal(s.t.chapterStrategy.projects[0].left, 18);
   capital.controller = s.tag; months(s.ctx, 18);
   assert.equal(s.t.capital, capital.name); assert(mil.resolveTagMult(s.ctx, s.tag, 'adminMult') < 1);
   const snapshot = JSON.stringify(s.game); monthlyChapterStrategies(s.ctx); assert.equal(JSON.stringify(s.game), snapshot, 'monthly consequences are idempotent');
-  console.log('PASS charters, annual levies, revocation, interrupted capital construction and completion');
+  console.log('PASS retired charter decisions, interrupted capital construction and completion');
 }
 {
   const s = scene('732bce');
@@ -134,11 +131,12 @@ console.log('PASS eleven visible bookmarks, legacy 40 BCE, complete menus and re
 }
 {
   const s = scene('66ce'), p = s.places[0], before = s.t.manpower;
-  enact(s, 'regional_command', { province: p.id }); assert.equal(s.t.manpower, before - 1000); assert(p.unitQueue.some(q => q.type === 'inf'));
-  enact(s, 'unified_command'); assert(s.t.chapterStrategy.unified); assert(!s.t.chapterStrategy.charters[p.id]);
+  assert(!s.actions.runChapterStrategy('regional_command', { province: p.id }).ok);
+  assert(!s.actions.runChapterStrategy('unified_command', {}).ok);
+  assert.equal(s.t.manpower, before);
   s.t.atWarWith = ['ROM']; enact(s, 'council_tax'); assert(!s.actions.getChapterDecision('council_tax', {}).ok);
   enact(s, 'requisition', { province: p.id }); assert(!s.actions.getChapterDecision('requisition', { province: p.id }).ok);
-  console.log('PASS council commands, paid recruitment, centralization and non-repeatable emergency powers');
+  console.log('PASS regional commands consolidated into Ideas and non-repeatable emergency powers');
 }
 {
   const s = scene('132ce'), p = s.places[0], original = s.t.manpower;
@@ -167,10 +165,10 @@ for (const settlement of ['local_government', 'recognition', 'independence']) {
 console.log('PASS distinct political settlements with real war-score costs and no province credit');
 {
   const s = scene('529ce'), p = s.places[0], faith = p.religion;
-  enact(s, 'municipal_charter', { province: p.id }); enact(s, 'tolerance', { province: p.id });
+  assert(!s.actions.runChapterStrategy('municipal_charter', { province: p.id }).ok); enact(s, 'tolerance', { province: p.id });
   assert.equal(p.religion, faith); assert(p.modifiers.some(m => m.effects?.taxMult === .8));
   enact(s, 'religious_uniformity', { province: p.id }); assert.equal(p.modifiers.filter(m => m.id === 'chapter_local_policy').length, 1);
-  console.log('PASS municipal funding and mutually replacing local religious policies');
+  console.log('PASS retired municipal shortcut and mutually replacing local religious policies');
 }
 {
   const s = scene('614ce');
@@ -220,7 +218,7 @@ console.log('PASS distinct political settlements with real war-score costs and n
         assert(Number.isFinite(t.manpower), era.bookmark.id + ': finite manpower');
       }
       assert.equal(reviveGame(JSON.parse(JSON.stringify(s.game))).bookmarkId, era.bookmark.id);
-      if (era.bookmark.id === '66ce') assert(era.bookmark.playableTags.some(v => v.tag !== s.tag && Object.keys(s.game.tags[v.tag].chapterStrategy?.charters || {}).length));
+      assert(!Object.values(s.game.tags).some(t => Object.values(t.chapterStrategy?.charters || {}).some(c => ['levy_charter', 'tax_charter', 'municipal_charter', 'regional_command'].includes(c.kind))), 'AI cannot recreate retired charters');
     }
   } finally { console.warn = original; }
   assert.deepEqual(warnings, [], 'all chapter systems must run through the real monthly clock without swallowed exceptions');

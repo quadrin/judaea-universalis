@@ -925,6 +925,17 @@ export function initUI(staticCtx) {
     try { return flagChip(tag, DEFINES, 15, !!link, state.ctx && state.ctx.game); } catch (e) { return ''; }
   }
 
+  // Context links open the same idea-path controls used throughout the game.
+  document.addEventListener('click', e => {
+    const link = e.target instanceof Element && e.target.closest('[data-open-ideas]');
+    if (!link || !state.ctx) return;
+    e.preventDefault(); e.stopPropagation();
+    const group = link.dataset.openIdeas, province = Number(link.dataset.ideasProvince) || null;
+    closeLedger(); closeWarOverview(); closeBattleWindow();
+    setSelectedProv(0); fleetPanel.close();
+    nationPanel.open(null, 'ideas', group, province);
+  }, true);
+
   // Any linked flag chip, anywhere (ledger, war overview, battle window,
   // province panel, outliner, the realm panel's own diplomacy rows), opens
   // that nation's court. Capture phase so the chip wins over whatever row

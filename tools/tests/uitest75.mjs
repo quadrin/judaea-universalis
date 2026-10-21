@@ -10,14 +10,15 @@ try {
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   await page.route('**/favicon.ico', r => r.fulfill({ status: 204, body: '' }));
   await page.goto((process.env.JU_BASE_URL || 'http://127.0.0.1:8641/') + 'icons/');
-  await page.setContent('<!doctype html><html><head><base href="/"></head><body><div id="app"><div id="ui-root"><aside id="nation-panel" class="hidden"></aside></div></div></body></html>');
+  await page.setContent('<!doctype html><html><head><base href="/"></head><body><div id="app"><div id="ui-root"><aside id="nation-panel" class="hidden"></aside><aside id="province-panel" class="hidden"></aside></div></div></body></html>');
   await page.addStyleTag({ url: '/styles.css' });
   await page.evaluate(async () => {
-    const [{ DEFINES }, { MAP_DATA }, { ERAS }, { buildProvinceMapping }, sim, { createNationPanel }, national] = await Promise.all([
-      import('/js/data/defines.js'), import('/js/data/map_data.js'), import('/js/data/compendium.js'), import('/js/data/map_profile.js'), import('/js/sim/init.js'), import('/js/ui/nation_panel.js'), import('/js/sim/national_ideas.js'),
+    const [{ DEFINES }, { MAP_DATA }, { ERAS }, { buildProvinceMapping }, sim, { createNationPanel }, national, { createProvincePanel }] = await Promise.all([
+      import('/js/data/defines.js'), import('/js/data/map_data.js'), import('/js/data/compendium.js'), import('/js/data/map_profile.js'), import('/js/sim/init.js'), import('/js/ui/nation_panel.js'), import('/js/sim/national_ideas.js'), import('/js/ui/province_panel.js'),
     ]);
     const snap = await fetch('/tools/geom-snapshot.json').then(r => r.json());
     const panel = createNationPanel(document.getElementById('nation-panel'), { DEFINES, onClose() {}, onPeaceClick() {}, onWarClick() {}, onProvinceClick() {} });
+    const provincePanel = createProvincePanel(document.getElementById('province-panel'), { DEFINES, onClose() {}, onWar() {} });
     window.loadNational = id => {
       const bookmark = ERAS.find(e => e.bookmark.id === id).bookmark;
       const provinceMap = buildProvinceMapping(MAP_DATA, bookmark), to = id => provinceMap?.[id] || id;
@@ -31,7 +32,8 @@ try {
       const t = game.tags[tag]; t.treasury = 5000; t.manpower = 30000; t.points = { gov: 999, infl: 999, mar: 999 };
       if (id === '66ce') for (const name of ['Jerusalem', 'Emmaus', 'Jericho', 'Joppa']) { const p = ctx.prov(name); p.owner = p.controller = tag; p.siege = null; p.unrest = 0; }
       const actions = sim.gameActions(ctx); panel.bind(ctx, actions); panel.open(null, 'ideas');
-      window.nationalTest = { ctx, actions, panel, national };
+      provincePanel.bind(ctx, actions);
+      window.nationalTest = { ctx, actions, panel, national, provincePanel };
     };
     window.loadNational('66ce');
   });
@@ -64,6 +66,46 @@ try {
   assert.equal(await page.locator('.ni-record').count(), 1);
   if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/national-paths-desktop.png' });
   console.log('PASS keyboard inspection, actual adoption and warehouse, gated actions and stable selectors');
+
+  await page.evaluate(() => window.loadNational('66ce'));
+  const settlement = await page.evaluate(() => {
+    const { ctx, panel } = window.nationalTest;
+    const p = ctx.prov('Jericho'); p.habitation = 'frontier';
+    panel.open(null, 'ideas', 'colonies', p.id);
+    return p.id;
+  });
+  await path('colonies').locator('[data-ni-buy]').click();
+  await page.evaluate(id => window.nationalTest.provincePanel.open(id), settlement);
+  assert.equal(await page.locator('#province-panel [data-open-ideas="colonies"]:visible').count(), 1);
+  assert.equal(await page.locator('#province-panel [data-integ="settle"], #province-panel [data-waste]').count(), 0);
+  assert(await path('colonies').evaluate(el => el.open));
+  assert.equal(await page.locator('[data-ni-target="settle"]').inputValue(), String(settlement));
+  await page.evaluate(() => window.nationalTest.provincePanel.close());
+  await page.locator('[data-ni-open="action:settle"] > summary').click();
+  const influence = await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl);
+  await page.locator('[data-ni-act="settle"]').click();
+  assert(await page.evaluate(id => window.nationalTest.ctx.byId(id).settlement?.by === 'JUD', settlement));
+  assert((await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl)) < influence);
+  assert(await path('colonies').locator('.ni-record progress').count());
+  await page.evaluate(() => {
+    const { ctx, provincePanel } = window.nationalTest;
+    const p = ctx.game.provinces.find(p => p?.owner === 'WASTE');
+    p.impassable = true; p.settleable = true;
+    provincePanel.open(p.id);
+  });
+  assert.equal(await page.locator('#province-panel [data-ref="wasteBlock"] [data-open-ideas="colonies"]').count(), 1);
+  assert.equal(await page.locator('#province-panel [data-waste]').count(), 0);
+  await page.evaluate(() => window.nationalTest.provincePanel.close());
+  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/consolidated-paths-desktop.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert(await page.locator('#nation-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
+  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/consolidated-paths-mobile.png' });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.evaluate(() => window.nationalTest.panel.open('ROM', 'court'));
+  assert.equal(await page.locator('[data-intrigue="subvert"], [data-intrigue="pretender"]').count(), 0);
+  assert.equal(await page.locator('#nation-panel [data-open-ideas="subversion"]').count(), 1);
+  assert.equal(await page.locator('#nation-panel [data-open-ideas="dynasty"]').count(), 1);
+  console.log('PASS frontier actions live in Military Colonies, province shortcuts preserve targets, real settlement starts and foreign intrigue has no duplicate controls');
 
   await page.evaluate(() => window.loadNational('66ce'));
   await path('federation').locator(':scope > summary').click();

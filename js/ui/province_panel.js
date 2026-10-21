@@ -109,7 +109,7 @@ const RISING_LABELS = {
           <button class="pp-build-btn" data-integ="rule" data-ref="integRule">${icon('scales')}<span>Establish Rule</span></button>
           <button class="pp-build-btn" data-integ="convert" data-ref="integConv">${icon('altar')}<span>Convert Faith</span></button>
           <button class="pp-build-btn" data-integ="integrate" data-ref="integInteg">${icon('scroll')}<span>Integrate</span></button>
-          <button class="pp-build-btn hidden" data-integ="settle" data-ref="integSettle">${icon('bricks')}<span>Settle the Land</span></button>
+          <button class="pp-build-btn hidden" data-open-ideas="colonies" data-ref="integSettle">${icon('grain')}<span>Military Colonies</span></button>
         </div>
       </div>
       <div class="pp-build hidden" data-ref="releaseBlock">
@@ -131,9 +131,7 @@ const RISING_LABELS = {
         <div class="pp-build-title">The Unclaimed Waste</div>
         <div class="pp-constr hidden" data-ref="wasteCampRow"></div>
         <div class="pp-build-grid">
-          <button class="pp-build-btn hidden" data-waste="expedition" data-ref="wasteExpedition">${icon('flag')}<span>Send an Expedition</span></button>
-          <button class="pp-build-btn hidden" data-waste="settle" data-ref="wasteSettle">${icon('bricks')}<span>Plant a Settlement</span></button>
-          <button class="pp-build-btn hidden" data-waste="annex" data-ref="wasteAnnex">${icon('scales')}<span>Annex the Land</span></button>
+          <button class="pp-build-btn" data-open-ideas="colonies" data-ref="wasteIdeas">${icon('grain')}<span>Military Colonies</span></button>
         </div>
       </div>
       <div class="pp-unrest" data-ref="unrestRow">
@@ -265,8 +263,7 @@ const RISING_LABELS = {
       const b = e.target instanceof Element ? e.target.closest('[data-integ]') : null;
       if (!b || b.classList.contains('disabled') || !actions) return;
       const fn = b.dataset.integ === 'rule' ? 'establishRule'
-        : b.dataset.integ === 'settle' ? 'settleProvince'
-          : b.dataset.integ === 'integrate' ? 'integrateProvince' : 'convertProvince';
+        : b.dataset.integ === 'integrate' ? 'integrateProvince' : 'convertProvince';
       try { if (typeof actions[fn] === 'function') actions[fn](provId); }
       catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
       refresh();
@@ -305,15 +302,6 @@ const RISING_LABELS = {
       }
       cedeArmed = 0;
       try { actions.cedeProvince(provId, to); } catch (err) { warnOnce('cede-province', err); }
-      refresh();
-    });
-    refs.wasteBlock.addEventListener('click', (e) => {
-      const b = e.target instanceof Element ? e.target.closest('[data-waste]') : null;
-      if (!b || b.classList.contains('disabled') || !actions) return;
-      const fn = b.dataset.waste === 'expedition' ? 'sendExpedition'
-        : b.dataset.waste === 'settle' ? 'settleProvince' : 'annexWasteland';
-      try { if (typeof actions[fn] === 'function') actions[fn](provId); }
-      catch (err) { warnOnce('waste-' + b.dataset.waste, err); }
       refresh();
     });
     // Mothball the fort, or man it again (SPEC §293).
@@ -735,12 +723,9 @@ const RISING_LABELS = {
     const showSettle = !!info.showSettle && !info.settling;
     refs.integSettle.classList.toggle('hidden', !showSettle);
     if (showSettle) {
-      const settleTerms = `Settle the Land — ${info.settleCost} influence points\n`
-        + `Over a few months the province grows into a ${(info.settleToName || 'settlement').toLowerCase()}, `
-        + 'gaining development; newly claimed land becomes developable. A little unrest while the newcomers settle in.';
-      refs.integSettle.classList.toggle('disabled', !info.canSettle);
-      refs.integSettle.dataset.tt = info.canSettle
-        ? settleTerms : `${info.whyNotSettle}\n――――――\n${settleTerms}`;
+      refs.integSettle.classList.remove('disabled');
+      refs.integSettle.dataset.ideasProvince = String(provId);
+      refs.integSettle.dataset.tt = 'Develop settlements and station veterans in Ideas → Military Colonies.';
     }
     refs.settleRow.classList.toggle('hidden', !info.settling);
     if (info.settling) {
@@ -846,32 +831,8 @@ const RISING_LABELS = {
         `${icon('flag')}<span class="pp-constr-name">${esc(label)}</span>`
         + `<span class="pp-constr-left">${esc(right)}</span>`);
     }
-    const exp = info.expedition || {};
-    refs.wasteExpedition.classList.toggle('hidden', !exp.show);
-    if (exp.show) {
-      const terms = `Send an Expedition — ${fmtInt(exp.men || 0)} men and ${exp.cost} talents\n`
-        + 'Soldiers from an adjacent army march into the waste and pitch camp. '
-        + 'Plant a settlement there and the land can be annexed.';
-      refs.wasteExpedition.classList.toggle('disabled', !exp.can);
-      refs.wasteExpedition.dataset.tt = exp.can ? terms : `${exp.why}\n――――――\n${terms}`;
-    }
-    const st = info.settle;
-    refs.wasteSettle.classList.toggle('hidden', !(st && st.show));
-    if (st && st.show) {
-      const terms = `Plant a Settlement — ${st.cost} influence points\n`
-        + `Over a few months the camp grows into a ${String(st.toName || 'frontier').toLowerCase()} `
-        + 'of our own people — the step annexation waits on.';
-      refs.wasteSettle.classList.toggle('disabled', !st.can);
-      refs.wasteSettle.dataset.tt = st.can ? terms : `${st.why}\n――――――\n${terms}`;
-    }
-    const ax = info.annex || {};
-    refs.wasteAnnex.classList.toggle('hidden', !ax.show);
-    if (ax.show) {
-      const terms = `Annex the Land — ${ax.cost} governance points\n`
-        + 'The planted waste enters the realm: owned, passable (though still harsh), and counted.';
-      refs.wasteAnnex.classList.toggle('disabled', !ax.can);
-      refs.wasteAnnex.dataset.tt = ax.can ? terms : `${ax.why}\n――――――\n${terms}`;
-    }
+    refs.wasteIdeas.dataset.ideasProvince = String(provId);
+    refs.wasteIdeas.dataset.tt = 'Frontier expeditions, settlement development and annexation are managed in Ideas → Military Colonies.';
   }
 
   // 'Assault the walls' — shown while our side besieges; enabled when the sim

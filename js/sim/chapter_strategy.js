@@ -1,9 +1,8 @@
-import { CHAPTER_ACTIONS, chapterStrategyProfile } from '../data/chapter_strategy.js';
+import { CHAPTER_ACTIONS, FOLDED_CHAPTER_ACTIONS, chapterStrategyProfile } from '../data/chapter_strategy.js';
 import { num, clamp, armiesOf, opinionOf, isHostile, sameSide, declareIndependenceCore,
-  independenceInfo, joinWar, tagGen, chronicle, isOffmapTag, isHumanChair } from './military.js';
+  independenceInfo, joinWar, chronicle, isOffmapTag, isHumanChair } from './military.js';
 import { incomeBreakdown } from './economy.js';
 import { isCoastal } from './navy.js';
-import { queueUnitRecruitment } from './recruitment.js';
 import { shiftFaction, factionDefs } from './factions.js';
 import { blockadedState } from './embargo.js';
 import { dominantEstate } from './estates.js';
@@ -66,16 +65,16 @@ function pledgeWilling(ctx, tag, partner, lord) {
 function effectiveCost(ctx, tag, key) {
   const cost = { ...CHAPTER_ACTIONS[key].cost }, s = read(ctx.game.tags[tag]);
   if (key === 'regulars') { cost.gold *= s.reforms + 1; cost.mar += s.reforms * 20; }
-  if (key === 'regional_command') cost.manpower = 1000;
   return cost;
 }
 export function chapterActionInfo(ctx, tag, key, args = {}) {
+  if (FOLDED_CHAPTER_ACTIONS[key]) return { ok: false, why: 'This institution is managed in Ideas → ' + FOLDED_CHAPTER_ACTIONS[key] + '.', cost: {} };
   const profile = chapterStrategyProfile(ctx.bookmark?.id), t = ctx.game.tags[tag], def = CHAPTER_ACTIONS[key];
   if (!profile?.actions.includes(key) || !t?.alive || !def) return { ok: false, why: 'This decision is unavailable in this chapter.' };
   const s = read(t), p = ctx.byId(Number(args.province)), partner = String(args.partner || '');
   const cost = effectiveCost(ctx, tag, key);
   let why = costWhy(t, cost);
-  if (!why && ['levy_charter', 'tax_charter', 'municipal_charter', 'regional_command', 'direct_rule'].includes(key)
+  if (!why && key === 'direct_rule'
       && (t.nationalStrategy?.colonies?.[p?.id] || t.nationalStrategy?.cities?.[p?.id])) why = 'Integrate the existing national-path charter through Ideas first.';
   if (!why && ['province', 'port'].includes(def.target) && (!p || p.impassable || p.owner !== tag || p.controller !== tag || p.siege)) why = 'Choose an owned, controlled province without a siege.';
   if (!why && def.target === 'occupation' && (!p || p.impassable || p.controller !== tag || p.owner === tag || !hostile(ctx, tag, p.owner))) why = 'Choose occupied enemy territory.';
@@ -100,9 +99,7 @@ export function chapterActionInfo(ctx, tag, key, args = {}) {
   if (!why && key === 'capital' && (s.projects.some(v => v.key === key) || t.capital === p?.name || s.capital === p?.id)) why = 'Choose a new capital; only one capital project may run at a time.';
   if (!why && key === 'regulars' && s.reforms >= 3) why = 'All three army reforms are complete.';
   if (!why && key === 'court_house' && s.houses[args.estate]) why = 'This house is already bound by an agreement.';
-  if (!why && ['levy_charter', 'tax_charter', 'municipal_charter', 'regional_command'].includes(key) && s.charters[p?.id]) why = 'Revoke the existing charter through a royal governor first.';
   if (!why && key === 'direct_rule' && !s.charters[p?.id] && num(p?.autonomy) <= 0) why = 'This province already has direct royal administration.';
-  if (!why && key === 'unified_command' && (s.unified || !Object.values(s.charters).some(v => v.kind === 'regional_command'))) why = 'Requires regional commands; command can only be unified once.';
   if (!why && key === 'council_tax' && !t.atWarWith?.length) why = 'Emergency taxation requires a war.';
   if (!why && key === 'draw_reserves' && (!s.sites[p?.id] || num(s.sites[p?.id].reserves) < 1)) why = 'No stored recruits are available here.';
   if (!why && ['local_administration', 'imperial_administration'].includes(key) && !s.patron) why = 'Negotiate a patron agreement first.';
@@ -174,21 +171,10 @@ export function runChapterAction(ctx, tag, key, args = {}) {
   } else if (key === 'court_house') {
     s.houses[args.estate] = { until: now(ctx) + 60, arrears: 0 };
     shiftFaction(ctx, tag, args.estate, 15); t.manpower += 1000;
-  } else if (['levy_charter', 'regional_command', 'tax_charter', 'municipal_charter'].includes(key)) {
-    s.charters[p.id] = { kind: key, age: 0, loyalty: 70 };
-    p.autonomy = Math.max(num(p.autonomy), .4); p.modifiers ||= [];
-    modifier(p.modifiers, 'chapter_charter', def.name, { prodMult: ['tax_charter', 'municipal_charter'].includes(key) ? 1.25 : 1, unrest: -1 });
-    estateShift(ctx, tag, p, 8);
-    if (key === 'municipal_charter') t.treasury += 50;
-    if (key === 'regional_command') queueUnitRecruitment(ctx, tag, p.id, 'inf', { manpower: 1000, gen: tagGen(ctx, tag) });
-  } else if (key === 'direct_rule' || key === 'unified_command') {
-    const places = key === 'direct_rule' ? [p] : Object.keys(s.charters).map(id => ctx.byId(Number(id))).filter(q => q?.owner === tag && q.controller === tag);
-    for (const q of places) {
-      if (s.charters[q.id]) { estateShift(ctx, tag, q, -12); modifier(q.modifiers ||= [], 'chapter_revocation', 'Revoked provincial privileges', { unrest: 3 }, 24); }
-      delete s.charters[q.id]; q.modifiers = (q.modifiers || []).filter(m => m.id !== 'chapter_charter');
-      q.autonomy = Math.max(0, num(q.autonomy) - .15);
-    }
-    if (key === 'unified_command') s.unified = true;
+  } else if (key === 'direct_rule') {
+    if (s.charters[p.id]) { estateShift(ctx, tag, p, -12); modifier(p.modifiers ||= [], 'chapter_revocation', 'Revoked provincial privileges', { unrest: 3 }, 24); }
+    delete s.charters[p.id];
+    p.autonomy = Math.max(0, num(p.autonomy) - .15);
   } else if (key === 'requisition') {
     t.treasury += 35; t.manpower += 500;
     modifier(p.modifiers ||= [], 'chapter_requisition', 'Requisitioned stores', { taxMult: .75, prodMult: .75, unrest: 3 }, 24);
@@ -300,7 +286,6 @@ export function monthlyChapterStrategies(ctx) {
       } else {
         const autonomy = Math.max(num(p.autonomy), .4); p.autonomy = autonomy;
         charter.loyalty = clamp(charter.loyalty + (num(t.legitimacy) >= 40 ? 1 : -3), 0, 100);
-        if (charter.age % 12 === 0 && ['levy_charter', 'regional_command'].includes(charter.kind) && charter.loyalty >= 40) t.manpower += 500;
       }
     }
     for (const [estate, pact] of Object.entries(s.houses)) {

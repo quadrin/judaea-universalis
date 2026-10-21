@@ -7,6 +7,7 @@ import { isCoastal, blockadedBy, navalGen } from './navy.js';
 import { queueUnitRecruitment } from './recruitment.js';
 import { rollCourtier } from './realm.js';
 import { fireRevolt } from './unrest.js';
+import { settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore, habLevel } from './economy.js';
 
 const month = d => (d.y > 0 ? d.y - 1 : d.y) * 12 + d.m - 1;
 const now = ctx => month(ctx.game.date);
@@ -86,6 +87,14 @@ export function buyNationalIdea(ctx, tag, key) {
 export function nationalActionInfo(ctx, tag, key, args = {}) {
   const d = NATIONAL_ACTIONS[key], t = ctx.game.tags[tag];
   if (!d || !t?.alive) return { ok: false, why: 'Unavailable action.', cost: {} };
+  if (['expedition', 'settle', 'annex_frontier'].includes(key)) {
+    const probe = (key === 'expedition' ? expeditionInfo : key === 'settle' ? settlementInfo : annexInfo)(ctx, tag, Number(args.province));
+    const cost = key === 'expedition' ? { gold: probe.cost, manpower: probe.men }
+      : { [key === 'settle' ? 'infl' : 'gov']: probe.cost };
+    const why = nationalIdeaLevel(t, 'colonies') < 1 ? 'Requires Veterans on the Land.'
+      : probe.can ? '' : probe.why || 'Choose an eligible frontier province.';
+    return { ok: !why, why, cost };
+  }
   const s = read(t), p = ctx.byId(Number(args.province)), target = String(args.target || p?.owner || '');
   const other = ctx.game.tags[target], port = s.ports[p?.id], colony = s.colonies[p?.id], city = s.cities[p?.id], network = s.networks[p?.id], c = s.claimants[target];
   const cost = key === 'protect_heir' ? { infl: clientOfferInfo(ctx, tag, target)?.cost || 100 } : { ...d.cost };
@@ -157,6 +166,7 @@ export function nationalActionInfo(ctx, tag, key, args = {}) {
     if (p?.id === capitalProvince(ctx, tag)?.id || colony || city || t.chapterStrategy?.charters?.[p?.id]) fail('Choose a non-capital province without an existing charter or military settlement.');
     if (key === 'colony' && Object.keys(s.colonies).length >= 4) fail('At most four military colonies.');
     if (key === 'charter' && Object.keys(s.cities).length >= 5) fail('At most five chartered cities.');
+    if (key === 'colony' && (p?.habitation === 'uninhabited' || p?.settlement)) fail('Develop the settlement before stationing veterans.');
   }
   if (key === 'colony_muster' && colony?.reserves < 1000) fail('Requires 1,000 local recruits.');
   if (key === 'district' && colony?.district && colony.commander) fail('This district already has a commander.');
@@ -201,6 +211,51 @@ function clearModifier(p, id, tag) { if (p) p.modifiers = (p.modifiers || []).fi
 function queueLocal(ctx, tag, p, type) {
   return queueUnitRecruitment(ctx, tag, p.id, type, { cost: 0, gen: type === 'ship' ? navalGen(ctx, tag) : tagGen(ctx, tag) });
 }
+// One-time upgrade of the old, parallel institutions. Existing investment is
+// retained without charging again, duplicating monthly income, or rerolling RNG.
+export function consolidateNationalPaths(ctx) {
+  if (ctx.game.flags.nationalPathsConsolidated) return;
+  const grant = (t, key, tier) => {
+    t.nationalIdeas ||= {};
+    t.nationalIdeas[key] = Math.max(nationalIdeaLevel(t, key), tier);
+  };
+  for (const [tag, t] of Object.entries(ctx.game.tags)) {
+    for (const [id, v] of Object.entries(t.chapterStrategy?.charters || {})) {
+      if (!['levy_charter', 'tax_charter', 'municipal_charter', 'regional_command'].includes(v.kind)) continue;
+      const p = ctx.byId(Number(id));
+      if (p?.owner === tag) {
+        const s = book(t);
+        if (s.cities[id]) grant(t, 'federation', 1);
+        else if (s.colonies[id]) grant(t, 'colonies', s.colonies[id].district ? 2 : 1);
+        else if (v.kind === 'regional_command') {
+          grant(t, 'colonies', 2);
+          s.colonies[id] = { left: 0, total: 6, reserves: 0, loyalty: num(v.loyalty, 70), district: true,
+            commander: { name: 'Commander of ' + p.name, fire: 1, shock: 2, maneuver: 1 } };
+          p.autonomy = Math.max(.4, num(p.autonomy));
+        } else {
+          grant(t, 'federation', 1);
+          s.cities[id] = { service: v.kind === 'levy_charter' ? 'levy' : 'fiscal', funds: 0, reserves: 0,
+            loyalty: num(v.loyalty, 70), integrating: 0 };
+          p.autonomy = Math.max(.45, num(p.autonomy));
+          provinceModifier(p, 'national_city', tag, { prodMult: .8 });
+        }
+      }
+      if (p) p.modifiers = (p.modifiers || []).filter(m => m.id !== 'chapter_charter' || m.chapterOwner && m.chapterOwner !== tag);
+      delete t.chapterStrategy.charters[id];
+    }
+  }
+  for (const p of ctx.game.provinces) {
+    const by = p?.settlement?.by || p?.expedition?.by;
+    if (ctx.game.tags[by]) grant(ctx.game.tags[by], 'colonies', 1);
+  }
+  // Grandfather existing investments even if their combination exceeds today's
+  // slot allowance. No path is erased and no new path bypasses the usual limit.
+  for (const t of Object.values(ctx.game.tags)) {
+    const used = Object.keys(NATIONAL_IDEAS).filter(k => nationalIdeaLevel(t, k)).length;
+    if (used > nationalIdeaSlots(t, ctx.bookmark)) t.nationalPathLegacySlots = used;
+  }
+  ctx.game.flags.nationalPathsConsolidated = true;
+}
 function installed(ctx, tag, target, c) {
   const o = ctx.game.tags[target];
   o.ruler = { ...c.candidate, title: o.ruler?.title || 'Ruler' }; o.heir = null; o.regency = false;
@@ -211,6 +266,11 @@ function installed(ctx, tag, target, c) {
 }
 export function runNationalAction(ctx, tag, key, args = {}) {
   const check = nationalActionInfo(ctx, tag, key, args); if (!check.ok) return check;
+  if (['expedition', 'settle', 'annex_frontier'].includes(key)) {
+    const result = (key === 'expedition' ? expeditionStart : key === 'settle' ? settlementStart : annexCore)(ctx, tag, Number(args.province));
+    if (result.ok) note(ctx, tag, NATIONAL_ACTIONS[key].name + ': ' + ctx.byId(Number(args.province)).name + '.');
+    return result;
+  }
   const t = ctx.game.tags[tag], s = book(t), p = ctx.byId(Number(args.province));
   const target = String(args.target || p?.owner || ''), o = ctx.game.tags[target], c = s.claimants[target];
   const cd = `${key}:${p?.id || target}`, time = now(ctx);
@@ -471,6 +531,14 @@ function aiNationalIdeas(ctx, time) {
 
 function optionsFor(ctx, tag, d) {
   const s = read(ctx.game.tags[tag]), g = ctx.game;
+  if (['frontier', 'settlement', 'expedition_camp'].includes(d.target)) {
+    return g.provinces.filter(p => p && p.settleable !== false && (d.target === 'frontier'
+      ? p.owner === 'WASTE' && p.impassable && !p.expedition && [...(ctx.geom.neighbors[p.id] || [])].some(id => ctx.byId(id)?.controller === tag)
+      : d.target === 'expedition_camp' ? p.owner === 'WASTE' && p.expedition?.by === tag
+        : (p.owner === tag && !p.impassable || p.owner === 'WASTE' && p.expedition?.by === tag)
+          && habLevel(ctx, p) < (ctx.DEFINES.SETTLEMENT?.maxTier ?? 3)))
+      .map(p => ({ id: String(p.id), name: p.name, args: { province: p.id } }));
+  }
   if (d.target === 'none') return [{ id: '', name: 'Realm', args: {} }];
   if (d.target === 'crown' || d.target === 'claimant') return Object.entries(g.tags)
     .filter(([k]) => d.target === 'claimant' ? !!s.claimants[k] : foreign(ctx, tag, k) && hereditary(ctx, k) && !g.tags[k].overlord && reach(ctx, tag, k))
@@ -489,6 +557,14 @@ export function nationalStrategyView(ctx, tag = ctx.game.playerTag) {
   }));
   const records = [];
   const add = (group, id, name, icon, stats, tip, progress) => records.push({ group, id, name, icon, stats, tip, progress });
+  for (const p of ctx.game.provinces) if (p?.settlement?.by === tag || p?.expedition?.by === tag) {
+    const left = p.settlement?.by === tag ? Math.max(0, p.settlement.monthsLeft) : null;
+    const total = Math.max(left || 0, ctx.DEFINES.SETTLEMENT?.months || 6);
+    add('colonies', 'frontier:' + p.id, p.name, left !== null ? 'bricks' : 'flag',
+      left !== null ? [['hourglass', left + 'm']] : [['spears', p.expedition.men]],
+      left !== null ? 'Settlement development underway. Loss of control cancels construction.' : 'Frontier camp. Develop a settlement, then annex it.',
+      left !== null ? { done: total - left, total } : null);
+  }
   for (const [id, v] of Object.entries(s.ports)) add('maritime', id, ctx.byId(Number(id))?.name || id, v.league ? 'ship' : v.level >= 2 ? 'anchor' : 'amphora',
     [['laurel', Math.floor(v.loyalty) + '%'], ['coins', (v.level >= 2 ? 3 : 2) + '/m'], ...(v.shipProject ? [['hourglass', v.shipProject + 'm']] : [])],
     `${v.league ? 'League member' : v.level >= 2 ? 'Harbor concession' : 'Warehouse'} · ${v.active ? 'Active' : 'Suspended'} · ${v.level >= 2 ? 24 : 12} trade power. Rent is paid to the host. Blockades suspend trade and supply.`);

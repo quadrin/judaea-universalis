@@ -9,6 +9,10 @@ import { TRADE_ROUTES } from '../data/trade.js';
 import { fireEvent } from './events.js';
 import { raiseCrisisTo } from './crisis.js';
 import { shiftPopToReligion, driftPopToReligion, shareOf, popTotal } from './population.js';
+import { royalPersonFields, syncRoyalCommands } from './royal_command.js';
+
+import { missionId, missionGraph } from './mission_graph.js';
+export { missionId, isMissionTree } from './mission_graph.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -42,6 +46,7 @@ export function rollCourtier(ctx, tag) {
 function crown(ctx, tag, heir, oldTitle) {
   const t = ctx.game.tags[tag];
   t.ruler = {
+    ...royalPersonFields(heir),
     name: String(heir.name || 'Successor'),
     title: String(oldTitle || 'Ruler'),
     gov: clamp(Math.round(num(heir.gov, 2)), 0, 6),
@@ -51,6 +56,7 @@ function crown(ctx, tag, heir, oldTitle) {
   };
   t.heir = null;
   t.regency = false;
+  syncRoyalCommands(ctx);
 }
 
 // The player's own successions deserve a full event card, not a six-second
@@ -144,6 +150,7 @@ export function rulerDies(ctx, tag, causeText) {
     try { raiseCrisisTo(ctx, tag, 'succession', 70); } catch (e) { warnOnce('crisis', 'stoke failed', e); }
     text = `${old.name} ${causeText || 'has died'} with no designated heir. ${nr.name} takes the ${title.toLowerCase()} amid whispers and drawn knives — and the question of the succession is open. (−25 legitimacy, −1 stability)`;
   }
+  syncRoyalCommands(ctx);
   chronicle(ctx, 'ruler', (t.name || tag) + ': ' + text);
   // The player's own succession pauses the game with a proper card; other
   // courts' deaths stay world news in the toast stream.
@@ -203,12 +210,12 @@ export function monthlySuccession(ctx) {
       if (govHas(ctx, tag, 'elects')) {
         t.electionIn = num(t.electionIn, 48) - 1;
         if (t.electionIn <= 0) {
-          const inc = { name: r.name, gov: num(r.gov, 2), infl: num(r.infl, 2), mar: num(r.mar, 2), age: num(r.age, 50) };
+          const inc = { ...royalPersonFields(r), name: r.name, gov: num(r.gov, 2), infl: num(r.infl, 2), mar: num(r.mar, 2), age: num(r.age, 50) };
           const ch = electWinner(ctx, tag);
           const score = (c) => num(c.gov) + num(c.infl) + num(c.mar);
           const winner = score(inc) >= score(ch) ? inc : ch;
           const reelected = winner === inc;
-          t.ruler = { name: winner.name, title: r.title || 'Head of Government', gov: winner.gov, infl: winner.infl, mar: winner.mar, age: winner.age };
+          t.ruler = { ...royalPersonFields(winner), name: winner.name, title: r.title || 'Head of Government', gov: winner.gov, infl: winner.infl, mar: winner.mar, age: winner.age };
           t.electionIn = 48;
           t.legitimacy = clamp(num(t.legitimacy) + 5, 0, 100);
           chronicle(ctx, 'ruler', (t.name || tag) + ': ' + (reelected
@@ -713,11 +720,9 @@ export function monthlyHolySites(ctx) {
 // prerequisite is the old LADDER: each mission implicitly requires the one
 // before it, and they complete strictly in order. A chain where any mission
 // declares `requires` (or claims a grid `col`) is a TREE: a mission unlocks
-// when every prerequisite is done, a mission with none is a root, and
-// parallel branches advance independently — a stalled war no longer holds
-// the building program hostage, which is the entire reason EU4 draws these
-// as trees. `col`/`row`/`icon` are layout, owned by the panel; the sim reads
-// only `requires`.
+// when every prerequisite and its vertical predecessor are done. The top
+// mission in each column is its root; parallel columns advance independently. `mission_graph.js` resolves authored columns/rows and declared
+// prerequisites into the same graph for the sim and panel.
 //
 // The record is `t.missionsDone`, the ids completed, in table order.
 // `t.missionIdx` stays maintained as the longest completed PREFIX of the
@@ -774,16 +779,6 @@ export function missionsFor(ctx, tag) {
   const inherited = contentForTag(ctx, table, tag);
   if (Array.isArray(inherited) && inherited.length) return chapterChain(inherited, ctx.bookmark && ctx.bookmark.id);
   return null;
-}
-
-export function missionId(m, i) {
-  return (m && m.id) ? String(m.id) : 'm' + i;
-}
-
-// Tree or ladder? Any explicit prerequisite (or a claimed column) makes it a tree.
-export function isMissionTree(list) {
-  return Array.isArray(list) && list.some((m) => m
-    && ((Array.isArray(m.requires) && m.requires.length) || Number.isFinite(m.col)));
 }
 
 // The set of completed mission ids for a tag. `missionsDone` is the record;
@@ -867,7 +862,8 @@ export function missionForkState(ctx, m) {
 export function missionClosedSet(ctx, list) {
   const closed = new Set();
   if (!Array.isArray(list) || !list.length) return closed;
-  const ids = list.map((m, i) => missionId(m, i));
+  const graph = missionGraph(list);
+  const ids = graph.nodes.map(n => n.id);
   for (let i = 0; i < list.length; i++) {
     let st = null;
     try { st = missionForkState(ctx, list[i]); } catch (e) { warnOnce('mfork:' + ids[i], e); }
@@ -878,8 +874,8 @@ export function missionClosedSet(ctx, list) {
     let grew = false;
     for (let i = 0; i < list.length; i++) {
       const m = list[i];
-      if (closed.has(ids[i]) || !m || !Array.isArray(m.requires)) continue;
-      for (const rid of m.requires) {
+      if (closed.has(ids[i]) || !m) continue;
+      for (const rid of graph.nodes[i].requires) {
         if (!closed.has(String(rid))) continue;
         closed.add(ids[i]); grew = true; break;
       }
@@ -933,16 +929,10 @@ export function missionForkLedger(ctx, tag) {
   return out;
 }
 
-// May mission `i` be worked on? Explicit prerequisites answer first; in a
-// tree a mission without any is a root; on a ladder it needs its predecessor.
-export function missionUnlocked(list, i, done, tree) {
-  const m = list[i];
-  if (m && Array.isArray(m.requires) && m.requires.length) {
-    for (const id of m.requires) if (!done.has(String(id))) return false;
-    return true;
-  }
-  if (tree) return true;
-  return i === 0 || done.has(missionId(list[i - 1], i - 1));
+// The same graph controls readiness, direct claims, AI rewards and the view.
+export function missionUnlocked(list, i, done) {
+  const graph = missionGraph(list), node = graph.nodes[i];
+  return !!node && !graph.invalid.has(node.id) && node.requires.every(id => done.has(id));
 }
 
 // Write the done set back: `missionsDone` in table order (ids from other
@@ -997,7 +987,6 @@ export function checkMissions(ctx) {
     const list = missionsFor(ctx, tag);
     if (!t || !t.alive || !Array.isArray(list)) continue;
     try {
-      const tree = isMissionTree(list);
       const done = missionDoneSet(t, list);
       const closed = missionClosedSet(ctx, list);
 
@@ -1028,7 +1017,7 @@ export function checkMissions(ctx) {
           if (!m || typeof m.check !== 'function') continue;
           const id = missionId(m, i);
           if (done.has(id) || closed.has(id)) continue;
-          if (!missionUnlocked(list, i, done, tree)) continue;
+          if (!missionUnlocked(list, i, done)) continue;
           let ok = false;
           try { ok = !!m.check(mctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
           if (!ok) continue;
@@ -1080,7 +1069,7 @@ export function checkMissions(ctx) {
           if (!m || typeof m.check !== 'function') continue;
           const id = missionId(m, i);
           if (done.has(id) || closed.has(id)) continue;
-          if (!missionUnlocked(list, i, done, tree)) continue;
+          if (!missionUnlocked(list, i, done)) continue;
           let ok = false;
           try { ok = !!m.check(mctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
           if (!ok) continue;
@@ -1109,7 +1098,6 @@ export function claimMission(ctx, id) {
   const list = missionsFor(ctx, tag);
   if (!t || t.alive === false || !Array.isArray(list)) return { ok: false, why: 'none' };
   const want = String(id);
-  const tree = isMissionTree(list);
   const done = missionDoneSet(t, list);
   const closed = missionClosedSet(ctx, list);
   for (let i = 0; i < list.length; i++) {
@@ -1119,7 +1107,7 @@ export function claimMission(ctx, id) {
     if (mid !== want) continue;
     if (done.has(mid)) return { ok: false, why: 'done' };
     if (closed.has(mid)) return { ok: false, why: 'shut' };
-    if (!missionUnlocked(list, i, done, tree)) return { ok: false, why: 'locked' };
+    if (!missionUnlocked(list, i, done)) return { ok: false, why: 'locked' };
     let ready = false;
     // Read through possession, exactly as the monthly pass reads it (SPEC
     // §259) — a claim decided on a looser question than the one that lit the
@@ -1129,7 +1117,15 @@ export function claimMission(ctx, id) {
     try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + mid, 'mission reward threw', mid, e); }
     done.add(mid);
     writeMissionState(t, list, done);
-    if (Array.isArray(t.missionReady)) t.missionReady = t.missionReady.filter((x) => String(x) !== mid);
+    // A claimed parent can make its child eligible immediately, even paused.
+    // Refresh this court only; claiming is not a monthly turn for AI courts.
+    const mctx = missionCtx(ctx), nextClosed = missionClosedSet(ctx, list);
+    t.missionReady = list.flatMap((next, ni) => {
+      const nid = missionId(next, ni);
+      if (!next || done.has(nid) || nextClosed.has(nid) || !missionUnlocked(list, ni, done)) return [];
+      try { return typeof next.check === 'function' && next.check(mctx) ? [nid] : []; }
+      catch (e) { warnOnce('mcheck:' + nid, 'mission check threw', nid, e); return []; }
+    });
     ctx.bus.emit('notify', {
       title: 'Mission complete — ' + (m.name || mid),
       text: m.rewardText || 'The realm advances.',

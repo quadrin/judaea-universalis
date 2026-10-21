@@ -261,7 +261,7 @@ const seated = (t, id) => (t.modifiers || []).some((m) => m.id === id);
   force(w, 'AGR', {
     treasury: 450, tech: { infl: 6, gov: 7 }, tiers: 3,
     men: 5000, at: 'Caesarea Philippi', regard: { ROM: 200 },
-    grant: ['Chalcis'],
+    grant: ['Chalcis', 'Tiberias', 'Tarichaea'], // the preceding lake/curriculum missions must be accomplished too
   });
   expectPaid(w, 'ADI', GROWTH[2].added, '66ce ADI');
   expectPaid(w, 'AGR', GROWTH[3].added, '66ce AGR');

@@ -879,7 +879,10 @@ renderer.render → overlay.draw → labels.update.
   candidates per empty seat.
   Generals show one to three gold stars on map standards, in the outliner,
   unit inspection and battle rows. The display rating sums fire, shock and
-  maneuver: 0–5 pips gives one star, 6–9 gives two, and 10+ gives three.
+  maneuver: 0–8 pips gives one star, 9–10 gives two, and 11+ gives three.
+  With the existing recruitment rolls, fresh hires are approximately 85%
+  one-star, 13% two-star and 2% three-star. Historical starting commanders
+  retain their authored skills; battle-earned increases can promote a general.
   Unled armies have no stars; stacked map standards show the best rating
   present. Tooltips retain the name, individual skills, traits and rating
   thresholds. Ratings derive from current skills, including earned increases,
@@ -22234,3 +22237,156 @@ siege collaboration, city integration and rebellion, AI purchases, nation
 formation, old saves and active-project persistence. `uitest75` checks actual
 adoption and actions, keyboard use, refusal reasons, stable controls, foreign
 privacy and mobile layout across all bookmarks.
+
+## §313 — Rulers and heirs in personal command
+
+Court → Personal Command lets an adult ruler or designated heir command an
+army for no monarch points. A person must be at least sixteen, and a council
+or regency cannot take personal command. Commission requires an army with an
+empty command, stationary in owned, controlled home territory and outside
+battle, siege, retreat or embarkation. Recall requires the same safe return.
+Hiring another general cannot overwrite a ruler or heir in command. Disbanding
+or merging into an occupied command cannot bypass the return requirement;
+merging into an empty command transfers the same person and skills.
+
+Each person receives a stable command identity and a saved skill profile.
+Skills are rolled once, using ordinary general recruitment with an adjustment
+for martial aptitude; office does not guarantee an elite commander. Recall
+and recommission retain that profile without rerolling. Earned command skills
+survive saves, army transfers, nation formation and an heir's accession. A
+reelected incumbent retains their identity. A replacement ruler loses the
+outgoing person's command, including during paused event choices. Historical
+event scripts retain their authored deaths and succession outcomes.
+
+Field service adds mortality to ordinary ruler mortality:
+
+| Situation | Additional death chance |
+| --- | --- |
+| Stationary in controlled home territory | 0.1% per month |
+| On campaign, moving or otherwise outside a safe home camp | 0.3% per month |
+| Fighting a battle | 0.1% per battle day |
+| Army destroyed | 20% |
+
+Monthly checks run once per saved calendar month. Peaceful disbanding and
+ordinary army transfers do not roll destruction mortality. A ruler's death
+uses normal succession, including regency, elections or an heirless crisis.
+An heir's death removes the designated heir and costs ten legitimacy. The
+Court cards expose the probabilities and consequences in keyboard- and
+touch-accessible details. Foreign inspection does not expose these controls.
+
+Fresh bookmarks link existing named army commanders to matching rulers or
+heirs rather than automatically making every ruler a field general. Examples
+include Judah Maccabee as an heir-general in 167 BCE and Simon bar Kosiba as
+ruler-general in 132 CE. Their three-star assessments, and Shapur II's in
+351 CE, are documented game interpretations of their command records, with
+references in `data/royal_command.js`. Other authored opening skills remain
+intact, including weaker commanders. Modern political leaders do not acquire
+automatic opening commands. Old saves gain identity links without resetting
+their generals' earned skills or applying fresh-bookmark rating overrides.
+
+`sim/royal_command.js` shares lifecycle rules between combat, succession and
+Court actions without importing other simulation modules. `ui/royal_command.js`
+keeps selections, expanded details, focus and scroll across refreshes. Mobile
+controls provide at least 44px touch targets. `smoke218` covers real combat
+deaths, heirless crises, natural and scripted succession, stable skills,
+save/load, command-transfer safeguards and every bookmark's opening roster.
+`uitest76` exercises actual Court actions, keyboard disclosure, refusals,
+desktop/mobile layout and foreign inspection.
+
+## §314 — One home for national-path institutions
+
+Military Colonies owns the frontier pipeline: detach an expedition from an
+adjacent army, develop its settlement, then annex the planted frontier. Its
+first idea also unlocks habitation development in owned provinces. These are
+national-path actions using the existing economy validators, prices and monthly
+construction, with no second charge or parallel construction system. The same
+idea requirement applies to the economy cores and compatibility actions, so
+calling an old action cannot bypass it. Station Veterans establishes the local
+military reserve in inhabited land; an empty or actively developing settlement
+must be developed first. Districts and field commands retain their existing
+second- and third-idea progression. Settlement and expedition ownership follows
+nation formation.
+
+Province inspectors retain progress and a single Military Colonies navigation
+button. It opens the Ideas tab and the relevant path, carrying the selected
+province into eligible action selectors, including after adopting a locked
+path. It does not execute a separate settlement action. The path lists active
+settlement projects and expedition camps alongside its other institutions.
+
+Federated Rule replaces the chapter levy, tax and municipal charter actions.
+Military Colonies replaces chapter regional commands and their separate
+unification action. Their old chapter controls, creation rules and annual levy
+are retired. Ordinary royal administration cannot revoke a national-path city
+or military district; integration uses that institution's own progression and
+loyalty rules. The instant Resettle the Land manpower decision is also retired.
+Distinct chapter reconstruction, domestic supply depots, religious policy,
+patronage agreements and authored historical event choices remain available.
+
+Foreign courts retain ordinary gifts to parties. Instant Pay Against Them and
+Back a Claimant actions are retired, including direct calls to their old core.
+Offensive operations use developed provincial networks in Subversion; foreign
+claimants use named households, compacts and succession wars in Dynastic
+Ambition. Foreign-court controls link to those idea paths. Maritime Leagues
+continues to own its foreign warehouse, supply-base and league agreements;
+ordinary domestic trade and fleet recruitment are not duplicate institutions.
+
+A one-time load upgrade converts existing chapter levy charters into levy
+cities, tax/municipal charters into fiscal cities, and regional commands into
+completed military districts. Loyalty is retained. Existing national records
+win on overlap, preserving their funds, recruits and integration progress.
+Legacy charter modifiers and records are removed so they cannot keep paying
+an annual levy or stack production bonuses. Migration does not charge money,
+create national manpower or advance RNG. Existing armies and recruitment queues
+remain intact. Established institutions grant the relevant idea tier; a legacy
+combination above today's slot limit is retained without granting an additional
+free slot. Active settlement projects and camps retain their progress and grant
+the first Military Colonies idea. A saved flag makes this conversion idempotent.
+
+`smoke216` covers exact single charges through the frontier pipeline, core idea
+gates, actual annexation, deterministic save migration, retained city balances,
+no duplicate annual levy, grandfathered slots, read-only queries and formation.
+The chapter and diplomacy regressions check retired shortcuts instead of their
+superseded effects. `uitest75` checks actual settlement execution, province
+shortcuts and target selection, foreign-court controls and desktop/mobile layout.
+
+## §315 — The mission above is a hard prerequisite
+
+Every lower mission in a column requires the mission displayed immediately
+above it to be accomplished. Meeting its own conditions, an old ready flag,
+or an explicit dependency on an earlier ancestor cannot bypass that immediate
+predecessor. Completing a parent means claiming its reward, not merely meeting
+its conditions. This rule applies to human readiness, direct claim actions,
+AI completion, civil objectives, hypothetical branches and formable chains.
+Independent top-of-column roots and cross-column requirements remain valid.
+
+`sim/mission_graph.js` builds one memoized graph from the authored columns,
+rows and explicit prerequisites. Topological placement preserves declared
+cross-column dependencies and adds the preceding node in each column as an
+additional requirement. New edges point only to previously placed nodes, so
+they cannot create cycles. Missing prerequisites, duplicate IDs and authored
+cycles fail closed. Chapter-filtered formables build their graph from the
+filtered chain. Views and graph construction do not mutate saves or RNG.
+
+The mission view uses the same edges for connectors, prerequisite names and
+locked states. Difficulty measurements can add vertical space, but cannot
+reorder the graph or turn a lower mission into an independent root. Closed
+forks propagate to descendants through inferred edges as well as explicit
+ones. The Hasmonean Chancery of Simon, People the Chanceries Have Heard Of and
+Bronze Tablets also explicitly name their preceding desert, hired-ranks and
+queen's-peace missions in the content table.
+
+Claiming a parent refreshes that court's ready list immediately, so a child
+whose conditions already hold can be claimed while paused. This does not
+advance the calendar or process AI rewards. Claims always revalidate actual
+conditions, prerequisites and fork closure; stale saved readiness or stale
+clickable markup cannot award a locked mission. Existing completed records
+and reward history survive loading.
+
+`smoke217` reproduces all three pictured Hasmonean missions with their own
+conditions satisfied, verifies locked claims before and after save/load,
+claims each actual predecessor, checks immediate child eligibility and
+one-time rewards, and exercises AI order, closed forks and invalid graphs.
+It audits 829 bookmark and chapter-filtered formable mission entries against
+the vertical-predecessor rule. `uitest77` verifies locked medallions and named
+requirements, rejects stale clickable markup, claims parents and children
+through the actual panel with mouse/keyboard, and checks the mobile tree.

@@ -1,58 +1,15 @@
 // Judaea Universalis — paying into somebody else's politics (SPEC §164). DOM-free.
 //
-// WHY THIS FILE EXISTS. The diplomacy a player could do to a foreign court was
-// a closed list: subsidise it, guarantee it, name it a rival, league against
-// it, take it as a client, or fight it. Every one of those is a transaction
-// between two courts conducted in daylight between the two rulers. None of
-// them reaches INSIDE the other court.
-//
-// Which is a strange hole for this period specifically, because reaching
-// inside somebody else's court is most of what actually happened in it. The
-// Pharisee rebels invited Demetrius III to invade their own country. Antipater
-// ran Hyrcanus like a hand puppet for twenty years. Both Hasmonean brothers
-// sent money to Rome and the legate Scaurus took four hundred talents from one
-// of them. Herod bought a Senate. Every one of those is in this game already —
-// as a scripted card, fired on a date, with the player watching. The verbs
-// existed in the fiction and not in the hands.
-//
-// So: three operations, priced in influence and gold, aimed at a named party
-// in a named foreign court (SPEC §163 gave every court parties to aim at).
-//
-//   PATRONIZE  raise a party. The cheap, open, deniable one. Nobody minds very
-//              much; their court warms to you slightly. This is how you buy a
-//              friendly neighbour without a treaty.
-//   SUBVERT    lower a party. This is the one that matters, because §163's
-//              pressure clock counts hostile parties — so a court you have
-//              been paying against for a decade reverses its policy, then loses
-//              its ruler, then loses a province, then comes apart. You did that.
-//              It can be traced back to you, and when it is, it is expensive.
-//   PRETENDER  back a claimant. Not a nudge — an intervention. It opens the
-//              §98 succession crisis at the stage where the houses married into
-//              theirs discover an interest in their constitution, and where the
-//              throne is already weak it puts a banner in the field. Caught
-//              doing this, you are not a rival; you are an enemy.
-//
-// TWO RULES THE WHOLE FILE OBEYS.
-//
-// First, you cannot reach a court you have no way of reaching. Adjacency, a
-// war, an alliance, or the target being a power everyone has heard of — one of
-// those, or your agents have nowhere to walk. A landlocked Judaea does not run
-// operations in Britain.
-//
-// Second, this is the PLAYER's verb. The AI does not run intrigue against the
-// player or against each other, for the same reason it does not raise punitive
-// coalitions (SPEC §59): an unseen system that quietly wrecks your court is not
-// a game mechanic, it is a bug report. What the AI gets instead is §163 —
-// courts that come apart on their own, honestly, whether or not anybody paid.
+// Open gifts to foreign court parties remain ordinary diplomacy. Offensive
+// intrigue and claimants now use national paths (SPEC §314); old commands
+// return a refusal without spending resources or advancing the RNG.
 
 import {
-  num, clamp, chronicle, addOpinion, tagDef, livingTag,
+  num, chronicle, addOpinion, livingTag,
   setDiploCd, diploCdActive, diploCdMonthsLeft,
 } from './military.js';
-import { raiseCrisisTo } from './crisis.js';
-import { courtSeats, courtApproval, shiftCourt, ensureCourt, COURT } from './courts.js';
+import { courtSeats, courtApproval, shiftCourt } from './courts.js';
 import { standingOf } from './standing.js';
-import { fireRevolt } from './unrest.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -79,28 +36,7 @@ export const INTRIGUE = {
     detect: 0,
     warmth: 5,
   },
-  subvert: {
-    id: 'subvert',
-    name: 'Pay against them',
-    infl: 35,
-    gold: 60,
-    shift: -10,
-    cooldownMonths: 24,
-    detect: 0.35,
-    opinionHit: -25,
-    infamy: 2,
-  },
-  pretender: {
-    id: 'pretender',
-    name: 'Back a claimant',
-    infl: 60,
-    gold: 150,
-    cooldownMonths: 120,
-    detect: 0.5,
-    opinionHit: -50,
-    infamy: 5,
-    crisisTo: 70,
-  },
+
 };
 
 // ------------------------------------------------------------------- reach
@@ -171,6 +107,11 @@ export function intrigueInfo(ctx, tag, target, kind, fid) {
     whyNot: '',
   };
   try {
+    if (kind === 'subvert' || kind === 'pretender') {
+      out.whyNot = kind === 'subvert' ? 'Develop a provincial network in Ideas → Subversion.'
+        : 'Shelter a named claimant in Ideas → Dynastic Ambition.';
+      return out;
+    }
     if (!spec) { out.whyNot = 'No such operation.'; return out; }
     const live = livingTag(ctx, target);
     const t = g.tags[tag];
@@ -204,34 +145,6 @@ export function intrigueInfo(ctx, tag, target, kind, fid) {
   } catch (e) { warnOnce('info', 'intrigueInfo failed', e); out.whyNot = 'The channel is confused.'; return out; }
 }
 
-// Discovery. A single roll at the moment of the act — the period's own
-// standard of tradecraft, which is to say a letter is intercepted or it is not.
-function caught(ctx, spec) {
-  if (!spec.detect) return false;
-  try { return ctx.rng.chance(spec.detect); }
-  catch (e) { warnOnce('roll', 'detection roll failed', e); return false; }
-}
-
-function exposure(ctx, tag, target, spec, what) {
-  const g = ctx.game;
-  const t = g.tags[tag];
-  const o = g.tags[target];
-  addOpinion(ctx, target, tag, spec.opinionHit);
-  t.aggression = num(t.aggression) + num(spec.infamy);
-  chronicle(ctx, 'politics',
-    ((o && o.name) || target) + ' has our letters: ' + what + ' (opinion '
-    + spec.opinionHit + ', infamy +' + spec.infamy + ')');
-  try {
-    if (ctx.bus) {
-      ctx.bus.emit('notify', {
-        title: 'Our hand is seen',
-        text: ((o && o.name) || target) + ' has the correspondence. ' + what,
-        type: 'bad',
-      });
-    }
-  } catch (e) { warnOnce('notify', 'exposure notice failed', e); }
-}
-
 // ------------------------------------------------------------------- the act
 export function runIntrigue(ctx, tag, target, kind, fid) {
   const info = intrigueInfo(ctx, tag, target, kind, fid);
@@ -256,49 +169,6 @@ export function runIntrigue(ctx, tag, target, kind, fid) {
     chronicle(ctx, 'politics', 'Silver to ' + pname + ' at ' + oname + '. (+' + spec.shift + ' to their standing)');
     return { ok: true, kind, target: live, party: pname, shift: spec.shift, caught: false };
   }
-
-  if (kind === 'subvert') {
-    shiftCourt(ctx, live, fid, spec.shift);
-    const seen = caught(ctx, spec);
-    if (seen) exposure(ctx, tag, live, spec, 'we were paying against ' + pname + '.');
-    else chronicle(ctx, 'politics', 'Our money is working against ' + pname + ' at ' + oname + '. (' + spec.shift + ' to their standing)');
-    return { ok: true, kind, target: live, party: pname, shift: spec.shift, caught: seen };
-  }
-
-  // pretender: the succession question is opened whether or not a banner goes
-  // up, because that is what backing a claimant DOES — it turns a settled
-  // house into a disputed one, and every court married into it notices.
-  try { raiseCrisisTo(ctx, live, 'succession', spec.crisisTo); } catch (e) { warnOnce('crisis', 'pretender crisis failed', e); }
-  o.legitimacy = clamp(num(o.legitimacy, 50) - 15, 0, 100);
-  let raised = false;
-  // A banner only goes up where the ground will hold one: a weak throne and a
-  // province unhappy enough to raise men. The ordinary rising machinery
-  // classifies it, so what appears may be a pretender, a separatist band or a
-  // religious rising — whichever that province was actually going to produce.
-  if (num(o.legitimacy, 50) < 55 || num(o.stability) < 1) {
-    const capital = tagDef(ctx, live).capital || null;
-    let best = null;
-    for (let i = 1; i < g.provinces.length; i++) {
-      const p = g.provinces[i];
-      if (!p || p.impassable || p.owner !== live) continue;
-      if (capital && p.name === capital) continue;
-      if (p.controller && p.controller !== live) continue;
-      if (!best || num(p.unrest) > num(best.unrest)) best = p;
-    }
-    if (best) { try { raised = !!fireRevolt(ctx, best); } catch (e) { warnOnce('rise', 'pretender rising failed', e); } }
-  }
-  // The court itself learns that the throne is disputed, whoever wins.
-  try {
-    const table = ensureCourt(ctx, live);
-    if (table && table.f) {
-      for (const k of Object.keys(table.f)) table.f[k] = clamp(num(table.f[k], 50) - 6, 0, 100);
-      table.pressure = num(table.pressure) + COURT.reversalAt * 0.5;
-    }
-  } catch (e) { warnOnce('court', 'pretender court shock failed', e); }
-  const seen = caught(ctx, spec);
-  if (seen) exposure(ctx, tag, live, spec, 'the claimant was ours.');
-  else chronicle(ctx, 'politics', 'A claimant to ' + oname + ' has found a purse, and nobody knows whose.');
-  return { ok: true, kind, target: live, raised, caught: seen };
 }
 
 // The panel's read: every operation available against one foreign court, with
@@ -322,8 +192,8 @@ export function intrigueMenu(ctx, tag, target) {
     return {
       target: live,
       parties,
-      ops: ['patronize', 'subvert', 'pretender'].map((kind) => {
-        const probe = intrigueInfo(ctx, tag, live, kind, kind === 'pretender' ? null : first);
+      ops: ['patronize'].map((kind) => {
+        const probe = intrigueInfo(ctx, tag, live, kind, first);
         return {
           kind,
           name: INTRIGUE[kind].name,

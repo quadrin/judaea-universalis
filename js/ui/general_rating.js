@@ -1,12 +1,15 @@
-import { generalRating, GENERAL_STAR_PATH } from '../data/general_rating.js';
+import { generalRating, GENERAL_STAR_PATH, GENERAL_STAR_THRESHOLDS } from '../data/general_rating.js';
 import { esc } from './format.js';
 
 export function generalDescription(general) {
   if (!general) return 'No general';
   const stars = generalRating(general);
+  const { two, three } = GENERAL_STAR_THRESHOLDS;
   const traits = Array.isArray(general.traits) && general.traits.length
     ? '\nTraits: ' + general.traits.join(', ') : '';
-  return `${general.name || 'General'} — ${stars}-star general\nFire ${general.fire || 0} · Shock ${general.shock || 0} · Maneuver ${general.maneuver || 0}${traits}\nRating by total skill: ★ 0–5 · ★★ 6–9 · ★★★ 10+.`;
+  const role = general.royalRole === 'ruler' ? '\nRuler in personal command — death triggers succession.'
+    : general.royalRole === 'heir' ? '\nHeir in personal command — death removes the designated heir.' : '';
+  return `${general.name || 'General'} — ${stars}-star general${role}\nFire ${general.fire || 0} · Shock ${general.shock || 0} · Maneuver ${general.maneuver || 0}${traits}\nRating by total skill: ★ 0–${two - 1} · ★★ ${two}–${three - 1} · ★★★ ${three}+.`;
 }
 
 export function generalStarsHtml(general) {

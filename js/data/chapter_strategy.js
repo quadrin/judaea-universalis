@@ -1,9 +1,7 @@
 // Chapter-specific decisions. Rules and prices are shared by the UI and sim.
 const action = (name, icon, target, cost, desc, extra = {}) => ({ name, icon, target, cost, desc, ...extra });
 export const CHAPTER_ACTIONS = {
-  levy_charter: action('Grant a levy charter', 'spears', 'province', { infl: 25 }, 'A local captain supplies 500 recruits each year. Provincial autonomy rises to 40%; loyalty depends on keeping the charter. Revoking it causes unrest.'),
-  tax_charter: action('Negotiate a tax charter', 'coins', 'province', { infl: 25 }, 'Merchants improve production by 25%, but retain local autonomy. A charter replaces the province’s previous agreement.'),
-  direct_rule: action('Appoint a royal governor', 'scroll', 'province', { gold: 60, gov: 40 }, 'Reduce autonomy by 15 points and end local privileges. Revoking a charter causes 24 months of unrest and lowers its estate’s approval.'),
+  direct_rule: action('Appoint a royal governor', 'scroll', 'province', { gold: 60, gov: 40 }, 'Reduce autonomy by 15 points. City charters and military districts must be integrated through their idea group first.'),
   capital: action('Establish a royal capital', 'temple', 'province', { gold: 300, gov: 60 }, 'An 18-month project costing 2 talents/month. Completion moves the capital here and reduces administrative costs by 10%.', { months: 18, upkeep: 2 }),
   tribute_cash: action('Negotiate cash tribute', 'coins', 'patron', { infl: 30 }, 'For 36 months, pay 10% of domestic revenue to a stronger patron. Receive 100 talents and recognition as a protected court; independent foreign wars require ending the agreement.'),
   tribute_troops: action('Negotiate military service', 'helmet', 'patron', { infl: 30 }, 'For 36 months, supply 150 manpower/month and 5% of domestic revenue. Receive 100 talents; fulfilling service earns self-government rights.'),
@@ -20,13 +18,10 @@ export const CHAPTER_ACTIONS = {
   patron_troops: action('Seek a patron’s troops', 'spears', 'patron', { infl: 40 }, 'The patron transfers 2,000 manpower to your recruitment pool. For 36 months, owe 10% of revenue and independent-war restrictions.'),
   patron_recognition: action('Seek recognition of the crown', 'laurel', 'patron', { gold: 60, infl: 40 }, 'Secure the patron’s backing and 10 legitimacy, with a 36-month tribute obligation. A rival patron cannot back you simultaneously.'),
   end_patron: action('Renounce the patron agreement', 'xmark', 'none', {}, 'End contractual tribute and restrictions. Breaking an unexpired agreement costs 15 legitimacy, 40 relations and the patron’s backing. An actual overlord must still be defeated in an independence war.'),
-  regional_command: action('Commission a regional commander', 'helmet', 'province', { gold: 40, mar: 25 }, 'A provincial commander raises an infantry regiment through the recruitment queue, using 1,000 manpower. Local autonomy rises to 40%; the commander supplies 500 recruits annually.'),
   requisition: action('Requisition provincial stores', 'grain', 'province', { mar: 20 }, 'Gain 35 talents and 500 manpower now. Local tax and production fall by 25% and unrest rises for two years. The same province cannot be requisitioned again during that time.'),
   council_tax: action('Vote an emergency war tax', 'coins', 'none', { infl: 30 }, 'During war, collect 80 talents. Lose 8 legitimacy and face 18 months of national unrest. The council cannot repeat the vote for 18 months.'),
-  unified_command: action('Unify the regional commands', 'swords', 'none', { gold: 120, mar: 60 }, 'End regional levy charters and reduce their autonomy. Their estates lose approval and affected provinces resist for two years. The standing army gains 5% discipline.'),
   depot: action('Prepare a hidden depot', 'granary', 'province', { gold: 90, mar: 25, manpower: 1000 }, 'Six months and 2 talents/month. Reserve 1,000 recruits and six months of field supplies here. Occupation gradually exposes and destroys the depot.', { months: 6, upkeep: 2 }),
   draw_reserves: action('Release local reserves', 'spears', 'province', {}, 'Transfer a controlled depot or support network’s stored recruits into the national pool. The reserve must rebuild before it can be drawn again.'),
-  municipal_charter: action('Negotiate a municipal charter', 'market', 'province', { infl: 35 }, 'The town advances 50 talents, gains 25% production and keeps 40% autonomy. Its estate gains approval. Royal centralization later revokes the bargain.'),
   tolerance: action('Guarantee local worship', 'altar', 'province', { infl: 30 }, 'Protect the province’s existing worship: −2 unrest and +10% production, but −20% local tax. Its religious estate approves; court hardliners lose approval.'),
   religious_uniformity: action('Enforce the court’s religious law', 'scroll', 'province', { gov: 30 }, 'Replace local worship guarantees with +15% tax and +2 unrest. Conversion still uses the existing conversion action; this policy never changes religion instantly.'),
   local_administration: action('Appoint local administrators', 'scroll', 'occupation', { gold: 40, gov: 25 }, 'Administer occupied enemy territory: collect up to 2 talents/month from its owner, but lose 1 patron standing/month. The agreement survives a normal cession to your realm.'),
@@ -38,16 +33,24 @@ export const CHAPTER_ACTIONS = {
 };
 const profile = (title, summary, actions) => ({ title, summary, actions: actions.split(' ') });
 export const CHAPTER_STRATEGIES = {
-  '931bce': profile('Consolidating the divided kingdom', 'Provincial privileges buy support and levies; direct royal rule buys revenue at a political cost.', 'levy_charter tax_charter direct_rule capital'),
-  '732bce': profile('Tribute and independence', 'Trade service for autonomy, then decide whether pledged allies make an independence war viable.', 'tribute_cash tribute_troops earn_rights pledge rise levy_charter'),
+  '931bce': profile('Consolidating the divided kingdom', 'Choose a capital and royal administration. Provincial charters develop through Federated Rule.', 'direct_rule capital'),
+  '732bce': profile('Tribute and independence', 'Trade service for autonomy, then decide whether pledged allies make an independence war viable.', 'tribute_cash tribute_troops earn_rights pledge rise'),
   '597bce': profile('Reconstruction and self-government', 'Rebuild provincial capacity while negotiating the obligations that keep your state standing.', 'restore_farms restore_towns resettle tribute_troops earn_rights'),
-  '167bce': profile('From local bands to a kingdom', 'Build provincial support networks, then pay the political and financial cost of a regular army.', 'network draw_reserves regulars regional_command direct_rule'),
+  '167bce': profile('From local bands to a kingdom', 'Build provincial support networks, then pay the political and financial cost of a regular army.', 'network draw_reserves regulars direct_rule'),
   '67bce': profile('The struggle for Judaea', 'Secure houses and foreign patrons, settle the succession, then consolidate the realm you actually won.', 'court_house patron_silver patron_troops patron_recognition earn_rights end_patron regulars capital'),
-  '66ce': profile('The war council', 'Regional commands supply the revolt; emergency powers can keep it fighting while weakening its coalition.', 'regional_command requisition council_tax unified_command regulars'),
+  '66ce': profile('The war council', 'Emergency taxes, requisitions and army reforms sustain the revolt at a political cost. Regional commands develop through Military Colonies.', 'requisition council_tax regulars'),
   '132ce': profile('A prepared resistance', 'Invest in reserves before the front reaches them. Networks survive occupation briefly; depots need protection.', 'depot network draw_reserves regulars'),
-  '351ce': profile('The imperial opening', 'Watch the empire’s other military commitments and choose between local government, recognition and independence at the peace table.', 'regional_command network requisition regulars'),
-  '529ce': profile('A coalition of towns', 'Municipal privileges and local worship guarantees determine who funds and supports your government.', 'municipal_charter tolerance religious_uniformity direct_rule network'),
+  '351ce': profile('The imperial opening', 'Watch the empire’s other military commitments and choose between local government, recognition and independence at the peace table.', 'network requisition regulars'),
+  '529ce': profile('A coalition of towns', 'Local worship guarantees and provincial supporters shape the coalition. Municipal charters develop through Federated Rule.', 'tolerance religious_uniformity direct_rule network'),
   '614ce': profile('A useful ally, a lasting state', 'Choose who administers occupied ground and turn service to a patron into guarantees of autonomy.', 'patron_troops patron_silver earn_rights end_patron local_administration imperial_administration'),
   '1948ce': profile('Mobilization and military supply', 'Balance civilian production against reserve mobilization, and protect the ports that receive equipment.', 'mobilize_limited mobilize_full demobilize order_arms'),
 };
-export function chapterStrategyProfile(id) { return CHAPTER_STRATEGIES[id === '40bce' ? '67bce' : id] || null; }
+// Old saves retain these keys; new orders use the national paths exclusively.
+export const FOLDED_CHAPTER_ACTIONS = {
+  levy_charter: 'Federated Rule', tax_charter: 'Federated Rule', municipal_charter: 'Federated Rule',
+  regional_command: 'Military Colonies', unified_command: 'Military Colonies',
+};
+export function chapterStrategyProfile(id) {
+  const p = CHAPTER_STRATEGIES[id === '40bce' ? '67bce' : id];
+  return p ? { ...p, actions: p.actions.filter(key => !FOLDED_CHAPTER_ACTIONS[key]) } : null;
+}

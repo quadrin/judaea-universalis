@@ -57,7 +57,7 @@ const t = game.tags.JUD;
 let list = actions.getDecisions();
 ok(list.length >= Object.keys(DECISIONS).length, 'getDecisions lists the base set (+ any formable crowns): ' + list.length);
 const resettle = list.find((d) => d.key === 'resettle_land');
-ok(resettle && !resettle.canEnact && /at war/.test(resettle.whyNot), 'resettle_land blocked at war: ' + (resettle && resettle.whyNot));
+ok(!resettle, 'instant resettlement decision is folded into Military Colonies');
 t.points.gov = 100;
 actions.enactDecision('great_rites');
 ok(t.points.gov === 50, 'great_rites spent 50 gov (now ' + t.points.gov + ')');

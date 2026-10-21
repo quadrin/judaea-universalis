@@ -34,6 +34,7 @@ import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
 import { monthlyChapterStrategies } from './chapter_strategy.js';
 import { monthlyNationalIdeas } from './national_ideas.js';
+import { syncRoyalCommands, monthlyRoyalCommands } from './royal_command.js';
 import { monthlyPretenders, monthlyRisings } from './revolt.js';
 import { monthlyOutlaws } from './outlaws.js';
 import { monthlyCrises } from './crisis.js';
@@ -129,6 +130,7 @@ function monthlyBlock(ctx) {
   safe('risings', () => monthlyRisings(ctx)); // and a band nobody answers burns out (SPEC §112)
   safe('outlaws', () => monthlyOutlaws(ctx)); // …unless it is standing where there is nobody to answer it (SPEC §217)
   safe('succession', () => monthlySuccession(ctx));
+  safe('royalCommands', () => monthlyRoyalCommands(ctx));
   safe('crises', () => monthlyCrises(ctx)); // what has been brewing gets a month older (SPEC §98)
   safe('embargo', () => monthlyEmbargoAI(ctx)); // the pressure short of war (SPEC §100)
   safe('integration', () => monthlyIntegration(ctx));
@@ -174,6 +176,7 @@ export function tickDay(ctx) {
   const g = ctx.game;
   try {
     advanceDate(ctx);
+    safe('royalCommandSync', () => syncRoyalCommands(ctx));
     // A cease-fire stops the war and nothing else (SPEC §261): for its month
     // no column marches, no squadron sails, no battle is fought, no siege line
     // advances and no aircraft flies — on every front and for every court,

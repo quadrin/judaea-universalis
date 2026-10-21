@@ -51,6 +51,9 @@ const ctx = makeCtx({
   game: g, DEFINES, MAP_DATA, geom, bus,
   bookmark: BOOKMARK_1948, events: [], provinceMap: modernMap,
 });
+g.tags.ISR.nationalIdeas = { colonies: 1 };
+g.tags.UK.nationalIdeas = { colonies: 1 };
+g.tags.EGY.nationalIdeas = { colonies: 1 };
 const prov = (name) => g.provinces[idOf(name)];
 const runSettlementMonths = (n) => { for (let i = 0; i < n; i++) monthlySettlement(ctx); };
 

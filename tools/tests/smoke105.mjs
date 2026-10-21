@@ -122,7 +122,8 @@ console.log('== §163 every court has politics, and the player\'s is still its o
   ok(vals.every((v) => v >= 0 && v <= 100), 'every bar stays inside 0–100');
 
   // The grace period: the authored opening plays before this system speaks.
-  const early = (game.chronicle || []).filter((c) => c && c.kind === 'politics');
+  const early = (game.chronicle || []).filter(c => c?.kind === 'politics'
+    && /the court forces a reversal|is removed by the court|will not answer the summons|has raised its own banner against the court/.test(c.text));
   ok(early.length === 0, 'no court outcome inside the authored opening (six-year grace)');
 }
 {
@@ -169,25 +170,24 @@ console.log('== §164 paying into somebody else\'s court ==');
     'REGRESSION: approvals are rounded at the panel boundary, not printed raw');
   const fid = menu.parties[0].id;
 
-  const before = courts.courtApproval(ctx, 'SEL', fid);
+  const before = courts.courtApproval(ctx, 'SEL', fid), money = t.treasury;
   const res = actions.runIntrigue('SEL', 'subvert', fid);
-  ok(res && res.ok, 'subversion runs');
-  ok(courts.courtApproval(ctx, 'SEL', fid) < before, 'and the party it paid against loses ground');
-  const again = actions.runIntrigue('SEL', 'subvert', fid);
-  ok(again && !again.ok && /cold/i.test(again.why || ''), 'the channel then cools: ' + (again && again.why));
+  ok(res && !res.ok && /Subversion/.test(res.why), 'offensive intrigue uses the Subversion path');
+  ok(courts.courtApproval(ctx, 'SEL', fid) === before && t.treasury === money, 'retired shortcut has no effects or cost');
+  ok(menu.ops.every(o => o.kind === 'patronize'), 'foreign court keeps ordinary gifts, with no duplicate intrigue actions');
 
   const up = menu.parties[1] ? menu.parties[1].id : fid;
   const b2 = courts.courtApproval(ctx, 'SEL', up);
   const pat = actions.runIntrigue('SEL', 'patronize', up);
   ok(pat && pat.ok && courts.courtApproval(ctx, 'SEL', up) > b2, 'patronage raises a party instead');
 
-  ok(!intrigue.intrigueInfo(ctx, tag, tag, 'subvert', fid).can, 'we cannot run agents in our own court');
-  ok(!intrigue.intrigueInfo(ctx, tag, 'REB', 'subvert', fid).can, 'nor against rebels');
+  ok(!intrigue.intrigueInfo(ctx, tag, tag, 'patronize', fid).can, 'we cannot run agents in our own court');
+  ok(!intrigue.intrigueInfo(ctx, tag, 'REB', 'patronize', fid).can, 'nor against rebels');
   const poor = boot('167bce');
   run(poor.ctx, 3);
   poor.game.tags[poor.tag].treasury = 0;
   poor.game.tags[poor.tag].points.infl = 0;
-  ok(!intrigue.intrigueInfo(poor.ctx, poor.tag, 'SEL', 'subvert', fid).can,
+  ok(!intrigue.intrigueInfo(poor.ctx, poor.tag, 'SEL', 'patronize', fid).can,
     'and an empty purse cannot buy anybody');
 }
 

@@ -43,7 +43,9 @@ import { ARMS, armGenName, unitMoveCue, dominantArm as dominantArmOf } from '../
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { eraIdeaGroupsFor, eraIdeaUnlocked, eraIdeaCost, ERA_IDEA_TIERS } from '../data/era_ideas.js';
-import { nationalIdeasInfo, buyNationalIdea, nationalStrategyView, nationalActionInfo, runNationalAction } from './national_ideas.js';
+import { nationalIdeasInfo, buyNationalIdea, nationalStrategyView, nationalActionInfo, runNationalAction, consolidateNationalPaths } from './national_ideas.js';
+import { initializeRoyalCommands, linkNamedRoyalCommands, syncRoyalCommands, royalPersonFields,
+  royalCommandsView, commissionRoyalCommand, recallRoyalCommand } from './royal_command.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName, computeTechEffects, DOCTRINES, techLevelName } from '../data/tech.js';
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
@@ -57,7 +59,8 @@ import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, buildingIncomeDelta, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked, missionPaceMonths, missionClosedSet, missionForkState, missionForkLedger, claimMission } from './realm.js';
-import { missionCosts, costBand, BANDS } from './mission_cost.js';
+import { missionCosts, costBand } from './mission_cost.js';
+import { missionGraph } from './mission_graph.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFactionsInfo } from './factions.js';
@@ -434,7 +437,8 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
     // importing the sim, so it rides here too.
     tagDef(tag) { return tagDef(ctx, tag); },
   };
-  if (!game.flags._setupDone) {
+  const isNewCampaign = !game.flags._setupDone;
+  if (isNewCampaign) {
     game.flags._setupDone = true;
     try {
       if (bookmark && typeof bookmark.setup === 'function') bookmark.setup(ctx);
@@ -572,6 +576,8 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
       applyReformsToTag(DEFINES, t, key);
     }
   } catch (e) { console.warn('[sim/init] modifier rebuild failed:', e); }
+  initializeRoyalCommands(ctx, isNewCampaign);
+  consolidateNationalPaths(ctx);
   return ctx;
 }
 
@@ -602,7 +608,9 @@ export const simHelpers = {
   // reaches the lookup through here.
   livingTag(ctx, tag) { return L(ctx, tag); },
   spawnArmy(ctx, tag, provName, opts) {
-    return spawnArmy(ctx, L(ctx, tag), provName, opts);
+    const live = L(ctx, tag), id = spawnArmy(ctx, live, provName, opts);
+    linkNamedRoyalCommands(ctx, live);
+    return id;
   },
   removeArmy(ctx, armyId) {
     removeArmy(ctx, armyId);
@@ -1074,7 +1082,11 @@ export const simHelpers = {
   setRuler(ctx, tag, r) {
     const t = ctx.game.tags[L(ctx, tag)];
     if (!t || !r) return;
+    const previous = [t.heir, t.ruler].find(p => p?.name === r.name);
+    const commands = royalPersonFields(previous);
+    if (previous && previous === t.heir) t.heir = null;
     t.ruler = {
+      ...commands,
       name: String(r.name || 'Ruler'),
       title: String(r.title || (t.ruler && t.ruler.title) || 'Ruler'),
       gov: clamp(Math.round(num(r.gov, 2)), 0, 6),
@@ -1084,17 +1096,20 @@ export const simHelpers = {
     };
     t.regency = false;
     t.regencyTitle = null;
+    syncRoyalCommands(ctx); linkNamedRoyalCommands(ctx, L(ctx, tag));
   },
   setHeir(ctx, tag, h) {
     const t = ctx.game.tags[L(ctx, tag)];
     if (!t) return;
     t.heir = h ? {
+      ...royalPersonFields(t.heir?.name === h.name ? t.heir : null),
       name: String(h.name || 'Heir'),
       gov: clamp(Math.round(num(h.gov, 2)), 0, 6),
       infl: clamp(Math.round(num(h.infl, 2)), 0, 6),
       mar: clamp(Math.round(num(h.mar, 2)), 0, 6),
       age: Math.max(0, Math.round(num(h.age, 20))),
     } : null;
+    syncRoyalCommands(ctx); linkNamedRoyalCommands(ctx, L(ctx, tag));
   },
   rulerDies(ctx, tag, causeText) {
     rulerDies(ctx, L(ctx, tag), causeText);
@@ -1254,21 +1269,7 @@ export const DECISIONS = {
       return 'The ranks are hardened: +5% discipline for 18 months.';
     },
   },
-  resettle_land: {
-    name: 'Resettle the Land', icon: 'grain', cdMonths: 24, costText: '100 talents · peacetime only',
-    desc: 'Veterans and landless families take up empty fields: +3,000 manpower now, +10% manpower for a year. Only while at peace.',
-    can(g, t) {
-      const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
-      if (atWar) return 'The realm is at war — the fields must wait.';
-      return num(t.treasury) >= 100 ? '' : 'Not enough treasury (100 talents).';
-    },
-    run(ctx, t) {
-      t.treasury = num(t.treasury) - 100;
-      t.manpower = num(t.manpower) + 3000;
-      simHelpers.addTagModifier(ctx, t.tag, { id: 'settled_veterans', name: 'Settled Veterans', months: 12, effects: { manpowerMult: 1.1 } });
-      return 'The land fills with willing hands: +3,000 manpower, +10% manpower for a year.';
-    },
-  },
+
 };
 
 // ------------------------------------------------------------------ gameActions (§6.6, frozen)
@@ -1736,6 +1737,7 @@ export function gameActions(ctx) {
     out.canSplitType = !out.whySplitType;
     const t = g.tags[g.playerTag];
     if (!t || num(t.points && t.points.mar) < 50) out.whyHire = 'Not enough martial points (50 required).';
+    if (a.general?.royalId) out.whyHire = 'Recall the ruler or heir through Court before replacing this commander.';
     out.canHire = !out.whyHire;
     try {
       const mi = modernizeInfo(ctx, a);
@@ -2276,6 +2278,7 @@ export function gameActions(ctx) {
             morale: num(a.morale), maxMorale: Math.max(0.1, num(a.maxMorale, 3)),
             general: a.general ? {
               name: a.general.name,
+              royalRole: a.general.royalRole || null,
               fire: a.general.fire | 0, shock: a.general.shock | 0, maneuver: a.general.maneuver | 0,
             } : null,
             inBattle: !!a.inBattle, retreating: !!a.retreating,
@@ -2484,6 +2487,19 @@ export function gameActions(ctx) {
           + (res.returned ? ', and ' + res.returned.toLocaleString() + ' men return to the manpower pool.' : '.'), 'info');
         return true;
       } catch (e) { warnOnce('disband', 'disbandArmy failed', e); return false; }
+    },
+    getRoyalCommands() { return royalCommandsView(ctx, g.playerTag); },
+    commissionRoyalGeneral(role, armyId) {
+      const result = commissionRoyalCommand(ctx, g.playerTag, role, Number(armyId), () => rollGeneral(ctx, g.playerTag));
+      if (!result.ok) say('Cannot take command', result.why, 'bad');
+      else say('Personal command', result.name + ' takes command of ' + result.army + '. Field service now exposes them to death and succession risks.', 'info');
+      return result;
+    },
+    recallRoyalGeneral(role) {
+      const result = recallRoyalCommand(ctx, g.playerTag, role);
+      if (!result.ok) say('Cannot recall commander', result.why, 'bad');
+      else say('Recalled to court', result.name + ' leaves the army. Their command skills are retained.', 'info');
+      return result;
     },
     hireGeneral(armyId) {
       try {
@@ -4021,17 +4037,7 @@ export function gameActions(ctx) {
         const res = runIntrigueCore(ctx, g.playerTag, String(tag), String(kind), factionId ? String(factionId) : null);
         if (!res.ok) { say('No channel', res.why || 'Our agents cannot reach them.', 'bad'); return res; }
         const who = (g.tags[res.target] && g.tags[res.target].name) || res.target;
-        if (kind === 'patronize') say('Silver sent', 'Our money is with ' + res.party + ' at ' + who + '.', 'good');
-        else if (kind === 'subvert') {
-          say(res.caught ? 'Our hand is seen' : 'Money at work',
-            res.caught ? who + ' has the correspondence.' : 'The ground shifts under ' + res.party + ' at ' + who + '.',
-            res.caught ? 'bad' : 'good');
-        } else {
-          say(res.caught ? 'Our hand is seen' : 'A claimant finds a purse',
-            res.caught ? who + ' knows whose claimant it was.'
-              : 'The succession at ' + who + ' is open' + (res.raised ? ', and there is a banner in the field.' : '.'),
-            res.caught ? 'bad' : 'good');
-        }
+        say('Silver sent', 'Our money is with ' + res.party + ' at ' + who + '.', 'good');
         return res;
       } catch (e) { warnOnce('runIntrigue', 'runIntrigue failed', e); return { ok: false, why: 'The channel is confused.' }; }
     },
@@ -4157,78 +4163,20 @@ export function gameActions(ctx) {
         const ids = list.map((m, i) => missionId(m, i));
         const nameOf = {};
         list.forEach((m, i) => { nameOf[ids[i]] = m.name || ids[i]; });
-        // Grid seats (SPEC §254). A declared col sticks (clamped to five,
-        // EU4's width). The ROW is no longer an author's guess: it is how far
-        // down the difficulty ladder the mission's own `check` actually sits —
-        // measured against a realm grown a twelfth at a time — relaxed down
-        // wherever a prerequisite sits deeper, so a child never draws above
-        // its parent however cheap it is. A mission the ladder cannot move (a
-        // flag an event sets, a date, a court's own politics) keeps the seat
-        // its author gave it, because the engine orders what it can measure
-        // and does not invent the rest. A ladder chain is still column zero,
-        // one row per mission.
-        const costs = tree ? missionCosts(ctx, g.playerTag, list) : new Map();
-        const col = [];
-        const row = [];
-        const cost = [];
-        list.forEach((m, i) => {
-          col[i] = tree ? Math.max(0, Math.min(4, num(m.col, 0) | 0)) : 0;
-          const c = costs.has(String(ids[i])) ? costs.get(String(ids[i])) : null;
-          cost[i] = Number.isFinite(c) ? c : null;
-        });
-        if (!tree) {
-          list.forEach((m, i) => { row[i] = i; });
-        } else {
-          const parents = list.map((m) => (Array.isArray(m.requires) ? m.requires : [])
-            .map((rid) => ids.indexOf(String(rid))).filter((pi) => pi >= 0));
-          // Where difficulty alone would seat it: the band the ladder measured,
-          // or — for the unmeasurable — the row its author wrote.
-          const want = list.map((m, i) => {
-            const band = costBand(cost[i]);
-            return Number.isFinite(band) ? band : Math.max(0, num(m.row, 0) | 0);
-          });
-          // Relax to a fixpoint: every mission at least as deep as it costs,
-          // and at least one below each of its prerequisites. The table is
-          // small and acyclic, so a settle loop is the whole algorithm.
-          for (let i = 0; i < list.length; i++) row[i] = want[i];
-          for (let pass = 0; pass < list.length + 2; pass++) {
-            let moved = false;
-            for (let i = 0; i < list.length; i++) {
-              for (const pi of parents[i]) {
-                if (row[pi] + 1 > row[i]) { row[i] = row[pi] + 1; moved = true; }
-              }
+        // Positions and prerequisite edges come from one stable graph. Cost
+        // bands may add vertical space, never reorder chronology or invent roots.
+        const graph = missionGraph(list), costs = tree ? missionCosts(ctx, g.playerTag, list) : new Map();
+        const col = graph.nodes.map(n => n.col);
+        const row = graph.nodes.map(n => Math.max(n.row, costBand(costs.get(n.id)) || 0));
+        for (let pass = 0; pass < list.length; pass++) {
+          let moved = false;
+          for (const n of graph.nodes) for (const rid of n.requires) {
+            const pi = ids.indexOf(rid);
+            if (pi >= 0 && !graph.invalid.has(n.id) && row[n.index] <= row[pi]) {
+              row[n.index] = row[pi] + 1; moved = true;
             }
-            if (!moved) break;
           }
-          // Then pack each column so no two medallions share a cell, taking
-          // them in the order the relaxation put them and breaking ties on
-          // what they cost: of two things that could sit in one row, the
-          // cheaper is the one that sits higher.
-          for (let pass = 0; pass < 4; pass++) {
-            const byCol = new Map();
-            list.forEach((m, i) => {
-              if (!byCol.has(col[i])) byCol.set(col[i], []);
-              byCol.get(col[i]).push(i);
-            });
-            for (const idxs of byCol.values()) {
-              idxs.sort((a, b) => (row[a] - row[b])
-                || ((cost[a] === null ? 1.1 : cost[a]) - (cost[b] === null ? 1.1 : cost[b]))
-                || (a - b));
-              let prev = -1;
-              for (const i of idxs) {
-                if (row[i] <= prev) row[i] = prev + 1;
-                prev = row[i];
-              }
-            }
-            // Packing one column can push a parent past a child in another.
-            let moved = false;
-            for (let i = 0; i < list.length; i++) {
-              for (const pi of parents[i]) {
-                if (row[pi] + 1 > row[i]) { row[i] = row[pi] + 1; moved = true; }
-              }
-            }
-            if (!moved) break;
-          }
+          if (!moved) break;
         }
         // Why a medallion the map looks ready for is not lit (SPEC §259). A
         // mission's land question means land HELD — owned and controlled —
@@ -4241,7 +4189,7 @@ export function gameActions(ctx) {
         const swordOnly = (m, i) => {
           if (typeof m.check !== 'function') return false;
           if (done.has(ids[i]) || closed.has(ids[i]) || ready.has(ids[i])) return false;
-          if (!missionUnlocked(list, i, done, tree)) return false;
+          if (!missionUnlocked(list, i, done)) return false;
           try {
             if (m.check(missionCtx(ctx))) return false;
             return !!m.check(ctx);
@@ -4249,9 +4197,7 @@ export function gameActions(ctx) {
         };
         return list.map((m, i) => {
           const id = ids[i];
-          const requires = tree
-            ? (Array.isArray(m.requires) ? m.requires.map(String).filter((rid) => rid !== id && ids.indexOf(rid) >= 0) : [])
-            : (i > 0 ? [ids[i - 1]] : []);
+          const requires = graph.nodes[i].requires;
           const fork = missionForkState(ctx, m);
           return {
             id,
@@ -4281,7 +4227,7 @@ export function gameActions(ctx) {
             // the road a sibling closed — locked forever, and drawn to say so.
             status: done.has(id) ? 'done'
               : closed.has(id) ? 'shut'
-                : !missionUnlocked(list, i, done, tree) ? 'locked'
+                : !missionUnlocked(list, i, done) ? 'locked'
                   : ready.has(id) ? 'ready' : 'current',
             // The terms are met by the sword alone (SPEC §259): the armies
             // stand where the mission asked, and the peace has not yet made
@@ -4491,6 +4437,9 @@ export function gameActions(ctx) {
     if (controls.has(name) || isQuery(name) || typeof rawActions[name] !== 'function') continue;
     actions[name] = (...args) => {
       const result = rawActions[name](...args);
+      // Event options can replace a ruler directly while the clock is paused.
+      // Retire the outgoing person's command before the UI reads the result.
+      syncRoyalCommands(ctx);
       if (ctx.bus) ctx.bus.emit('actionTaken', { name });
       return result;
     };

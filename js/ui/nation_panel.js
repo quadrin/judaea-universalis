@@ -14,6 +14,7 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 import { ideaCard, ideaTierIcon, ideaWallet } from './idea_cards.js';
 import { createChapterStrategyPanel } from './chapter_strategy.js';
 import { createNationalIdeasPanel } from './national_ideas.js';
+import { createRoyalCommandPanel } from './royal_command.js';
 
 // The tabs (SPEC §175).
 //
@@ -110,6 +111,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   const refs = {};
   let chapterStrategyPanel = null;
   let nationalIdeasPanel = null;
+  let royalCommandPanel = null;
 
   function setText(node, s) {
     if (node && node.textContent !== s) node.textContent = s;
@@ -208,6 +210,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       </div>
 
       <!-- ── THE COURT ─────────────────────────────────────────────────── -->
+      <div class="pp-build hidden" data-ref="royalCommandBlock" data-tab="court">
+        <div class="pp-build-title">Personal Command</div>
+        <div data-ref="royalCommands"></div>
+      </div>
       <div class="pp-build hidden" data-ref="factionsBlock" data-tab="court">
         <div class="pp-build-title np-est-head"><span data-ref="factionsTitle">Estates</span><button class="np-est-map" data-est-map data-tt="Paint the map by whose ground each province is (SPEC §167). What an estate holds decides what its favor is worth.">${icon('scales')}<span>Their ground</span></button></div>
         <div class="np-factions" data-ref="factions"></div>
@@ -346,6 +352,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
     chapterStrategyPanel = createChapterStrategyPanel(refs.chapterStrategy, () => actions);
     nationalIdeasPanel = createNationalIdeasPanel(refs.nationalIdeas, () => actions);
+    royalCommandPanel = createRoyalCommandPanel(refs.royalCommands, () => actions);
     el.dataset.tab = tab;
 
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
@@ -722,7 +729,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // open() shows the player's own realm; open('ROM') shows Rome's court
   // read-only. viewing() reports the foreign tag (null when it's our own).
   // `tabId` opens straight onto a tab — the topbar's tech bell (SPEC §286).
-  function open(tag, tabId) {
+  function open(tag, tabId, pathKey, provinceId) {
     if (!ctx) return;
     const g = ctx.game;
     viewTag = (tag && tag !== g.playerTag && g.tags && g.tags[tag]) ? tag : null;
@@ -730,6 +737,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.classList.remove('hidden');
     refresh();
     el.scrollTop = 0;
+    if (pathKey) nationalIdeasPanel?.focusPath(pathKey, provinceId);
   }
   function close() { el.classList.add('hidden'); viewTag = null; }
   function isOpen() { return !el.classList.contains('hidden'); }
@@ -1130,6 +1138,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refs.ideaWallet.classList.toggle('hidden', !self);
     setHtml(refs.ideaWallet, self ? ideaWallet(t.points) : '');
     refreshCourt(t, self);
+    refs.royalCommandBlock.classList.toggle('hidden', !self);
+    if (self) royalCommandPanel.refresh();
 
     // The four numbers you always want, pinned above the tabs (SPEC §175).
     // Tabs solve crowding by hiding things, which is only an improvement if
@@ -1316,7 +1326,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const mark = m.status === 'done' ? '<i class="np-mn-tick">✓</i>'
         : m.status === 'shut' ? '<i class="np-mn-cross">✕</i>' : '';
       const claim = m.status === 'ready' ? ` data-claim="${esc(m.id)}" role="button" tabindex="0"` : '';
-      return `<div class="np-mn np-mn-${m.status}${m.hypothetical ? ' np-mn-hypo' : ''}" style="grid-column:${(m.col | 0) + 1};grid-row:${(m.row | 0) + 1}" data-tt="${esc(tt)}"${claim}>`
+      return `<div class="np-mn np-mn-${m.status}${m.hypothetical ? ' np-mn-hypo' : ''}" data-mission="${esc(m.id)}" style="grid-column:${(m.col | 0) + 1};grid-row:${(m.row | 0) + 1}" data-tt="${esc(tt)}"${claim}>`
         + arrow
         + `<span class="np-mn-medal">${icon(m.icon || 'scroll')}${mark}</span>`
         + `<span class="np-mn-name">${esc(m.name)}</span>`
@@ -1691,7 +1701,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         : (f.state === 'hostile' || f.state === 'discontent') ? 'neg' : '';
       const ops = (menu && menu.ops) || [];
       const pat = ops.find((o) => o.kind === 'patronize');
-      const sub = ops.find((o) => o.kind === 'subvert');
       const btn = (op, glyph) => {
         if (!op) return '';
         const tt = op.name + ' — ' + op.infl + ' influence, ' + op.gold + ' talents'
@@ -1702,18 +1711,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       return `<div class="np-faction" data-tt="${esc(f.desc || f.name)}">`
         + `<div class="np-fac-top"><span class="np-fac-name">${esc(f.name)}</span>`
         + `<span class="np-fac-state ${cls}">${esc(f.state)} · ${f.approval}</span>`
-        + btn(pat, icon('coins')) + btn(sub, icon('flame'))
+        + btn(pat, icon('coins'))
         + `</div>`
         + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${f.state}" style="width:${Math.max(2, Math.min(100, f.approval))}%"></div></div>`
         + `</div>`;
     }).join('');
-    const pre = menu && menu.ops ? menu.ops.find((o) => o.kind === 'pretender') : null;
-    const preRow = pre
-      ? `<div class="np-faction" data-tt="${esc(pre.name + ' — ' + pre.infl + ' influence, ' + pre.gold + ' talents. Risk of discovery: ' + Math.round(pre.detect * 100) + '%.' + (pre.can ? '' : '\n' + (pre.whyNot || '')))}">`
-        + `<div class="np-fac-top"><span class="np-fac-name">Back a claimant</span>`
-        + `<button class="pp-build-btn np-fac-btn${pre.can ? '' : ' disabled'}" data-intrigue="pretender" data-court="${esc(who)}" data-tt="${esc(pre.can ? 'Open the succession' : (pre.whyNot || ''))}">${icon('star8')}</button></div></div>`
-      : '';
-    setHtml(refs.foreignCourt, near + quiet + bars + preRow);
+    setHtml(refs.foreignCourt, near + quiet + bars
+      + `<div class="np-dip-actions"><button class="pp-dip" data-open-ideas="subversion">${icon('dagger', 'icon-sm')} Subversion</button><button class="pp-dip" data-open-ideas="dynasty">${icon('laurel', 'icon-sm')} Dynastic Ambition</button></div>`);
   }
 
   // Renders the viewed nation's treaties and wars. `who` is the viewed tag;

@@ -43,6 +43,7 @@ const ctx = makeCtx({
   game: g, DEFINES, MAP_DATA, geom: fakeGeom, bus,
   bookmark: BOOKMARK_1948, events: [], provinceMap: modernMap,
 });
+g.tags.ISR.nationalIdeas = { colonies: 1 };
 const prov = (n) => g.provinces[idOf(n)];
 
 console.log('== the map of 15 May wears its original names ==');
