@@ -3151,6 +3151,8 @@ export const EVENTS_167 = [
     aiOption: (ctx) => {
       try { return (ctx.game.tags.HAS.treasury || 0) >= 100 ? 0 : 1; } catch (e) { return 1; }
     },
+    historical: 'Josephus links Hyrcanus’ hiring of mercenaries to money taken from David’s tomb, then lists his campaigns east of the Jordan, at Sichem and in Idumaea. War 1.61–64 compresses these events; the game’s campaign timing and costs are adaptations, not figures supplied by this passage.',
+    sources: [{ label: 'Josephus, Jewish War 1.61–64', url: 'https://penelope.uchicago.edu/josephus/war-1.html' }],
     options: [
       {
         label: 'Hire mercenaries — the first of Israel’s rulers to do it',

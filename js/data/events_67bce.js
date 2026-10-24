@@ -911,17 +911,20 @@ export const EVENTS_67 = [
     // No requiresWar: the trigger is the fact itself — Rome standing in
     // Jerusalem — however and in whichever war the city fell. The old gate
     // could retire the scene before the legions ever reached the walls.
-    desc: 'On the day the Temple fell to him, Pompey did what no living Jew had done: he '
-      + 'walked through the Veil into the Holy of Holies, and found — nothing. No statue, '
-      + 'no relic, no treasure hoard; an empty room, and the presence that empty rooms '
-      + 'have. He touched none of the vessels and ordered the rites resumed the next '
-      + 'morning, and was proud of his restraint. The city never forgave him the '
-      + 'footprints.',
+    desc: 'Pompey has entered the sanctuary with his officers. Josephus says they saw '
+      + 'the lampstand, lamps, table, vessels, incense, and the sacred treasury. Pompey '
+      + 'left this property untouched and ordered the attendants to purify the Temple '
+      + 'and resume the sacrifices the next day.\n\n'
+      + 'Restraint over the treasury does not settle the violation of the sanctuary. '
+      + 'The priesthood must restore the rites under the authority of the army that '
+      + 'has just taken the city.',
     forTag: 'both',
     major: true,
     trigger: safeTrigger('ev4_holy_of_holies', (ctx) =>
       alive(ctx, 'ROM') && ctx.helpers.controls(ctx, 'ROM', 'Jerusalem')),
     aiOption: 0,
+    historical: 'Josephus says Pompey entered the sanctuary with his officers, saw its sacred equipment and treasury, left the property untouched, and ordered purification and renewed sacrifices the next day. His account also stresses priests continuing their duties during the assault. The political costs in the choices are game abstractions.',
+    sources: [{ label: 'Josephus, Jewish War 1.148–153', url: 'https://penelope.uchicago.edu/josephus/war-1.html' }],
     options: [
       {
         label: 'The footprints remain',

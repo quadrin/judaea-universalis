@@ -52,6 +52,14 @@ python3 -m http.server 8613 --directory .
 # open http://localhost:8613
 ```
 
+**More from Josephus.** The Great Revolt includes John’s Syrian oil licence,
+the disputed royal baggage at Tarichaea, Joppa’s refugee flotilla, and the
+petitions against Antioch’s Jewish charters. Each offers choices with game
+effects and a passage reference. Historical notes distinguish Josephus’s
+accusations and self-defence from the game’s alternative policies. Earlier
+Hasmonean and Herodian cards also include references to *Jewish War*; the
+golden-eagle card identifies *Antiquities* as the source of its eclipse notice.
+
 **Campaign planning.** Open the **Macrobuilder** with **B**, the bricks button
 in the topbar, or the campaign tools menu. Compare building costs, completion
 times, and projected monthly income; select provinces to begin an affordable

@@ -60,6 +60,7 @@ import { EVENTS_66_WORLD } from './events_66ce_world.js';
 import { EVENTS_66_AFTER } from './events_66ce_after.js';
 import { EVENTS_66_NATION } from './events_66ce_nation.js';
 import { EVENTS_66_SETTLEMENT } from './events_66ce_settlement.js';
+import { EVENTS_66_JOSEPHUS } from './events_66ce_josephus.js';
 import { EVENTS_66_YEARS } from './events_66ce_years.js';
 import { EVENTS_66_NEIGHBOURS } from './events_66ce_neighbours.js';
 import { BOOKMARK_132 } from './bookmark_132ce.js';
@@ -250,7 +251,7 @@ export const ERAS = [
   { bookmark: withPolitical(BOOKMARK_67), events: EVENTS_67.concat(EVENTS_67_WORLD, EVENTS_67_AFTER, EVENTS_67_AUGUSTAN, EVENTS_67_YEARS, EVENTS_67_NEIGHBOURS, EVENTS_BROTHERS, EVENTS_HEROD_SUCCESSION, ANTIQUE) },
   // Preserved for loading old campaigns; its playable arc is now in 67 BCE.
   { legacy: true, bookmark: withPolitical(BOOKMARK_40), events: EVENTS_40.concat(EVENTS_40_WORLD, EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, EVENTS_40_ROAD, EVENTS_40_YEARS, EVENTS_40_NEIGHBOURS, EVENTS_HEROD_SUCCESSION.filter(e => e.id !== 'ev5_herod_dies'), ANTIQUE) },
-  { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_NEIGHBOURS, EVENTS_ARABIA106, ANTIQUE) },
+  { bookmark: withPolitical(BOOKMARK_66), events: EVENTS_66.concat(EVENTS_66_WORLD, EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, EVENTS_66_YEARS, EVENTS_66_JOSEPHUS, EVENTS_66_NEIGHBOURS, EVENTS_ARABIA106, ANTIQUE) },
   // 132's chain is three packages (SPEC §104): the revolt itself, the
   // Christian thread that runs beside it, and the world spine to 425. They
   // are concatenated HERE rather than inside events_132ce.js so that every

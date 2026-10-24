@@ -2143,13 +2143,15 @@ export const EVENTS_40 = [
       + 'the house where no image may be. When the rumor runs that the king is dead, '
       + 'the students of the teachers Judas and Matthias go up by rope in broad '
       + 'daylight and hack it down before a cheering crowd. The king is not dead. He '
-      + 'has himself carried to the tribunal to pass sentence, and that night — the '
-      + 'one night in Josephus a man can date — the moon goes into eclipse over '
-      + 'Jericho.',
+      + 'has himself carried to the tribunal to pass sentence. Josephus describes '
+      + 'his fury and the execution of the teachers; the parallel account in '
+      + 'Antiquities also records a lunar eclipse around this episode.',
     forTag: 'HER',
     date: { y: -4, m: 2 },
     major: true,
     aiOption: 0,
+    historical: 'Josephus names Judas son of Sepphoraeus and Matthias son of Margalus as the teachers, describes students lowering themselves on ropes and cutting down the eagle at midday, and reports their arrest and execution. The eclipse belongs to the parallel account in Antiquities 17.167; War does not give that astronomical notice. The scheduled month is approximate.',
+    sources: [{ label: 'Josephus, Jewish War 1.648–655', url: 'https://penelope.uchicago.edu/josephus/war-1.html' }],
     options: [
       {
         label: 'Burn the teachers alive',
