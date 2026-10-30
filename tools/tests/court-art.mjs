@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { DEFINES } from '../../js/data/defines.js';
+import { BOOKMARK_1948 } from '../../js/data/bookmark_1948.js';
+import { FLAT_FLAGS } from '../../js/ui/flag_art.js';
+import { FLAGS, flagChip, flagInfo, courtChip, courtInfo } from '../../js/ui/icons.js';
+import { REVISED_COURTS } from '../../js/ui/court_revisions.js';
+import { MODERN_COURT_ART, MODERN_FLAG_REPAIRS } from '../../js/ui/modern_standards.js';
+
+assert.equal(REVISED_COURTS.length,108);
+const modern='HEJ KUR ALW DRZ ISR EGY JOR SYR LEB IRQ TUR GRC SAU IRN UK ITA UAR SAR HEZ FRA SPA POR NLD DEN SWE POL CZE SOV GER AUT HUN YUG ALB BUL ROU IRL SUI BEL LUX OMA ETH YEM AFG PAK LBR USA'.split(' ');
+assert.equal(modern.length,46);
+assert.equal(Object.keys(MODERN_COURT_ART).length,52);
+const body=html=>html.match(/<svg\b[^>]*>([\s\S]*)<\/svg>/)[1];
+for(const tag of [...REVISED_COURTS,...modern]) {
+  const lens=modern.includes(tag)?BOOKMARK_1948.tagTweaks[tag]:null;
+  const info=courtInfo(tag,DEFINES,null,lens);
+  assert(info.detailed && info.note.length>40,tag+': interpreted court artwork');
+  const masters=[14,24,34,52,160,320].map(size=>body(courtChip(tag,DEFINES,size,false,null,lens)));
+  assert.equal(new Set(masters).size,1,tag+': retain the same complete master');
+  assert(!/<(?:script|image|foreignObject|text|filter|linearGradient|radialGradient|pattern)\b|\bon\w+=|(?:href|src)="(?:https?:|data:|javascript:)/i.test(masters[0]),tag+': self-contained vectors');
+  assert(!/NaN|undefined|Infinity/.test(masters[0]),tag+': finite drawing');
+}
+for(const [tag,expected] of [['GRC','GRC_MOD'],['OMA','OMA_MOD']]) {
+  assert.equal(courtInfo(tag,DEFINES,null,BOOKMARK_1948.tagTweaks[tag]).key,expected);
+  assert.equal(courtInfo(tag,DEFINES).key,tag,'ancient identity remains separate');
+}
+for(const variant of ['EGY_REP','SYR_BAATH','SYR_FAR','IRN_IR','IRQ_BAATH','IRQ_REP']) {
+  const tag=variant.slice(0,3),game={tags:{[tag]:{flag:variant,name:'Rebranded court'}}};
+  assert.equal(courtInfo(tag,DEFINES,game).key,variant);
+  assert.equal(courtInfo(tag,DEFINES,game).note,MODERN_COURT_ART[variant].note);
+  assert.match(courtChip(tag,DEFINES,34,false,game),new RegExp(`data-flag-key="${variant}"`));
+  assert.equal(flagInfo(tag,DEFINES,game).key,variant,'diplomatic flag follows the same regime');
+}
+assert.equal(courtInfo('OMA',DEFINES,{date:{y:1948},tags:{OMA:{}}}).key,'OMA_MOD','old Omani save upgrades its portrait');
+assert.equal(courtInfo('USA',DEFINES,{tags:{USA:{flag:'__proto__'}}}).key,'USA');
+assert.equal((FLAGS.USA.body.match(/<path\b/g)||[]).length,48,'the 1948 national flag has 48 individual stars');
+assert.equal(Object.keys(MODERN_FLAG_REPAIRS).length,6);
+assert.notEqual(body(courtChip('USA',DEFINES,34)),body(flagChip('USA',DEFINES,34)),'court eagle and national flag remain separate');
+for(const [tag,hash] of Object.entries({
+  SAM:'cc838c64acaae738440f1bcb2c6b84e5b4be3b9c213e8e5bdb0564bd1126941e',
+  HAS:'138f3495b36c20741c3eb6c643b6604490af5a46bd272ed2c64a71989724fec0',
+})) assert.equal(createHash('sha256').update(JSON.stringify(FLAT_FLAGS[tag])).digest('hex'),hash,tag+': approved master unchanged');
+console.log('PASS 154 audited courts, 52 modern masters and variants, six flag repairs, six rendering sizes, dated identities, saved rebrands and protected approved masters');

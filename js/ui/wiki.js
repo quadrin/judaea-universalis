@@ -6,7 +6,7 @@
 // chrome has the floor. getCtx() is consulted when a game happens to exist,
 // the data modules always.
 import { esc, rgb, fmtYear, titleCase, warnOnce } from './format.js';
-import { icon, divider, flagChip, flagInfo } from './icons.js';
+import { icon, divider, flagChip, flagInfo, courtChip, courtInfo } from './icons.js';
 import { PLAYABLE_ERAS as ERAS, GENERIC_EVENTS } from '../data/compendium.js';
 import { REVIVALS } from '../data/revivals.js';
 import { FORMABLES } from '../data/formables.js';
@@ -34,7 +34,7 @@ export function createWiki({ DEFINES, getCtx }) {
   const eraOf = (id) => ERAS.find((e) => e.bookmark.id === id) || null;
   const scriptedOf = (era) => era.events.filter((e) => e && !genericIds.has(e.id));
   const liveGame = () => { const c = getCtx && getCtx(); return c ? c.game : null; };
-  const chip = (tag, size = 18, bookmark = null) => flagChip(tag, DEFINES, size, false,
+  const chip = (tag, size = 18, bookmark = null) => courtChip(tag, DEFINES, size, false,
     bookmark ? null : liveGame(), bookmark?.tagTweaks?.[tag]);
   // Chapter pages describe that chapter even when another campaign is loaded.
   const chapterName = (tag, bookmark) => bookmark?.tagTweaks?.[tag]?.name || TAGS[tag]?.name || tag;
@@ -43,7 +43,7 @@ export function createWiki({ DEFINES, getCtx }) {
     for (const { bookmark: b } of ERAS) {
       const lens = b.tagTweaks?.[tag];
       if (!lens?.flag) continue;
-      const info = flagInfo(tag, DEFINES, null, lens);
+      const info = courtInfo(tag, DEFINES, null, lens);
       if (info.key === tag) continue;
       if (!variants.has(info.key)) variants.set(info.key, { info, bookmark: b, years: [] });
       variants.get(info.key).years.push(fmtYear(b.startDate.y));
@@ -490,7 +490,7 @@ export function createWiki({ DEFINES, getCtx }) {
       meta.push(['Temperament', words.join('; ') || 'unremarkable']);
     }
     const ideas = ideaLines(def.ideas);
-    const standard = flagInfo(tag, DEFINES, liveGame());
+    const standard = courtInfo(tag, DEFINES, liveGame());
     const variants = chapterStandards(tag);
     const standardFigure = (info, image, label) => `<figure class="wiki-standard wiki-standard-art">
       ${image}

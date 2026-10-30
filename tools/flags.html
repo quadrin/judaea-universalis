@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Court flags · Judaea Universalis</title>
+<title>Court artwork · Judaea Universalis</title>
 <link rel="stylesheet" href="../styles.css">
 <style>
   html,body { margin:0; min-height:100%; height:auto; overflow:auto; background:#efe5ce; color:#32261f; }
@@ -20,18 +20,20 @@
   @media(max-width:500px) { main { padding:16px; } .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 </style>
 <main>
-  <h1>Court flags</h1>
+  <h1>Court artwork</h1>
   <p>Court standards drawn from coins, reliefs, architecture and regional objects. Ancient and alternative banners are original game compositions. Notes identify regional analogies and retrospective motifs. Every size uses the complete vector drawing, including the engraved detail.</p>
   <label for="search">Find a court</label><input id="search" type="search" placeholder="Name or tag">
-  <label for="chapter">Judaean chapter</label><select id="chapter"><option value="base">General standards</option><option value="66ce">66 CE · First Revolt</option><option value="132ce">132 CE · Bar Kokhba</option></select>
+  <label for="chapter">Chapter</label><select id="chapter"><option value="base">General standards</option><option value="66ce">66 CE · First Revolt</option><option value="132ce">132 CE · Bar Kokhba</option><option value="1948">1948 · Modern courts</option></select>
+  <label for="surface">Artwork</label><select id="surface"><option value="court">Court portraits</option><option value="flag">Flags</option></select>
   <p id="count"></p><div class="gallery" id="gallery"></div>
 </main>
 <script type="module">
   import { DEFINES } from '../js/data/defines.js';
   import { REVIVALS } from '../js/data/revivals.js';
-  import { flagChip, flagInfo } from '../js/ui/icons.js';
+  import { flagChip, flagInfo, courtChip, courtInfo } from '../js/ui/icons.js';
   import { BOOKMARK_66 } from '../js/data/bookmark_66ce.js';
   import { BOOKMARK_132 } from '../js/data/bookmark_132ce.js';
+  import { BOOKMARK_1948 } from '../js/data/bookmark_1948.js';
   const courts = new Map(REVIVALS.map(r => [r.tag, r]));
   for (const [tag, def] of Object.entries(DEFINES.TAGS)) if (tag !== 'WASTE') courts.set(tag, def);
   const first = ['ISR','MLI','JUD','GAL','QDR','SAB','BYZ','HAS','PHO','ASR','BBL','PAS','SAS','ROM','SAM','HPA','HPH','SEL','PTO'];
@@ -41,18 +43,24 @@
   });
   function render() {
     const search = document.getElementById('search').value.trim().toLowerCase(), host = document.getElementById('gallery');
-    const chapter = { '66ce': BOOKMARK_66, '132ce': BOOKMARK_132 }[document.getElementById('chapter').value];
+    const chapter = { '66ce': BOOKMARK_66, '132ce': BOOKMARK_132, '1948': BOOKMARK_1948 }[document.getElementById('chapter').value];
+    const portraits=document.getElementById('surface').value==='court';
+    const chip=portraits?courtChip:flagChip, infoOf=portraits?courtInfo:flagInfo;
     host.replaceChildren(); let n = 0;
     for (const [tag, def] of entries) {
       if (search && !(tag + ' ' + def.name).toLowerCase().includes(search)) continue;
       const card = document.createElement('article'); card.dataset.tag = tag;
-      const lens = chapter?.tagTweaks?.[tag], info = flagInfo(tag, DEFINES, null, lens);
+      const lens = chapter?.tagTweaks?.[tag], info = infoOf(tag, DEFINES, null, lens);
       const name = document.createElement('h2'); name.textContent = def.name;
-      const big = document.createElement('div'); big.innerHTML = flagChip(tag, DEFINES, 160, false, null, lens);
+      const big = document.createElement('div'); big.innerHTML = chip(tag, DEFINES, 160, false, null, lens);
       const samples = document.createElement('div'); samples.className = 'samples';
-      samples.innerHTML = [14,24,34,52].map(size => flagChip(tag, DEFINES, size, false, null, lens)).join('');
+      samples.innerHTML = [14,24,34,52].map(size => chip(tag, DEFINES, size, false, null, lens)).join('');
       const key = document.createElement('span'); key.className = 'tag'; key.textContent = tag;
       card.append(big,name,samples,key);
+      if(portraits && courtInfo(tag,DEFINES,null,lens).note!==flagInfo(tag,DEFINES,null,lens).note) {
+        const national=document.createElement('div');national.className='samples';
+        national.innerHTML=flagChip(tag,DEFINES,24,false,null,lens)+'<span>National flag</span>';card.append(national);
+      }
       if (info.note) { const note = document.createElement('p'); note.textContent = info.note; card.append(note); }
       if (info.source) {
         const [label, url] = info.source, link = document.createElement('a');
@@ -65,5 +73,6 @@
   }
   document.getElementById('search').addEventListener('input',render); render();
   document.getElementById('chapter').addEventListener('change',render);
+  document.getElementById('surface').addEventListener('change',render);
 </script>
 </html>

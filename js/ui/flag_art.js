@@ -6,6 +6,7 @@ import { REVIVALS } from '../data/revivals.js';
 import { enrichCourtStandards } from './court_standards.js';
 import { enrichJudaeanStandards } from './judaean_standards.js';
 import { SAMARITAN_CALLIGRAPHY } from './samaritan_standard.js';
+import { reviseCourtStandards } from './court_revisions.js';
 
 export const REVIVAL_FLAGS = Object.fromEntries(REVIVALS.map(r => [r.tag, r]));
 export const LEGACY_BORROWED_FLAGS = { HPA: 'HER', HPH: 'HER', BAL: 'SEL', DMT: 'SEL', LKH: 'GHA' };
@@ -327,6 +328,10 @@ Object.assign(FLAT_FLAGS, {
 // Compendium views use these same paths; there is no reduced-detail variant.
 enrichCourtStandards(FLAT_FLAGS);
 enrichJudaeanStandards(FLAT_FLAGS);
+reviseCourtStandards(FLAT_FLAGS);
+// Modern Oman is resolved independently of its ancient maritime standard.
+FLAT_FLAGS.OMA_MOD = standard('#b32632', '', {emblem:'omani-royal-flag',scale:1,
+  note:'The plain red game flag of the modern Omani sultanate. Its court portrait uses the khanjar and crossed swords.'});
 
 // Preserve the designs of actual modern flags; their geometry is the design.
 const MODERN = new Set(('ISR EGY JOR SYR LEB IRQ TUR SAU IRN UK ITA UAR SAR HEZ EGY_REP SYR_BAATH SYR_FAR IRN_IR IRQ_BAATH GRC_MOD IRQ_REP FRA SPA POR NLD BEL LUX DEN SWE POL CZE SOV GER AUT HUN YUG ALB BUL ROU IRL SUI USA ETH YEM AFG PAK LBR HEJ KUR ALW DRZ').split(' '));

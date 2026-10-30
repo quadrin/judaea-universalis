@@ -1,0 +1,14 @@
+Reference contours, retained at full source precision.
+Heraldic charges (lion, eagle, leopard passant, serpent, dolphin):
+https://github.com/victorwestmann/Heraldry/tree/df6dae96c2d1a4847bef513678d50725877b19c1/03%20animals/public%20domain
+The source repository explicitly supplies these files in its public domain directory.
+Adaptations: metadata removed, palette converted to caller-controlled inks,
+coordinate systems fitted to the established square court format.
+
+United States Great Seal obverse:
+https://github.com/twngo/privacytools-zh/blob/325c884a3c177349bb79adc06574b139166fb120/assets/img/svg/layout/great_seal_of_the_united_states_obverse.svg
+Distributed by that repository under CC0 1.0 Universal (LICENSE.txt).
+https://creativecommons.org/publicdomain/zero/1.0/
+Adaptations: outer disc removed, gradients flattened to solid source colours,
+editor metadata and unused gradients removed; contours and lettering retained.
+These attributions concern artwork reuse, not historical motif attribution.

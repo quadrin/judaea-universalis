@@ -7,6 +7,44 @@ identify the subject. The earlier silhouette-only direction is superseded.
 
 ## Artwork
 
+### October 2026 roster revision
+
+The full audit selected 154 court identities: 108 earlier courts and 46 modern
+courts. `court_revisions.js` replaces the 108 earlier masters after the existing
+enrichment passes. The general Judaean menorah's new source is also inherited by
+the Ethnarchy and Kingdom; their Bar Kokhba variants remain unchanged. Samaria
+and the approved Hasmonean master retain their exact checksums.
+
+`modern_standards.js` supplies 52 modern court masters: the 46 modern identities
+(with separate `GRC_MOD` and `OMA_MOD` identities) and six additional regime
+variants. `courtChip` / `courtInfo` use the same identity resolver as flags. The
+start-screen choices, realm header, topbar and Compendium use court portraits.
+Diplomatic chips continue to use `flagChip`. The development gallery can switch
+between the two surfaces and preview the 1948 chapter.
+
+Six literal flag placeholders are repaired as well: USA, Saudi Arabia, Albania,
+Lebanon, Portugal and the Iranian republican variant. The American flag contains
+48 individual stars and thirteen stripes for the 1948 chapter. Modern Oman gets
+a separate plain-red flag key, while ancient Oman retains its maritime image.
+
+These are court illustrations and game adaptations, not a set of facsimiles of
+official 1948 seals. In particular, occupied Germany uses a neutral eagle game
+portrait; it does not acquire a fictional unified government seal. Notes identify
+invented compositions. No substitute Arabic, Hebrew or royal motto lettering is
+fabricated. The Saudi inscription and the Great Seal motto retain source paths.
+
+`armorial_masters.js` contains the construction helpers. `national_devices.js`
+retains the flag-icons device contours and its MIT notice. `reference_masters.js`
+retains public-domain heraldic charges and the CC0-distributed Great Seal source,
+with flattened colours and all contour precision preserved. Their source URLs,
+licensing and adaptations are recorded in the modules and
+`icons/source/court-art-credits.txt`; these artwork credits do not replace the
+historical object references below. Each body remains self-contained SVG.
+
+Run `node tools/tests/court-art.mjs` for full audit coverage, court/flag separation,
+all modern government variants, ancient/modern identities, source preservation
+at six sizes, safe embedded SVG and the protected-master checksums.
+
 `js/ui/flag_art.js` supplies the established renderer contract and fields.
 `js/ui/court_standards.js` replaces 101 of the generic devices with original
 coin-, relief-, architecture- and object-inspired drawings. The enrichment
@@ -16,7 +54,7 @@ The remaining explicit art, modern flags and identity lookups remain supported.
 grid, scaled into the established 96-unit viewBox. These preserve anatomy,
 metalwork, garment folds and feathering in the same master at every size.
 `js/ui/judaean_standards.js` adds nine coin-based compositions and four
-derived Ethnarchy/Kingdom standards. Its enrichment runs last. Hasmonean
+derived Ethnarchy/Kingdom standards. Its enrichment precedes the roster revision. Hasmonean
 Judaea (`HAS`) remains exactly unchanged, including its gold palette and note.
 The general Judaean menorah also remains available.\n\nSamaria (`SAM`) uses the user-supplied calligraphic device in ivory on emerald.\n`js/ui/samaritan_standard.js` preserves its outlined forms, interior counters\nand dots as self-contained vector paths. This is a game adaptation of the\nreference; the note does not assert a transcription or an attested period flag.
 
@@ -69,8 +107,9 @@ notes and images through the same lookup (`flagInfo` and `flagChip`).
 
 ## Checked reference objects
 
-Sources support the stated motif only. All drawings are original; no museum
-photographs are embedded. The source map in `court_standards.js` also appears
+Sources support the stated motif only. The object-inspired drawings are original;
+no museum photographs are embedded. Reused heraldic contours have separate artwork
+credits above. The source map in `court_standards.js` also appears
 in the development gallery and the relevant nation's Compendium page.
 Judaean references live in `JUDAEAN_COIN_SOURCES` in `judaean_standards.js`.
 

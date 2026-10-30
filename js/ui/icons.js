@@ -9,6 +9,7 @@
 
 import { unitGlyphSvg } from '../data/units.js';
 import { FLAT_FLAGS, REVIVAL_FLAGS, LEGACY_BORROWED_FLAGS, presentFlag, legacyCourtFlag } from './flag_art.js';
+import { MODERN_COURT_ART, MODERN_FLAG_REPAIRS } from './modern_standards.js';
 
 export const ICONS = {
   dagger: '<path d="M15 3 8 12l4 3 6-10ZM6 11l8 6M9 15l-4 5M4 18l3 3"/>',
@@ -1792,6 +1793,7 @@ export const FLAGS = {
     `<rect x="0.6" y="0.6" width="9.8" height="9.5" fill="#1d3c6e" stroke="none"/>` +
     star5(5.5, 5.3, 2.6, '#f2f4f4'),
   ...FLAT_FLAGS,
+  ...MODERN_FLAG_REPAIRS,
 };
 
 function escText(s) {
@@ -1862,12 +1864,31 @@ export function flagInfo(tag, DEFINES, game = null, lens = null) {
   return { key, note: art?.note || '', source: art?.source || null, detailed: !!art?.detailed };
 }
 
+// Portraits follow the same live/chapter/save identity resolver as flags.
+// Callers choose the court surface explicitly; small diplomatic flags stay flags.
+function resolveCourt(tag, DEFINES, game = null, lens = null) {
+  const resolved=resolveFlag(tag,DEFINES,game,lens);
+  // Upgrade older 1948 saves whose OMA tag still points to the ancient ship.
+  const modernOman=resolved.key==='OMA' && (game?.bookmarkId==='1948' || game?.bookmarkId==='1948ce' || game?.date?.y>=1900 || lens?.names==='omani_modern');
+  const key=modernOman?'OMA_MOD':resolved.key;
+  return {...resolved,key,art:Object.hasOwn(MODERN_COURT_ART,key)?MODERN_COURT_ART[key]:resolved.art};
+}
+export function courtInfo(tag, DEFINES, game=null, lens=null) {
+  const {key,art}=resolveCourt(tag,DEFINES,game,lens);
+  return {key,note:art?.note||'',source:art?.source||null,detailed:!!art?.detailed};
+}
+export function courtChip(tag, DEFINES, size=20, link=false, game=null, lens=null) {
+  return renderCourtChip(resolveCourt(tag,DEFINES,game,lens),size,link,'court');
+}
+
 export function flagChip(tag, DEFINES, size = 20, link = false, game = null, lens = null) {
-  const { t, c, key, art, dispName } = resolveFlag(tag, DEFINES, game, lens);
+  return renderCourtChip(resolveFlag(tag,DEFINES,game,lens),size,link,'flag');
+}
+function renderCourtChip({t,c,key,art,dispName},size,link,kind) {
   const s = Math.max(12, Math.round(Number(size) || 20));
   const banner = art && presentFlag(key, art, c);
   const inner = art
-    ? `<svg viewBox="${escText(viewBoxOf(banner))}" aria-hidden="true" focusable="false" data-flag-key="${escText(key || t)}">${scopeIds(bodyOf(banner), key || t)}</svg>`
+    ? `<svg viewBox="${escText(viewBoxOf(banner))}" aria-hidden="true" focusable="false" data-flag-key="${escText(key || t)}" data-art-kind="${kind}">${scopeIds(bodyOf(banner), kind+'-'+(key || t))}</svg>`
     : `<span class="fchip-abbr">${escText(t || '—')}</span>`;
   const linked = link && t && t !== 'REB' && t !== 'WASTE';
   const linkAttrs = linked

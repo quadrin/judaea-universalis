@@ -1,7 +1,7 @@
 // js/ui/startscreen.js — title screen (SPEC §8.2 / §8.3, §13).
 // Two steps: pick a bookmark (era), then pick a nation within it.
 import { esc, rgb, rgba, fmtYear } from './format.js';
-import { icon, flagChip } from './icons.js';
+import { icon, courtChip as flagChip } from './icons.js';
 import { onAppState, offlineStatus, openInstallPanel } from './install.js';
 import { TITLE_LOGO } from './branding.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';

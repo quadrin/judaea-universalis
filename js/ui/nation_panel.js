@@ -5,7 +5,7 @@
 // renders any nation read-only — their ruler, purse, armies, diplomacy, tech
 // and reforms, plus how they feel about us — with every lever hidden.
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
-import { icon, flagChip, unitIcon } from './icons.js';
+import { icon, flagChip, courtChip, unitIcon } from './icons.js';
 import { unlockedGen, cappedGen, doctrinesFor, techLevelName } from '../data/tech.js';
 import { armGenName } from '../data/units.js';
 import { forceLimitOf, regCount, reservesTerms } from '../sim/military.js';
@@ -853,7 +853,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setText(refs.factionsTitle, terms.factions || 'Estates');
     setText(refs.courtTitle, terms.court || 'The Court');
 
-    setHtml(refs.flag, flagChip(tag, DEFINES, 34, false, g));
+    setHtml(refs.flag, courtChip(tag, DEFINES, 34, false, g));
     setText(refs.name, (t.name || tag) + (t.alive === false ? ' †' : ''));
     // Foreign dress: the note, and our own flag as the way home.
     refs.foreignNote.classList.toggle('hidden', self);

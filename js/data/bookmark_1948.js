@@ -1042,14 +1042,14 @@ export const BOOKMARK_1948 = {
   // them.
   tagTweaks: {
     TUR: { capital: 'Ancyra' },   // Ankara, capital since 1923
-    GRC: { capital: 'Athens', names: 'greek_modern' },
+    GRC: { capital: 'Athens', names: 'greek_modern', flag: 'GRC_MOD' },
     ITA: { names: 'italian' },
     UK: { names: 'british' },
     IRN: { names: 'iranian_modern' },
     // SPEC §205: the ancient mart of Omana is the Sultanate now — same name,
     // its own century's court (the static 'arab' pool is the Periplus-era
     // one, correct everywhere else OMA is seated).
-    OMA: { names: 'omani_modern' },
+    OMA: { names: 'omani_modern', flag: 'OMA_MOD' },
     // The rival banner (SPEC §251), dressed for a century whose civil wars are
     // fought between officers and imams rather than between purples. `USR` is
     // one generic tag that each card names for itself; what the LENS has to

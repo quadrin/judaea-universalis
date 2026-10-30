@@ -1,6 +1,6 @@
 // js/ui/topbar.js — top resource/date/speed bar (SPEC §8.2).
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
-import { icon, flagChip } from './icons.js';
+import { icon, courtChip as flagChip } from './icons.js';
 
 export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onBuilderClick, onChronicleClick, onSavesClick, onToolsClick, onTechClick, onSettingsClick, onMissionClick }) {
   let ctx = null;
