@@ -18,7 +18,7 @@ metalwork, garment folds and feathering in the same master at every size.
 `js/ui/judaean_standards.js` adds nine coin-based compositions and four
 derived Ethnarchy/Kingdom standards. Its enrichment runs last. Hasmonean
 Judaea (`HAS`) remains exactly unchanged, including its gold palette and note.
-The general Judaean menorah also remains available.
+The general Judaean menorah also remains available.\n\nSamaria (`SAM`) uses the user-supplied calligraphic device in ivory on emerald.\n`js/ui/samaritan_standard.js` preserves its outlined forms, interior counters\nand dots as self-contained vector paths. This is a game adaptation of the\nreference; the note does not assert a transcription or an attested period flag.
 
 The 66 CE chapter assigns `JUD_REVOLT` (vine leaf); the 132 CE chapter assigns
 `JUD_BK` (the harp/lyre on a silver denar). The latter chapter also

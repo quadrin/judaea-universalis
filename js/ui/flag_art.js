@@ -5,6 +5,7 @@ import { DEFINES } from '../data/defines.js';
 import { REVIVALS } from '../data/revivals.js';
 import { enrichCourtStandards } from './court_standards.js';
 import { enrichJudaeanStandards } from './judaean_standards.js';
+import { SAMARITAN_CALLIGRAPHY } from './samaritan_standard.js';
 
 export const REVIVAL_FLAGS = Object.fromEntries(REVIVALS.map(r => [r.tag, r]));
 export const LEGACY_BORROWED_FLAGS = { HPA: 'HER', HPH: 'HER', BAL: 'SEL', DMT: 'SEL', LKH: 'GHA' };
@@ -265,9 +266,6 @@ const petraFacade = path('M43 20H53L51 26H45Z', P) + rect(46, 26, 4, 5, P)
   + rect(23, 47, 50, 5, P)
   + [27, 38, 53, 64].map(x => rect(x, 53, 5, 22, P)).join('')
   + rect(23, 76, 50, 4, P) + rect(20, 81, 56, 3, P);
-const gerizimSanctuary = path('M18 76V69H26V62H34V55H40V49H56V55H62V62H70V69H78V76Z', P)
-  + path('M32 32 48 22 64 32V36H32Z', P)
-  + [35, 43, 51, 59].map(x => rect(x, 38, 3, 11, P)).join('') + rect(32, 49, 32, 3, P);
 const armenianTiara = path('M31 39 34 27 41 34 48 19 55 34 62 27 65 39 62 69H34Z')
   + path('M30 44H34V68L26 79 24 70ZM62 44H66L72 70 70 79 62 68Z') + rect(31, 68, 34, 6, G)
   + star(48, 52, 8, 10, 4.5, '#a51f3e');
@@ -306,7 +304,7 @@ Object.assign(FLAT_FLAGS, {
   MIZ: standard('#154a91', doubleCrown, { emblem: 'pschent', dx: 3.6, dy: 1.8, note: 'An Egyptian double-crown silhouette, in gold on deep blue.' }),
   ATH: standard('#234f93', athenianOwl, { emblem: 'athenian-owl', dx: -1, dy: -4, note: 'An ivory owl in profile, with an open folded wing.' }),
   NAB: standard('#a63a26', petraFacade, { emblem: 'petra-facade', dy: -4, note: 'An ivory Petra-inspired façade with a central urn and broken pediment.' }),
-  SAM: standard('#087c5c', gerizimSanctuary, { emblem: 'gerizim-sanctuary', dy: -1, note: 'An original stepped Mount Gerizim sanctuary insignia, in ivory on emerald.' }),
+  SAM: { ...standard('#087c5c', SAMARITAN_CALLIGRAPHY, { emblem: 'samaritan-calligraphy', scale: 1, note: 'A calligraphic device adapted from the supplied Samaritan reference, in ivory on emerald. Its outlined forms are preserved without asserting a transcription or a historical flag.' }), detailed: true },
   ARM: standard('#a51f3e', armenianTiara, { emblem: 'artaxiad-tiara', dy: -1, note: 'A tall Artaxiad-inspired tiara, with side lappets and an inset star.' }),
   ACH: standard('#126b63', achaeanMonogram, { emblem: 'achaean-monogram', dx: -.5, dy: -1, note: 'An interlocking Alpha–Chi monogram inspired by Achaean coin devices.' }),
   RHO: standard('#ad2946', rhodianRose, { emblem: 'rhodian-rose', dy: -.5, note: 'An upright ivory rose with a cut petal and paired leaves.' }),

@@ -7,7 +7,7 @@ import { STANDARD_SOURCES } from '../../js/ui/court_standards.js';
 import { JUDAEAN_COIN_SOURCES } from '../../js/ui/judaean_standards.js';
 
 const detailed = Object.entries(FLAT_FLAGS).filter(([, a]) => a.detailed);
-assert.equal(detailed.length, 114);
+assert.equal(detailed.length, 115);
 for (const [tag, a] of detailed) {
   assert(a.note.length > 40, tag + ': explain the motif and its interpretation');
   const drawings = [14, 24, 34, 52, 160, 320].map(size => {
@@ -57,5 +57,5 @@ assert.equal(flagInfo('TYR', DEFINES, game).note, FLAGS.TYR.note);
 const oldSave = { tags: { HPA: { flag: 'HER' } } };
 assert.equal(flagInfo('HPA', DEFINES, oldSave).key, 'HPA');
 assert.equal(flagInfo('missing', DEFINES).note, '');
-console.log('PASS 114 interpreted court drawings and variants, complete SVG source at six sizes, distinct regional constructions and identity-aware notes');
+console.log('PASS 115 interpreted court drawings and variants, complete SVG source at six sizes, distinct regional constructions and identity-aware notes');
 console.log('ALL PASS');
