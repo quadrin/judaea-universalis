@@ -12,7 +12,7 @@
 // plus every module reachable from main.js, found by reading the import
 // statements. There is no build step and no file list to keep in step with
 // the code; a new module is found the day it is imported.
-const CACHE = 'ju-v5-court-art';
+const CACHE = 'ju-v6-court-art';
 
 // Files no import statement names.
 const SHELL = [
@@ -54,9 +54,19 @@ async function precacheGame(cache, urls, missingOnly) {
         const hit = !!res;
         if (!res) res = await fetch(new Request(href, { cache: 'reload' }));
         if (!res || !res.ok) return;
-        if (href.endsWith('.js')) {
+        const pathname = new URL(href).pathname;
+        if (pathname.endsWith('.js')) {
           const text = await res.clone().text();
           for (const spec of moduleSpecifiers(text)) queue.push(new URL(spec, href).href);
+        } else if (pathname.endsWith('/') || pathname.endsWith('.html')) {
+          // Import maps pin changed modules to one release, so an older HTTP
+          // cache cannot mix incompatible exports into an updated page. Cache
+          // those exact URLs too; installed apps need the mapped URLs offline.
+          const html = await res.clone().text();
+          const map = html.match(/<script\b[^>]*id=["']ju-web-art-map["'][^>]*>([\s\S]*?)<\/script>/i);
+          if (map) for (const spec of Object.values(JSON.parse(map[1]).imports || {})) {
+            if (typeof spec === 'string' && /^\.{1,2}\//.test(spec)) queue.push(new URL(spec, href).href);
+          }
         }
         if (!hit) await cache.put(href, res);
         held.add(href);

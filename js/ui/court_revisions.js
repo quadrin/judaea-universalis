@@ -1,6 +1,6 @@
 // Roster audit, October 2026. These original game compositions refine the
 // existing identities; notes distinguish an object association from a flag.
-import { G,I,B,D,S,p,l,c,r,g,rep,mirror,ring,star,branch,crown,eagle,lion,weapon,bow,anchor,tiara } from './armorial_masters.js';
+import { G,I,B,D,S,p,l,c,r,g,rep,mirror,ring,star,branch,crown,eagle,lion,weapon,bow,anchor,tiara,referenceAnimal } from './armorial_masters.js';
 
 function carved(d,ink=I) { return p(d,ink)+l(d,B,.8); }
 function stone(type='gate') {
@@ -123,9 +123,9 @@ function arethusa() {
     +rep(13,i=>{const x=62+(i%5)*12,y=46+Math.floor(i/5)*13;return l(`M${x} ${y}q-8-8-11 0q0 9 9 6q4-3-1-6`,B,1);})
     +l('M82 68Q98 79 115 66M81 75Q96 87 116 75M90 112Q88 132 81 143M103 130 99 140M120 92 127 94M121 110 128 110M112 86 121 84M110 82 118 80',B,1.1)
     +c(119,87,1.5,D)+ring(93,112,4,G,1.5)+l('M96 114 96 125',G,1.4);
-  const dolphin=p('M0 0C13-10 28-8 38-1L47 0 43 4 38 5C28 16 8 16 0 9L-9 15-7 4-13-3Z',I)+p('M15-7 22-17 26-6Z',I)+c(37,2,1,D)+l('M4 5Q18 11 34 5',B,.8);
-  return head+g(dolphin,'translate(18 38) rotate(-35) scale(.7)')+g(dolphin,'translate(142 30) rotate(70) scale(.65)')
-    +g(dolphin,'translate(166 126) rotate(145) scale(.7)')+g(dolphin,'translate(47 173) rotate(210) scale(.7)');
+  const dolphin=referenceAnimal('dolphin',I,B);
+  return head+g(dolphin,'translate(9 20) scale(.22) rotate(-45 96 96)')+g(dolphin,'translate(141 8) scale(.22) rotate(65 96 96)')
+    +g(dolphin,'translate(140 134) scale(.22) rotate(135 96 96)')+g(dolphin,'translate(12 139) scale(.22) rotate(220 96 96)');
 }
 
 function rose() {
@@ -306,8 +306,7 @@ export function reviseCourtStandards(flags) {
     ARD:p('M91 20H134L110 70H142L51 174 76 105H47Z',G)+l('M95 25H125L101 76H129L63 159',I,1.5),
     PLM:sun('palmyra'), EME:p('M54 161 59 88 84 25 112 31 135 90 144 161Z',I)
       +p('M86 32 109 39 128 96 136 155 121 155 99 70Z',B)+l('M65 151 70 96 88 49M76 113 88 87M105 128 113 140',D,1.4)+star(98,95,8,11,5,G)+r(48,164,103,8,G),
-    DEC:temple(), ASY:winged(true), BAB:g(sun(),'rotate(22.5 96 96)'), ELM:g(vignette('cista').slice(0,0),'')+l('M58 157C159 177 169 112 101 107C27 103 30 49 99 46L124 44',I,15)
-      +p('M119 32 143 34 157 45 143 57 119 54Z',I)+c(140,42,2,D)+rep(12,i=>l(`M${56+i*7} ${151+Math.sin(i*.5)*6}l2 9`,B,1.5)),
+    DEC:temple(), ASY:winged(true), BAB:g(sun(),'rotate(22.5 96 96)'), ELM:referenceAnimal('serpent',I,D),
     MED:weapon(), PRS:fireAltar(), CIL:stone('cilicia'), CAP:rock()+p('M82 172V118L96 101 110 118V172Z',D), ION:temple('ionic'),
     HEL:g(weapon('spear'),'translate(26 52) scale(.73)')+p('M70 80H122L114 98H78Z',I)
       +p('M97 14C107 38 126 41 119 62C114 84 80 85 73 64C65 45 89 34 88 18C94 25 94 34 96 39Z',G)+l('M98 34Q118 55 106 67M84 50Q75 63 91 70',I,1.2),
@@ -341,21 +340,20 @@ export function reviseCourtStandards(flags) {
       +p('M67 78H125L117 98H75Z',I)+p('M96 13C108 44 137 44 126 70C123 87 73 91 65 69C56 48 83 32 83 16C94 25 93 38 94 40Z',G)
       +l('M100 35Q130 58 110 73M78 49Q63 69 88 76',I,1.8),
     USR:standingStandard(), USV:standingStandard('frontier'), LST:g(weapon('sabre'),'rotate(-30 96 96)'), PIR:ship('pirate'),
-    CMG:rock('atlas')+[47,96,145].map((x,i)=>g(p('M-13 3Q-15-11 0-13Q15-11 13 3L19 30H-19Z',I)+p('M-13-4-10-18 0-26 10-18 13-4Z',G)+l('M-6 0H6M-7 6 0 11 7 6M0 13V28',B,1),`translate(${x} ${116+(i===1?-20:0)})`)).join(''),
+    CMG:rock('sela')+star(96,20,8,10,4,G)+[47,96,145].map((x,i)=>g(p('M-13 3Q-15-11 0-13Q15-11 13 3L19 30H-19Z',I)+p('M-13-4-10-18 0-26 10-18 13-4Z',G)+l('M-6 0H6M-7 6 0 11 7 6M0 13V28',B,1),`translate(${x} ${116+(i===1?-20:0)})`)).join(''),
     BIT:ship('bithynia'), CRT:labyrinth(), DMS:mirror(p('M83 37 63 18 55 23 66 40 48 65 57 73 80 50Z',I))
       +l('M96 19V172M44 82 96 121 148 82',G,7)+p('M96 10 86 31H106Z',I)+l('M79 144H113M82 153H110M86 162H106',B,2),
-    MOB:stele(), AMO:stone('ammon'), EDM:rock('sela'), QDR:g(bow(),'translate(13 0) scale(.9 1)'), ELA:g(l('M40 151C145 182 177 119 113 111C35 101 34 62 84 45L128 43',G,14)
-      +p('M123 31 149 36 158 47 140 58 121 54Z',I)+c(143,43,2,D)+rep(11,i=>l(`M${47+i*9} ${151+Math.sin(i*.45)*5}l1 10`,D,1.5)),'rotate(-7 96 96)'),
+    MOB:stele(), AMO:stone('ammon'), EDM:rock('sela'), QDR:g(bow(),'translate(13 0) scale(.9 1)'), ELA:g(referenceAnimal('serpent',G,D),'translate(192 0) scale(-1 1)'),
     MDA:g(weapon(),'translate(18 -5) scale(.82 1)'), TAB:grainAndGrapes(), CRC:pomegranate(), PAR:seatedArcher(), ARM:tiara(), ADI:tiara('adiabene'),
-    CHX:ship('characene'), LKH:stone('palace'), GHA:pennon(), RSH:pennon('liwa'), TRT:ship('tartessos'), SRD:stone('nuraghe'),
+    CHX:ship('characene'), LKH:stone('palace')+p('M92 35H100V45H110V53H100V64H92V53H82V45H92Z',G), GHA:pennon(), RSH:pennon('liwa'), TRT:ship('tartessos'), SRD:stone('nuraghe'),
     IBE:weapon('falcata'), SYC:arethusa(), PRG:vignette('cista'), MAU:rock('atlas'), GRM:chariot(), MAS:ship('massalia'),
     BLG:g(weapon('spear'),'rotate(-15 96 96)')+g(weapon('spear'),'rotate(15 96 96)')+l('M81 117 110 125M80 124 109 132',G,3),
     ARO:ship('armorican'), AQT:branch('oak')+g(branch('oak'),'translate(192 0) scale(-1 1)')+l('M96 175V142',G,4),
     NOR:g(weapon(),'translate(31 -2) scale(.68 .82)')+p('M40 130H152L142 146H109V161H126V171H65V161H82V146H61Z',G)+l('M48 136H144M88 149H103',I,1.4),
     BOI:bull('boii'), SUE:vignette('hair'), CHE:vignette('broken'),
-    CHA:roundShield()+g(weapon('spear'),'translate(55 28) scale(.65 .85)'), FRS:stone('terp'), CIM:bull('cimbri'), SCN:ship('suiones'),
+    CHA:g(roundShield('thureos'),'translate(-13 4) scale(.9)')+l('M145 50V138',B,4)+p('M132 133H158V153Q145 176 132 153Z',I)+l('M136 139H154M145 141V162',B,1), FRS:stone('terp'), CIM:bull('cimbri'), SCN:ship('suiones'),
     GOT:weapon('spear')+ring(96,103,22,G,5)+l('M79 88 113 118M79 118 113 88',B,2), AES:vignette('amber'),
-    DLM:stone('hillfort'), SCO:roundShield('thureos'), DRD:stone('watchtower'), VEN:g(p('M28 159 54 104H42L65 64H54L78 19 102 64H91L114 104H102L127 159H87V177H69V159Z',I)+l('M78 57V166M78 100 60 91M78 129 101 117',B,1.2),'translate(24 0)')
+    DLM:stone('hillfort'), SCO:g(weapon('spear'),'translate(-66 0)')+roundShield('thureos'), DRD:stone('watchtower'), VEN:g(p('M28 159 54 104H42L65 64H54L78 19 102 64H91L114 104H102L127 159H87V177H69V159Z',I)+l('M78 57V166M78 100 60 91M78 129 101 117',B,1.2),'translate(24 0)')
       +g(p('M24 159 46 111H36L55 78H45L65 43 85 78H75L94 111H84L106 159H70V177H57V159Z',G),'translate(-17 0)'),
     VAN:ship('vandal'), FRK:g(weapon('francisca'),'rotate(18 96 96)'), BGD:vignette('lawbook'),
     SAX:g(weapon('seax'),'rotate(-25 96 96)')+g(weapon('seax'),'rotate(25 96 96)'), AVA:vignette('horsetail'),
@@ -372,6 +370,11 @@ export function reviseCourtStandards(flags) {
     ROM:'A raised-wing aquila above the retained outlined SPQR inscription on its own crossbar. Feather groups, head, claws and tail remain separate contours.',
     MOA:'A weathered round-headed stele with varied surviving incision fragments and cracks. The marks supply surface texture, not a transcription.',
     MOB:'A round-headed Mesha-stele-inspired stone with irregular worn incision fragments. No readable inscription or invented transcription is asserted.',
+    ELM:'A coiled serpent with a separate open head, scales and intertwined body contours. This is a heraldic game adaptation of the existing Elamite snake association, not a copy of an Elamite seal.',
+    ELA:'A coiled serpent with retained scale, jaw and knotted-body contours, mirrored for this court. The snake-throne association remains a regional art analogy; the heraldic composition is a game adaptation.',
+    BLG:'Two leaf-bladed javelins cross at a bound grip, with separate sockets, shafts and ferrules. This is an invented military composition for the Belgic court.',
+    CHE:'Two military standards on broken, angled staffs, retaining hanging cloth and separate crown-like finials. This is an invented narrative device for the Cherusci.',
+    AQT:'Two lobed oak sprigs with internal leaf veins and individual branches form an invented landscape device for the Aquitanian court.',
     LUK:'A broken classical column and fallen diadem replace the generic axe. This is an invented game device for the revolt.',
     GAL:'Twelve individually drawn zodiac signs surround a solar centre on the established baby-blue field. This is a retrospective synagogue-mosaic game composition.',
     ISL:'The established four-horned altar, retaining four distinct horns, its block, mouldings and stepped footing, with internal carved detail.',

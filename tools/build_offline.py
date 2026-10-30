@@ -80,6 +80,9 @@ def build(output: Path, archive: Path) -> dict:
         return 'data:' + mime + ';base64,' + base64.b64encode((ROOT / path).read_bytes()).decode()
     assets = {'titleLogo': asset_uri('icons/judaea-universalis-logo.webp')}
     html = (ROOT / 'index.html').read_text(encoding='utf-8')
+    # The portable document supplies its own complete import map. Web-only
+    # release URLs must not take precedence over the embedded module URLs.
+    html = re.sub(r'<script\b[^>]*id="ju-web-art-map"[^>]*>[\s\S]*?</script>\s*', '', html)
     # Favicons also stay local when this document is opened directly from disk.
     html = re.sub(r'href="(icons/[^"]+)"', lambda m: 'href="' + asset_uri(m[1]) + '"', html)
     html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="' + CSP + '">', 1)
