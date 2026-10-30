@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'package.json'
       - 'main.js'
       - 'js/**'
       - 'icons/**'
@@ -29,8 +30,6 @@ jobs:
         with:
           ref: main
       - name: Check court artwork and offline support
-        env:
-          NODE_OPTIONS: --experimental-default-type=module
         run: |
           node tools/tests/court-art.mjs
           node tools/tests/generated-court-art.mjs
