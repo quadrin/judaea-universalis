@@ -11,12 +11,16 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
   if (globalThis.__JU_OFFLINE__) onMultiplayer = null;
   const list = Array.isArray(bookmarks) ? bookmarks : [bookmarks];
 
-  function shell(inner) {
+  let bookmarkObserver = null;
+
+  function shell(inner, mode = 'nations') {
     return `
-    <div class="ss-inner">
+    <div class="ss-inner ss-${mode}">
       <h1 class="ss-title ss-title-art"><img class="ss-logo" src="${TITLE_LOGO}" alt="Judaea Universalis" width="609" height="640" decoding="async"></h1>
+      <div class="ss-content">
       ${inner}
       <div class="ss-hint">Right-click moves armies &nbsp;·&nbsp; Space pauses &nbsp;·&nbsp; 1–5 sets speed &nbsp;·&nbsp; H for help in-game</div>
+      </div>
     </div>`;
   }
 
@@ -26,6 +30,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
   let challenge = 'normal';
 
   function renderBookmarks() {
+    if (bookmarkObserver) bookmarkObserver.disconnect();
     const cards = list.map((b, i) => `
       <div class="ss-slide"><div class="bm-card" data-bm="${i}" tabindex="0">
         <div class="bm-year">${esc(fmtYear(b.startDate.y))}</div>
@@ -51,16 +56,23 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       </div>
       <div class="ss-dots">${dots}</div>
       ${continueInfo ? `<button class="ss-continue">${icon('star4', 'icon-xs')} &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ${icon('star4', 'icon-xs')}</button>` : ''}
-      ${tools}`);
+      ${tools}`, 'bookmarks');
 
     const track = root.querySelector('.ss-track');
+    const vp = root.querySelector('.ss-viewport');
     const cardEls = [...root.querySelectorAll('.bm-card')];
     const dotEls = [...root.querySelectorAll('.ss-dot')];
+    const fitCurrentSlide = () => {
+      if (!vp.isConnected) return;
+      const slide = cardEls[bmIndex].parentElement;
+      vp.style.height = Math.ceil(slide.getBoundingClientRect().height) + 'px';
+    };
     const go = (i) => {
       bmIndex = ((i % list.length) + list.length) % list.length; // wrap both ways
       track.style.transform = `translateX(${-bmIndex * 100}%)`;
       cardEls.forEach((c, k) => c.classList.toggle('current', k === bmIndex));
       dotEls.forEach((d, k) => d.classList.toggle('on', k === bmIndex));
+      fitCurrentSlide();
     };
     root.querySelector('.ss-prev').addEventListener('click', () => go(bmIndex - 1));
     root.querySelector('.ss-next').addEventListener('click', () => go(bmIndex + 1));
@@ -71,7 +83,6 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       else if (e.key === 'ArrowRight') { e.preventDefault(); go(bmIndex + 1); }
     });
     // touch swipe on the viewport
-    const vp = root.querySelector('.ss-viewport');
     let swipeX = null;
     vp.addEventListener('touchstart', (e) => { if (e.touches.length === 1) swipeX = e.touches[0].clientX; }, { passive: true });
     vp.addEventListener('touchend', (e) => {
@@ -81,6 +92,11 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       if (Math.abs(dx) > 40) go(bmIndex + (dx < 0 ? 1 : -1));
     }, { passive: true });
     go(bmIndex);
+    // Each chapter uses its own height; long neighbours must not stretch it.
+    if (typeof ResizeObserver !== 'undefined') {
+      bookmarkObserver = new ResizeObserver(fitCurrentSlide);
+      bookmarkObserver.observe(track);
+    }
 
     cardEls.forEach((card) => {
       const open = () => {
@@ -98,6 +114,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       cont.addEventListener('click', () => {
         if (root.dataset.picked) return;
         root.dataset.picked = '1';
+        if (bookmarkObserver) bookmarkObserver.disconnect();
         continueInfo.onContinue();
       });
     }
@@ -113,6 +130,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
   }
 
   function renderNations(bookmark) {
+    if (bookmarkObserver) bookmarkObserver.disconnect();
     const playable = (bookmark && bookmark.playableTags) || [];
     const cards = playable.map((p) => {
       // The chapter's own name for the court, where it has one (SPEC §139):

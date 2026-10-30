@@ -4387,7 +4387,9 @@ a.ss-tool { text-decoration: none; display: inline-block; }
 .sv-export { white-space: nowrap; }
 @media (max-width: 600px) { .sv-row { flex-wrap: wrap; } .sv-row .sv-main { min-width: 60%; } }
 
-/* Approved engraved lion title mark. */
+/* Approved lion title mark and chapter picker. */
+.ss-inner { box-sizing: border-box; width: 100%; min-width: 0; }
+.ss-content { min-width: 0; }
 .ss-title-art {
   margin: 0 auto 22px;
   background: none;
@@ -4396,17 +4398,56 @@ a.ss-tool { text-decoration: none; display: inline-block; }
   letter-spacing: normal;
   line-height: 0;
 }
-.ss-logo {
-  display: block;
-  width: clamp(176px, 28vh, 250px);
-  max-width: min(100%, 70vw);
-  height: auto;
-  margin: 0 auto;
-}
-.ss-inner:has(.ss-cards) .ss-logo { width: 130px; }
+.ss-logo { display: block; width: 130px; max-width: 100%; height: auto; margin: 0 auto; }
 .ss-savetools { flex-wrap: wrap; }
-@media (max-height: 660px) { .ss-logo { width: 160px; } }
-@media (max-width: 560px) { .ss-logo { width: 180px; } }
-/* Fit the carousel inside the scrollable title screen on narrow phones. */
-.ss-inner { box-sizing: border-box; width: 100%; min-width: 0; }
 .ss-viewport { width: auto; min-width: 0; max-width: 400px; flex: 1 1 400px; }
+.ss-track { align-items: flex-start; }
+.ss-slide { box-sizing: border-box; }
+.ss-bookmarks {
+  display: grid;
+  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(24px, 5vw, 64px);
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px 20px;
+}
+.ss-bookmarks .ss-title-art { margin: 0; }
+.ss-bookmarks .ss-logo { width: 100%; max-width: 280px; }
+.ss-bookmarks .ss-sub { font-size: 15px; margin-bottom: 8px; }
+.ss-bookmarks .ss-carousel { margin-bottom: 6px; }
+.ss-bookmarks .bm-card { width: 100%; }
+.ss-bookmarks .bm-blurb {
+  min-height: 0;
+  max-height: min(290px, calc(100dvh - 300px));
+  overflow-y: auto;
+}
+.ss-bookmarks .ss-dots { margin-bottom: 6px; }
+.ss-bookmarks .ss-continue { margin-top: 4px; padding: 8px 16px; }
+.ss-bookmarks .ss-savetools { margin-top: 4px; gap: 6px; }
+.ss-bookmarks .ss-tool { margin-top: 4px; padding: 6px 10px; font-size: 12px; }
+.ss-bookmarks .ss-hint { margin-top: 12px; }
+@media (max-width: 760px) {
+  .ss-bookmarks { display: block; max-width: 540px; padding: 16px 12px; }
+  .ss-bookmarks .ss-title-art { float: left; width: 76px; margin: 0 12px 6px 0; }
+  .ss-bookmarks .ss-logo { width: 76px; }
+  .ss-bookmarks .ss-sub {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.16em;
+    margin-bottom: 4px;
+  }
+  .ss-bookmarks .ss-carousel { clear: both; display: block; position: relative; margin-bottom: 0; }
+  .ss-bookmarks .ss-viewport { width: 100%; margin: 0 auto; }
+  .ss-bookmarks .ss-arrow { position: absolute; bottom: -32px; width: 32px; height: 32px; font-size: 22px; }
+  .ss-bookmarks .ss-prev { left: 0; }
+  .ss-bookmarks .ss-next { right: 0; }
+  .ss-bookmarks .ss-dots { min-height: 38px; align-items: center; gap: 8px; margin: 0 38px 4px; }
+  .ss-bookmarks .ss-hint { margin-top: 10px; }
+}
+@media (max-height: 650px) {
+  .ss-bookmarks { padding-top: 12px; padding-bottom: 12px; }
+  .ss-bookmarks .ss-hint { display: none; }
+}
