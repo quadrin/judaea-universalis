@@ -40,7 +40,6 @@ notes = {e['id']:e['subject'] for e in entries}
 if len(mapping) != sum(len(e['tags']) for e in entries):
     raise ValueError('A court has more than one generated master')
 module = imports + '\nconst images = {' + sources + '};\n'
-module += 'const descriptions = ' + json.dumps(notes, separators=(',', ':')) + ';\n'
 module += 'export const GENERATED_COURT_ASSETS = Object.freeze(' + json.dumps(mapping, sort_keys=True, separators=(',', ':')) + ');\n'
 module += '''
 export function enrichGeneratedCourtStandards(flags) {
@@ -48,8 +47,11 @@ export function enrichGeneratedCourtStandards(flags) {
     const original = flags[tag];
     if (!original || !images[id]) throw new Error('Missing court image: ' + tag);
     const originalMotifNote = original.note || '';
+    const displayNote = tag === 'QDR' ? 'A strung composite bow with a wrapped grip and a single arrow, referring to Qedar’s archery traditions. An original court composition.'
+      : tag === 'OST' ? 'An eagle-shaped metal fitting with garnet-style inlays and pearl pendants, adapted from Migration-period jewellery. The composition uses the established eagle association rather than copying the cited buckle.'
+      : originalMotifNote.replace(/ The engraved game composition now retains[^.]*\\./g, '');
     flags[tag] = {...original, viewBox:'0 0 192 192', detailed:true, imageAsset:id,
-      originalMotifNote, note:descriptions[id] + ' Generated game artwork interpreting the established motif; colours and composition are illustrative.',
+      originalMotifNote, note:displayNote,
       body:`<rect width="192" height="192" fill="${original.fieldColor}"/><g data-emblem="${original.emblem}" data-generated-art="${id}"><image x="7" y="7" width="178" height="178" preserveAspectRatio="xMidYMid meet" href="${images[id]}"/></g>`};
   }
 }
