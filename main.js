@@ -832,7 +832,40 @@ async function boot() {
     return true;
   }
 
+  async function exportSave(id) {
+    let parsed = await localRead(id);
+    if (!parsed && isCloudOn()) parsed = await cloudGetSave(id);
+    if (!parsed || parsed.v !== SAVE_VERSION || !parsed.game || !hasBookmark(parsed.game.bookmarkId)) {
+      throw new Error('That campaign could not be read.');
+    }
+    return { filename: 'Judaea-Universalis-' + String(id).replace(/[^a-zA-Z0-9_-]/g, '_') + '.json',
+      json: JSON.stringify(parsed) };
+  }
+
+  async function importSave(file) {
+    if (!file || file.size > 50 * 1024 * 1024) throw new Error('Choose a save file smaller than 50 MB.');
+    let parsed;
+    try { parsed = JSON.parse(await file.text()); }
+    catch (e) { throw new Error('That file is not a JSON campaign save.'); }
+    if (!parsed || parsed.v !== SAVE_VERSION || !parsed.game || !hasBookmark(parsed.game.bookmarkId)) {
+      throw new Error('That save is from an unsupported game version or chapter.');
+    }
+    const game = reviveGame(parsed.game);
+    if (!game || !game.tags || !game.tags[game.playerTag] || !game.date || !Number.isFinite(game.date.y)) {
+      throw new Error('That campaign is incomplete.');
+    }
+    const id = 'manual-' + game.bookmarkId + '-import-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    const savedAt = Date.now();
+    const json = JSON.stringify({ v: SAVE_VERSION, savedAt, game });
+    if (!await localWrite(id, json, saveMeta(game, id, savedAt))) {
+      throw new Error('The browser could not store this campaign.');
+    }
+    return id;
+  }
+
   const saveTools = {
+    exportSave,
+    importSave,
     cloudOn: () => isCloudOn(),
     endpoint: () => cloudEndpoint(),
     status: () => cloudHealth(),
@@ -997,7 +1030,7 @@ boot().catch((e) => {
 // PWA: network-first service worker (no stale modules when online). Install
 // caches the whole game, so it plays with no connection (SPEC §288); after an
 // online boot the page asks the worker to fetch anything still missing.
-if ('serviceWorker' in navigator) {
+if (!globalThis.__JU_OFFLINE__ && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('[sw]', e));
     navigator.serviceWorker.ready.then((reg) => {
@@ -1005,3 +1038,4 @@ if ('serviceWorker' in navigator) {
     }).catch(() => {});
   });
 }
+

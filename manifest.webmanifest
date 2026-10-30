@@ -1,7 +1,7 @@
 {
   "name": "Judaea Universalis",
   "short_name": "Judaea",
-  "description": "Grand strategy in the Eastern Mediterranean — the Great Revolt of 66 CE.",
+  "description": "Grand strategy across the history of the Eastern Mediterranean.",
   "display": "standalone",
   "orientation": "any",
   "theme_color": "#1d1710",
@@ -15,3 +15,4 @@
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
+

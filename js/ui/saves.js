@@ -50,6 +50,7 @@ export function createSavesPanel({ DEFINES, saveTools }) {
           <span class="sv-name">${esc(s.nationName || tagDef.name || s.tag)} — ${esc(s.dateLabel)}</span>
           <span class="sv-sub">${esc(s.chapterName)} ${kind} ${where}</span>
         </span>
+        ${saveTools.exportSave ? `<button class="btn sv-export" data-export="${esc(s.id)}">Download</button>` : ''}
         <button class="btn sv-load" data-load="${esc(s.id)}">Load</button>
         <button class="btn sv-del" data-del="${esc(s.id)}"
           data-tt="Delete this campaign — from this device, and from your cloud copy if you have one"
@@ -100,6 +101,7 @@ export function createSavesPanel({ DEFINES, saveTools }) {
       ${offerHtml()}
       <div class="sv-status" data-ref="status">Reading the shelf…</div>
       <div class="sv-list" data-ref="list"></div>
+      ${saveTools.importSave ? '<div class="sv-import"><button class="btn" data-ref="import">Import save file</button><input type="file" data-ref="import-file" accept=".json,application/json" hidden></div>' : ''}
       ${keyBlockHtml()}
       <div class="sv-cloudline" data-ref="cloudline"></div>
       <button class="btn peace-cancel" data-ref="close">Close</button>`);
@@ -112,6 +114,24 @@ export function createSavesPanel({ DEFINES, saveTools }) {
   function wire() {
     el.querySelector('.modal-scrim').addEventListener('click', close);
     el.querySelector('[data-ref="close"]').addEventListener('click', close);
+
+    const importBtn = el.querySelector('[data-ref="import"]');
+    const importFile = el.querySelector('[data-ref="import-file"]');
+    if (importBtn && importFile) {
+      importBtn.addEventListener('click', () => { if (!busy) importFile.click(); });
+      importFile.addEventListener('change', async () => {
+        const file = importFile.files[0];
+        if (!file || busy) return;
+        busy = true;
+        importBtn.disabled = true;
+        try {
+          await saveTools.importSave(file);
+          await refreshList();
+          status('Campaign imported. Choose Load to play it.');
+        } catch (e) { status('Could not import: ' + (e.message || e), true); }
+        finally { busy = false; importBtn.disabled = false; importFile.value = ''; }
+      });
+    }
 
     const accept = el.querySelector('[data-ref="accept"]');
     if (accept) {
@@ -169,6 +189,25 @@ export function createSavesPanel({ DEFINES, saveTools }) {
     el.querySelector('[data-ref="list"]').addEventListener('click', async (e) => {
       const target = e.target instanceof Element ? e.target : null;
       if (!target || busy) return;
+      const exportBtn = target.closest('[data-export]');
+      if (exportBtn) {
+        busy = true;
+        exportBtn.disabled = true;
+        try {
+          const save = await saveTools.exportSave(exportBtn.dataset.export);
+          const url = URL.createObjectURL(new Blob([save.json], { type: 'application/json' }));
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = save.filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          status('Save file downloaded.');
+        } catch (e) { status('Could not download: ' + (e.message || e), true); }
+        finally { busy = false; exportBtn.disabled = false; }
+        return;
+      }
       const loadBtn = target.closest('[data-load]');
       if (loadBtn) { await doLoad(loadBtn.dataset.load, loadBtn); return; }
       const delBtn = target.closest('[data-del]');
@@ -209,8 +248,9 @@ export function createSavesPanel({ DEFINES, saveTools }) {
     let html = `<span class="sv-ok">▢ ${esc(where)}</span> <span class="sv-off">${esc(kept)}${room}</span>`;
 
     if (!saveTools.cloudOn()) {
-      html += `<span class="sv-off"> Nothing to set up, and nothing to download.
-        A cloud copy that follows you between devices is optional — see server/README.md.</span>`;
+      html += globalThis.__JU_OFFLINE__
+        ? '<span class="sv-off"> Offline copy. Use Download and Import save file to back up campaigns or move them between copies.</span>'
+        : '<span class="sv-off"> Use Download and Import save file to back up campaigns. An optional cloud copy can follow you between devices — see server/README.md.</span>';
       line.innerHTML = html;
       return;
     }
@@ -299,3 +339,4 @@ export function createSavesPanel({ DEFINES, saveTools }) {
     close,
   };
 }
+

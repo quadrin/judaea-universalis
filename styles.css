@@ -4379,3 +4379,10 @@ html.ju-reduce-motion *, html.ju-reduce-motion *::before, html.ju-reduce-motion 
 @media (max-width: 520px) {
   .wiki-standard-art figcaption { flex: 0 1 auto; }
 }
+
+
+/* Download and portable campaign backups. */
+a.ss-tool { text-decoration: none; display: inline-block; }
+.sv-import { margin: 12px 0; }
+.sv-export { white-space: nowrap; }
+@media (max-width: 600px) { .sv-row { flex-wrap: wrap; } .sv-row .sv-main { min-width: 60%; } }

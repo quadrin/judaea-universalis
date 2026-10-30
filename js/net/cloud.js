@@ -68,18 +68,21 @@ function linkEndpoint() {
 
 // Where saves may go: accepted by this player, or shipped with the game.
 export function cloudEndpoint() {
+  if (globalThis.__JU_OFFLINE__) return '';
   const stored = trimSlash(ls(() => localStorage.getItem(ENDPOINT_LS), ''));
   return stored || trimSlash(DEFAULT_ENDPOINT);
 }
 
 // Where a lobby room may go: the above, or whatever a link offered.
 export function roomEndpoint() {
+  if (globalThis.__JU_OFFLINE__) return '';
   return cloudEndpoint() || linkEndpoint();
 }
 
 // An endpoint a link offered that the player has not accepted for saves. The
 // saves panel surfaces this as a question rather than acting on it.
 export function untrustedEndpoint() {
+  if (globalThis.__JU_OFFLINE__) return '';
   const link = linkEndpoint();
   return link && link !== cloudEndpoint() ? link : '';
 }
@@ -250,3 +253,4 @@ export async function cloudDeleteSave(id) {
   await call('/saves/' + encodeURIComponent(id), { method: 'DELETE', auth: true });
   return true;
 }
+

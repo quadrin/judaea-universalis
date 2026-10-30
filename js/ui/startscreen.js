@@ -7,6 +7,7 @@ import { tagDef } from '../sim/military.js';
 
 export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools, onMultiplayer, onWiki) {
   if (!root) return;
+  if (globalThis.__JU_OFFLINE__) onMultiplayer = null;
   const list = Array.isArray(bookmarks) ? bookmarks : [bookmarks];
 
   function shell(inner) {
@@ -36,6 +37,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       `<button class="ss-dot" data-dot="${i}" aria-label="${esc(b.name)}" data-tt="${esc(b.name)}"></button>`).join('');
     const tools = (saveTools || onMultiplayer || onWiki) ? `
       <div class="ss-savetools">
+        ${!globalThis.__JU_OFFLINE__ ? '<a class="ss-back ss-tool" href="downloads/Judaea-Universalis-Offline.zip" download>Download offline</a>' : ''}
         ${onMultiplayer ? '<button class="ss-back ss-tool ss-mp" data-ref="mp">⚔ Multiplayer</button>' : ''}
         ${onWiki ? '<button class="ss-back ss-tool" data-ref="wiki">📖 Compendium</button>' : ''}
         ${saveTools && saveTools.open ? '<button class="ss-back ss-tool" data-ref="saves">▤ Saved campaigns</button>' : ''}
@@ -99,9 +101,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
         continueInfo.onContinue();
       });
     }
-    // Saves are a shelf, not a file: the panel lists every campaign this
-    // player has (cloud first, this device second) and loads any of them.
-    // Nothing is downloaded and nothing is uploaded by hand.
+    // The panel lists local and optional cloud campaigns, with file backups.
     const savesBtn = root.querySelector('[data-ref="saves"]');
     if (savesBtn && saveTools && saveTools.open) {
       savesBtn.addEventListener('click', () => saveTools.open());
@@ -184,3 +184,4 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
   delete root.dataset.picked;
   renderBookmarks();
 }
+

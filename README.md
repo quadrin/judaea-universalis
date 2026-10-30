@@ -2,6 +2,31 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
+**[Download the offline game](https://quadrin.github.io/judaea-universalis/downloads/Judaea-Universalis-Offline.zip)**
+
+Unzip the download and open `Judaea-Universalis-Offline.html` in a current
+Chrome or Edge browser. It runs directly from the file without Wi-Fi,
+an installer, or a local server. Single-player campaigns, maps, artwork,
+and synthesized sound are included. Cloud saves and multiplayer stay disabled
+in this copy. The download contains the same game code as this repository.
+
+Use **Saved campaigns → Download** to back up a campaign and **Import save file**
+to bring one into another copy. Browser saves belong to that browser and copy;
+keep the HTML at the same path and export saves before moving it or clearing
+browser data. You can also export a campaign from the website and import it
+into the offline game.
+
+Rebuild the download with Python 3.10 or later (standard library only):
+
+```sh
+python3 tools/build_offline.py
+```
+
+The build writes a preview HTML to `dist/` and both the standalone HTML and ZIP
+to `downloads/`. Rebuild and commit the downloads whenever game code changes.
+A [single HTML download](https://quadrin.github.io/judaea-universalis/downloads/Judaea-Universalis-Offline.html)
+is also available (save the page as HTML, then open that file).
+
 An EU4-style grand-strategy game set in the ancient Near East. Eleven bookmarks,
 every one played from an Israelite side:
 **The Kingdom Divided, 931 BCE** (Israel or Judah, at war with each other from
@@ -1647,3 +1672,4 @@ static site, the zero dependencies, or the missing build step changes.
 
 See `SPEC.md`. `main.js` is the boot/frame loop; `js/map/` rendering; `js/sim/` DOM-free
 simulation; `js/ui/` chrome; `js/data/` defines, map data, and the 66 CE scenario.
+
