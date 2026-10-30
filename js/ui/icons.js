@@ -10,6 +10,7 @@
 import { unitGlyphSvg } from '../data/units.js';
 import { FLAT_FLAGS, REVIVAL_FLAGS, LEGACY_BORROWED_FLAGS, presentFlag, legacyCourtFlag } from './flag_art.js';
 import { MODERN_COURT_ART, MODERN_FLAG_REPAIRS } from './modern_standards.js';
+import { AUTHENTIC_NATIONAL_FLAGS } from './authentic_national_flags.js';
 
 export const ICONS = {
   dagger: '<path d="M15 3 8 12l4 3 6-10ZM6 11l8 6M9 15l-4 5M4 18l3 3"/>',
@@ -1794,6 +1795,7 @@ export const FLAGS = {
     star5(5.5, 5.3, 2.6, '#f2f4f4'),
   ...FLAT_FLAGS,
   ...MODERN_FLAG_REPAIRS,
+  ...AUTHENTIC_NATIONAL_FLAGS,
 };
 
 function escText(s) {
@@ -1896,7 +1898,8 @@ function renderCourtChip({t,c,key,art,dispName},size,link,kind) {
   const linkAttrs = linked
     ? ` data-open-tag="${escText(t)}" role="button" data-tt="${escText(dispName + ' — see their court')}"`
     : '';
-  return `<span class="fchip${linked ? ' fchip-link' : ''}" style="background-color:rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0});width:${s}px;height:${s}px" aria-label="${escText(dispName)}"${linkAttrs}>${inner}</span>`;
+  const background = art?.nationalFlag ? 'transparent' : `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+  return `<span class="fchip${linked ? ' fchip-link' : ''}" style="background-color:${background};width:${s}px;height:${s}px" aria-label="${escText(dispName)}"${linkAttrs}>${inner}</span>`;
 }
 
 // Build one icon: 24x24, inherits currentColor, sized via CSS (.icon + modifier).

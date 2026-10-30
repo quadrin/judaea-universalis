@@ -85,8 +85,9 @@ console.log('== and it is real art, in the house hand ==');
   const malformed = courts.filter((t) => {
     const art = emblemOf(t);
     const b = bodyOf(art);
-    // The chip supplies the <svg>; an emblem that brings its own would nest.
-    return art && (/<svg|<\/svg>/.test(b) || !/<(path|circle|rect|g)\b/.test(b));
+    // Sourced national flags retain a fitted nested SVG to preserve their
+    // native aspect ratio; interpreted emblems remain ordinary body content.
+    return art && ((!art.nationalFlag && /<svg|<\/svg>/.test(b)) || !/<(path|circle|rect|g)\b/.test(b));
   }).sort();
   ok(!malformed.length, 'and every one is body content the chip can wrap ('
     + (malformed.join(' ') || 'all well-formed') + ')');
@@ -123,7 +124,9 @@ console.log('== the chip actually renders them ==');
     if (!chip.includes('<svg')) bad.push(t + ':no-svg');
     if (chip.includes('fchip-abbr')) bad.push(t + ':fell-back-to-text');
     const col = (DEFINES.TAGS[t] || {}).color || [];
-    if (col.length >= 3 && !chip.includes(col.slice(0, 3).map((n) => n | 0).join(','))) {
+    if (emblemOf(t)?.nationalFlag) {
+      if (!chip.includes('background-color:transparent')) bad.push(t + ':fictional-field');
+    } else if (col.length >= 3 && !chip.includes(col.slice(0, 3).map((n) => n | 0).join(','))) {
       bad.push(t + ':wrong-field');
     }
   }
@@ -138,7 +141,6 @@ console.log('== §270: the richer emblem shape, and the trap that comes with it 
   const rich = { viewBox: '0 0 96 96',
     body: '<defs><linearGradient id="a"><stop offset="0" stop-color="#123456"/></linearGradient></defs>'
       + '<rect x="0" y="0" width="96" height="96" fill="url(#a)"/>' };
-  const legacy = FLAGS.UK;
   try {
     FLAGS.__RICH_PROBE = rich;
     const probe = flagChip('__RICH_PROBE', DEFINES, 40);
@@ -153,8 +155,11 @@ console.log('== §270: the richer emblem shape, and the trap that comes with it 
   } finally {
     delete FLAGS.__RICH_PROBE;
   }
-  ok(typeof legacy === 'string' && flagChip('UK', DEFINES, 20).includes('viewBox="0 0 24 24"'),
-    'and a plain string emblem still renders on the 24x24 grid it was drawn for');
+  try {
+    FLAGS.__LEGACY_PROBE = '<path d="M2 2h20v20H2Z" fill="#123456"/>';
+    ok(flagChip('__LEGACY_PROBE', DEFINES, 20).includes('viewBox="0 0 24 24"'),
+      'and a plain string emblem still renders on the 24x24 grid it was drawn for');
+  } finally { delete FLAGS.__LEGACY_PROBE; }
   const shapes = Object.keys(FLAGS).map((t) => typeof FLAGS[t]);
   ok(shapes.every((x) => x === 'string' || x === 'object'),
     'every emblem in the table is one shape or the other (' + [...new Set(shapes)].join(', ') + ')');

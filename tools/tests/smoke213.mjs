@@ -14,7 +14,8 @@ for (const tag of courts) {
   const html = flagChip(tag, DEFINES, 24);
   assert(!html.includes('fchip-abbr'), tag + ' must never render as a text stub');
   assert.match(html, new RegExp('data-flag-key="' + tag + '"'));
-  assert(!/<filter\b|<linearGradient\b|<radialGradient\b|<script\b|\bonload=|url\(https?:/i.test(html), tag + ' must be self-contained local artwork');
+  assert(!/<filter\b|<script\b|\bon\w+=|url\(https?:/i.test(html), tag + ' must be self-contained local artwork');
+  if (!FLAGS[tag].nationalFlag) assert(!/<(?:linearGradient|radialGradient)\b/i.test(html), tag + ' keeps flat interpreted artwork');
 }
 for (const f of FORMABLES) if (f.to) assert(FLAGS[f.to], 'formation: ' + f.to);
 let lenses = 0;

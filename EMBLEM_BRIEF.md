@@ -6,9 +6,9 @@ Ancient courts retain their established coin, relief, seal, architectural or reg
 
 `icons/court-generated/manifest.json` records each generated image's subject and court assignments. `js/ui/generated_court_assets_*.js` preserve the canonical image data as self-contained WebP data URLs. `tools/build_court_assets.py` can recover those WebP files locally and repack the modules; `generated_standards.js` installs them after the earlier vector enrichment passes. The complete image remains the same at every display size. No external image fetch is required, including in the portable HTML build.
 
-`js/ui/modern_standards.js` retains the national-flag repairs. Its older portrait definitions remain unused by the court renderer. Runtime regime flags, Greek and Omani chapter identities, literal national-flag geometry and the United States' 48-star 1948 flag retain their existing definitions.
+`js/ui/authentic_national_flags.js` embeds 25 sourced flag vectors, including the full period devices for Yemen, Iran, Afghanistan, Ethiopia, Spain, Bulgaria, Romania and saved regime variants. `icons/source/national-flags/manifest.json` and `CREDITS.md` record their sources and rights. `tools/build_national_flags.py` sanitizes and fits each complete flag without changing its aspect ratio. The earlier six national-device repairs remain in `modern_standards.js`; its older portrait definitions remain unused. The United States retains its 48-star 1948 flag. Modern Greece uses the period land flag; occupation-era Germany is explicitly identified by its merchant C-pennant.
 
-Run court-art, generated-court-art, smoke213, smoke215, smoke186, smoke-judaean-coins, offline-cache and app-install before publishing. Review the gallery at 14/24/34/52/160px and inspect the Compendium in the browser. Bump the release import-map version and service-worker cache, and rebuild both portable downloads.
+Run court-art, generated-court-art, national-flags, smoke213, smoke215, smoke186, smoke-judaean-coins, offline-cache and app-install before publishing. Review the gallery at 14/24/34/52/160px and inspect the Compendium in the browser. Bump the release import-map version and service-worker cache, and rebuild both portable downloads.
 
 ## Historical interpretation
 

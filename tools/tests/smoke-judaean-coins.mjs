@@ -6,7 +6,7 @@ import { ERAS } from '../../js/data/compendium.js';
 import { initGame, makeCtx } from '../../js/sim/init.js';
 import { switchTagCore } from '../../js/sim/military.js';
 import { FLAT_FLAGS } from '../../js/ui/flag_art.js';
-import { flagChip, flagInfo } from '../../js/ui/icons.js';
+import { FLAGS, flagChip, flagInfo } from '../../js/ui/icons.js';
 import { JUDAEAN_COIN_SOURCES } from '../../js/ui/judaean_standards.js';
 
 // User constraint: the entire Hasmonean master, including its palette,
@@ -81,5 +81,5 @@ for (const [era, targets] of [['132ce', ['EPJ', 'KGJ']], ['614ce', ['KGJ']]]) {
 const w = boot('132ce');
 w.game.tags.JUD.flag = 'ISR';
 assert.equal(flagInfo('JUD', DEFINES, w.game).key, 'ISR', 'saved rebrands retain precedence');
-assert.equal(flagInfo('JUD', DEFINES, w.game).note, FLAT_FLAGS.ISR.note);
+assert.equal(flagInfo('JUD', DEFINES, w.game).note, FLAGS.ISR.note);
 console.log('PASS unchanged Hasmonean master, nine coin devices, chapter and save identities, founding motifs and formation transitions');

@@ -33,6 +33,7 @@ jobs:
         run: |
           node tools/tests/court-art.mjs
           node tools/tests/generated-court-art.mjs
+          node tools/tests/national-flags.mjs
           node tools/tests/smoke213.mjs
           node tools/tests/smoke215.mjs
           node tools/tests/smoke186.mjs

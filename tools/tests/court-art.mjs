@@ -39,12 +39,12 @@ assert.equal((FLAGS.USA.body.match(/<path\b/g)||[]).length,48,'the 1948 national
 assert.equal(Object.keys(MODERN_FLAG_REPAIRS).length,6);
 for (const tag of modern) {
   const lens=BOOKMARK_1948.tagTweaks[tag];
-  assert.equal(body(courtChip(tag,DEFINES,52,false,null,lens)).replaceAll('court-','flag-'),body(flagChip(tag,DEFINES,52,false,null,lens)),tag+': modern court displays its national flag');
+  assert.equal(body(courtChip(tag,DEFINES,52,false,null,lens)).replaceAll('court-','flag-').replaceAll('fcourt','fflag'),body(flagChip(tag,DEFINES,52,false,null,lens)),tag+': modern court displays its national flag');
   assert.deepEqual(courtInfo(tag,DEFINES,null,lens),flagInfo(tag,DEFINES,null,lens),tag+': flag caption and source follow the same identity');
 }
 for (const key of Object.keys(MODERN_COURT_ART)) {
   const tag=key.slice(0,3),game={tags:{[tag]:{flag:key}}};
-  assert.equal(body(courtChip(tag,DEFINES,160,false,game)).replaceAll('court-','flag-'),body(flagChip(tag,DEFINES,160,false,game)),key+': national flag survives saved regime changes');
+  assert.equal(body(courtChip(tag,DEFINES,160,false,game)).replaceAll('court-','flag-').replaceAll('fcourt','fflag'),body(flagChip(tag,DEFINES,160,false,game)),key+': national flag survives saved regime changes');
 }
 for(const [tag,hash] of Object.entries({
   SAM:'cc838c64acaae738440f1bcb2c6b84e5b4be3b9c213e8e5bdb0564bd1126941e',

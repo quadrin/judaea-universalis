@@ -29,7 +29,7 @@ for(const [tag,id] of Object.entries(GENERATED_COURT_ASSETS)) {
 for(const tag of ['JDH','JUD','SAM','HAS','HPA','HPH','HER','AGR','HYR','ARI','ATG','JUD_REVOLT','JUD_BK','EPJ_BK','KGJ_BK']) {
   assert(!FLAGS[tag].imageAsset,tag+': approved original preserved');
 }
-const body=html=>html.match(/<svg\b[^>]*>([\s\S]*)<\/svg>/)[1].replaceAll('court-','flag-');
+const body=html=>html.match(/<svg\b[^>]*>([\s\S]*)<\/svg>/)[1].replaceAll('court-','flag-').replaceAll('fcourt','fflag');
 for(const tag of ['USA','UK','YEM','YUG','TUR','ISR','EGY','GRC','OMA']) {
   const lens=BOOKMARK_1948.tagTweaks[tag];
   assert.equal(body(courtChip(tag,DEFINES,52,false,null,lens)),body(flagChip(tag,DEFINES,52,false,null,lens)),tag+': national flag');
