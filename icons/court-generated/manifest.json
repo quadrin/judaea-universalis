@@ -1,0 +1,1110 @@
+{
+  "created": "2026-10-30",
+  "method": "Image generation; established motif interpretations, with approved originals preserved",
+  "assets": [
+    {
+      "id": "adiabene-tiara",
+      "tags": [
+        "ADI"
+      ],
+      "subject": "A low ancient Adiabene royal tiara with a rounded jewelled band, inset roundel, two small side lappets and flowing diadem ribbons, unlike a tall Artaxiad crown.",
+      "sha256": "d7bf7173883e28fba9362e1409575d330f1efe4a560a41a6735ca64d64058db2",
+      "source_png": "exec-6277a6d4-9f06-4fcb-b376-81fcd6e3e761.png",
+      "bytes": 68526
+    },
+    {
+      "id": "aeduan-torc",
+      "tags": [
+        "AED"
+      ],
+      "subject": "A slender ancient Celtic gold torc with a tightly twisted collar and two large spiral curled terminals, open at the bottom, fine incised wire and archaeological metalwork construction.",
+      "sha256": "42a039b1e2a021eee5c63f009c3d34decfc949323e81fba7c2964dea08028696",
+      "source_png": "exec-5be0861c-a757-47dc-a5e0-253885fdef7f.png",
+      "bytes": 70328
+    },
+    {
+      "id": "aksum-stela",
+      "tags": [
+        "AXM"
+      ],
+      "subject": "An Aksumite monumental stela, very tall carved stone with a gently rounded summit, rows of false windows and a false door at the foot, carefully incised architectural relief panels.",
+      "sha256": "82e0bfb366d7e0023c309d976932a5bf0f4c4a6eba52eafb66027b1751b5ed40",
+      "source_png": "exec-25a01982-0f28-4eb4-ab8a-e1f5fbe35221.png",
+      "bytes": 29574
+    },
+    {
+      "id": "amber-necklace",
+      "tags": [
+        "AES"
+      ],
+      "subject": "An ancient Baltic amber necklace, seven individually shaped irregular amber beads on a looping cord, polished faceted bead edges and engraved highlights, restrained gold and ivory only.",
+      "sha256": "dbaecb441078d371e6afa0acf848f49aae208a2514e65797dd4a55b0090a75a1",
+      "source_png": "exec-3db57c43-70a6-4930-985b-2496a0eb67dc.png",
+      "bytes": 55404
+    },
+    {
+      "id": "ammonite-citadel",
+      "tags": [
+        "AMM",
+        "AMO"
+      ],
+      "subject": "An ancient Levantine ashlar citadel gateway, two massive squared flanking towers, recessed dark doorway, lintel and incised masonry courses, solar roundel over the gate.",
+      "sha256": "1397bb51ec60b8305f407d1152763abd6a8572c1c303b29db62b7410f3f198de",
+      "source_png": "exec-ef881c86-a692-40e0-a969-693134f12d2d.png",
+      "bytes": 87332
+    },
+    {
+      "id": "anvil-sword",
+      "tags": [
+        "NOR"
+      ],
+      "subject": "A Roman-period iron anvil with a shaped horn and solid foot, a short straight double-edged sword standing behind it, collared hilt, blade fuller and finely engraved edges.",
+      "sha256": "01bbd550683e95c996b277c77fddca8b0c4de2d6e3edc6a96835bcfcfc070f2c",
+      "source_png": "exec-beafea92-3195-415b-ac98-e5c21ff122bd.png",
+      "bytes": 48972
+    },
+    {
+      "id": "arethusa",
+      "tags": [
+        "SYC"
+      ],
+      "subject": "The classical Greek profile of Arethusa from Syracusan silver coin reverses, dressed wavy hair gathered in a net, earring, necklace, with four dolphins curving around the head. No coin border or inscription.",
+      "sha256": "c25b8e462fd4428093f8413eab9cfc81fee1904bcc17ab1e997c05f5dfb89469",
+      "source_png": "exec-c35489ef-fea5-4f32-8753-327e7dc0889c.png",
+      "bytes": 95334
+    },
+    {
+      "id": "armorican-ship",
+      "tags": [
+        "ARO"
+      ],
+      "subject": "A broad-beamed Venetic Atlantic merchant ship with tall blunt prow and stern, deep heavy timber hull and one large square leather sail with stitched panel seams, thick mast and rigging, side profile.",
+      "sha256": "688a880a73e50a9ea391daeb845a4497487ddff3623ad39255d40e9de19d890d",
+      "source_png": "exec-ce2888d2-f948-45d9-900b-fd6cadb2d5b5.png",
+      "bytes": 92582
+    },
+    {
+      "id": "artaxiad-tiara",
+      "tags": [
+        "ARM"
+      ],
+      "subject": "An Artaxiad royal tiara with five pointed crest elements, star and eagle ornament, jewelled band, hanging cheek lappets and diadem ties, modeled on Armenian royal coin portraits; isolated crown only.",
+      "sha256": "5379fa6fd64f9d18e01b7c1d5bc171919c106c6aca0aeab8f100b9a2262dec41",
+      "source_png": "exec-e74c78eb-3d99-4d86-8187-fa6a87af1397.png",
+      "bytes": 88308
+    },
+    {
+      "id": "assyria-ashur",
+      "tags": [
+        "ASR",
+        "ASY"
+      ],
+      "subject": "The Assyrian winged solar disc with a bearded royal archer, drawn bow, layered feathered wings and pendant tail fan.",
+      "sha256": "72d981e728dd6352d1eeceb06d5514d2ee49365ae8a9835d1147199e4e6ba34c",
+      "source_png": "exec-974c6ae9-d969-49d1-93e3-9a03b321b197.png",
+      "bytes": 77282
+    },
+    {
+      "id": "athenian-owl",
+      "tags": [
+        "ATH"
+      ],
+      "subject": "The Athena owl from classical Athenian tetradrachms, front-facing owl head with large round facial discs and almond eyes, compact body in side profile, patterned folded wing and two visible talons, a small olive sprig at upper left. No letters.",
+      "sha256": "19ca068c6bd4129e90574a70202be1bc1fd8aced76992d0d1bc7de5d94727979",
+      "source_png": "exec-59fef2a6-2a1b-464e-8943-2e09942bfb6d.png",
+      "bytes": 65482
+    },
+    {
+      "id": "atlas-rock",
+      "tags": [
+        "MAU",
+        "IDU",
+        "EDM"
+      ],
+      "subject": "A monumental rocky mountain crag with natural fractured ledges and a narrow stepped cleft, rendered as an antique heraldic landscape device, strong jagged silhouette and precise engraved stone texture.",
+      "sha256": "4cd02a13af7527c74eb13e83434259baa84c97a96170497fd74bda34c16c4d48",
+      "source_png": "exec-ff347c0a-c7d3-408b-a905-9042487eca67.png",
+      "bytes": 76938
+    },
+    {
+      "id": "bactrian-elephant",
+      "tags": [
+        "GBA"
+      ],
+      "subject": "A complete Asian elephant in side profile with natural head, small folded ears, long curved trunk, tusk, thick body and four separated legs, light ornamental bell at neck, ancient Bactrian coin-inspired engraving.",
+      "sha256": "4ddbbd9616a6de4ab95d561d352e3461b640b920bceb18c55aa979fa510d8f51",
+      "source_png": "exec-a7e8e207-6805-4767-915c-764ae4837c62.png",
+      "bytes": 93182
+    },
+    {
+      "id": "belgic-javelins",
+      "tags": [
+        "BLG"
+      ],
+      "subject": "Two ancient Belgic light javelins bound together at their grips, narrow pointed iron heads, very long slim ash shafts, leather binding at the crossing, slight outward angle, no crescent.",
+      "sha256": "6ae07ce6ecdc2ee74e292277ca2890f0854e43832569c81ef68629827ef78fd7",
+      "source_png": "exec-32a53c34-872d-45f3-af57-546ee79b43de.png",
+      "bytes": 35214
+    },
+    {
+      "id": "bithynian-galley",
+      "tags": [
+        "BIT"
+      ],
+      "subject": "A Hellenistic Bithynian war galley with high recurved swan-neck stern, long narrow multi-bank oared hull, strong bronze ram, central mast and a small furled square sail, side profile.",
+      "sha256": "3140185667347ff4e17c76ce94230efdeed6471390fbeb638b391e53903a8a7a",
+      "source_png": "exec-394eb03f-97e4-45ee-aaaf-c95bf0c8bf14.png",
+      "bytes": 86048
+    },
+    {
+      "id": "boian-bull",
+      "tags": [
+        "BOI"
+      ],
+      "subject": "A La Tene coin-style bull standing in strong side profile, naturally muscular neck and shoulders, raised foreleg, curled forehead and two short curved horns, no generic geometric animal anatomy.",
+      "sha256": "20f6ac5acb425977faed6538d4df281c928811dbb3f4901809fb0481faf07744",
+      "source_png": "exec-ce5704e6-3136-49e0-8a40-cdfeaaf233cd.png",
+      "bytes": 77338
+    },
+    {
+      "id": "bow-quiver",
+      "tags": [
+        "SCY"
+      ],
+      "subject": "An ancient Near Eastern composite recurve bow beside an embossed leather gorytos bow case and quiver holding five arrows; graceful real curvature, taut string and engraved animal-style ornament.",
+      "sha256": "c75e85a36bed32502c1a6d674a487910d22d97c442fd799a7252a38fac1930aa",
+      "source_png": "exec-bf093e71-eb65-4aac-bb93-ab126c08257a.png",
+      "bytes": 64164
+    },
+    {
+      "id": "broken-standards",
+      "tags": [
+        "CHE"
+      ],
+      "subject": "Two captured Roman military standards with broken angled staffs and damaged fringed banners, separate eagle and disc finials, carefully engraved metalwork and hanging cloth.",
+      "sha256": "c1442ffc12d92c7302dddc1771aac21b3a4133696b23efd2c8861cbdbc940619",
+      "source_png": "exec-a27e74d7-c1dd-4787-ad90-c25fc4d659af.png",
+      "bytes": 88236
+    },
+    {
+      "id": "bull-head",
+      "tags": [
+        "SAB"
+      ],
+      "subject": "A powerful ancient votive bull head facing forward, long naturally curved horns, defined muzzle, curled forehead hair, distinct ears and engraved facial planes, after ancient Mediterranean and South Arabian bronze sculpture.",
+      "sha256": "a6579b32801dc9957d8cda56655a2965f01359e6dd8bdca44b5cb96ed1ed9adc",
+      "source_png": "exec-c0c53ab6-9537-4fa9-9c40-0914b2b3cdb1.png",
+      "bytes": 66286
+    },
+    {
+      "id": "cappadocian-rock",
+      "tags": [
+        "CAP"
+      ],
+      "subject": "A single Cappadocian rock-cut sanctuary carved into a pointed volcanic formation, small recessed door and architectural openings, natural irregular cliffs and incised rock texture.",
+      "sha256": "a1aaecd75b19e82bff20c5032faf1337881040cf14868db2d34789451645365a",
+      "source_png": "exec-25b85f38-1aeb-467d-9862-9a30505fa328.png",
+      "bytes": 69248
+    },
+    {
+      "id": "carnyx",
+      "tags": [
+        "SEQ"
+      ],
+      "subject": "A La Tene boar-headed carnyx war trumpet, long curved tube rising vertically to an open-jawed boar head, upright ears, long snout, curled metal crest and separate tube collars, precise archaeological metalwork engraving.",
+      "sha256": "51a664a61e4ad0d3d50d79a5d0ed081f574c65f60ab56abe2e5b02c97e286327",
+      "source_png": "exec-071cd5e2-0c70-4d11-9b28-9e3cb2d668f9.png",
+      "bytes": 35112
+    },
+    {
+      "id": "celtiberian-caetra",
+      "tags": [
+        "CTB"
+      ],
+      "subject": "A round Celtiberian caetra shield with a large central bronze boss and La Tene curvilinear metal ornament, a forward-curving falcata and one spear crossed behind it, accurate archaeological weapons.",
+      "sha256": "53e6ef95ad68b8d3b40f0cbeca9dca3176ac986face0d02388e864cbbbff0fd7",
+      "source_png": "exec-2534b5ce-8669-4a3d-9f6a-f063c92db36c.png",
+      "bytes": 67482
+    },
+    {
+      "id": "characene-ship",
+      "tags": [
+        "CHX"
+      ],
+      "subject": "An ancient Persian Gulf merchant ship with high curved bow and stern, deep stitched planked hull and a single large square sail, visible mast stays and rigging, side profile.",
+      "sha256": "fadf6fea002c4a155b70f7d372f8d580a127e35f8b0c1f7b6834fae47fd72ed2",
+      "source_png": "exec-cd1a482c-e493-4114-8a68-c379453387be.png",
+      "bytes": 92380
+    },
+    {
+      "id": "cilician-gate",
+      "tags": [
+        "CIL"
+      ],
+      "subject": "A monumental ancient Cilician stone gate with two rectangular pylons, a vaulted entry, weathered ashlar masonry and carved lintel ornament, shallow three-quarter view.",
+      "sha256": "ce8d4efa3695575f0d82a4ccc1254e80d363d8ffeac3a6158315069c53e740d9",
+      "source_png": "exec-1a1af287-752e-4526-af44-a28707d54aec.png",
+      "bytes": 92358
+    },
+    {
+      "id": "cimbrian-bull",
+      "tags": [
+        "CIM"
+      ],
+      "subject": "A proud bull head in three-quarter profile, a broad natural muzzle, one sweeping long upward horn with the far horn visible behind it, strong neck and engraved curls on the forehead, ancient bronze votive style.",
+      "sha256": "a89b45b3b9ec40f9bba791bccc05bbb1ef301c5438dd4fdcd9edfd1d039969c9",
+      "source_png": "exec-2c9d9016-2b67-46cd-b4e6-3c5e04decc23.png",
+      "bytes": 77084
+    },
+    {
+      "id": "cista-mystica",
+      "tags": [
+        "PRG"
+      ],
+      "subject": "The cista mystica from Pergamene coin reverses, a round woven ritual basket with its lid tipped open, a single snake emerging in an S-curve, small ivy leaves framing the basket; no inscription.",
+      "sha256": "18612a14b0c84cc0e5e60b787bae6d654c5b652857fee4b599f12deb8e9e893d",
+      "source_png": "exec-4b5e6be2-a6f3-43f7-a8e1-4b6e56409119.png",
+      "bytes": 73990
+    },
+    {
+      "id": "classical-temple",
+      "tags": [
+        "DEC",
+        "ION"
+      ],
+      "subject": "A classical six-column Ionic temple facade, real voluted capitals, fluted columns, recessed cella, carved pediment and low steps, precise antiquarian architectural engraving.",
+      "sha256": "564604f5287b9fa944aaf3c7c6f7acf34f957b0636d424c3e00e594f7e8aaee7",
+      "source_png": "exec-42d07dcd-16d3-411a-a57f-0ec7c8f01935.png",
+      "bytes": 61866
+    },
+    {
+      "id": "crossed-javelins",
+      "tags": [
+        "BLM"
+      ],
+      "subject": "Two ancient leaf-bladed javelins crossed diagonally, shaped iron heads with visible sockets, long wooden shafts and bound grips; a small crescent in the lower central space.",
+      "sha256": "3bfc304c079d8a9fbec52055e3e270d6c33af53ec52939d7071bf149f4430e2e",
+      "source_png": "exec-9a967402-aad7-4fab-af95-b847f2966c85.png",
+      "bytes": 50346
+    },
+    {
+      "id": "crossed-seaxes",
+      "tags": [
+        "SAX"
+      ],
+      "subject": "Two early medieval seax knives crossed diagonally, long single-edged broken-back blades, narrow tangs, carved wooden grips and modest metal collars, precise weapon engraving.",
+      "sha256": "f0aa936a5af6673d31775ed121feabb4fae060783130e3a4480ef99050da7ef5",
+      "source_png": "exec-3ea8aa8b-c427-43bc-a88e-eeb14e328d25.png",
+      "bytes": 50938
+    },
+    {
+      "id": "dacian-draco",
+      "tags": [
+        "DAC"
+      ],
+      "subject": "A Dacian draco military standard, open-jawed wolf head with pointed ears and visible teeth at the top of a staff, long ribbed serpent-like textile windsock streaming to the right, flowing cloth seams and metal head engraving.",
+      "sha256": "bba8aca13c318c1f1d3dd05b545a5a3636c6d8fa6ac35eca77ae49e8514fe6db",
+      "source_png": "exec-e9f98532-adb9-4581-9a81-702cefeb67e1.png",
+      "bytes": 46622
+    },
+    {
+      "id": "damascus-thunderbolt",
+      "tags": [
+        "DMS"
+      ],
+      "subject": "A three-branched ancient Syrian thunderbolt emblem of Hadad, with three radiating barbed lightning branches emerging from a bound central grip, after Hellenistic Syrian coin-style thunderbolts.",
+      "sha256": "d73d7b3c1904d6769863bbb558c9b8d9263ee52ca37c8fe5619970a6840f3967",
+      "source_png": "exec-8b1e874b-00b9-4604-991d-183c7b1f0cb4.png",
+      "bytes": 49718
+    },
+    {
+      "id": "dardanian-watchtower",
+      "tags": [
+        "DRD"
+      ],
+      "subject": "A tall isolated ancient Balkan watchtower of rough fitted stone, narrow slit openings, heavy lintelled doorway and an uneven battlemented top, on a rocky footing, three-quarter archaeological architectural engraving.",
+      "sha256": "159526cf41cd5efaed6a3ac1f7055169bf2b7c2ee4ba9d6dac2d8c4383a88d75",
+      "source_png": "exec-9994852e-2627-4b4b-88d9-fcd6cb2a4eb8.png",
+      "bytes": 78574
+    },
+    {
+      "id": "desert-chariot",
+      "tags": [
+        "GRM"
+      ],
+      "subject": "A Garamantian-style two-horse chariot in side profile, two natural horses galloping together, a light spoke-wheeled chariot with a standing driver holding reins. Anatomically formed horses, no stick figures.",
+      "sha256": "42e1bc20e7b43fbe461fe1b70ab727e34f60dc1220c9dd8966e49fcb1a1091df",
+      "source_png": "exec-4853f8de-004e-461d-9654-825fca11670c.png",
+      "bytes": 81928
+    },
+    {
+      "id": "eagle-buckle",
+      "tags": [
+        "OST"
+      ],
+      "subject": "A Migration-period eagle fibula, hooked beak in profile, sweeping raised feathered wing, geometric garnet-cell inlays and small pearl pendants; precise archaeological jewellery engraving, gold and ivory only.",
+      "sha256": "c4a188e37cc6ae86308f0a453c94760f0c8cfc82f9a9437d7d1a54ebe6f5359a",
+      "source_png": "exec-eedcd981-415e-42a9-85e9-009ad1c23f0a.png",
+      "bytes": 71162
+    },
+    {
+      "id": "egyptian-double-crown",
+      "tags": [
+        "MIZ"
+      ],
+      "subject": "The Egyptian pschent double crown: tall rounded White Crown nested into the Red Crown with its high rear projection and curled frontal wire, precise Egyptian relief-derived silhouette and engraved interior.",
+      "sha256": "02fc2ea4c943f01b73562ccc2d13b44a535d31cee51c2677a18b5b4f920801f7",
+      "source_png": "exec-8f6608ab-48ae-4838-b25e-50bd090e4d56.png",
+      "bytes": 60968
+    },
+    {
+      "id": "emesa-baetyl",
+      "tags": [
+        "EME"
+      ],
+      "subject": "The Emesene conical sacred stone baetyl, a slightly irregular tall tapering dark stone with engraved surface striations and a small star on its upper face, on a low stepped footing.",
+      "sha256": "99c6d59b50d87e808d0b1643930b6dcc30d4468f80f95ffb71732e24d3f36f6f",
+      "source_png": "exec-888fe5bd-e021-4d28-a012-1f81776327f4.png",
+      "bytes": 48194
+    },
+    {
+      "id": "etruscan-mask",
+      "tags": [
+        "ETR"
+      ],
+      "subject": "An Etruscan terracotta gorgoneion antefix mask, frontal archaic female face with large almond eyes, protruding tongue, two tusks and densely curled hair, a serious archaeological object with engraved modeled facial contours.",
+      "sha256": "1ca5cac068b3f6d9c617da01cbc9e79a36b7744bbfe6c2736edb5a127359235a",
+      "source_png": "exec-fba2b68e-e021-4c9d-95d5-b36bad9756d2.png",
+      "bytes": 92228
+    },
+    {
+      "id": "falcata",
+      "tags": [
+        "IBE",
+        "LST"
+      ],
+      "subject": "An ancient Iberian falcata with its characteristic forward-curving single-edged blade, sculpted horse-head pommel, wrapped grip and engraved spine, upright diagonal heraldic composition.",
+      "sha256": "82e727e70e6af3966b5b53bdde3a0e97d34a16ce544cdadfe6e6ded52d4d3893",
+      "source_png": "exec-0309cafc-d70d-4707-9d58-8a66f0aeecd9.png",
+      "bytes": 36800
+    },
+    {
+      "id": "fallen-column",
+      "tags": [
+        "LUK"
+      ],
+      "subject": "A broken fluted Ionic column with a fallen small royal diadem at its foot, separate jagged stone fracture, voluted capital and engraved acanthus-like ornament.",
+      "sha256": "abf1a2f42dd6e51cc2a79b57002ab9cba32f7252a1521633c89ea9fd0c140a67",
+      "source_png": "exec-472de025-c744-4240-a479-3d0056d9a096.png",
+      "bytes": 70504
+    },
+    {
+      "id": "faravahar",
+      "tags": [
+        "PAS"
+      ],
+      "subject": "A Persian winged disc with an upper human figure facing left, one hand raised, holding a ring in the other; elaborate layered horizontal wings and three-tiered tail feathers, carefully articulated natural face and garments. No bow.",
+      "sha256": "f6a42080e718ac38356e434a6154ec994dad2163c04a74d72a5710e9d894da77",
+      "source_png": "exec-101e748d-68c0-4995-a049-0afb43958d09.png",
+      "bytes": 54554
+    },
+    {
+      "id": "francisca",
+      "tags": [
+        "FRK"
+      ],
+      "subject": "A Frankish francisca throwing axe with a characteristic sweeping asymmetric iron axe head and curved wooden handle, real beveled blade and engraved wood grain, an oak sprig beside the haft.",
+      "sha256": "12e0fd7747f099daf3cba53cb782517c7aaa9a19298bffd5f0fa710ec9d2c734",
+      "source_png": "exec-5de078aa-4180-4fd4-a6cd-35433756f0e9.png",
+      "bytes": 57420
+    },
+    {
+      "id": "galatian-torc",
+      "tags": [
+        "GLT"
+      ],
+      "subject": "An ancient Celtic twisted gold torc with thick braided collar, large spiral bulb terminals and incised ornamental bands, open lower gap, precise archaeological metalwork engraving.",
+      "sha256": "9f70798ce21d10bb0c1e1f40b1851a1820d8849820b09a55f437854aad766501",
+      "source_png": "exec-67c2162b-c5d0-4876-9b94-834242156270.png",
+      "bytes": 61390
+    },
+    {
+      "id": "galilean-zodiac",
+      "tags": [
+        "GAL"
+      ],
+      "subject": "A late antique synagogue zodiac medallion: twelve distinct small zodiac figures evenly spaced in a circular band surrounding a radiate sun face. Engraved mosaic-like figures, no letters or numbers.",
+      "sha256": "cc26c8085f636852deb07e8380ac4a7ca20ac2494f0efa415ed94e43807cd9be",
+      "source_png": "exec-e1b94914-a9ca-4aa1-b6a4-eb7a976bf784.png",
+      "bytes": 112968
+    },
+    {
+      "id": "gaulish-boar",
+      "tags": [
+        "AVN"
+      ],
+      "subject": "A La Tene boar military standard, side-facing wild boar with arched bristled back, long snout, strong tusk and curled tail standing on a narrow crossbar above a pole, accurate Celtic bronze-object engraving.",
+      "sha256": "2f6a763a071674565e23623205a8584e8ce1ab23b6a8a089409a75d9cb99df14",
+      "source_png": "exec-a12c190d-0a20-49ad-98d7-0b27760dc19f.png",
+      "bytes": 81734
+    },
+    {
+      "id": "gepid-eagle-fibula",
+      "tags": [
+        "GEP"
+      ],
+      "subject": "A Migration-period eagle fibula with an unmistakable long hooked eagle head in profile, one broad shield-shaped wing divided into garnet cloisonne cells, tiny gem-like compartments and three hanging pearl pendants; archaeological jewellery engraving.",
+      "sha256": "39b44d5216752d8b589eafa554acef6491653e222f9fb5defb4fe47b1d538df3",
+      "source_png": "exec-15f9921f-da07-4322-940c-ab33b3d8b294.png",
+      "bytes": 55206
+    },
+    {
+      "id": "grain-grapes",
+      "tags": [
+        "TAB"
+      ],
+      "subject": "A ripe bunch of grapes on a curling vine with two natural lobed leaves and three ears of wheat, after Syro-Anatolian agricultural reliefs, precise botanical engraving.",
+      "sha256": "8d066c560e964eb338fb0c9ef9d5947e79e9ccc86138276d1fc8e272394a14f2",
+      "source_png": "exec-c2f12c90-b072-4c97-9b58-5b1fa89afb57.png",
+      "bytes": 104930
+    },
+    {
+      "id": "greek-torch",
+      "tags": [
+        "HEL",
+        "REB"
+      ],
+      "subject": "An ancient Greek ceremonial torch with a tapered wrapped wooden handle, bronze rimmed cup and flowing flame, formal vertical heraldic composition.",
+      "sha256": "b0683e39b96fe2e6c9b95ccc44a8776cf56088b401eae76c78ae2f265f293d1b",
+      "source_png": "exec-d425ea2b-5689-433a-963f-c1481ac9036c.png",
+      "bytes": 30810
+    },
+    {
+      "id": "hamath-winged-sun",
+      "tags": [
+        "HMT"
+      ],
+      "subject": "A Syro-Anatolian winged solar disc after ancient Hamath relief motifs: circular sun disc, two symmetrical horizontal feathered wings and a pendant fan of tail feathers. No human figure.",
+      "sha256": "280e423f5a3e1d7c0cd1b84a73f5a2c1a92400d8174d2962166cf46e810bcbf3",
+      "source_png": "exec-c131221a-071c-44fd-9197-2d0098bcf0f1.png",
+      "bytes": 50108
+    },
+    {
+      "id": "hellenistic-galley",
+      "tags": [
+        "MAS"
+      ],
+      "subject": "An ancient Mediterranean oared galley with a graceful curved stern, low long planked hull, projecting bronze ram, one mast with a furled square sail, rigging and a clearly separated row of oars, side profile.",
+      "sha256": "125411e113ad9292ad9b2bedca1013fcc128eef78ae6144e91705eb7e119103a",
+      "source_png": "exec-aef3eb55-b0bc-47ac-83c1-6baf89d24636.png",
+      "bytes": 65956
+    },
+    {
+      "id": "hillfort",
+      "tags": [
+        "DLM"
+      ],
+      "subject": "An ancient hillfort with a stone curtain wall and two compact towers over an irregular rocky base, recessed gateway, fine masonry joints and crenellations; dignified antiquarian architectural engraving.",
+      "sha256": "e104ef2063f6a2dd33ccc19b09ed227e7983116f7c9a9fe9b3b319d30a5eaeab",
+      "source_png": "exec-4df7ce0d-a106-4953-a72d-3ebc3466a7c2.png",
+      "bytes": 87852
+    },
+    {
+      "id": "himyarite-eagle",
+      "tags": [
+        "HMY"
+      ],
+      "subject": "An ancient South Arabian bird of prey with spread feathered wings, strong hooked beak and fanned tail, inspired by Zafar stone relief birds, small crescent beneath, precise relief-style engraving.",
+      "sha256": "39eda02407d2a8b6f57e0d9a78422b99118762dbc4ed8b31ad190919a2c262ae",
+      "source_png": "exec-70392d3e-5538-4b45-bbb2-c16b4d8d9203.png",
+      "bytes": 79158
+    },
+    {
+      "id": "horsetail-standard",
+      "tags": [
+        "AVA"
+      ],
+      "subject": "An Avar steppe horse-tail standard, three long flowing horsehair tails suspended from a curved crosspiece under a small metal finial on a wooden staff; distinct strands, bindings and small bell fittings.",
+      "sha256": "19aeb5a6ce3d226300d5ebc38c4d493bfff337708ace5fbe06e209b9b5d61184",
+      "source_png": "exec-9f1d326c-6b40-4d50-b255-9ab4cfb53f98.png",
+      "bytes": 85064
+    },
+    {
+      "id": "incense-burner",
+      "tags": [
+        "HDR"
+      ],
+      "subject": "An ancient South Arabian stone incense burner with four sturdy legs, carved panel sides, a square open bowl and one slender curling plume of incense, precise relief engraving.",
+      "sha256": "af5fdce36b2ea19c2c358510314f661a8075a3c709c677bb92197f8352bededf",
+      "source_png": "exec-a13ba92b-2123-4936-934e-220143e29e23.png",
+      "bytes": 67364
+    },
+    {
+      "id": "israel-horned-altar",
+      "tags": [
+        "ISL"
+      ],
+      "subject": "A carved four-horned Levantine stone altar with a solid squared top, recessed front panel, ashlar joints and stepped footing.",
+      "sha256": "e0b587db5b91fbb559b2b29b302b40c8bd76fa28872076a2d85584b84865b3d5",
+      "source_png": "exec-082cfbe9-98a5-441e-949a-5a0f0bfc2843.png",
+      "bytes": 112994
+    },
+    {
+      "id": "ituraean-quiver",
+      "tags": [
+        "ITU"
+      ],
+      "subject": "An ancient mountain archer's slim curved composite bow beside a tapered tooled leather quiver with four visible fletched arrows, strongly worked leather straps and stitching; distinct from a Scythian gorytos.",
+      "sha256": "26ba87ff31acaf563f8418fd792474e2f3d5c8c996b2f47922c122f1518cafeb",
+      "source_png": "exec-93280c23-cb65-42d2-8721-bc78c310d134.png",
+      "bytes": 70852
+    },
+    {
+      "id": "la-tene-roundel",
+      "tags": [
+        "BRT"
+      ],
+      "subject": "A La Tene Celtic bronze roundel with three flowing curvilinear arms, spiral terminals, concentric engraved channels and tiny rim rivets, exact organic archaeological ornament.",
+      "sha256": "c04fe1b045b253bfc41a786e265861cd98c4c6cfb01265d44f4eef611d57b0df",
+      "source_png": "exec-f6fd4812-7c9f-425d-aa9c-342589c72bc6.png",
+      "bytes": 101766
+    },
+    {
+      "id": "lakhmid-palace",
+      "tags": [
+        "LKH"
+      ],
+      "subject": "A late antique Arab palace gateway at al-Hira, two crenellated towers, a tall recessed arched doorway, carved stone cornices and a small simple cross over the portal.",
+      "sha256": "e73bbe2ce53bfd39c95729beae0f14bd4c3527bb64bb3c99a8256e8560978a7c",
+      "source_png": "exec-7e312e84-c767-48eb-adb3-49ef37d28164.png",
+      "bytes": 69640
+    },
+    {
+      "id": "lawbook",
+      "tags": [
+        "BGD"
+      ],
+      "subject": "An open early medieval lawbook with thick parchment leaves, embossed leather binding, metal corner fittings and a simple central rosette; page rulings only, no invented words or alphabet.",
+      "sha256": "74c1ff04150f60aa5de71ca6329681ed32d3d52a21e8625789a5a6158f86d661",
+      "source_png": "exec-e4a37063-77aa-44c5-9bb7-33c0cf635307.png",
+      "bytes": 66786
+    },
+    {
+      "id": "lombard-crown",
+      "tags": [
+        "LMB"
+      ],
+      "subject": "An early medieval segmented royal crown inspired by the Iron Crown of Lombardy, six rectangular gold panels, individual inset oval gems and rosette mounts, visible inner band and engraved edges.",
+      "sha256": "9961d9c8f68b0820173c78a4b2f355605a217b9737522aa97791cf5fed54f349",
+      "source_png": "exec-7183787b-3515-4e0b-a7c9-d743bfa8b6a3.png",
+      "bytes": 64308
+    },
+    {
+      "id": "lusitanian-caetra",
+      "tags": [
+        "LUS"
+      ],
+      "subject": "A small ancient Lusitanian circular caetra shield, round raised central boss and concentric engraved bands, leather rim with metal rivets, two short light javelins crossed behind the shield.",
+      "sha256": "8bf1dc1f5312b5651cec13705964d349264828f346b97b74956a7d9a9ff041a5",
+      "source_png": "exec-a5744c86-9517-46f4-94e3-2470f470b5dc.png",
+      "bytes": 69936
+    },
+    {
+      "id": "lydian-lion-bull",
+      "tags": [
+        "LYD"
+      ],
+      "subject": "The confronting foreparts of a lion and a bull from Lydian Croesid coinage: lion left with open jaws and deeply curled mane, bull right with horn and muscular neck, both facing inward, natural animal anatomy.",
+      "sha256": "9d97c392b12427a0137632a4b19582e9663bf6a3416651f635ac8b9a5f707d7a",
+      "source_png": "exec-ab2a51c4-8cf7-4c4e-87a1-0d964920bb67.png",
+      "bytes": 97978
+    },
+    {
+      "id": "medean-sword",
+      "tags": [
+        "MED",
+        "MDA"
+      ],
+      "subject": "An ancient Iranian akinakes short sword with a straight double-edged blade, shallow fuller, winged guard, ribbed grip and small lobed pommel, precise archaeological object engraving.",
+      "sha256": "c6c14dab57625e00f7151e459b65f485a26dfd7fb81d45d009087f7c3cf53047",
+      "source_png": "exec-6c4f1c60-eed6-48fe-b800-f01bbcc8b59b.png",
+      "bytes": 20526
+    },
+    {
+      "id": "meroitic-pyramids",
+      "tags": [
+        "KSH"
+      ],
+      "subject": "Three steep narrow Meroitic royal pyramids with small projecting offering chapels, the middle pyramid taller, incised stone courses and realistic shallow three-quarter architectural form.",
+      "sha256": "4c5833dcddf9e893367f5a931bf4d6cf71380e620b1336e9fb5e4944741ccbdb",
+      "source_png": "exec-5ab78fde-1b98-4caa-ac56-98ff1cbfec00.png",
+      "bytes": 74256
+    },
+    {
+      "id": "milesian-lion",
+      "tags": [
+        "MIL"
+      ],
+      "subject": "The forepart of an archaic Greek lion in profile, mouth open, thick carefully curled mane and one raised paw, with a small eight-point star above its shoulder, following Milesian coin motifs.",
+      "sha256": "2d0fcd33dbe6120574b321338a87007ff86ae14135246a4ac21fbfe26b75c44c",
+      "source_png": "exec-daba388f-07c9-4866-b088-2d6a93a3ae2d.png",
+      "bytes": 89762
+    },
+    {
+      "id": "moabite-stele",
+      "tags": [
+        "MOA",
+        "MOB"
+      ],
+      "subject": "The round-topped Mesha-style Moabite stone stele, with curved shoulders, chipped stone edges and rows of tiny irregular worn inscription-like incisions. No readable invented lettering.",
+      "sha256": "04d7e697f91f64878a1679107dc445790ad778c924b13db20eae2f5b3e4518d8",
+      "source_png": "exec-93283c8e-0077-482e-8185-66f34d8d50df.png",
+      "bytes": 86390
+    },
+    {
+      "id": "nemrut-reliefs",
+      "tags": [
+        "CMG"
+      ],
+      "subject": "Three monumental seated Commagene royal and divine statues from Mount Nemrut, recognizable tall Iranian and Hellenistic headdresses, bearded carved faces, draped torsos and a rocky stepped plinth. Compact symmetrical group.",
+      "sha256": "bca5e6c0f5629ae5f9ceb16b4a866b91a0d8282130daf996cad156dcd82de7c5",
+      "source_png": "exec-57d5d88d-fe2f-45f3-b5c4-5b38b5435d04.png",
+      "bytes": 96648
+    },
+    {
+      "id": "nobian-double-bows",
+      "tags": [
+        "NOB"
+      ],
+      "subject": "Two ancient Nubian longbows crossed diagonally, tall naturally curved wooden limbs, taut strings and wrapped grips, one straight arrow vertically between them; no quiver and no bag.",
+      "sha256": "5f5ba9290987c0fb93427a6bb983de2910e7ad32396ed7667ff8067058d9d3c1",
+      "source_png": "exec-10e24f73-499a-4a06-8e9d-a3ad340fa81b.png",
+      "bytes": 67814
+    },
+    {
+      "id": "numidian-horse",
+      "tags": [
+        "NUM"
+      ],
+      "subject": "A free running Numidian horse in profile with one foreleg raised, natural equine anatomy, flowing mane and long tail, fine ancient coin-inspired engraving, no rider and no tack.",
+      "sha256": "cea27ef6a9f7b01fa7406040572de5cc030a2e4a637d9c25cbf24663d3f6520d",
+      "source_png": "exec-4e9884dc-4920-436f-8f48-eabe9c7a0d51.png",
+      "bytes": 80858
+    },
+    {
+      "id": "nuraghe",
+      "tags": [
+        "SRD"
+      ],
+      "subject": "A Sardinian nuraghe stone tower, truncated conical dry-stone structure with massive rough masonry blocks, tiny lintelled doorway and flat parapet; shallow three-quarter view.",
+      "sha256": "b09e9c285b156143f8491a0081c23ee10b036f8a941b397806f87d7f199f5c2a",
+      "source_png": "exec-bb51357e-99cc-4c48-8409-004bfc1cc96f.png",
+      "bytes": 76318
+    },
+    {
+      "id": "oak-sprigs",
+      "tags": [
+        "AQT"
+      ],
+      "subject": "Two natural oak sprigs with lobed leaves, fine veins and three acorns, curved inward into an open heraldic spray. Carefully engraved botanical contours.",
+      "sha256": "7981bd21552aa80b399af850655f906f9fb9e77b127a110072d60177fe72cdca",
+      "source_png": "exec-a1ea5b7a-fe57-4196-a13f-07e1d87223ba.png",
+      "bytes": 83898
+    },
+    {
+      "id": "oasis-gate",
+      "tags": [
+        "CHO"
+      ],
+      "subject": "An ancient Central Asian oasis fortress gate, high mud-brick rectangular walls, projecting towers and recessed lintelled entry, stepped crenellations and carefully engraved earthen masonry.",
+      "sha256": "e32c34974f5652e22d8c90babaed9255a7b3c4ca39bfee112454135c9d9a017e",
+      "source_png": "exec-3941564b-a802-471a-80cf-76872665c380.png",
+      "bytes": 69210
+    },
+    {
+      "id": "omani-dhow",
+      "tags": [
+        "OMA"
+      ],
+      "subject": "A traditional Omani trading dhow in side profile, deep graceful timber hull, raised stern, single high mast and immense triangular lateen sail with rope stays, detailed planking and sewn sail seams.",
+      "sha256": "50534141dc3a4a9838aea3403c8ae026f45ae29e3046d4a0346014c008d66186",
+      "source_png": "exec-c8e47163-65c7-4ade-872d-565ecd52d33f.png",
+      "bytes": 75528
+    },
+    {
+      "id": "oxhide-ingot",
+      "tags": [
+        "CYP"
+      ],
+      "subject": "A Bronze Age copper oxhide ingot, broad slightly concave rectangular body and four characteristic projecting corner handles, irregular cast-metal edges and lightly incised surface.",
+      "sha256": "234a4f522a84ae95c340d5e2faf2c39233985fe3e63fe50563bd00c2b1400149",
+      "source_png": "exec-4c9ec3ef-e4db-4589-9c55-062a646433b4.png",
+      "bytes": 74524
+    },
+    {
+      "id": "palmyrene-sun",
+      "tags": [
+        "PLM"
+      ],
+      "subject": "A Palmyrene solar disc with richly worked radiate rays and a small central rosette, engraved concentric bands and hanging ancient ornamental ribbons.",
+      "sha256": "09ee7ccce5f4fbd22e2cc44b050f4fdc2dc586718e8dee1720dcd527bef4084c",
+      "source_png": "exec-7ea9e2b8-fe23-4f2c-b0aa-d8e0a10e5c9d.png",
+      "bytes": 78310
+    },
+    {
+      "id": "parthian-archer",
+      "tags": [
+        "PAR"
+      ],
+      "subject": "The seated royal archer from Arsacid Parthian coin reverses, side profile, Iranian trousers, diadem ties, extended arm holding a recurve bow, hand and face naturally articulated, seated on a low throne.",
+      "sha256": "9fadebd3ad8b441d823ce81c6f5619c726c22c965de48b36c943a5749fb18aae",
+      "source_png": "exec-b8118aef-0050-415d-9113-27d08d66e4ca.png",
+      "bytes": 76510
+    },
+    {
+      "id": "pegasus",
+      "tags": [
+        "COR"
+      ],
+      "subject": "Pegasus flying left as on ancient Corinthian staters, natural horse anatomy with extended forelegs and folded hindlegs, one immense swept feathered wing rising from the shoulder, flowing mane and tail.",
+      "sha256": "66faa0426f48efd7f3ae5b6ba884bc4c661ac4e6f0930a734a06b5f3e4ed3737",
+      "source_png": "exec-536da344-9624-43f3-b021-4a6ee375ca19.png",
+      "bytes": 79222
+    },
+    {
+      "id": "persian-fire-altar",
+      "tags": [
+        "PRS"
+      ],
+      "subject": "An ancient Iranian fire altar, stepped pedestal with carved mouldings and a wide square fire bowl, a single structured flame curling upward, ancient coin-relief engraving.",
+      "sha256": "32a0abb5e5112badd5e8eaca1612791850d38478f3c66e7fd76bb18cf38aeef7",
+      "source_png": "exec-d138c8b6-8782-417e-b9fe-0d48fc2aef13.png",
+      "bytes": 56890
+    },
+    {
+      "id": "petra",
+      "tags": [
+        "NAB"
+      ],
+      "subject": "Petra's monumental al-Khazneh facade: carved Corinthian columns, recessed doorways, split upper pediment and central circular tholos with urn; precise architectural elevation.",
+      "sha256": "492147efd5f51f19c8d102b855b047d7a1a4d14131542370276e4581408c2995",
+      "source_png": "exec-e86727d6-8bfa-4392-a713-d9fad6418410.png",
+      "bytes": 69708
+    },
+    {
+      "id": "philistine-headdress",
+      "tags": [
+        "PHL",
+        "PLS"
+      ],
+      "subject": "A Philistine/Peleset feathered headdress after Egyptian relief depictions, a row of naturally shaped upright feathers, patterned brow band, hanging cheek guards.",
+      "sha256": "c11097605069ee0bd29156ecd93a93c4ea737990b4bdff5d0919e5a745a9f782",
+      "source_png": "exec-e146baf0-cd16-4651-96c1-72c7965da97c.png",
+      "bytes": 72280
+    },
+    {
+      "id": "phrygian-cap",
+      "tags": [
+        "PHR"
+      ],
+      "subject": "A soft ancient Phrygian cap, low fitted brim and long forward-curled tip, subtly folded cloth and incised stitched seams, side profile, archaeological dress engraving.",
+      "sha256": "53d0979fb949cde7365e08491ab6d650155180f898d2d2a673b79ac4a2ac45f4",
+      "source_png": "exec-a2ba0c36-be60-4a98-b48c-51cffdfe3a37.png",
+      "bytes": 92596
+    },
+    {
+      "id": "pictish-crescent",
+      "tags": [
+        "CAL"
+      ],
+      "subject": "A Pictish crescent and V-rod symbol from carved symbol stones, wide crescent filled with interlaced curved ornament, two slender angled rods crossing it, sculpted terminal scrolls and precise incised contours.",
+      "sha256": "8e76be93daddc80dfe0c2174231d5d87d6356d5fca47ef27e82722af354f87d0",
+      "source_png": "exec-3c959410-f0ac-4891-af63-f80da3ad6067.png",
+      "bytes": 70202
+    },
+    {
+      "id": "pine-trees",
+      "tags": [
+        "VEN"
+      ],
+      "subject": "Two tall naturally branching pine trees, one slightly shorter, with tapered trunks, fine needle clusters and an engraved forest silhouette, compact heraldic landscape composition.",
+      "sha256": "b85ad4d8a348343434aba4014254124dc8dd018153234dd9d062c49b769e4900",
+      "source_png": "exec-52c12f5e-0504-4cca-883a-260cc4461a36.png",
+      "bytes": 113156
+    },
+    {
+      "id": "pirate-ship",
+      "tags": [
+        "PIR"
+      ],
+      "subject": "A small ancient Mediterranean pirate raiding galley, fast low hull, sharply rising curved stern, projecting ram, six long oars and a low mast with a half-furled sail, side profile.",
+      "sha256": "21a150b0d2882ec4fa0b32d8149d39ed1022c711246799b20b6af2ab6f6f0cda",
+      "source_png": "exec-3b2d391e-fb22-488c-9f55-34629010f4ca.png",
+      "bytes": 75476
+    },
+    {
+      "id": "pomegranate",
+      "tags": [
+        "CRC"
+      ],
+      "subject": "One crowned pomegranate fruit, split slightly to reveal densely arranged seeds, flanked by two natural narrow leaves and curling stems, antique botanical and seal engraving.",
+      "sha256": "e0107c2c1b5fd48173072c5dbc0d407f59e62aef901f8c4de1a59c3bc5171ce7",
+      "source_png": "exec-a0cdc75d-ad7a-414a-8820-a872335d005c.png",
+      "bytes": 80076
+    },
+    {
+      "id": "qedar-bow",
+      "tags": [
+        "QDR"
+      ],
+      "subject": "One large strung ancient Arabian composite bow with long elegant recurved limbs, bound leather grip, fitted nocks and a single arrow aligned across the center, no quiver, formal heraldic composition.",
+      "sha256": "d338aadef3afa1d40750d91ecb288ba2eda254b3d64f320bd32b49539cf3cadf",
+      "source_png": "exec-629ee0a0-5d7a-4667-b1c0-672dbab5121a.png",
+      "bytes": 47586
+    },
+    {
+      "id": "rhodian-rose",
+      "tags": [
+        "RHO"
+      ],
+      "subject": "The rose from Rhodian coin reverses, an upright richly lobed rose blossom on a stem with two natural pointed leaves and a closed bud, crisp botanical engraving.",
+      "sha256": "8645d85618853715c393fbaaa04395f0da2683ad0734c9c72b9c6b4e79de0299",
+      "source_png": "exec-7c5a5b93-3896-4b2f-a9db-ff18dcc8a01a.png",
+      "bytes": 76504
+    },
+    {
+      "id": "ringed-spear",
+      "tags": [
+        "GOT"
+      ],
+      "subject": "A long iron spear with a leaf-shaped blade, visible central ridge and a separate bronze ring around the upper shaft, bound socket and narrow wooden staff.",
+      "sha256": "40a95fec8b99a23c008c3e5619144186de3099594e79e0ca54f5604340cdb04c",
+      "source_png": "exec-84dc8c39-4615-4512-866f-0f493a9e2ed6.png",
+      "bytes": 17736
+    },
+    {
+      "id": "roman-standard",
+      "tags": [
+        "USR",
+        "USV"
+      ],
+      "subject": "A Roman military vexillum with an eagle finial, three circular phalerae on the staff and a hanging fringed square banner, ornate rings and bindings, no inscription.",
+      "sha256": "224c5fc99fa6095da1bfe3888e3c6ba75c3eb645d3473a943e00aea8cc51c353",
+      "source_png": "exec-fd32b299-9a2d-4ad5-912e-cb1d1498ad27.png",
+      "bytes": 39912
+    },
+    {
+      "id": "samnite-spears",
+      "tags": [
+        "SMN"
+      ],
+      "subject": "Two long ancient Samnite spears crossed diagonally, broad tapered leaf-shaped iron heads and heavy sockets, long wooden shafts and small iron ferrules, formal spare heraldic weapon composition, no crescent.",
+      "sha256": "6fb046e5bdbb08a9728229dce847fb10cc67a1ae1596e7d545ff4a5ccaf3551b",
+      "source_png": "exec-b4358993-7dc6-44ed-8117-fdef9e74207a.png",
+      "bytes": 40562
+    },
+    {
+      "id": "sasanian-altar",
+      "tags": [
+        "SAS"
+      ],
+      "subject": "The fire altar and two attendants of a Sasanian silver drachm reverse, a stepped altar with flame at center, one naturally drawn standing crowned attendant on either side holding a long staff, detailed robes, faces, diadem ribbons and altar mouldings.",
+      "sha256": "b08ff66e02f65a23efa3dbb6ac1c87ff2405481cd0db367a52a04f983b5fcb8d",
+      "source_png": "exec-dcb9fc6a-7b78-4149-ae26-84d5fbf414fd.png",
+      "bytes": 105488
+    },
+    {
+      "id": "seleucid-anchor",
+      "tags": [
+        "SEL",
+        "CYZ",
+        "BAL",
+        "DMT"
+      ],
+      "subject": "The Seleucid royal anchor emblem derived from Hellenistic coinage: vertical shaft, large circular upper ring, cross-stock, curved symmetrical arms and pointed flukes, incised mouldings and a braided rope looping once around the shaft.",
+      "sha256": "f0a87eeda5fc8a9469e60a5d3529e40fa1a68051e034ed12cd21f09cbb0588c7",
+      "source_png": "exec-3e2efb0f-18aa-444e-8afa-5d44957a64f8.png",
+      "bytes": 53180
+    },
+    {
+      "id": "shield-spade",
+      "tags": [
+        "CHA"
+      ],
+      "subject": "An ancient oval thureos shield with central boss and raised spine, beside an iron spade with long wooden shaft and broad round-ended blade; authentic object construction, engraved metal edges and wood grain.",
+      "sha256": "b748c6821ba1a6bd8d4a0f4f1cc9e5fa2006e82f4b190221bfc81641d91c37fd",
+      "source_png": "exec-38dc173a-0d1a-4b5b-b681-bd5b74a7a2b1.png",
+      "bytes": 52072
+    },
+    {
+      "id": "silphium",
+      "tags": [
+        "CYR"
+      ],
+      "subject": "The silphium plant as represented on Cyrene coinage, tall branching stalk with symmetrical rounded flower umbels, heart-shaped seed pods and paired deeply cut leaves, detailed ancient botanical motif.",
+      "sha256": "1ccb8750f2a9688ac3f066e0b5654a635188ebd25c7d79056fd5e800df3a1342",
+      "source_png": "exec-e8da4eb7-8f46-4119-a14b-a1d72f21441e.png",
+      "bytes": 116576
+    },
+    {
+      "id": "slavic-axe",
+      "tags": [
+        "SLV"
+      ],
+      "subject": "An early medieval Slavic bearded axe with a long lower cutting edge and a straight wooden haft, realistic socket and blade bevel, two natural oak leaves and an acorn at the foot.",
+      "sha256": "3ace99982649d1096d10023cd915ab3261488964cdb55b8f8c9adda98859694e",
+      "source_png": "exec-cb50efe9-a678-4f24-aaea-0cdf343f0510.png",
+      "bytes": 70154
+    },
+    {
+      "id": "steppe-cap",
+      "tags": [
+        "SAK"
+      ],
+      "subject": "A tall soft ancient Iranian or Phrygian cap with a forward-falling point, stitched seams and curved folded brim, isolated historically recognizable headwear, natural cloth folds.",
+      "sha256": "461c961bf2fd35cd0a7c117e3af7f1a97424017fd4f7d3177371fda178074430",
+      "source_png": "exec-9d8d12b3-a319-4497-ad08-3c972177dd0d.png",
+      "bytes": 78348
+    },
+    {
+      "id": "suebian-head",
+      "tags": [
+        "SUE"
+      ],
+      "subject": "A serious ancient Germanic male head in profile with the characteristic Suebian knot of tied hair at the side, natural facial anatomy, individual engraved hair strands and a simple neck cutoff.",
+      "sha256": "fa38f829eb2af571524f8d0b2e2f8a487a17ec0cee3ebe186b229d1bdfea9fa6",
+      "source_png": "exec-b77e8895-90de-4011-a192-9a0a2d87c21e.png",
+      "bytes": 70252
+    },
+    {
+      "id": "suiones-boat",
+      "tags": [
+        "SCN"
+      ],
+      "subject": "A northern European ancient double-ended rowing boat, strongly upcurved matching stems, clinker-planked hull, six pairs of oars, no mast and no sail, side profile.",
+      "sha256": "dfef8d8cbd9273f0f79e5c0dbb13a6df1499631997739d38b09b737c269af690",
+      "source_png": "exec-2ae256a5-e0dd-4cdb-a6b4-85422ddcd296.png",
+      "bytes": 38250
+    },
+    {
+      "id": "tanit",
+      "tags": [
+        "CAR"
+      ],
+      "subject": "The historical Punic sign of Tanit rendered as an ancient carved metal votive emblem: triangular lower body, horizontal crossbar with upturned ends, circular head and crescent above; exact recognizable sign with finely incised ornament.",
+      "sha256": "d7ac57c18f5385477b611c37546a7417e92ada7b7d01badafafceea29ebdd278",
+      "source_png": "exec-ad2eacca-bc1f-42f8-8819-7182931a609b.png",
+      "bytes": 54762
+    },
+    {
+      "id": "tarentine-dolphin",
+      "tags": [
+        "TAR"
+      ],
+      "subject": "Taras riding a dolphin in side profile as on Tarentine silver coins, a naturally articulated seated youthful figure holding a trident, a curved anatomically formed dolphin with visible flukes; compact ancient coin-style composition.",
+      "sha256": "d15d4d8b6588b3fb3bf1b7b9f268a7e73eeba7233ba157e01a2e58db9960ea67",
+      "source_png": "exec-f8230298-b71c-4f91-b6e8-be39487c2519.png",
+      "bytes": 75326
+    },
+    {
+      "id": "tartessian-ship",
+      "tags": [
+        "TRT"
+      ],
+      "subject": "An early Phoenician-style merchant ship with horse-head curved prow, high stern, rounded hull, central mast, loose square sail and many carefully drawn stays, side profile.",
+      "sha256": "bf1f451a6b822a819ba3cc896840fb452099adea9aae22476f85b6ad95a08ae9",
+      "source_png": "exec-dbd9930c-504e-4937-9b7b-70f13d31c483.png",
+      "bytes": 100572
+    },
+    {
+      "id": "terp",
+      "tags": [
+        "FRS"
+      ],
+      "subject": "An ancient Frisian terp dwelling mound with one timber longhouse and reed roof above low tidal water lines, neat natural landscape silhouette, engraved roof thatch and earth texture.",
+      "sha256": "69f43af691845ee555b94ed3bc8df273204ac96d1724c602995e32af67a33c4b",
+      "source_png": "exec-7b08f72e-12ce-4c54-bbbc-a1cf7d1783a6.png",
+      "bytes": 73514
+    },
+    {
+      "id": "thracian-pelta",
+      "tags": [
+        "THR"
+      ],
+      "subject": "An ancient Thracian crescent-edged pelta shield with a broad crescent-shaped upper cutout, raised rim and round boss, two narrow javelins behind it; archaeological weapon construction and finely engraved edges.",
+      "sha256": "e13d7e4708cd11e557128ff0bb7fce2592f1a81abdd6d1822d444a5acdb5607d",
+      "source_png": "exec-d67c9387-884b-4d8b-b0c5-f067eb7e29a6.png",
+      "bytes": 62454
+    },
+    {
+      "id": "thureos",
+      "tags": [
+        "SCO"
+      ],
+      "subject": "An ancient oval thureos shield with a raised central metal spine and rounded boss, a carefully rimmed border and rivets, two slim javelins crossed behind it, actual archaeological weapon proportions.",
+      "sha256": "11d95435b93f446b22cda323169c9c64cab272d62e84986f979244a4dac8cafe",
+      "source_png": "exec-ed136f20-2a87-47b4-81f8-ae9b262d666a.png",
+      "bytes": 52450
+    },
+    {
+      "id": "trident",
+      "tags": [
+        "BOS"
+      ],
+      "subject": "A classical Greek trident with three long shaped prongs, collared socket, slender shaft and engraved ridges, formal upright composition.",
+      "sha256": "b706b4b810264068b82bd328a72834bbb1d8405a1fb5ad93a46035dd04b25d65",
+      "source_png": "exec-9a348813-1e09-4a70-99a6-06367ad7c0cb.png",
+      "bytes": 31138
+    },
+    {
+      "id": "tyrian-murex",
+      "tags": [
+        "TYR"
+      ],
+      "subject": "A spined murex sea shell, a strongly twisted spiral, layered ribs, sharp natural spines and long siphonal canal, accurate antiquarian natural history engraving.",
+      "sha256": "d4de00b85ecf8a7b72cbb306a8ff2d214b3380d231188db46d4a1cb04fc94c00",
+      "source_png": "exec-72f79d00-5bad-434f-a349-bfdaf277f882.png",
+      "bytes": 51100
+    },
+    {
+      "id": "urartian-tree",
+      "tags": [
+        "URA"
+      ],
+      "subject": "An Urartian sacred tree after ancient bronze reliefs: a central tiered trunk with symmetrical curling branches, palmette rosettes and a flared stepped base; precise repeated botanical ornament.",
+      "sha256": "15991e3f377b78eae7afc7372b7a8c820e4ad7f34f48b0151fc61053c4de8bd6",
+      "source_png": "exec-ba50fdc7-ed09-409a-8f8a-e9a6ec49556c.png",
+      "bytes": 118200
+    },
+    {
+      "id": "vandal-ship",
+      "tags": [
+        "VAN"
+      ],
+      "subject": "A late antique Vandal sailing warship with a long raised stern, deep planked hull, square sail, long yard and diagonal rigging; side profile, distinct stout seaworthy construction.",
+      "sha256": "ac0efaec49b1336c0f68f0907483a3b0df9c15613699b4efa11de6f2519852f0",
+      "source_png": "exec-02a34df6-382d-48ee-8776-a53005b90437.png",
+      "bytes": 85820
+    },
+    {
+      "id": "votive-crown",
+      "tags": [
+        "VIS"
+      ],
+      "subject": "A Visigothic votive crown suspended by four fine chains, a broad gem-set golden circlet with hanging ornamental pendants, no letter pendants or inscriptions, precise archaeological metalwork engraving.",
+      "sha256": "f380197bcdb69e2b46eb04d350abdbf360b44060a63b788049d640357e9e5082",
+      "source_png": "exec-71d2089e-ea4f-4edc-8805-683370e642b1.png",
+      "bytes": 103338
+    },
+    {
+      "id": "wolf-standard",
+      "tags": [
+        "TRK"
+      ],
+      "subject": "An ancient Turkic wolf-head military standard finial above a recurved composite bow, alert wolf profile with natural muzzle, pointed ears and engraved fur, binding collars on the staff.",
+      "sha256": "6e5b747437a23342d9e362cf4f6cd957c654009aeaeeb9e1cfe48359bf18bc46",
+      "source_png": "exec-03c65d28-0f34-40c7-937d-7802840ff35e.png",
+      "bytes": 56580
+    }
+  ]
+}

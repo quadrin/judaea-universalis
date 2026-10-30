@@ -1867,11 +1867,13 @@ export function flagInfo(tag, DEFINES, game = null, lens = null) {
 // Portraits follow the same live/chapter/save identity resolver as flags.
 // Callers choose the court surface explicitly; small diplomatic flags stay flags.
 function resolveCourt(tag, DEFINES, game = null, lens = null) {
-  const resolved=resolveFlag(tag,DEFINES,game,lens);
-  // Upgrade older 1948 saves whose OMA tag still points to the ancient ship.
-  const modernOman=resolved.key==='OMA' && (game?.bookmarkId==='1948' || game?.bookmarkId==='1948ce' || game?.date?.y>=1900 || lens?.names==='omani_modern');
-  const key=modernOman?'OMA_MOD':resolved.key;
-  return {...resolved,key,art:Object.hasOwn(MODERN_COURT_ART,key)?MODERN_COURT_ART[key]:resolved.art};
+  const resolved = resolveFlag(tag, DEFINES, game, lens);
+  // Older 1948 campaigns may still store OMA's ancient maritime identity.
+  const modernOman = resolved.key === 'OMA' && (game?.bookmarkId === '1948' || game?.bookmarkId === '1948ce' || game?.date?.y >= 1900 || lens?.names === 'omani_modern');
+  if (modernOman) return {...resolved, key:'OMA_MOD', art:FLAGS.OMA_MOD};
+  // A modern court displays its actual national flag, including dated and
+  // saved regime variants. Coat-of-arms portraits never override that flag.
+  return resolved;
 }
 export function courtInfo(tag, DEFINES, game=null, lens=null) {
   const {key,art}=resolveCourt(tag,DEFINES,game,lens);
@@ -1927,3 +1929,4 @@ export function divider(cls = '') {
     '<path d="M98 8c-1.8-3-4.2-4.5-7.4-4.6.6 3 3 4.6 7.4 4.6Z"/>' +
     '</svg>';
 }
+

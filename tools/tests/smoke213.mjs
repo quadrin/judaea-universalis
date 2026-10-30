@@ -14,7 +14,7 @@ for (const tag of courts) {
   const html = flagChip(tag, DEFINES, 24);
   assert(!html.includes('fchip-abbr'), tag + ' must never render as a text stub');
   assert.match(html, new RegExp('data-flag-key="' + tag + '"'));
-  assert(!/<image\b|<filter\b|<linearGradient\b|<radialGradient\b|<script\b|\bonload=|url\(https?:/i.test(html), tag + ' must be flat local vector artwork');
+  assert(!/<filter\b|<linearGradient\b|<radialGradient\b|<script\b|\bonload=|url\(https?:/i.test(html), tag + ' must be self-contained local artwork');
 }
 for (const f of FORMABLES) if (f.to) assert(FLAGS[f.to], 'formation: ' + f.to);
 let lenses = 0;
@@ -54,3 +54,4 @@ assert(!flagChip('HPA', DEFINES, 24, false, malicious).includes('<img'));
 assert(FLAT_FLAGS.HPA.flatBanner && FLAT_FLAGS.HPH.flatBanner);
 console.log('PASS runtime rebrands, the Galilee lens, deterministic legacy courts, link targets and untrusted save values');
 console.log('ALL PASS');
+

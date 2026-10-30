@@ -1,3 +1,4 @@
+import { enrichGeneratedCourtStandards } from './generated_standards.js';
 // Flat vector court standards. Ancient banners are original game designs,
 // inspired by coins, seals and regional motifs, not reconstructed flags.
 // No raster images, gradients, filters, cloth, lighting or remote resources.
@@ -329,9 +330,10 @@ Object.assign(FLAT_FLAGS, {
 enrichCourtStandards(FLAT_FLAGS);
 enrichJudaeanStandards(FLAT_FLAGS);
 reviseCourtStandards(FLAT_FLAGS);
+enrichGeneratedCourtStandards(FLAT_FLAGS);
 // Modern Oman is resolved independently of its ancient maritime standard.
 FLAT_FLAGS.OMA_MOD = standard('#b32632', '', {emblem:'omani-royal-flag',scale:1,
-  note:'The plain red game flag of the modern Omani sultanate. Its court portrait uses the khanjar and crossed swords.'});
+  note:'The plain red national flag used by the Omani sultanate in the 1948 chapter.'});
 
 // Preserve the designs of actual modern flags; their geometry is the design.
 const MODERN = new Set(('ISR EGY JOR SYR LEB IRQ TUR SAU IRN UK ITA UAR SAR HEZ EGY_REP SYR_BAATH SYR_FAR IRN_IR IRQ_BAATH GRC_MOD IRQ_REP FRA SPA POR NLD BEL LUX DEN SWE POL CZE SOV GER AUT HUN YUG ALB BUL ROU IRL SUI USA ETH YEM AFG PAK LBR HEJ KUR ALW DRZ').split(' '));
@@ -362,3 +364,4 @@ export function legacyCourtFlag(tag, identity, color) {
   const device = star(48, 48, petals, 29, width, P);
   return standard(validColor(color), device, { emblem: 'saved-court' });
 }
+

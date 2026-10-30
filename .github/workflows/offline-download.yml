@@ -1,0 +1,52 @@
+name: Rebuild offline download
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'main.js'
+      - 'js/**'
+      - 'icons/**'
+      - 'styles.css'
+      - 'index.html'
+      - 'tools/build_offline.py'
+      - 'tools/tests/**'
+      - '.github/workflows/offline-download.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: offline-download-main
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      - name: Check court artwork and offline support
+        env:
+          NODE_OPTIONS: --experimental-default-type=module
+        run: |
+          node tools/tests/court-art.mjs
+          node tools/tests/generated-court-art.mjs
+          node tools/tests/smoke213.mjs
+          node tools/tests/smoke215.mjs
+          node tools/tests/smoke186.mjs
+          node tools/tests/smoke-judaean-coins.mjs
+          node tools/tests/offline-cache.mjs
+          node tools/tests/app-install.mjs
+      - name: Rebuild portable HTML and ZIP
+        run: python3 tools/build_offline.py
+      - name: Commit updated downloads
+        run: |
+          git add downloads/Judaea-Universalis-Offline.html downloads/Judaea-Universalis-Offline.zip
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Rebuild the offline game from the current source'
+          git push origin HEAD:main
