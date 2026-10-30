@@ -12,7 +12,7 @@
 // plus every module reachable from main.js, found by reading the import
 // statements. There is no build step and no file list to keep in step with
 // the code; a new module is found the day it is imported.
-const CACHE = 'ju-v3-lion';
+const CACHE = 'ju-v4-app';
 
 // Files no import statement names.
 const SHELL = [
@@ -63,7 +63,7 @@ async function precacheGame(cache, urls, missingOnly) {
       } catch (e) { /* offline or refused: leave it to the fetch handler */ }
     }));
   }
-  return held;
+  return { held, complete: seen.size === held.size, missing: [...seen].filter((url) => !held.has(url)) };
 }
 
 self.addEventListener('install', (event) => {
@@ -77,7 +77,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const names = await caches.keys();
-    await Promise.all(names.filter((n) => n !== CACHE).map((n) => caches.delete(n)));
+    await Promise.all(names.filter((n) => n.startsWith('ju-') && n !== CACHE).map((n) => caches.delete(n)));
     await self.clients.claim();
   })());
 });
@@ -89,8 +89,8 @@ self.addEventListener('message', (event) => {
   if (!event.data || event.data.type !== 'ju-precache') return;
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    const held = await precacheGame(cache, [...SHELL, ENTRY], true);
-    if (event.source) event.source.postMessage({ type: 'ju-precached', count: held.size });
+    const result = await precacheGame(cache, [...SHELL, ENTRY], true);
+    if (event.source) event.source.postMessage({ type: 'ju-precached', count: result.held.size, complete: result.complete, missingCount: result.missing.length });
   })());
 });
 

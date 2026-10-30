@@ -4,6 +4,13 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
+**Install as an app:** open the game in Chrome or Edge, choose **Install game**,
+and wait for **Ready to play offline**. It opens in its own window with the lion
+icon. The installed app and website share campaigns in the same browser profile.
+This shares saves on that computer; cross-device sync still needs the optional
+cloud service. To transfer a campaign from the standalone HTML, export it under
+Saved campaigns and import it on the website once.
+
 **[Download the offline game](https://quadrin.github.io/judaea-universalis/downloads/Judaea-Universalis-Offline.zip)**
 
 Unzip the download and open `Judaea-Universalis-Offline.html` in a current

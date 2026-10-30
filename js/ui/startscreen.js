@@ -2,6 +2,7 @@
 // Two steps: pick a bookmark (era), then pick a nation within it.
 import { esc, rgb, rgba, fmtYear } from './format.js';
 import { icon, flagChip } from './icons.js';
+import { onAppState, offlineStatus, openInstallPanel } from './install.js';
 import { TITLE_LOGO } from './branding.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { tagDef } from '../sim/military.js';
@@ -12,6 +13,8 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
   const list = Array.isArray(bookmarks) ? bookmarks : [bookmarks];
 
   let bookmarkObserver = null;
+  let appUnsubscribe = null;
+  let requestedInstall = false;
 
   function shell(inner, mode = 'nations') {
     return `
@@ -31,6 +34,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
 
   function renderBookmarks() {
     if (bookmarkObserver) bookmarkObserver.disconnect();
+    if (appUnsubscribe) appUnsubscribe();
     const cards = list.map((b, i) => `
       <div class="ss-slide"><div class="bm-card" data-bm="${i}" tabindex="0">
         <div class="bm-year">${esc(fmtYear(b.startDate.y))}</div>
@@ -42,6 +46,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       `<button class="ss-dot" data-dot="${i}" aria-label="${esc(b.name)}" data-tt="${esc(b.name)}"></button>`).join('');
     const tools = (saveTools || onMultiplayer || onWiki) ? `
       <div class="ss-savetools">
+        <button class="ss-back ss-tool ss-install" data-ref="install">Install game</button>
         ${!globalThis.__JU_OFFLINE__ ? '<a class="ss-back ss-tool" href="downloads/Judaea-Universalis-Offline.zip" download>Download offline</a>' : ''}
         ${onMultiplayer ? '<button class="ss-back ss-tool ss-mp" data-ref="mp">⚔ Multiplayer</button>' : ''}
         ${onWiki ? '<button class="ss-back ss-tool" data-ref="wiki">📖 Compendium</button>' : ''}
@@ -56,7 +61,8 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       </div>
       <div class="ss-dots">${dots}</div>
       ${continueInfo ? `<button class="ss-continue">${icon('star4', 'icon-xs')} &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ${icon('star4', 'icon-xs')}</button>` : ''}
-      ${tools}`, 'bookmarks');
+      ${tools}
+      ${!globalThis.__JU_OFFLINE__ ? '<div class="ss-app-status" data-ref="app-status" role="status"></div>' : ''}`, 'bookmarks');
 
     const track = root.querySelector('.ss-track');
     const vp = root.querySelector('.ss-viewport');
@@ -127,10 +133,25 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
     if (mpBtn && onMultiplayer) mpBtn.addEventListener('click', onMultiplayer);
     const wikiBtn = root.querySelector('[data-ref="wiki"]');
     if (wikiBtn && onWiki) wikiBtn.addEventListener('click', onWiki);
+    const installBtn = root.querySelector('[data-ref="install"]');
+    if (installBtn) installBtn.addEventListener('click', openInstallPanel);
+    appUnsubscribe = onAppState((s) => {
+      const status = root.querySelector('[data-ref="app-status"]');
+      if (status) status.textContent = offlineStatus(s);
+      if (installBtn) {
+        installBtn.textContent = s.installed ? 'App installed' : 'Install game';
+        installBtn.disabled = s.installed;
+      }
+    });
+    if (!globalThis.__JU_OFFLINE__ && !requestedInstall && new URLSearchParams(location.search).get('install') === '1') {
+      requestedInstall = true;
+      openInstallPanel();
+    }
   }
 
   function renderNations(bookmark) {
     if (bookmarkObserver) bookmarkObserver.disconnect();
+    if (appUnsubscribe) appUnsubscribe();
     const playable = (bookmark && bookmark.playableTags) || [];
     const cards = playable.map((p) => {
       // The chapter's own name for the court, where it has one (SPEC §139):

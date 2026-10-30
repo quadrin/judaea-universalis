@@ -4451,3 +4451,12 @@ a.ss-tool { text-decoration: none; display: inline-block; }
   .ss-bookmarks { padding-top: 12px; padding-bottom: 12px; }
   .ss-bookmarks .ss-hint { display: none; }
 }
+
+.ss-app-status { margin-top: 8px; color: var(--text-dim); font-size: 11px; min-height: 16px; }
+.ss-install { border-color: var(--gold); color: var(--gold-bright); }
+.ss-tool:disabled { opacity: .65; cursor: default; }
+.app-card { font-size: 14px; line-height: 1.5; }
+.app-card p { margin: 12px 0; }
+.app-ready { color: var(--ink); font-weight: 700; }
+.app-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.app-actions [hidden], .app-card [hidden] { display: none !important; }

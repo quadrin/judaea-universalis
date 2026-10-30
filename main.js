@@ -1,5 +1,6 @@
 // Judaea Universalis — boot & frame loop. This file is the authoritative consumer of
 // every cross-module API (see SPEC.md §10). Modules must load unmodified under it.
+import { initAppSupport } from './js/ui/install.js';
 import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
 import { buildProvinceMapping, mapProfileKey } from './js/data/map_profile.js';
@@ -1027,15 +1028,5 @@ boot().catch((e) => {
   document.body.appendChild(el);
 });
 
-// PWA: network-first service worker (no stale modules when online). Install
-// caches the whole game, so it plays with no connection (SPEC §288); after an
-// online boot the page asks the worker to fetch anything still missing.
-if (!globalThis.__JU_OFFLINE__ && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('[sw]', e));
-    navigator.serviceWorker.ready.then((reg) => {
-      if (reg.active && navigator.onLine !== false) reg.active.postMessage({ type: 'ju-precache' });
-    }).catch(() => {});
-  });
-}
-
+// Install support and a complete offline-cache check, shared by app and tab.
+initAppSupport();
