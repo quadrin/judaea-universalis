@@ -12,13 +12,14 @@
 // plus every module reachable from main.js, found by reading the import
 // statements. There is no build step and no file list to keep in step with
 // the code; a new module is found the day it is imported.
-const CACHE = 'ju-v2';
+const CACHE = 'ju-v3-lion';
 
 // Files no import statement names.
 const SHELL = [
   './', './index.html', './styles.css', './main.js', './manifest.webmanifest',
-  './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png',
-  './icons/icon-maskable-192.png', './icons/icon-maskable-512.png',
+  './icons/lion-apple-touch.png', './icons/lion-192.png', './icons/lion-512.png',
+  './icons/lion-maskable-192.png', './icons/lion-maskable-512.png',
+  './icons/judaea-universalis-logo.webp', './icons/lion-16.png', './icons/lion-32.png', './icons/lion.ico',
 ];
 const ENTRY = './main.js';
 

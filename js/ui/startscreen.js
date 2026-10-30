@@ -1,7 +1,8 @@
 // js/ui/startscreen.js — title screen (SPEC §8.2 / §8.3, §13).
 // Two steps: pick a bookmark (era), then pick a nation within it.
 import { esc, rgb, rgba, fmtYear } from './format.js';
-import { icon, divider, flagChip } from './icons.js';
+import { icon, flagChip } from './icons.js';
+import { TITLE_LOGO } from './branding.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { tagDef } from '../sim/military.js';
 
@@ -13,8 +14,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
   function shell(inner) {
     return `
     <div class="ss-inner">
-      <div class="ss-rule">${divider()}</div>
-      <h1 class="ss-title">JVDAEA VNIVERSALIS</h1>
+      <h1 class="ss-title ss-title-art"><img class="ss-logo" src="${TITLE_LOGO}" alt="Judaea Universalis" width="609" height="640" decoding="async"></h1>
       ${inner}
       <div class="ss-hint">Right-click moves armies &nbsp;·&nbsp; Space pauses &nbsp;·&nbsp; 1–5 sets speed &nbsp;·&nbsp; H for help in-game</div>
     </div>`;

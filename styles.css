@@ -4386,3 +4386,24 @@ a.ss-tool { text-decoration: none; display: inline-block; }
 .sv-import { margin: 12px 0; }
 .sv-export { white-space: nowrap; }
 @media (max-width: 600px) { .sv-row { flex-wrap: wrap; } .sv-row .sv-main { min-width: 60%; } }
+
+/* Approved engraved lion title mark. */
+.ss-title-art {
+  margin: 0 auto 22px;
+  background: none;
+  color: var(--gold-bright);
+  text-shadow: none;
+  letter-spacing: normal;
+  line-height: 0;
+}
+.ss-logo {
+  display: block;
+  width: clamp(176px, 28vh, 250px);
+  max-width: min(100%, 70vw);
+  height: auto;
+  margin: 0 auto;
+}
+.ss-inner:has(.ss-cards) .ss-logo { width: 130px; }
+.ss-savetools { flex-wrap: wrap; }
+@media (max-height: 660px) { .ss-logo { width: 160px; } }
+@media (max-width: 560px) { .ss-logo { width: 180px; } }

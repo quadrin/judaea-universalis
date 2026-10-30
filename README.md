@@ -1,5 +1,7 @@
 # Judaea Universalis
 
+<p align="center"><img src="icons/judaea-universalis-logo.webp" alt="Judaea Universalis" width="250"></p>
+
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
 **[Download the offline game](https://quadrin.github.io/judaea-universalis/downloads/Judaea-Universalis-Offline.zip)**
@@ -44,6 +46,10 @@ years of the northern kingdom),
 and **The War of Independence, 1948** (Israel).
 
 Zero dependencies, no build step: browser ES modules + WebGL2.
+
+The title screen uses the approved engraved Lion of Judah artwork. The favicon
+and installed-game icons use its lion head. Original PNG masters live in
+`icons/source/`; browser artwork is exported with `bash tools/build_icons.sh`.
 
 **Court flags.** All 210 catalog and releasable courts carry distinct vector
 artwork, including Antipas’s and Philip’s tetrarchies. Ancient flags use one

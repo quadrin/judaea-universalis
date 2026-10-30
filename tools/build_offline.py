@@ -9,6 +9,7 @@ import argparse
 import base64
 import hashlib
 import json
+import mimetypes
 from pathlib import Path
 import posixpath
 import re
@@ -74,12 +75,18 @@ def build(output: Path, archive: Path) -> dict:
     css = (ROOT / 'styles.css').read_text(encoding='utf-8')
     if '@import' in css or re.search(r'url\s*\(', css, re.I):
         raise ValueError('CSS contains an asset that needs explicit embedding')
+    def asset_uri(path: str) -> str:
+        mime = mimetypes.guess_type(path)[0] or 'application/octet-stream'
+        return 'data:' + mime + ';base64,' + base64.b64encode((ROOT / path).read_bytes()).decode()
+    assets = {'titleLogo': asset_uri('icons/judaea-universalis-logo.webp')}
     html = (ROOT / 'index.html').read_text(encoding='utf-8')
+    # Favicons also stay local when this document is opened directly from disk.
+    html = re.sub(r'href="(icons/[^"]+)"', lambda m: 'href="' + asset_uri(m[1]) + '"', html)
     html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="' + CSP + '">', 1)
     html = re.sub(r'<link\b[^>]*rel="(?:manifest|apple-touch-icon)"[^>]*>\s*', '', html)
     css = re.sub(r'</style', r'<\\/style', css, flags=re.I)
     html, styles = re.subn(r'<link rel="stylesheet" href="styles.css">', lambda _: '<style>\n' + css + '\n</style>', html)
-    modules = '<script>globalThis.__JU_OFFLINE__ = true;</script>\n'
+    modules = '<script>globalThis.__JU_OFFLINE__ = true;globalThis.__JU_ASSETS__=' + json.dumps(assets, separators=(',', ':')) + ';</script>\n'
     modules += '<script type="importmap">' + json.dumps({'imports': imports}, separators=(',', ':')) + '</script>\n'
     modules += '<script type="module">import "ju/main.js";</script>'
     html, scripts = re.subn(r'<script type="module" src="main.js"></script>', lambda _: modules, html)
