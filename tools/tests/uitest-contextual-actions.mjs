@@ -39,14 +39,22 @@ try {
     window.loadNational('66ce');
   });
   // Every operation has a stable contextual home before its idea is adopted.
-  const tabs = { maritime:'trade', dynasty:'world', colonies:'war', subversion:'world', federation:'court' };
+  const tabs = { maritime:'trade', colonies:'war', subversion:'world', dynasty:'world', federation:'court' };
   for (const [group,tab] of Object.entries(tabs)) {
     await page.evaluate(tab => window.nationalTest.panel.open(null, tab), tab);
+    assert.equal(await page.locator('.national-operation:visible').count(), 0, 'tabs show no operation forms by default');
+    await page.evaluate(group => window.nationalTest.panel.open(null, null, group), group);
     assert(await page.locator(`[data-national-group="${group}"]`).isVisible());
     assert((await page.locator(`[data-national-group="${group}"] [data-ni-act]`).count()) > 0);
     assert((await page.locator(`[data-national-group="${group}"] [data-ni-act]`).evaluateAll(xs => xs.every(x => x.disabled))));
     assert.match(await page.locator(`[data-national-group="${group}"]`).textContent(), /Requires .*tier 1/);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('dialog[open]').count(), 0);
   }
+  await page.evaluate(() => window.nationalTest.panel.open(null, 'court'));
+  assert.equal(await page.locator('.national-operation:visible').count(), 0);
+  await page.evaluate(() => window.nationalTest.panel.open(null, 'world'));
+  assert.equal(await page.locator('.national-operation:visible').count(), 0);
   await page.evaluate(() => window.nationalTest.panel.open(null, 'missions'));
   assert.equal(await page.locator('#nation-panel > [data-tab="missions"] [data-cs-act], #nation-panel > [data-tab="missions"] [data-ni-act]').count(), 0);
   await page.evaluate(() => window.nationalTest.panel.open(null, 'war'));

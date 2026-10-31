@@ -54,6 +54,9 @@ try {
   assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl), before - 60);
   assert.equal(await page.locator('#nation-panel > [data-tab="ideas"] [data-ni-act]').count(), 0, 'Ideas contains adoption only');
   await page.evaluate(() => window.nationalTest.panel.open(null, 'trade'));
+  assert.equal(await page.locator('.national-operation:visible').count(), 0);
+  const launcher = page.locator('[data-ref="nationalActions_trade"] [data-na-open]');
+  await launcher.focus(); await page.keyboard.press('Enter');
   assert.equal(await page.locator('[data-ni-act="warehouse"]').count(), 1);
   assert(await page.locator('[data-ni-act="harbor"]').isDisabled(), 'future action remains visible and locked');
   assert.match(await page.locator('[data-national-operation="harbor"]').textContent(), /Harbor Concessions/);
@@ -131,7 +134,7 @@ try {
   await page.evaluate(() => window.nationalTest.panel.open('ROM', 'court'));
   assert.equal(await page.locator('[data-intrigue="subvert"], [data-intrigue="pretender"]').count(), 0);
   assert.equal(await page.locator('#nation-panel [data-open-operations="subversion"]').count(), 1);
-  assert.equal(await page.locator('#nation-panel [data-open-operations="dynasty"]').count(), 1);
+  assert.equal(await page.locator('#nation-panel [data-open-operations="dynasty"]').count(), 0);
   console.log('PASS civilian investment works without ideas, live costs, desktop/mobile layout, no duplicate owned target; frontier camps remain in Military Colonies');
 
   await page.evaluate(() => window.loadNational('66ce'));
@@ -139,24 +142,20 @@ try {
   await path('federation').locator('[data-ni-buy]').click();
   await page.evaluate(() => window.nationalTest.panel.open(null, 'court'));
   assert.equal(await page.locator('#nation-panel > [data-tab="missions"] [data-cs-act], #nation-panel > [data-tab="ideas"] [data-ni-act]').count(), 0);
-  const city = await page.evaluate(() => String(window.nationalTest.ctx.prov('Emmaus').id));
-  await page.locator('[data-na-target="charter"]').selectOption(city);
-  await page.locator('[data-na-service="charter"]').selectOption('naval');
-  assert(await page.locator('[data-ni-act="charter"]').isDisabled(), 'inland naval charters are refused');
-  await page.locator('[data-na-service="charter"]').selectOption('levy');
-  assert(await page.locator('[data-ni-act="charter"]').isEnabled());
-  await page.locator('[data-ni-act="charter"]').click();
-  assert.equal(await page.evaluate(id => window.nationalTest.ctx.game.tags.JUD.nationalStrategy.cities[id].service, city), 'levy');
-  await page.evaluate(() => { const { ctx, panel } = window.nationalTest; ctx.game.tags.JUD.treasury = 0; panel.refresh(); });
-  assert(await page.locator('[data-ni-act="charter"]').isDisabled());
+  assert.equal(await page.locator('.national-operation:visible').count(), 0, 'adoption never expands operation forms on the Court page');
+  await page.locator('[data-ref="nationalActions_court"] [data-na-open]').click();
   await page.setViewportSize({ width: 390, height: 844 });
+  assert(await page.locator('dialog[open]').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
+  if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + '/operations-dialog-mobile.png' });
   assert(await page.locator('#nation-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
   assert((await page.locator('.ni-tiers button:visible, .national-operation-controls button:visible, .national-operation-controls select:visible').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 44));
+  await page.keyboard.press('Escape');
+  assert(await page.locator('[data-ref="nationalActions_court"] [data-na-open]').evaluate(el => el === document.activeElement));
   if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/national-paths-mobile.png' });
   await page.evaluate(() => { const { panel, ctx } = window.nationalTest; const foreign = ctx.game.tags.ROM; foreign.nationalIdeas = { subversion: 3 }; panel.open('ROM', 'ideas'); });
   assert.equal(await page.locator('.ni-path').count(), 1);
   assert.equal(await page.locator('[data-ni-buy], [data-ni-act], .ni-record').count(), 0, 'foreign courts expose no actions or private records');
   assert.deepEqual(errors, []);
-  console.log('PASS actual charter service, live affordability, mobile touch targets, foreign privacy and no browser errors');
+  console.log('PASS uncluttered Court after adoption, mobile layout, foreign privacy and no browser errors');
   console.log('uitest75: ALL PASS');
 } finally { await browser.close(); }

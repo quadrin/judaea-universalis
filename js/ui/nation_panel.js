@@ -774,6 +774,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // `tabId` opens straight onto a tab — the topbar's tech bell (SPEC §286).
   function open(tag, tabId, pathKey, provinceId) {
     if (!ctx) return;
+    for (const panel of Object.values(nationalActionPanels)) panel.close();
     const g = ctx.game;
     courtOfferFeedback = '';
     viewTag = (tag && tag !== g.playerTag && g.tags && g.tags[tag]) ? tag : null;
@@ -787,7 +788,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       nationalActionPanels[tab]?.focusGroup(pathKey, provinceId);
     }
   }
-  function close() { el.classList.add('hidden'); viewTag = null; }
+  function close() { for (const panel of Object.values(nationalActionPanels)) panel.close(); el.classList.add('hidden'); viewTag = null; }
   function isOpen() { return !el.classList.contains('hidden'); }
   function viewing() { return viewTag; }
 
@@ -1792,7 +1793,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `</div>`;
     }).join('');
     setHtml(refs.foreignCourt, near + quiet + bars
-      + `<div class="np-dip-actions"><button class="pp-dip" data-open-operations="subversion">${icon('dagger', 'icon-sm')} Subversion</button><button class="pp-dip" data-open-operations="dynasty">${icon('laurel', 'icon-sm')} Dynastic Ambition</button></div>`);
+      + `<div class="np-dip-actions"><button class="pp-dip" data-open-operations="subversion">${icon('dagger', 'icon-sm')} Subversion</button></div>`);
   }
 
   // Renders the viewed nation's treaties and wars. `who` is the viewed tag;

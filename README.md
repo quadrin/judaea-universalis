@@ -128,9 +128,11 @@ show their ideas for inspection, with purchasing controls hidden.
 
 **National paths.** Adopt ideas in **Court → Ideas**. Each tier adds lasting
 bonuses as well as unlocking actions. Use maritime concessions in **Trade**,
-military colonies in **Defense**, dynastic and covert operations in **World**,
-and city charters in **Court**. These controls are visible before adoption,
-with the required idea named beside each disabled action.
+military colonies in **Defense**, and diplomatic or covert operations in **World**.
+Each tab has a compact **Operations** button that opens the relevant actions
+in a separate dialog; city charters are available from Court's Operations.
+Actions remain disabled until the required idea is adopted. Escape or Close
+returns to the tab without expanding its layout.
 
 **Allied coordination.** During a shared war, open **Court → World → Allied
 coordination** to request defense of a province, relief of a siege, or an

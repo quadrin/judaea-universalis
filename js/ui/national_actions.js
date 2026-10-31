@@ -10,14 +10,27 @@ const costText = cost => Object.entries(cost || {}).filter(([,v]) => v).map(([k,
 export function createNationalActionsPanel(el, getActions, { tab, onChange = () => {} } = {}) {
   const picks = {}, services = {}, manual = {};
   let lastHtml = '', active = false, binding = null, preferredProvince = null;
+  let selectedGroup = null, returnFocus = null;
+  function close() {
+    const dialog = el.querySelector('dialog');
+    if (dialog?.open) dialog.close();
+  }
+  function show(group) {
+    const dialog = el.querySelector('dialog');
+    if (!dialog || !active) return;
+    selectedGroup = group;
+    for (const section of dialog.querySelectorAll('[data-national-group]')) section.hidden = section.dataset.nationalGroup !== group;
+    for (const button of dialog.querySelectorAll('[data-na-group]')) button.setAttribute('aria-pressed', String(button.dataset.naGroup === group));
+    if (!dialog.open) { returnFocus = document.activeElement; dialog.showModal(); }
+  }
   function refresh(self = true, cachedReport) {
     active = self;
     const actions = getActions();
     if (binding !== actions) { binding = actions; lastHtml = ''; for (const k of Object.keys(picks)) delete picks[k]; }
     const report = self ? (cachedReport === undefined ? actions?.getNationalStrategy?.() : cachedReport) : null;
-    if (!report) { el.innerHTML = ''; lastHtml = ''; return false; }
+    if (!report) { close(); el.innerHTML = ''; lastHtml = ''; return false; }
     const groups = Object.keys(NATIONAL_IDEAS).filter(key => NATIONAL_ACTION_TAB[key] === tab);
-    const html = groups.map(group => {
+    const contents = groups.map(group => {
       const operations = (report.actions || []).filter(a => a.group === group);
       if (!operations.length) return '';
       const rows = operations.map(a => {
@@ -40,12 +53,20 @@ export function createNationalActionsPanel(el, getActions, { tab, onChange = () 
       const records = (report.records || []).filter(r => r.group === group).map(r => `<div class="ni-record" title="${esc(r.tip)}" data-tt="${esc(r.tip)}"><span>${icon(r.icon, 'icon-sm')}${esc(r.name)}</span><span>${r.stats.map(([,value]) => esc(value)).join(' · ')}</span>${r.progress ? `<progress max="${r.progress.total}" value="${r.progress.done}" aria-label="${esc(r.name + ' progress')}"></progress>` : ''}</div>`).join('');
       return `<section class="national-operation-group" data-national-group="${group}"><h4>${icon(NATIONAL_IDEAS[group].icon, 'icon-sm')}${esc(LABELS[group])}</h4>${records}${rows}</section>`;
     }).join('');
+    const html = contents ? `<button type="button" class="pp-dip national-operations-launch" data-na-open aria-haspopup="dialog">${icon('scroll', 'icon-sm')} Operations</button>`
+      + `<dialog class="national-operations-dialog" aria-label="Operations"><header><h3>Operations</h3><button type="button" class="pp-dip" data-na-close aria-label="Close operations">Close</button></header>`
+      + (groups.length > 1 ? `<nav aria-label="Operation groups">${groups.map(group => `<button type="button" class="pp-dip" data-na-group="${group}">${icon(NATIONAL_IDEAS[group].icon, 'icon-sm')}${esc(LABELS[group])}</button>`).join('')}</nav>` : '')
+      + `<div class="national-operations-body">${contents}</div></dialog>` : '';
     preferredProvince = null;
     if (html !== lastHtml) {
       const panel = el.closest('#nation-panel'), scroll = panel?.scrollTop;
       const focus = document.activeElement && el.contains(document.activeElement) ? document.activeElement : null;
       const attrs = focus ? [...focus.attributes].filter(a => a.name.startsWith('data-na-') || a.name === 'data-ni-act') : [];
-      lastHtml = html; el.innerHTML = html;
+      const wasOpen = !!el.querySelector('dialog')?.open;
+      const originalReturnFocus = returnFocus;
+      close(); lastHtml = html; el.innerHTML = html;
+      el.querySelector('dialog')?.addEventListener('close', () => returnFocus?.isConnected && returnFocus.focus({ preventScroll:true }));
+      if (wasOpen) { show(selectedGroup || groups[0]); returnFocus = originalReturnFocus; }
       if (attrs.length) [...el.querySelectorAll('select,button')].find(n => attrs.every(a => n.getAttribute(a.name) === a.value))?.focus({ preventScroll: true });
       if (panel) panel.scrollTop = scroll;
     }
@@ -58,6 +79,10 @@ export function createNationalActionsPanel(el, getActions, { tab, onChange = () 
     refresh(true);
   });
   el.addEventListener('click', e => {
+    if (e.target.closest('[data-na-open]')) { show(selectedGroup || Object.keys(NATIONAL_IDEAS).find(key => NATIONAL_ACTION_TAB[key] === tab)); return; }
+    if (e.target.closest('[data-na-close]')) { close(); return; }
+    const group = e.target.closest('[data-na-group]');
+    if (group) { show(group.dataset.naGroup); return; }
     const button = e.target.closest('[data-ni-act]');
     if (!button || !active || button.disabled) return;
     const actions = getActions(), key = button.dataset.niAct;
@@ -70,13 +95,14 @@ export function createNationalActionsPanel(el, getActions, { tab, onChange = () 
     } catch (err) { warnOnce('national-operation', err); }
     refresh(true); onChange();
   });
-  el.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') e.stopPropagation(); });
+  el.addEventListener('keydown', e => { if ([' ', 'Enter', 'Escape'].includes(e.key)) e.stopPropagation(); });
   function focusGroup(group, province) {
     preferredProvince = province; refresh(active);
+    show(group);
     const section = el.querySelector(`[data-national-group="${group}"]`);
     if (section) { section.scrollIntoView({ block: 'start' }); section.querySelector('select,button')?.focus({ preventScroll: true }); }
   }
-  return { refresh, focusGroup };
+  return { refresh, focusGroup, close };
 }
 
 export function createAlliedOrdersPanel(el, getActions, onChange = () => {}) {
