@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { DEFINES } from '../../js/data/defines.js';
 import { MAP_DATA } from '../../js/data/map_data.js';
 import { ERAS } from '../../js/data/compendium.js';
@@ -9,9 +8,8 @@ import { FLAT_FLAGS } from '../../js/ui/flag_art.js';
 import { FLAGS, flagChip, flagInfo } from '../../js/ui/icons.js';
 import { JUDAEAN_COIN_SOURCES } from '../../js/ui/judaean_standards.js';
 
-// Preserve the approved Hasmonean geometry; the user requested new flat inks.
-assert.equal(createHash('sha256').update(FLAT_FLAGS.HAS.body.replace(/\s(?:fill|stroke)="[^"]*"/g,'')).digest('hex'),
-  '4231d76629d90f8ea501ff3c1cd5bbf6ad315c12525d2d65c3754cabd656fe0d');
+assert.equal(FLAT_FLAGS.HAS.imageAsset,'court-has');
+assert.equal(FLAT_FLAGS.HAS.emblem,'cornucopias');
 
 for (const [tag, emblem] of Object.entries({
   HER: 'herodian-helmet', ATG: 'antigonus-coin-menorah',
@@ -23,7 +21,8 @@ for (const [tag, emblem] of Object.entries({
   assert.equal(art.emblem, emblem);
   assert(art.detailed && art.note.length > 60);
   assert(Object.values(JUDAEAN_COIN_SOURCES).includes(art.source));
-  assert(!/<text\b|<image\b|<filter\b|<script\b/i.test(art.body), tag + ': complete local paths');
+  assert(art.imageAsset && /<image\b[^>]*href="data:image\/webp;base64,/.test(art.body), tag + ': complete embedded generated master');
+  assert(!/<text\b|<filter\b|<script\b|href="https?:/i.test(art.body), tag + ': passive local artwork');
   const drawings = [14, 24, 34, 52, 160, 320].map(size =>
     flagChip(tag, DEFINES, size).match(/<svg[^>]*>([\s\S]*)<\/svg>/)[1]);
   assert.equal(new Set(drawings).size, 1, tag + ': every size uses the complete master');
@@ -81,5 +80,5 @@ const w = boot('132ce');
 w.game.tags.JUD.flag = 'ISR';
 assert.equal(flagInfo('JUD', DEFINES, w.game).key, 'ISR', 'saved rebrands retain precedence');
 assert.equal(flagInfo('JUD', DEFINES, w.game).note, FLAGS.ISR.note);
-console.log('PASS preserved Hasmonean contours, nine coin devices, chapter and save identities, founding motifs and formation transitions');
+console.log('PASS generated Hasmonean master, nine coin devices, chapter and save identities, founding motifs and formation transitions');
 

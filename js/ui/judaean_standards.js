@@ -149,8 +149,10 @@ function greekWord(word, y) {
 function agrippaWreath() {
   // Open the wreath sideways to leave clear space beside both full words.
   // The leaves and ribbon retain every path of the original master.
-  return group(wreath(), 'translate(-9.6 0) scale(1.1 1)')
-    + '<g data-inscription="ΒΑΣΙΛΕΩΣ ΑΓΡΙΠΠΑ">'
+  return group(wreath(), 'translate(-9.6 0) scale(1.1 1)') + agrippaInscription();
+}
+export function agrippaInscription() {
+  return '<g data-inscription="ΒΑΣΙΛΕΩΣ ΑΓΡΙΠΠΑ">'
     + greekWord('ΒΑΣΙΛΕΩΣ', 77) + greekWord('ΑΓΡΙΠΠΑ', 103)
     + l('M62 98H130', G, .85) + '</g>';
 }
