@@ -2,6 +2,8 @@
 // (SPEC §6.1, §6.2, §6.4, §6.6). DOM-free; imports only core/rng + sim siblings.
 
 import { politicalCrisisInfo, choosePoliticalCrisis, politicalCrisisView, investReparations, canPoliticalIntervention } from './political_turning_points.js';
+import { courtIntentions } from './court_plans.js';
+import { courtOffers, resolveCourtOffer } from './court_diplomacy.js';
 import { historicalCrisisInfo, chooseHistoricalCrisis, canImperialIntervention } from './historical_crises.js';
 import { winChance } from './ai_war.js';
 import { createRng } from '../core/rng.js';
@@ -1896,6 +1898,9 @@ export function gameActions(ctx) {
   };
 
   const actions = {
+    getCourtIntentions(tag = g.playerTag) { return courtIntentions(ctx, tag, g.playerTag); },
+    getCourtOffers() { return courtOffers(ctx, g.playerTag); },
+    resolveCourtOffer(id, accept) { return resolveCourtOffer(ctx, id, accept, g.playerTag); },
     setSpeed(n) {
       g.speed = clamp(Math.round(num(n, 2)), 1, 5);
       ctx.bus.emit('speed', g.speed);

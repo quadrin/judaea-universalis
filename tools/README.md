@@ -3,6 +3,23 @@
 Developer tooling. Plain Node, zero dependencies — none of this ships to the
 browser.
 
+## Court strategy checks
+
+From the repository root, run each of the five suites with
+`node tools/tests/<suite>.mjs`: `court-plans`, `court-diplomacy`,
+`court-history`, `court-memory`, and `court-integration`.
+The integration suite runs twelve monthly councils on every registered bookmark,
+checks that courts initiate and conclude real agreements, exercises strategic
+construction, and verifies save persistence and player control. The focused
+suites cover preparation, treaties, costs, independence support, historical
+choices, diplomatic memory, intelligence limits, and nation formation.
+
+With the development server running, use
+`JU_PW_DIR=/path/to/playwright-parent JU_CHROMIUM=/usr/bin/chromium node tools/tests/uitest-court-intentions.mjs`.
+It exercises the World tab, real offer acceptance through game actions, resource
+transfers, stale terms, keyboard controls, and mobile layout. These suites are
+additional to the numbered regression runners.
+
 ## Court flag checks
 
 `node tools/tests/smoke213.mjs` checks artwork for all 210 catalog/revival

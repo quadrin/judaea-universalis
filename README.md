@@ -85,6 +85,17 @@ campaigns start in 67 BCE; their later events follow the houses that survive.
 
 ## Run
 
+**Court strategy.** AI courts keep a main ambition and a secondary aim, review
+them as rulers and circumstances change, and prepare reserves before pursuing
+territorial goals. Their recruitment, frontier defenses and development follow
+those priorities. Small courts seek protection and diplomatic support.
+Courts negotiate with each other and send offers to the player; open
+**Court → World** to read and answer incoming proposals, or inspect a foreign
+court's intentions where diplomatic contact allows. Agreements, attacks,
+territorial losses and broken promises affect later dealings. Historical crisis
+decisions also take the current balance of power and existing settlements into
+account. Court plans and diplomatic offers travel with campaign saves.
+
 ```sh
 python3 -m http.server 8613 --directory .
 # open http://localhost:8613

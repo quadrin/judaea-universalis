@@ -15,6 +15,7 @@ import { ideaCard, ideaTierIcon, ideaWallet } from './idea_cards.js';
 import { createChapterStrategyPanel } from './chapter_strategy.js';
 import { createNationalIdeasPanel } from './national_ideas.js';
 import { createRoyalCommandPanel } from './royal_command.js';
+import { renderCourtIntentions, renderCourtOffers } from './court_intentions.js';
 
 // The tabs (SPEC §175).
 //
@@ -107,6 +108,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // Ladders whose next level the pool can pay for (SPEC §286): the Technology
   // tab's own badge, beside the Missions tab's claims.
   let readyTech = 0;
+  let pendingCourtOffers = 0;
+  let courtOfferFeedback = '';
   const ideaSelections = new Map();
   const refs = {};
   let chapterStrategyPanel = null;
@@ -345,6 +348,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row hidden" data-ref="opinionRow"><span class="pp-k">${icon('dove', 'icon-k')}Opinion of us</span><span class="pp-v" data-ref="opinion"></span></div>
         <div class="pp-row hidden" data-ref="standingRow"><span class="pp-k">${icon('scroll', 'icon-k')}Standing</span><span class="pp-v" data-ref="standing"></span></div>
       </div>
+      <section class="pp-diplo np-court-intentions hidden" data-ref="courtIntentionsBlock" data-tab="world" aria-label="Court intentions">
+        <div class="pp-diplo-title">Court intentions</div>
+        <div data-ref="courtIntentions"></div>
+      </section>
+      <section class="pp-diplo np-court-offers" data-ref="courtOffersBlock" data-tab="world" aria-label="Diplomatic offers">
+        <div class="pp-diplo-title">Diplomatic offers</div>
+        <div data-ref="courtOffers"></div>
+        <div class="np-court-feedback" data-ref="courtOfferFeedback" role="status" aria-live="polite" tabindex="-1"></div>
+      </section>
       <div class="pp-diplo" data-tab="world">
         <div class="pp-diplo-title">Diplomacy</div>
         <div data-ref="diploBody"></div>
@@ -438,6 +450,25 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (tb) {
         const id = tb.dataset.tabGo;
         if (id && id !== tab) { tab = id; refresh(); el.scrollTop = 0; }
+        return;
+      }
+      const courtOffer = e.target.closest('[data-court-offer]');
+      if (courtOffer) {
+        if (courtOffer.disabled || typeof actions?.resolveCourtOffer !== 'function') return;
+        const accept = courtOffer.dataset.courtAccept === 'true';
+        try {
+          const result = actions.resolveCourtOffer(courtOffer.dataset.courtOffer, accept);
+          // Multiplayer clients can queue an action without a synchronous result.
+          courtOfferFeedback = result?.ok === false ? (result.why || 'These terms are no longer available.')
+            : result?.ok ? (accept ? 'Offer accepted.' : 'Offer declined.') : 'Response sent.';
+        } catch (err) {
+          warnOnce('np-court-offer', err);
+          courtOfferFeedback = 'The response could not be sent. Try again.';
+        }
+        refresh();
+        const next = refs.courtOffers.querySelector('button:not(:disabled)');
+        if (next) next.focus({ preventScroll: true });
+        else refs.courtOfferFeedback.focus({ preventScroll: true });
         return;
       }
       // One command, one order (SPEC §246). Single orders are NOT armed the
@@ -732,6 +763,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   function open(tag, tabId, pathKey, provinceId) {
     if (!ctx) return;
     const g = ctx.game;
+    courtOfferFeedback = '';
     viewTag = (tag && tag !== g.playerTag && g.tags && g.tags[tag]) ? tag : null;
     if (tabId && TABS.some((t) => t.id === tabId)) tab = tabId;
     el.classList.remove('hidden');
@@ -813,11 +845,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.tabs, avail.map((t) => {
       // The claim badge (SPEC §229) and the tech badge (SPEC §286): the two
       // tabs that can be owed something.
-      const n = t.id === 'missions' ? readyClaims : t.id === 'tech' ? readyTech : 0;
+      const n = t.id === 'missions' ? readyClaims : t.id === 'tech' ? readyTech : t.id === 'world' ? pendingCourtOffers : 0;
       const badge = n ? `<i class="np-tab-badge">${n}</i>` : '';
       const tt = !n ? t.tt
         : t.id === 'missions'
           ? t.tt + '\n' + n + ' accomplishment' + (n === 1 ? '' : 's') + ' ready to claim.'
+          : t.id === 'world' ? t.tt + '\n' + n + ' diplomatic offer' + (n === 1 ? '' : 's') + ' awaiting a response.'
           : t.tt + '\n' + n + ' level' + (n === 1 ? '' : 's') + ' ready to buy.';
       return `<button class="np-tab${t.id === tab ? ' active' : ''}" data-tab-go="${esc(t.id)}"`
         + ` role="tab" aria-selected="${t.id === tab}" data-tt="${esc(tt)}">`
@@ -1122,6 +1155,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshInstitutions(self);
     refreshSacred(self);
     refreshSchools(self);
+    refreshCourtIntentions(tag, self);
     refreshForeignCourt(tag, self);
     refreshDiplomacy(g, t, tag, self);
     refreshTech(t, self, techInfo);
@@ -1676,6 +1710,25 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${r.embraced ? 'devoted' : r.share >= r.need ? 'content' : 'discontent'}" style="width:${Math.max(2, Math.min(100, r.embraced ? 100 : r.share))}%"></div></div>`
         + `</div>`;
     }).join(''));
+  }
+
+  function refreshCourtIntentions(who, self) {
+    let intentions = null;
+    let offers = [];
+    try { intentions = actions?.getCourtIntentions?.(who) || null; }
+    catch (err) { warnOnce('np-court-intentions', err); }
+    try { offers = actions?.getCourtOffers?.() || []; }
+    catch (err) { warnOnce('np-court-offers', err); }
+    if (!Array.isArray(offers)) offers = [];
+    const visibleOffers = self ? offers : offers.filter(o => o.from === who);
+    pendingCourtOffers = offers.length;
+    refs.courtIntentionsBlock.classList.toggle('hidden', self || !intentions);
+    setHtml(refs.courtIntentions, renderCourtIntentions(intentions));
+    // The player's World tab keeps an empty state so offers have a stable home.
+    refs.courtOffersBlock.classList.toggle('hidden', !self && !visibleOffers.length);
+    setHtml(refs.courtOffers, renderCourtOffers(visibleOffers, ctx.game, DEFINES,
+      typeof actions?.resolveCourtOffer === 'function'));
+    setText(refs.courtOfferFeedback, courtOfferFeedback);
   }
 
   // Somebody else's politics (SPEC §163/§164): the parties at a foreign court,

@@ -155,6 +155,62 @@ function maskIdx(allowed, idx, count) {
   return allowed.indexOf(i) >= 0 ? i : allowed[0];
 }
 
+// Opt-in political decisions use the deciding court's present interests. An
+// authored policy per option keeps interpretation out of labels and prose.
+// Readers are deterministic; the returned index always respects legal options.
+export function strategicEventChoice(ctx, ev, allowed, fallback = 0) {
+  const policy = ev?.courtChoice;
+  if (!policy || !Array.isArray(policy.policies)) return fallback;
+  let actor, other;
+  try {
+    actor = typeof policy.actor === 'function' ? policy.actor(ctx) : policy.actor || ev.forTag;
+    other = typeof policy.other === 'function' ? policy.other(ctx) : policy.other;
+  } catch { return fallback; }
+  actor = livingTag(ctx, actor); other = other ? livingTag(ctx, other) : null;
+  const t = ctx.game.tags[actor], rival = ctx.game.tags[other];
+  if (!t || (other && (!rival || rival.alive === false))) return fallback;
+  const n = (v, d = 0) => Number.isFinite(v) ? v : d;
+  const men = tag => Object.values(ctx.game.armies || {}).filter(a => a?.tag === tag)
+    .reduce((s, a) => s + n(a.men), 0) + n(ctx.game.tags[tag]?.manpower) * .25;
+  const ratio = Math.min(3, men(actor) / Math.max(1000, men(other)));
+  const exhaustion = n(t.warExhaustion) + Math.max(0, -n(t.stability)) * 2;
+  const trust = n(t.diplomaticCredit?.[other]?.trust, 50);
+  const now = monthIndex(ctx.game.date.y, ctx.game.date.m);
+  const memory = (t.courtPlan?.memories || []).filter(m => m.other === other && m.expires > now).reduce((v, m) => v + n(m.weight), 0);
+  const regard = n(t.opinion?.[other]) + memory;
+  const goals = (t.courtPlan?.goals || []).map(g => g.kind);
+  const rebuilding = goals.some(k => ['rebuild', 'survive', 'consolidate'].includes(k));
+  const hostile = goals.some((k, i) => ['recover', 'independence'].includes(k)
+    && (!other || t.courtPlan.goals[i].target === other));
+  const reserve = n(t.courtPlan?.reserve);
+  const overcommitted = (t.atWarWith || []).length > 1;
+  const pool = allowed?.length ? allowed : ev.options.map((_, i) => i);
+  const score = i => {
+    let value = i === fallback ? 1 : 0;
+    switch (policy.policies[i]) {
+      case 'peace': case 'submission':
+        value += exhaustion + (rebuilding ? 5 : 0) + (ratio < .8 ? 5 : 0) + (overcommitted ? 4 : 0) - (hostile ? 3 : 0); break;
+      case 'war':
+        value += (ratio - 1) * 7 + (hostile ? 5 : 0) - exhaustion - (rebuilding ? 5 : 0)
+          - (overcommitted ? 5 : 0) - (n(t.treasury) < reserve ? 4 : 0);
+        if ((t.modifiers || []).some(m => m.effects?.aiPassive || m.effects?.noOpportunisticWars)) value -= 30;
+        break;
+      case 'honour': value += (trust - 50) / 8 + regard / 25 + (rebuilding ? 3 : 0); break;
+      case 'counterweight': value += -regard / 20 + (hostile ? 4 : 0) - (n(t.treasury) < reserve + 100 ? 6 : 0) - (rebuilding ? 4 : 0); break;
+      case 'support': value += regard / 20 + (trust - 50) / 10 - (n(t.treasury) < reserve + 100 ? 6 : 0) - (rebuilding ? 4 : 0); break;
+      case 'neutral': value += (rebuilding ? 5 : 0) + (overcommitted ? 4 : 0) + (n(t.treasury) < reserve + 100 ? 3 : 0); break;
+      case 'reject': value += -(trust - 50) / 8 - regard / 25 + (hostile ? 3 : 0); break;
+    }
+    return value;
+  };
+  return pool.reduce((best, i) => score(i) > score(best) ? i : best, pool[0] ?? fallback);
+}
+function politicalSituationValid(ctx, ev) {
+  if (typeof ev?.courtChoice?.valid !== 'function') return true;
+  try { return !!ev.courtChoice.valid(ctx); }
+  catch (e) { warnOnce('courtvalid:' + ev.id, 'court situation check failed', e); return false; }
+}
+
 // The recorded course: the option `aiOption` names (an index, or a function of
 // the world), snapped onto the mask.
 function recordedCourse(ctx, ev, allowed) {
@@ -162,7 +218,7 @@ function recordedCourse(ctx, ev, allowed) {
   try {
     idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
   } catch (e) { warnOnce('aiopt:' + ev.id, 'aiOption threw for', ev.id, e); }
-  return maskIdx(allowed, idx, ev.options.length);
+  return strategicEventChoice(ctx, ev, allowed, maskIdx(allowed, idx, ev.options.length));
 }
 
 // How heavily a card's own record weighs against the roads it did not take
@@ -204,6 +260,7 @@ function courseFor(ctx, ev, allowed) {
 export function fireEvent(ctx, ev) {
   const g = ctx.game;
   if (!ev || !ev.id) return;
+  if (!politicalSituationValid(ctx, ev)) { skipEvent(ctx, ev, 'the diplomatic situation was already resolved'); return; }
   if (!requiredWarActive(ctx, ev)) {
     if (requiredWarSettled(ctx, ev)) skipEvent(ctx, ev, 'the war it belonged to was already settled');
     return;
@@ -403,6 +460,11 @@ export function resolveEventOption(ctx, instanceId, idx) {
   g.pendingEvents.splice(i, 1);
   const ev = findEventById(ctx, pe.eventId);
   if (ev) {
+    if (!politicalSituationValid(ctx, ev)) {
+      skipEvent(ctx, ev, 'the diplomatic situation changed before the answer');
+      ctx.bus.emit('eventResolved', { instanceId });
+      return;
+    }
     // A notice card (foreign decider, SPEC §70) applies the course fixed at
     // fire time no matter which button the UI reports — acknowledging is not
     // choosing.

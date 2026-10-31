@@ -147,6 +147,7 @@ export const EVENTS_LAKHMID602 = [
 export const PEACE628_ENTRY = {
   id: 'ev_p_khosrow_falls', title: 'A Peace Made Between Empires', forTag: 'SAS', major: true, minYear: 628, maxYear: 630,
   trigger: ctx => I(ctx, 'peace628').exists, aiOption: 0, sources: peace,
+  courtChoice: { actor: ctx => I(ctx, 'peace628').persia, other: ctx => I(ctx, 'peace628').rome, policies: ['peace', 'war'], valid: ctx => I(ctx, 'peace628').exists },
   historical: 'Khosrow II was overthrown in 628; Kavad II sought peace. Persian withdrawal restored Roman territories. Continued war or a settlement preserving an independent local court are alternatives.',
   desc: 'After the fighting around Nineveh, the Persian court can depose Khosrow and seek peace under Kavad II, or continue the imperial war. A peace offer still needs the Roman court’s answer.',
   options: [
@@ -160,7 +161,8 @@ export const EVENTS_PEACE628 = [
       O('peace628', 'restore', 'Restore the Roman territories and end the war', [S('flag', 'Persian withdrawal'), S('dove', 'Peace')], 'Restore eligible Roman territories currently owned by Persia, then end the bilateral imperial war. Third-party land and third-party occupations are untouched.'),
       O('peace628', 'armistice', 'Accept an armistice without territorial restoration', [S('dove', 'Status quo peace')], 'End the bilateral imperial war and return occupations without additional ownership transfers.'),
       O('peace628', 'reject', 'Continue the campaign', [S('swords', 'Continue war')], 'Reject the offer. The historical peace is not forced.'),
-    ], { minYear: 628, maxYear: 632, sources: peace, historical: 'Restoration accompanied the historical peace; an armistice preserving Persian acquisitions is an alternative.' }),
+    ], { minYear: 628, maxYear: 632, sources: peace,
+      courtChoice: { actor: ctx => I(ctx, 'peace628').rome, other: ctx => I(ctx, 'peace628').persia, policies: ['peace', 'peace', 'war'], valid: ctx => R(ctx, 'peace628')?.status === 'offered' }, historical: 'Restoration accompanied the historical peace; an armistice preserving Persian acquisitions is an alternative.' }),
   C('ev628_the_local_court', 'Our Place in Their Peace', 'JUD', 'peace628', ['settled'],
     'The empires have settled their own war. The surviving local government must now seek recognition, accept Roman clientship, or refuse the imperial settlement. Persian sponsorship no longer supplies a secure answer.', [
       O('peace628', 'petition', 'Seek recognition and written guarantees', [S('coins', '−75'), S('scroll', 'Imperial answer required')], 'Pay a 75-talent embassy. The Roman court independently decides whether to recognize this state and guarantee it for ten years.', ctx => I(ctx, 'peace628').canRequest),

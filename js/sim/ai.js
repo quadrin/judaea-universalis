@@ -36,6 +36,8 @@ import { LOAN_SIZE, LOAN_INTEREST_PER_MONTH, developCore, developInfo, DEV_KINDS
 import { popTotal, popTension } from './population.js';
 import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
 import { emptyQuarter, outlawsRisen } from './outlaws.js';
+import { monthlyCourtPlans, courtWarPlan, courtBudget } from './court_plans.js';
+import { monthlyCourtDiplomacy, courtIndependenceSupport, honorCourtIndependence } from './court_diplomacy.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -46,7 +48,9 @@ function warnOnce(key, ...args) {
 
 function personality(ctx, tag) {
   const P = ctx.DEFINES.PERSONALITIES || {};
-  return P[tag] || { aggression: 1, caution: 1 };
+  const base = P[tag] || { aggression: 1, caution: 1 };
+  const ruler = ctx.game.tags[tag]?.courtPlan?.ruler;
+  return ruler ? { ...base, aggression: ruler.aggression, caution: ruler.caution } : base;
 }
 
 function hasAiPassive(ctx, tag) {
@@ -460,7 +464,9 @@ function runTagAI(ctx, tag) {
   const rearmingAtPeace = !enemies.length && hints.threatRearm
     && g.flags && g.flags.postwarRearmament;
   try { aiUpkeep(ctx, tag, enemies.length > 0); } catch (e) { warnOnce('upkeep:' + tag, 'upkeep AI failed for', tag, e); }
-  aiRecruit(ctx, tag, hints, enemies.length || rearmingAtPeace ? 1 : 0.5);
+  const budget = courtBudget(ctx, tag);
+  const preparing = budget.priority === 'military' || budget.priority === 'defense';
+  aiRecruit(ctx, tag, hints, enemies.length || rearmingAtPeace || preparing ? 1 : 0.5);
   aiShedUnaffordable(ctx, tag);
   // The sea has its own clock (SPEC §82): an armada mid-crossing keeps
   // sailing even after a peace or under a scripted lull — passivity plans
@@ -576,6 +582,7 @@ function aiConsiderWar(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   if (!t || t.overlord) return; // clients follow their overlord to war, never lead
+  if (courtBudget(ctx, tag).priority === 'recovery') return;
   if (hasTagEffect(ctx, tag, 'noOpportunisticWars')) return;
   if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
   // Wars of opportunity want a settled court (stability >= 1); a war on the
@@ -585,7 +592,7 @@ function aiConsiderWar(ctx, tag) {
   if (num(t.aggression) > 40) return; // the world is watching: digest first
   const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
   const myMen = strength(tag);
-  if (myMen < 8000) return; // no army worth the name, no adventures
+  if (myMen <= 0) return;
   // Realms adjacent to ours, by province adjacency.
   const nbTags = new Set();
   for (let i = 1; i < g.provinces.length; i++) {
@@ -602,6 +609,9 @@ function aiConsiderWar(ctx, tag) {
     if (tgt === 'REB') continue;
     const e = g.tags[tgt];
     if (!e || !e.alive) continue;
+    const plan = courtWarPlan(ctx, tag, tgt);
+    if (plan.wanted && !plan.ready) continue;
+    if (!plan.wanted && myMen < 8000) continue;
     if (truceActive(ctx, tag, tgt)) continue;
     if (recognized(ctx, tag, tgt)) continue; // a recognized peace is not raided (SPEC §96)
     if ((t.allies || []).indexOf(tgt) >= 0 || e.overlord === tag || t.overlord === tgt) continue;
@@ -616,7 +626,7 @@ function aiConsiderWar(ctx, tag) {
     // succession claim rides for it whatever it thinks of the neighbors —
     // wars of succession were fought between houses that liked each other.
     const succession = successionClaim(ctx, tag, tgt);
-    if (!succession && opinionOf(ctx, tag, tgt) > -50) continue;
+    if (!succession && !plan.wanted && opinionOf(ctx, tag, tgt) > -50) continue;
     const rival = areRivals(ctx, tag, tgt);
     if (!succession && !rival && num(t.stability) < 1) continue; // only the old enmity moves an unsettled court
     const busyElsewhere = (e.atWarWith || []).some((x) => g.tags[x] && g.tags[x].alive);
@@ -647,7 +657,7 @@ function aiConsiderWar(ctx, tag) {
       // until the one arc that sets it; scripted declarations never ask.
       * (1 + 0.6 * resolveTagAdd(ctx, tgt, 'deterrent'));
     if (!(ratio >= needed || (busyElsewhere && ratio >= needed * 0.75))) continue;
-    if (!ctx.rng.chance((succession ? 0.12 : 0.08) * num(pers.aggression, 1))) continue;
+    if (!ctx.rng.chance((plan.wanted ? 0.3 : succession ? 0.12 : 0.08) * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);
     t.stability = clamp(num(t.stability) - (cb ? (cb.type === 'claim' ? 0 : 1) : 2), -3, 3);
     declareWar(ctx, tag, tgt, null, cb || 'conquest');
@@ -683,6 +693,7 @@ function vassalIndependence(ctx) {
     });
     let ours = strength(k);
     for (const v of coRebels) ours += strength(v);
+    for (const sponsor of courtIndependenceSupport(ctx, k)) if (!coRebels.includes(sponsor)) ours += strength(sponsor);
     if (ours < strength(lordTag) * num(V.revoltStrength, 0.4)) continue;
     // a client as large as its lord is readier to dare (SPEC §298)
     const rise = t.chafe && t.chafe.by === lordTag ? Math.max(1, num(t.chafe.rise, 1)) : 1;
@@ -693,6 +704,7 @@ function vassalIndependence(ctx) {
     const war = declareWar(ctx, k, lordTag,
       (t.name || k) + '’s War of Independence', 'independence');
     if (war) {
+      honorCourtIndependence(ctx, k, war);
       for (const v of coRebels) {
         if (war.attackers.indexOf(v) >= 0 || war.defenders.indexOf(v) >= 0) continue;
         war.attackers.push(v);
@@ -1481,7 +1493,8 @@ function aiBuild(ctx, tag) {
   if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
   if (num(t.income) < num(t.expenses)) return;
   const B2 = ctx.DEFINES.BUILDINGS || {};
-  const reserve = Math.max(150, num(t.expenses) * 12);
+  const budget = courtBudget(ctx, tag);
+  const reserve = Math.max(30, num(t.expenses) * 6, num(budget.reserve));
   let busy = false;
   let market = null, shrine = null;
   for (let i = 1; i < g.provinces.length; i++) {
@@ -1494,7 +1507,16 @@ function aiBuild(ctx, tag) {
     if (!has('shrine') && num(p.unrest) >= 3 && (!shrine || num(p.unrest) > num(shrine.unrest))) shrine = p;
   }
   if (busy) return;
-  const pick = shrine && B2.shrine ? { p: shrine, key: 'shrine' } : market && B2.market ? { p: market, key: 'market' } : null;
+  const preferred = ctx.byId(budget.targetProvince);
+  const eligible = preferred && preferred.owner === tag && preferred.controller === tag
+    && !preferred.siege && !preferred.construction;
+  const has = key => Array.isArray(preferred?.buildings) && preferred.buildings.includes(key);
+  let strategic = null;
+  if (eligible && budget.priority === 'defense' && num(preferred.fort) < 3 && !has('walls') && B2.walls)
+    strategic = { p: preferred, key: 'walls' };
+  if (eligible && budget.priority === 'trade' && !has('shipyard') && B2.shipyard
+      && ctx.geom?.coastal?.[preferred.id]) strategic = { p: preferred, key: 'shipyard' };
+  const pick = strategic || (shrine && B2.shrine ? { p: shrine, key: 'shrine' } : market && B2.market ? { p: market, key: 'market' } : null);
   if (!pick) return;
   const b = B2[pick.key];
   if (num(t.treasury) < num(b.cost) + reserve) return;
@@ -1632,6 +1654,7 @@ function aiDevelop(ctx, tag) {
   const t = g.tags[tag];
   if (!t) return;
   const capital = tagDef(ctx, tag).capital;
+  const budget = courtBudget(ctx, tag);
   for (const kind of Object.keys(DEV_KINDS)) {
     const pool = DEV_KINDS[kind];
     if (num(t.points[pool]) < 500) continue; // tech and reforms eat first
@@ -1639,7 +1662,8 @@ function aiDevelop(ctx, tag) {
     for (let i = 1; i < g.provinces.length; i++) {
       const p = g.provinces[i];
       if (!p || p.impassable || p.owner !== tag || p.controller !== tag || p.siege) continue;
-      const score = devTotal(p) + ((p.canon || p.name) === capital ? 100 : 0) - num(p.autonomy, 0.25) * 20;
+      const score = devTotal(p) + ((p.canon || p.name) === capital ? 100 : 0)
+        + (p.id === budget.targetProvince ? 120 : 0) - num(p.autonomy, 0.25) * 20;
       if (score > bestScore) { bestScore = score; best = i; }
     }
     if (best && developInfo(ctx, tag, best, kind).can) developCore(ctx, tag, best, kind);
@@ -1785,6 +1809,8 @@ function aiModernize(ctx, tag) {
 
 export function runMonthlyAI(ctx) {
   const g = ctx.game;
+  monthlyCourtPlans(ctx);
+  monthlyCourtDiplomacy(ctx);
   for (const tag of Object.keys(g.tags)) {
     try {
       const t = g.tags[tag];

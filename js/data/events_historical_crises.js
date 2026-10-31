@@ -15,6 +15,7 @@ export const BALAS_EVENT = {
   desc: 'Alexander Balas has landed at Ptolemais, claiming to be a son of Antiochus IV. Demetrius I and the claimant both seek Jonathan’s support. Alexander offers the high priesthood; Demetrius promises extensive concessions.\n\nA rival Seleucid court will fight for the crown. Our decision determines whom we support, but the armies decide who can honour the bargain.',
   historical: 'Jonathan accepted Alexander’s offer of the high priesthood in 152 BCE. Alexander defeated Demetrius in 150 BCE. His claimed parentage was disputed; the game does not treat it as proven.', sources: macc,
   aiOption: ctx => info(ctx, 'balas').canFund ? 0 : 2,
+  courtChoice: { actor: ctx => info(ctx, 'balas').sponsor, other: ctx => info(ctx, 'balas').incumbent, policies: ['counterweight', 'honour', 'neutral'], valid: ctx => info(ctx, 'balas').exists },
   options: [
     { label: 'Accept the priesthood and supply Alexander', when: ctx => info(ctx, 'balas').canFund,
       stakes: [chip('coins', '−100'), chip('spears', '−1,000'), chip('laurel', 'Back Balas')],
@@ -47,6 +48,7 @@ export const EVENTS_BROTHERS = [
   {
     id: 'ev67_the_brothers_accord', title: 'An Oath in the Temple', forTag: 'HYR',
     date: { y: -67, m: 6 }, when: ctx => info(ctx, 'brothers').exists, major: true, aiOption: 0,
+    courtChoice: { actor: ctx => info(ctx, 'brothers').elder, other: ctx => info(ctx, 'brothers').younger, policies: ['peace', 'war'], valid: ctx => info(ctx, 'brothers').exists },
     desc: 'Hyrcanus and Aristobulus can settle their struggle without another siege. Aristobulus would hold the crown; Hyrcanus would surrender his claim and Jerusalem in return for security. The agreement needs both brothers’ assent.\n\nHyrcanus would retain a dependent administration in his remaining lands. Accepting ends the war between the brothers and restricts his foreign policy.',
     historical: 'Josephus records Hyrcanus’s defeat near Jericho, his agreement to retire while Aristobulus ruled, and an oath in the Temple. Antipater subsequently persuaded Hyrcanus to reopen his claim with Nabataean help. The retained dependent administration is a gameplay abstraction of the settlement.', sources: brothers,
     options: [
@@ -63,6 +65,7 @@ export const EVENTS_BROTHERS = [
     desc: 'Hyrcanus offers to recognize our crown and yield Jerusalem. His remaining administration would answer to us, and our armies would stop fighting. We can accept his submission or seek a complete victory in the field.',
     historical: 'Aristobulus accepted the original agreement with Hyrcanus. Its survival here depends on both courts’ decisions.', sources: brothers,
     aiOption: 0,
+    courtChoice: { actor: ctx => info(ctx, 'brothers').younger, other: ctx => info(ctx, 'brothers').elder, policies: ['peace', 'war'], valid: ctx => info(ctx, 'brothers').canAccept },
     options: [
       { label: 'Accept his submission and end the war', stakes: [chip('laurel', '+15 legitimacy'), chip('tower', 'Jerusalem'), chip('scroll', '5% tribute')],
         tooltip: 'White peace returns occupations; uncontested Jerusalem passes to our crown. Hyrcanus becomes our client with 5% tribute for ten years. Six-month truce; his outside alliances end.', effects: pick('brothers', 'accept') },
@@ -77,6 +80,7 @@ export const EVENTS_BROTHERS = [
     desc: 'Antipater argues that the agreement has made Hyrcanus dependent on his brother’s goodwill. He urges a renewed claim. The truce has expired; reopening the succession would mean an actual war of independence. Keeping the oath would leave Aristobulus’s settlement intact.',
     historical: 'Antipater persuaded Hyrcanus to seek Aretas III’s help against Aristobulus. The existing Price of Petra event handles Nabataea’s territorial price if the renewed war remains active.', sources: brothers,
     aiOption: 0,
+    courtChoice: { actor: ctx => info(ctx, 'brothers').elder, other: ctx => info(ctx, 'brothers').younger, policies: ['war', 'peace'], valid: ctx => saved(ctx, 'brothers')?.status === 'accord' && info(ctx, 'brothers').canRise },
     options: [
       { label: 'Reopen the claim', stakes: [chip('swords', 'War of independence')],
         tooltip: 'Use the ordinary independence declaration: leave the brother’s wars, sever clientship and declare war. Nabataean support still requires its own agreement; no free intervention is granted here.', effects: pick('brothers', 'rise') },
@@ -146,6 +150,7 @@ export const EVENTS_HEROD_SUCCESSION = [
     desc: 'The successor court refuses our settlement and governs without our authority. Our diplomatic commitments now permit intervention. We can enforce the verdict by war or leave the undivided kingdom independent.',
     historical: 'Roman intervention in the unrest after Herod’s death is attested. This particular war over an undivided Antipan kingdom is an alternative outcome.', sources: testament,
     aiOption: ctx => (ctx.game.tags[info(ctx, 'herod').rome]?.atWarWith || []).length >= 2 ? 1 : 0,
+    courtChoice: { actor: ctx => info(ctx, 'herod').rome, other: ctx => info(ctx, 'herod').parent, policies: ['war', 'peace'], valid: ctx => ctx.helpers.canImperialIntervention(ctx) },
     options: [
       { label: 'Enforce the settlement by war', stakes: [chip('swords', 'Declare war')], tooltip: 'Declare a real war against the successor court. No automatic conquest, ruler replacement or treaty outcome.', effects: pick('herod', 'enforce') },
       { label: 'Leave this kingdom to its own affairs', stakes: [chip('shield', 'Independent kingdom')], tooltip: 'Accept the continued existence of the independent, undivided kingdom. No tribute or forced partition.', effects: pick('herod', 'leave') },

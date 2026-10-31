@@ -17,6 +17,7 @@ import {
   initGame, makeCtx, gameActions, reviveGame, reconcileGameProvinces, SAVE_VERSION,
 } from './js/sim/init.js';
 import { tickDay } from './js/sim/tick.js';
+import { monthlyCourtPlans } from './js/sim/court_plans.js';
 import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
 import { getSetting } from './js/ui/settings.js';
@@ -242,6 +243,7 @@ async function boot() {
       game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark,
       events: entry.events, provinceMap: activeProvinceMap,
     });
+    monthlyCourtPlans(ctx);
     renderer.setProvinceTerrains(game.provinces);
     actions = gameActions(ctx);
     if (wrapActions) actions = wrapActions(actions);

@@ -1,4 +1,5 @@
-// Diplomacy and treaty readers. No imports or random draws: previews are pure.
+import { rememberCourtEvent } from './court_plans.js';
+// Diplomacy and treaty readers. No random draws: previews are pure.
 const n = (v, d = 0) => Number.isFinite(v) ? v : d;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const provinces = (ctx, tag) => ctx.game.provinces.filter(p => p && !p.impassable && p.owner === tag);
@@ -63,6 +64,7 @@ export function rememberAllianceBreak(ctx, breaker, other) {
   const c = credit(ctx, other, breaker);
   c.trust = clamp(c.trust - 20, 0, 100);
   c.favors = 0;
+  rememberCourtEvent(ctx, other, breaker, 'abandoned_ally', { reason: 'Broke our alliance' });
 }
 
 export function settlePromises(ctx, war) {
@@ -72,6 +74,7 @@ export function settlePromises(ctx, war) {
     const kept = ctx.byId(p.province)?.owner === p.ally;
     // Defeat excuses the promise; a victorious principal must keep its word.
     if (!kept && !war.promiseVictory?.[p.caller]) continue;
+    rememberCourtEvent(ctx, p.ally, p.caller, kept ? 'kept_promise' : 'broken_promise', { province: p.province, reason: kept ? 'Honoured a territorial promise' : 'Withheld promised territory after victory' });
     const c = credit(ctx, p.ally, p.caller);
     c.trust = clamp(c.trust + (kept ? 10 : -25), 0, 100);
     const t = ctx.game.tags[p.ally];

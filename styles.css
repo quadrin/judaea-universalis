@@ -4460,3 +4460,21 @@ a.ss-tool { text-decoration: none; display: inline-block; }
 .app-ready { color: var(--ink); font-weight: 700; }
 .app-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .app-actions [hidden], .app-card [hidden] { display: none !important; }
+
+/* Court intentions and incoming diplomatic offers share the World tab. */
+.np-court-line { margin: 6px 0; line-height: 1.45; overflow-wrap: anywhere; }
+.np-court-attitude { color: var(--gold-bright); }
+.np-court-goals { margin: 8px 0; padding-left: 20px; }
+.np-court-goals li { margin: 7px 0; line-height: 1.45; overflow-wrap: anywhere; }
+.np-court-goals li span { display: block; color: var(--text-dim); }
+.np-court-offer { padding: 10px 0; border-bottom: 1px solid var(--gold-dim); }
+.np-court-offer:last-child { border-bottom: 0; }
+.np-court-offer-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.np-court-offer-head strong { overflow-wrap: anywhere; }
+.np-court-offer-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.np-court-offer-actions button { min-height: 36px; }
+.np-court-offer-actions button:disabled { opacity: .5; cursor: default; }
+.np-court-feedback { margin-top: 6px; line-height: 1.4; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .np-court-offer-actions button { min-height: 44px; }
+}

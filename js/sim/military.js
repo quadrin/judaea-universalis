@@ -20,6 +20,7 @@ import { royalBattleRisk, royalArmyRemoved, royalCanReturn } from './royal_comma
 import { combatFrontage, fieldStrength } from './frontage.js';
 import { landRoutes, fortControl, fortStep, fortApproachFor } from './fort_control.js';
 import { offensiveCall, commitAllyCall, settlePromises, rememberAllianceBreak, expansionPreview, applyExpansion, peaceWarScore } from './strategy.js';
+import { rememberCourtEvent } from './court_plans.js';
 // The month of the year (SPEC §272). seasons.js imports nothing from the sim
 // precisely so that this file, navy.js and weather.js may all consult it
 // without a cycle: it is date arithmetic and a table, nothing else.
@@ -2799,6 +2800,30 @@ export function switchTagCore(ctx, from, to) {
   for (const t of Object.values(g.tags)) for (const field of ['expansionConcern', 'diplomaticCredit']) {
     if (t[field] && Object.hasOwn(t[field], from)) { t[field][to] = t[field][from]; delete t[field][from]; }
   }
+  // Strategic commitments belong to the continuing court across formations.
+  for (const t of Object.values(g.tags)) {
+    const plan = t.courtPlan;
+    if (!plan) continue;
+    for (const goal of plan.goals || []) if (goal.target === from) goal.target = to;
+    for (const row of plan.history || []) if (row.target === from) row.target = to;
+    for (const row of plan.memories || []) {
+      if (row.other === from) row.other = to;
+      if (row.detail?.attacker === from) row.detail.attacker = to;
+    }
+    if (plan.attitudes && Object.hasOwn(plan.attitudes, from)) {
+      plan.attitudes[to] = plan.attitudes[from]; delete plan.attitudes[from];
+    }
+  }
+  const courtDiplomacy = g.courtDiplomacy;
+  if (courtDiplomacy) {
+    for (const row of [...(courtDiplomacy.offers || []), ...(courtDiplomacy.history || [])]) {
+      for (const key of ['from', 'to', 'enemy']) if (row[key] === from) row[key] = to;
+    }
+    for (const pledge of courtDiplomacy.support || []) {
+      for (const key of ['client', 'sponsor', 'lord']) if (pledge[key] === from) pledge[key] = to;
+    }
+    rekey(courtDiplomacy.cooldowns, '>', true);
+  }
   for (const w of g.wars) {
     for (const p of w.promises || []) {
       if (p.caller === from) p.caller = to;
@@ -3933,6 +3958,7 @@ export function declareWar(ctx, atk, def, name, cb) {
     if (gt.guarantees.indexOf(atk) >= 0) continue;
     const before = defenders.length;
     join(defenders, k);
+    if (defenders.length > before) rememberCourtEvent(ctx, def, k, 'guarantee_honored', { attacker: atk });
     if (defenders.length > before && (atk === g.playerTag || def === g.playerTag || k === g.playerTag)) {
       ctx.bus.emit('notify', {
         title: 'A guarantee is honored',
@@ -3969,6 +3995,7 @@ export function declareWar(ctx, atk, def, name, cb) {
   };
   for (const c of committedCalls) if (attackers.includes(c.al)) commitAllyCall(ctx, war, c.al, c.principal, c.offer, c.answer);
   g.wars.push(war);
+  rememberCourtEvent(ctx, def, atk, 'attacked', { war: war.id });
   for (const a of attackers) {
     for (const d of defenders) {
       const ta = g.tags[a], td = g.tags[d];
@@ -8236,9 +8263,11 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     // change so the incoming owner cannot inherit a rename it never earned.
     p.integration = 0;
     p.integrating = null;
+    const previousOwner = p.owner;
     recordGrudge(ctx, p.owner, recip, id); // the lost lands are remembered (SPEC §67)
     changeOwnerCore(ctx, p, recip);
     changeControllerCore(ctx, p, recip);
+    if (previousOwner !== recip) rememberCourtEvent(ctx, previousOwner, recip, 'territorial_loss', { province: id, war: war.id });
     p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
     p.conversion = null;
     p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
@@ -8269,6 +8298,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
       recordGrudge(ctx, byTag, info.enemyLeader, row.id);
       changeOwnerCore(ctx, p, info.enemyLeader);
       changeControllerCore(ctx, p, info.enemyLeader);
+      rememberCourtEvent(ctx, byTag, info.enemyLeader, 'territorial_loss', { province: row.id, war: war.id });
       p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
       p.conversion = null;
       p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
@@ -8479,6 +8509,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     me.points.mar = clamp(num(me.points.mar) + 25, 0, 999);
     et.legitimacy = clamp(num(et.legitimacy) - 15, 0, 100);
     et.stability = clamp(num(et.stability) - 1, -3, 3);
+    rememberCourtEvent(ctx, info.enemyLeader, byTag, 'humiliated', { war: war.id });
     me.aggression = num(me.aggression) + BAL(ctx, 'infamyHumiliate', 5);
     terms.push('is humiliated before the nations');
   }
