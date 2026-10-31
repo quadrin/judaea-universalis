@@ -40,6 +40,11 @@ jobs:
           node tools/tests/smoke-judaean-coins.mjs
           node tools/tests/offline-cache.mjs
           node tools/tests/app-install.mjs
+      - name: Check war planning and reserve deployment
+        run: |
+          node tools/tests/war-deployment.mjs
+          node tools/tests/smoke196.mjs
+          node tools/tests/allied-orders-war.mjs
       - name: Rebuild portable HTML and ZIP
         run: python3 tools/build_offline.py
       - name: Commit updated downloads

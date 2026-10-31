@@ -44,6 +44,7 @@ import { landRoutes, fortControl } from './fort_control.js';
 import { seasonSiegeFactor } from './seasons.js';
 import { reservedForNavalOp } from './invasion.js';
 import { alliedOrderTasks } from './allied_orders.js';
+import { traceSupply } from './supply.js';
 
 // How far ahead the planner looks, in days of march.
 const HORIZON = 45;
@@ -515,7 +516,7 @@ function battleTasks(ctx, W) {
 // An accepted council request changes the value of a military task, while
 // its route, force requirement and combat forecast remain the planner's.
 // Defending our own threatened capital takes precedence over foreign orders.
-function councilTasks(ctx, W, tasks, reach) {
+function councilTasks(ctx, W, tasks) {
   const orders = alliedOrderTasks(ctx, W.tag);
   const date = ctx.game.date;
   const currentMonth = (date.y > 0 ? date.y - 1 : date.y) * 12 + date.m - 1;
@@ -537,7 +538,6 @@ function councilTasks(ctx, W, tasks, reach) {
     }
   }
   for (const order of orders) {
-    if (!reach.has(order.province)) continue;
     const p = ctx.byId(order.province);
     if (!p || p.impassable) continue;
     const priority = clamp(num(order.priority, 45), 0, 80);
@@ -780,6 +780,60 @@ function idleOrders(ctx, W, army) {
   else halt(army);
 }
 
+// Reserves outside the battle horizon still need to reach the front. Search
+// the connected friendly road network, stopping at its hostile boundary,
+// then order at most HORIZON days toward a useful objective. Tactical plans
+// get first use of every army and retain all combat and retreat decisions.
+function deployReserves(ctx, W, free, tasks, opts) {
+  if (!free.size || !tasks.length) return;
+  const blocked = new Set(W.hostilesAt.keys());
+  for (const p of ctx.game.provinces) {
+    if (p && (p.impassable || !(p.controller === W.tag || sameSide(ctx, W.tag, p.controller))
+      || p.siege && isHostile(ctx, W.tag, p.siege.by))) blocked.add(p.id);
+  }
+  const goals = tasks.flatMap(task => task.kind === 'battle'
+    ? task.spots.map(spot => ({ ...task, prov: spot.prov })) : [task]);
+  for (const army of free) {
+    if (blocked.has(army.prov) || num(army.oosMonths) > 0 || !traceSupply(ctx, army).ok) continue;
+    const routes = travelFrom(ctx, army, Infinity, blocked);
+    let best = null;
+    for (const goal of goals) {
+      const distance = routes.dist.get(goal.prov);
+      if (distance === undefined || distance <= 0) continue;
+      const path = routes.pathTo(goal.prov);
+      let stage = army.prov;
+      for (const id of path) {
+        if (routes.dist.get(id) > HORIZON || blocked.has(id)) break;
+        const p = ctx.byId(id);
+        const waiting = W.mine.filter(a => a !== army && a.prov === id && !a.path?.length);
+        if (!holds(ctx, W, [army, ...waiting], id, THREAT_DAYS)) break;
+        // Reserve space for troops already marching to this camp, including
+        // allies. A single existing oversized host can travel, but it cannot
+        // crowd another army into an unsupported staging position.
+        let committed = 0;
+        for (const other of Object.values(ctx.game.armies)) {
+          if (!other || other === army || other.aboard || num(other.men) <= 0
+            || !(other.tag === W.tag || sameSide(ctx, W.tag, other.tag))) continue;
+          if ((other.path?.at(-1) || other.prov) === id) committed += regCount(other);
+        }
+        if (committed + regCount(army) > Math.max(supportLimit(ctx, p), regCount(army))) continue;
+        if (traceSupply(ctx, { ...army, prov: id }).ok) stage = id;
+      }
+      // An army already near the front holds its safe camp rather than
+      // drifting back to a richer interior town while waiting for an opening.
+      if (stage === army.prov && distance > HORIZON) continue;
+      const score = goal.value / (1 + distance / 30);
+      if (!best || score > best.score) best = { prov: stage, objective: goal.prov,
+        score, alliedOrder: goal.alliedOrder };
+    }
+    if (!best || !marchTo(ctx, army, best.prov, routes)) continue;
+    free.delete(army);
+    if (Array.isArray(opts?.log)) opts.log.push({ kind: 'deploy', prov: best.prov,
+      objective: best.objective, score: best.score, armies: [army.id],
+      ...(best.alliedOrder ? { alliedOrder: best.alliedOrder } : {}) });
+  }
+}
+
 // Co-located armies fight as one anyway, so the planner keeps them apart
 // (two armies can hold two places). The exception is a remnant: under three
 // regiments it is a battle the enemy wins for two points, so it folds into a
@@ -885,11 +939,11 @@ export function planWar(ctx, tag, opts) {
   // Only what some army of ours can actually reach is a task.
   const reach = new Set();
   for (const tr of W.travel.values()) for (const id of tr.dist.keys()) reach.add(id);
-  const tasks = councilTasks(ctx, W, [
-    ...battleTasks(ctx, W).filter((task) => task.spots.some((s) => reach.has(s.prov))),
-    ...provinceTasks(ctx, W).filter((task) => reach.has(task.prov)),
-    ...guardTasks(ctx, W).filter((task) => reach.has(task.prov)),
-  ], reach);
+  const objectives = councilTasks(ctx, W, [
+    ...battleTasks(ctx, W), ...provinceTasks(ctx, W), ...guardTasks(ctx, W),
+  ]);
+  const tasks = objectives.filter(task => task.kind === 'battle'
+    ? task.spots.some(spot => reach.has(spot.prov)) : reach.has(task.prov));
   // The nearest and most valuable first; the tail cannot win an assignment.
   tasks.sort((x, y) => y.value - x.value);
   const pool = tasks.slice(0, 40);
@@ -915,6 +969,7 @@ export function planWar(ctx, tag, opts) {
       opts.log.push({ kind: pick.kind, prov: pick.prov, score: pick.score, armies: pick.force.map((a) => a.id), ...(pick.alliedOrder ? { alliedOrder: pick.alliedOrder } : {}) });
     }
   }
+  deployReserves(ctx, W, free, objectives, opts);
   for (const a of free) idleOrders(ctx, W, a);
   detach(ctx, W, plans);
 }
