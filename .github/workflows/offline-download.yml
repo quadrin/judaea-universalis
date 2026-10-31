@@ -40,6 +40,8 @@ jobs:
           node tools/tests/smoke-judaean-coins.mjs
           node tools/tests/offline-cache.mjs
           node tools/tests/app-install.mjs
+      - name: Check peace settlement previews
+        run: node tools/tests/peace-crown-preview.mjs
       - name: Check war planning and reserve deployment
         run: |
           node tools/tests/war-deployment.mjs

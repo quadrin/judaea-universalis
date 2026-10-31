@@ -17,7 +17,7 @@ import { icon, flagChip, unitIcon } from './icons.js';
 import { armGenName } from '../data/units.js';
 import { createCampaignTools } from './campaign_tools.js';
 import { createMessages } from './messages.js';
-import { renderPeaceStrategy, renderPeaceWarScore, peaceScoreText } from './peace_strategy.js';
+import { renderPeaceStrategy, renderPeaceWarScore, peaceTermsSummary, renderPeaceClientTransfers } from './peace_strategy.js';
 import { generalStarsHtml, generalDescription } from './general_rating.js';
 
 const MAPMODES = [
@@ -555,19 +555,7 @@ export function initUI(staticCtx) {
             <span class="peace-prov-cost">${r.minWs}%</span>
           </label>`).join('')}
         </div>` : ''}
-        <div class="peace-sec">Take over their client kingdoms</div>
-        ${(info.transferableVassals || []).length ? info.transferableVassals.map((r) =>
-    `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc(
-      'Transfer ' + r.name + ' from ' + r.fromName + ' to our protection. The client keeps its ruler, army and every province; its tribute and war duty pass to us.\nCosts '
-      + r.cost + ' war score.' + (r.goalAligned ? ' This fulfills the ' + (r.goalReason || 'war goal') + ' and receives favored terms.' : ''))}">
-          <input type="checkbox" data-transfer-vassal="${esc(r.tag)}">
-          <span class="peace-prov-name">Transfer ${esc(r.name)} to us
-            <span class="peace-dim">${r.dev} dev · from ${esc(r.fromName)}</span></span>
-          <span class="peace-prov-cost">${r.cost}</span>
-        </label>`).join('')
-    : `<div class="peace-dim peace-none">${info.separate
-      ? 'A separate peace cannot transfer another sovereign’s clients.'
-      : 'They have no direct client kingdom that can be transferred.'}</div>`}
+        ${renderPeaceClientTransfers(info)}
         `}
         ${info.chapterSettlements?.length ? `<div class="peace-sec">Political settlement</div>
           <label class="chapter-action">${icon('scroll', 'icon-sm')}Settlement<select data-ref="chapterSettlement" aria-label="Political settlement">
@@ -668,15 +656,7 @@ export function initUI(staticCtx) {
       const white = !deal.provinces.length && !deal.release.length && !deal.transferVassals.length
         && !deal.concessions.length && deal.gold <= 0
         && !deal.humiliate && !deal.subjugate && !deal.unifyCrown && !deal.reparations && !deal.chapterSettlement;
-      totalEl.textContent = white
-        ? (info.exit
-          ? 'A clean withdrawal: occupations between us and the enemy revert; the war goes on without us.'
-          : 'A white peace: every occupation reverts, nothing changes hands.')
-        : ev.net > 0
-          ? `Demands cost ${ev.net} war score — we have ${peaceScoreText(ev.acceptanceBudget)}.`
-          : ev.offered > 0
-            ? `We offer ${ev.offered} war score of our own land — their military score is ${Math.max(0, -info.myWs)}.`
-            : `Demands cost ${ev.cost} war score — we have ${peaceScoreText(ev.acceptanceBudget)}.`;
+      totalEl.textContent = peaceTermsSummary(ev, info, white);
       verdictEl.textContent = ev.acceptable ? 'They will accept these terms.' : ev.reason;
       const strategy = peaceEl.querySelector('[data-ref="strategy"]');
       if (strategy) strategy.innerHTML = renderPeaceStrategy(ev, state.ctx);

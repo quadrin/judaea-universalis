@@ -7384,7 +7384,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
           ? 'The argument is settled: they renounce, and the crown is one.'
           : 'Our position compels them to accept.')
         : unifyCrown
-          ? `A crown is not signed away by a court that still believes in the next campaign (${net} war score asked, ${Math.max(0, info.myWs)} held).`
+          ? `Taking the whole kingdom requires ${net} military score; we have ${Math.max(0, info.myWs)}.`
           : `They will bear ${Math.round(acceptanceBudget * 10) / 10} war score of demands (${net} asked; enthusiasm ${enthusiasm.level.toLowerCase()}).`;
     } else {
       // We are the ones paying (SPEC §222). A court accepts what covers what
@@ -7399,6 +7399,14 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
         : `They have won more than that (${-net} offered, ${enemyWs} is what their war has earned).`;
     }
   }
+  // Forecast the courts that still exist after these terms, using the same
+  // land-or-army rule as updateTagLife. A crown settlement also removes the
+  // rival's armies and court explicitly, even if they survive in the field.
+  const cededOrReleased = new Set([...chosen.map(p => p.id), ...releaseRows.flatMap(r => r.provIds)]);
+  const remainingLand = options.consequences === false ? null : new Set(ctx.game.provinces.filter(p => p && !p.impassable
+    && !cededOrReleased.has(p.id)).map(p => p.owner));
+  const survives = tag => !(unifyCrown && tag === info.enemyLeader)
+    && (isOffmapTag(ctx, tag) || remainingLand.has(tag) || armiesOf(ctx, tag).length > 0);
   return {
     cost, net, offered, mixedTerms, acceptable, reason, gold, humiliate, subjugate, reparations,
     chapterSettlement: chapterSettlement?.key || null,
@@ -7409,6 +7417,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal, options = {}) {
       ...transferRows.flatMap(r => r.provIds || []),
     ])].filter(id => !(independenceSideOf(war) === (war.attackers.includes(byTag) ? 'att' : 'def')
         && liberatedSoil(ctx, ctx.byId(id), byTag))))
+      .filter(r => survives(r.tag))
       .map(r => subjugate && r.tag === info.enemyLeader || transferRows.some(t => t.tag === r.tag)
         ? { ...r, coalition: false, newlyAlarmed: false } : r),
     unifyCrown, // the crown war's answer (SPEC §226): one kingdom, one claimant

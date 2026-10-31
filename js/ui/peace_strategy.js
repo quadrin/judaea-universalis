@@ -9,19 +9,45 @@ export const peaceScoreText = value => String(Number(Number(value || 0).toFixed(
 export function renderPeaceWarScore(score, { enemyName, separate = false } = {}) {
   const total = score.warScore ?? score.acceptanceBudget ?? 0;
   const cls = total > 0 ? 'pos' : total < 0 ? 'neg' : '';
-  const label = separate ? 'Separate war score' : 'War score';
-  const tip = 'Includes military results and the enemy’s willingness to settle. Expand war enthusiasm below to see the calculation.';
+  const label = score.unifyCrown ? 'Military score for taking the crown' : separate ? 'Separate war score' : 'War score';
+  const tip = score.unifyCrown ? 'Taking the whole kingdom uses military score only. War enthusiasm applies to ordinary peace terms.'
+    : 'Includes military results and the enemy’s willingness to settle. Expand war enthusiasm below to see the calculation.';
   return `<span title="${esc(tip)}" data-tt="${esc(tip)}">${label}${enemyName ? ' against ' + esc(enemyName) : ''}: <b class="${cls}" data-peace-score="${peaceScoreText(total)}">${total > 0 ? '+' : ''}${peaceScoreText(total)}%</b></span>`;
+}
+export function peaceTermsSummary(ev, info, white = false) {
+  if (white) return info.exit
+    ? 'A clean withdrawal: occupations between us and the enemy revert; the war goes on without us.'
+    : 'A white peace: every occupation reverts, nothing changes hands.';
+  if (ev.unifyCrown) return `Taking the whole kingdom requires ${ev.cost} military score; we have ${peaceScoreText(ev.militaryWarScore)}.`;
+  if (ev.net > 0) return `Demands cost ${ev.net} war score — we have ${peaceScoreText(ev.acceptanceBudget)}.`;
+  if (ev.offered > 0) return `We offer ${ev.offered} war score of our own land — their military score is ${Math.max(0, -info.myWs)}.`;
+  return `Demands cost ${ev.cost} war score — we have ${peaceScoreText(ev.acceptanceBudget)}.`;
+}
+export function renderPeaceClientTransfers(info) {
+  if (!info.transferableVassals?.length) return '';
+  return `<div class="peace-sec">Take over their client kingdoms</div>` + info.transferableVassals.map(r =>
+    `<label class="peace-prov" data-center="${r.provIds?.[0] || 0}" data-tt="${esc(
+      'Transfer ' + r.name + ' from ' + r.fromName + ' to our protection. The client keeps its ruler, army and every province; its tribute and war duty pass to us.\nCosts '
+      + r.cost + ' war score.' + (r.goalAligned ? ' This fulfills the ' + (r.goalReason || 'war goal') + ' and receives favored terms.' : ''))}">
+      <input type="checkbox" data-transfer-vassal="${esc(r.tag)}">
+      <span class="peace-prov-name">Transfer ${esc(r.name)} to us
+        <span class="peace-dim">${r.dev} dev · from ${esc(r.fromName)}</span></span>
+      <span class="peace-prov-cost">${r.cost}</span>
+    </label>`).join('');
 }
 export function renderPeaceStrategy(ev, ctx) {
   const military = ev.militaryWarScore ?? ev.acceptanceBudget - ev.acceptanceAdjustment;
-  const math = ev.enthusiasm ? `Military score ${peaceScoreText(military)} + war enthusiasm ${signed(ev.acceptanceAdjustment)} = war score ${peaceScoreText(ev.warScore ?? ev.acceptanceBudget)}. Willingness ${signed(ev.enthusiasm.willingness)} after base reluctance 4. Positive adjustment is capped at 25% of military score; total victory permits demands up to 100.${ev.unifyCrown ? ' Taking a crown requires military score; enthusiasm does not lower that threshold.' : ''}` : '';
-  return (ev.enthusiasm ? `<details open class="peace-factors"><summary>
+  const math = ev.enthusiasm ? ev.unifyCrown
+    ? `Taking the crown requires ${ev.cost} military score; current military score ${peaceScoreText(military)}. Crown settlements use military score only.`
+    : `Military score ${peaceScoreText(military)} + war enthusiasm ${signed(ev.acceptanceAdjustment)} = war score ${peaceScoreText(ev.warScore ?? ev.acceptanceBudget)}. Willingness ${signed(ev.enthusiasm.willingness)} after base reluctance 4. Positive adjustment is capped at 25% of military score; total victory permits demands up to 100.` : '';
+  return (ev.unifyCrown ? '<p class="peace-hint">Crown settlements use military score only.</p>' : '')
+    + (ev.enthusiasm ? `<details${ev.unifyCrown ? '' : ' open'} class="peace-factors"><summary>
     <span>${icon('dove', 'icon-sm')}Enemy war enthusiasm: ${esc(ev.enthusiasm.level)}</span></summary>
     <div class="peace-stats" title="${esc(math)}" data-tt="${esc(math)}">
       <span>${icon('swords', 'icon-sm')}Military <b>${peaceScoreText(military)}</b></span>
-      <span>${icon('dove', 'icon-sm')}Enthusiasm <b>${signed(ev.acceptanceAdjustment)}</b></span>
-      <span>${icon('alert', 'icon-sm')}Cap <b>25%</b></span></div>
+      ${ev.unifyCrown ? `<span>${icon('scales', 'icon-sm')}Required <b>${ev.cost}</b></span>`
+        : `<span>${icon('dove', 'icon-sm')}Enthusiasm <b>${signed(ev.acceptanceAdjustment)}</b></span>
+      <span>${icon('alert', 'icon-sm')}Cap <b>25%</b></span>`}</div>
     <div class="peace-factor-grid">${ev.enthusiasm.factors.map(r => `<div class="peace-factor" title="${esc(r.label)} contributes ${signed(r.value)} to willingness to settle">
       ${icon(FACTORS[r.label] || 'scales', 'icon-sm')}<span>${esc(r.label)}</span><b class="${r.value >= 0 ? 'pos' : 'neg'}">${signed(r.value)}</b></div>`).join('')}</div></details>` : '')
     + (ev.expansion?.length ? `<details open class="peace-concern"><summary>${icon('alert', 'icon-sm')}Regional concern after this treaty <span class="peace-stat">${ev.expansion.filter(r => r.coalition).length} at risk</span></summary>
