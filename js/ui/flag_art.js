@@ -1,7 +1,8 @@
 import { flattenCourtStandards } from './flat_court_palette.js';
-// Flat vector court standards. Ancient banners are original game designs,
+import { enrichFlatGeneratedStandards } from './flat_generated_standards.js';
+// Detailed generated court standards. Ancient banners are original game designs,
 // inspired by coins, seals and regional motifs, not reconstructed flags.
-// No raster images, gradients, filters, cloth, lighting or remote resources.
+// Images are embedded locally; exact inscriptions remain native paths.
 import { DEFINES } from '../data/defines.js';
 import { REVIVALS } from '../data/revivals.js';
 import { enrichCourtStandards } from './court_standards.js';
@@ -327,10 +328,12 @@ Object.assign(FLAT_FLAGS, {
 
 // Keep the complete relief/coin-inspired drawing at every size. Enlarged
 // Compendium views use these same paths; there is no reduced-detail variant.
+const romanWordmark=FLAT_FLAGS.ROM.body.match(/<path d="([^"]+)"/)[1];
 enrichCourtStandards(FLAT_FLAGS);
 enrichJudaeanStandards(FLAT_FLAGS);
 reviseCourtStandards(FLAT_FLAGS);
 flattenCourtStandards(FLAT_FLAGS);
+enrichFlatGeneratedStandards(FLAT_FLAGS,{romanWordmark});
 // Modern Oman is resolved independently of its ancient maritime standard.
 FLAT_FLAGS.OMA_MOD = standard('#b32632', '', {emblem:'omani-royal-flag',scale:1,
   note:'The plain red national flag used by the Omani sultanate in the 1948 chapter.'});

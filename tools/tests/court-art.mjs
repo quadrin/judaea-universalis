@@ -48,8 +48,7 @@ for (const key of Object.keys(MODERN_COURT_ART)) {
 }
 assert.equal(createHash('sha256').update(JSON.stringify(FLAT_FLAGS.SAM)).digest('hex'),
   'cc838c64acaae738440f1bcb2c6b84e5b4be3b9c213e8e5bdb0564bd1126941e','SAM: approved master unchanged');
-assert.equal(createHash('sha256').update(FLAT_FLAGS.HAS.body.replace(/\s(?:fill|stroke)="[^"]*"/g,'')).digest('hex'),
-  '4231d76629d90f8ea501ff3c1cd5bbf6ad315c12525d2d65c3754cabd656fe0d','HAS: approved contours retained with new flat inks');
+assert.equal(FLAT_FLAGS.HAS.imageAsset,'court-has','HAS: full generated cornucopias and pomegranate master');
 console.log('PASS 154 audited courts, 52 modern masters and variants, six flag repairs, six rendering sizes, dated identities, saved rebrands and protected approved masters');
 
 
