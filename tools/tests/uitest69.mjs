@@ -31,7 +31,7 @@ try {
       const ctx = sim.makeCtx({ game, DEFINES, MAP_DATA, geom, bookmark, events: [], provinceMap, bus: { emit() {}, on() { return () => {}; } } });
       const t = game.tags[tag]; t.treasury = 3000; t.manpower = 30000; t.points = { gov: 999, infl: 999, mar: 999 };
       for (const p of game.provinces) if (p?.owner === tag) { p.controller = tag; p.siege = null; }
-      const actions = sim.gameActions(ctx); panel.bind(ctx, actions); panel.open(null, 'missions');
+      const actions = sim.gameActions(ctx); panel.bind(ctx, actions); panel.open(null, ({ '732bce':'world', '167bce':'war', '132ce':'war', '351ce':'war', '1948ce':'war' }[id] || 'court'));
       window.chapterTest = { ctx, actions, panel, strategy, renderPeaceStrategy };
     };
     buildStartScreen(document.getElementById('start-screen'), DEFINES, PLAYABLE_ERAS.map(e => e.bookmark), () => {});
@@ -42,17 +42,13 @@ try {
   await page.evaluate(() => document.getElementById('start-screen').remove());
   for (const id of ['931bce', '732bce', '597bce', '167bce', '67bce', '66ce', '132ce', '351ce', '529ce', '614ce', '1948ce', '40bce']) {
     await page.evaluate(id => window.loadChapter(id), id);
-    assert(await page.locator('[data-ref="chapterStrategyBlock"]').isVisible(), id);
-    assert(await page.locator('[data-cs-act]').count() >= 4, id);
+    assert((await page.locator('[data-ref^="chapterStrategyBlock_"]:visible').count()) > 0, id);
+    assert.equal(await page.locator('[data-cs-act]').count(), await page.evaluate(() => window.chapterTest.actions.getChapterStrategy().actions.length), id + ': every action has exactly one contextual home');
   }
   console.log('PASS eleven visible bookmarks, merged succession card and all chapter menus including legacy saves');
   await page.evaluate(() => window.loadChapter('931bce'));
-  assert(await page.evaluate(() => {
-    const tree = document.querySelector('[data-ref="missionsBlock"]');
-    const strategy = document.querySelector('[data-ref="chapterStrategyBlock"]');
-    return !!(tree.compareDocumentPosition(strategy) & Node.DOCUMENT_POSITION_FOLLOWING);
-  }), 'the mission tree precedes chapter actions');
-  const info = page.locator('details[data-cs-info="levy_charter"]');
+  assert.equal(await page.locator('#nation-panel > [data-tab="missions"] [data-cs-act]').count(), 0, 'Missions contains no executable chapter actions');
+  const info = page.locator('details[data-cs-info="direct_rule"]');
   assert(!(await info.evaluate(el => el.open)), 'action explanations start collapsed');
   await info.locator('summary').focus(); await page.keyboard.press('Enter');
   assert(await info.evaluate(el => el.open), 'keyboard users can inspect the complete action');
@@ -60,25 +56,27 @@ try {
   await page.evaluate(() => window.chapterTest.panel.refresh());
   assert(await info.evaluate(el => el.open), 'refresh preserves the expanded explanation');
   await page.evaluate(() => {
-    window.chapterControl = document.querySelector('[data-cs-target="levy_charter"]');
+    window.chapterControl = document.querySelector('[data-cs-target="direct_rule"]');
     window.chapterTest.panel.refresh();
   });
-  assert(await page.evaluate(() => window.chapterControl === document.querySelector('[data-cs-target="levy_charter"]')),
+  assert(await page.evaluate(() => window.chapterControl === document.querySelector('[data-cs-target="direct_rule"]')),
     'an unchanged refresh preserves the live target control');
   await info.locator('summary').click();
-  const select = page.locator('[data-cs-target="levy_charter"]');
+  const select = page.locator('[data-cs-target="direct_rule"]');
   await select.focus();
   const province = await select.inputValue();
+  await page.evaluate(id => { window.chapterTest.ctx.byId(Number(id)).autonomy = .15; window.chapterTest.panel.refresh(); }, province);
   await select.selectOption(province);
-  assert.equal(await page.locator(':focus').getAttribute('data-cs-target'), 'levy_charter');
-  await page.locator('[data-cs-act="levy_charter"]').click();
-  assert.equal(await page.evaluate(() => window.chapterTest.ctx.game.tags[window.chapterTest.ctx.game.playerTag].points.infl), 974);
-  assert(await page.evaluate(id => !!window.chapterTest.ctx.game.tags[window.chapterTest.ctx.game.playerTag].chapterStrategy.charters[id], province));
-  assert(await page.locator('[data-cs-act="levy_charter"]').isDisabled());
+  assert.equal(await page.locator(':focus').getAttribute('data-cs-target'), 'direct_rule');
+  await page.locator('[data-cs-act="direct_rule"]').click();
+  assert.equal(await page.evaluate(() => window.chapterTest.ctx.game.tags[window.chapterTest.ctx.game.playerTag].points.gov), 959);
+  assert.equal(await page.evaluate(id => window.chapterTest.ctx.byId(Number(id)).autonomy, province), 0);
+  assert.equal(await page.evaluate(() => window.chapterTest.ctx.game.tags[window.chapterTest.ctx.game.playerTag].treasury), 2940);
+  assert(await page.locator('[data-cs-act="direct_rule"]').isDisabled());
   await page.evaluate(() => { const { panel, ctx } = window.chapterTest; panel.open(ctx.game.playerTag === 'ISL' ? 'JDH' : 'ISL', 'missions'); });
-  assert(!(await page.locator('[data-ref="chapterStrategyBlock"]').isVisible()));
-  await page.evaluate(() => window.chapterTest.panel.open(null, 'missions'));
-  console.log('PASS tree-first layout, keyboard action details, stable controls, real charter enactment, exact cost, repeat refusal and foreign read-only view');
+  assert.equal(await page.locator('[data-ref^="chapterStrategyBlock_"]:visible').count(), 0);
+  await page.evaluate(() => window.chapterTest.panel.open(null, 'court'));
+  console.log('PASS contextual layout, keyboard action details, stable controls, real governor enactment, exact cost, repeat refusal and foreign read-only view');
   await page.evaluate(() => window.loadChapter('597bce'));
   await page.locator('[data-cs-act="restore_farms"]').click();
   assert.equal(await page.locator('.chapter-progress progress').count(), 1);
@@ -86,10 +84,10 @@ try {
     const { ctx, panel } = window.chapterTest; ctx.game.tags[ctx.game.playerTag].treasury = 0; panel.refresh();
   });
   assert(await page.locator('[data-cs-act="restore_towns"]').isDisabled());
-  assert.match(await page.locator('.chapter-strategy').textContent(), /Requires 100 talents/);
+  assert.match(await page.locator('.chapter-strategy:visible').textContent(), /Requires 100 talents/);
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.locator('#nation-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
-  assert((await page.locator('[data-cs-act]').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 44));
+  assert((await page.locator('[data-cs-act]:visible').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 44));
   if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + '/chapter-strategy-mobile.png' });
   console.log('PASS construction progress, live affordability, mobile layout and touch targets');
   await page.evaluate(() => {

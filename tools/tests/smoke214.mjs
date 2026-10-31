@@ -125,7 +125,7 @@ function target(s, key) {
 {
   const s = scene(); adopt(s, 'subversion'); const args = target(s, 'contact'), p = s.ctx.byId(args.province), host = s.game.tags[p.owner];
   host.stability = 0; p.unrest = 3; p.revoltCooldownMonths = 0;
-  act(s, 'contact', args); months(s, 8); const v = s.t.nationalStrategy.networks[p.id]; assert.equal(v.strength, 40);
+  act(s, 'contact', args); months(s, 8); const v = s.t.nationalStrategy.networks[p.id]; assert.equal(v.strength, 48);
   act(s, 'rising', args); months(s, 5); const armies = Object.keys(s.game.armies).length;
   months(s, 1); assert(Object.keys(s.game.armies).length > armies); assert(!v.op);
   act(s, 'recall_contact', args); p.owner = p.controller = host.tag;
@@ -214,7 +214,8 @@ function target(s, key) {
   assert.equal(gameActions(old.ctx).getNationalIdeas().used, 0);
   for (const e of ERAS) {
     const ch = scene(e.bookmark.id); const report = ch.actions.getNationalStrategy();
-    assert.equal(report.groups.length, 5); assert(report.actions.length === 0);
+    assert.equal(report.groups.length, 5); assert.equal(report.actions.length, Object.keys(NATIONAL_ACTIONS).length);
+  assert(report.actions.every(a => !a.unlocked && !a.info.ok && /Requires .*tier [123]/.test(a.info.why)), 'old saves discover contextual actions while their missing tiers remain locked');
     assert.equal(report.groups.find(g => g.key === 'dynasty').canBuy, e.bookmark.mechanics?.clientKingdoms === false ? false : true);
   }
   console.log('PASS old saves, JSON round trip of active construction, real tick and every bookmark’s idea menu');

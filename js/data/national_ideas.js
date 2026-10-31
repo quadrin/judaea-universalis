@@ -1,44 +1,64 @@
-// National paths unlock actions. Existing reforms and era ideas remain valid.
+// National paths grant permanent capabilities and contextual actions. Effects
+// are derived from adopted tiers, so restored saves gain them without migration.
 export const NATIONAL_IDEAS = {
   maritime: { name: 'Maritime Leagues', icon: 'ship', point: 'infl',
     desc: 'Build a network of foreign ports, protect its privileges and assemble a league fleet.',
     tiers: [
-      { name: 'Overseas Factors', icon: 'amphora', desc: 'Negotiate up to four foreign warehouses. Pay the host rent; collect trade at their markets. Blockades suspend the privilege.' },
-      { name: 'Harbor Concessions', icon: 'anchor', desc: 'Upgrade warehouses into supply bases. Friendly concession ports can supply expeditions by sea; hostility, occupation or blockade closes them.' },
-      { name: 'The Maritime League', icon: 'ship', desc: 'Invite smaller port courts into a league, commission their ships and contest disloyal rival concessions. Members can withdraw.' },
+      { name: 'Overseas Factors', icon: 'amphora', effects: { tradeMult: 1.15 }, desc: '+15% trade income throughout your markets. Negotiate up to four foreign warehouses. Pay the host rent; collect trade at their markets. Blockades suspend the privilege.' },
+      { name: 'Harbor Concessions', icon: 'anchor', effects: { navalMult: 1.10 }, desc: '+10% naval combat strength. Upgrade warehouses into supply bases. Friendly concession ports can supply expeditions by sea; hostility, occupation or blockade closes them.' },
+      { name: 'The Maritime League', icon: 'ship', effects: { tradeMult: 1.15, navalMult: 1.10 }, desc: 'A further +15% trade income and +10% naval combat strength. Invite smaller port courts into a league, commission their ships and contest disloyal rival concessions. Members can withdraw.' },
     ] },
   dynasty: { name: 'Dynastic Ambition', icon: 'laurel', point: 'infl',
     desc: 'Shelter a claimant, negotiate an inheritance or fight to install a dependent crown.',
     tiers: [
-      { name: 'A Court in Exile', icon: 'laurel', desc: 'Shelter up to two named claimants to reachable hereditary courts. Their households require monthly funding.' },
-      { name: 'Succession Compacts', icon: 'scroll', desc: 'A friendly heirless crown may accept your claimant as heir. The agreement ends if its terms are broken; accession opens a protection offer.' },
-      { name: 'The War for the Crown', icon: 'swords', desc: 'Press a claimant’s cause in a succession war. An accepted client settlement installs the claimant. A restored ruler can grow strong enough to defy you.' },
+      { name: 'A Court in Exile', icon: 'laurel', effects: { legitimacyAdd: .15 }, desc: '+0.15 legitimacy each month. Shelter up to two named claimants to reachable hereditary courts. Their households require monthly funding.' },
+      { name: 'Succession Compacts', icon: 'scroll', effects: { diploSeats: 1 }, desc: '+1 diplomatic relationship capacity. A friendly heirless crown may accept your claimant as heir. The agreement ends if its terms are broken; accession opens a protection offer.' },
+      { name: 'The War for the Crown', icon: 'swords', effects: { legitimacyAdd: .15, diploSeats: 1 }, desc: 'A further +1 diplomatic relationship capacity and +0.15 monthly legitimacy. Press a claimant’s cause in a succession war. An accepted client settlement installs the claimant. A restored ruler can grow strong enough to defy you.' },
     ] },
   colonies: { name: 'Military Colonies', icon: 'helmet', point: 'mar',
     desc: 'Settle soldiers, build local reserves and decide how much power their commanders should keep.',
     tiers: [
-      { name: 'Veterans on the Land', icon: 'grain', desc: 'Unlock frontier expeditions, frontier settlement and annexation. Station veterans in settled provinces to build local reserves, in exchange for 40% autonomy.' },
-      { name: 'Military Districts', icon: 'helmet', desc: 'Give a colony a named commander and larger reserves. Districts cost upkeep; unpaid or alienated commanders can mutiny.' },
-      { name: 'The Common Command', icon: 'swords', desc: 'Mobilize a district under its own general, or negotiate its return to central administration. Integrating an unwilling commander risks a rising.' },
+      { name: 'Veterans on the Land', icon: 'grain', effects: { manpowerMult: 1.15 }, desc: '+15% national manpower capacity and recovery. Unlock frontier expeditions, frontier settlement and annexation. Station veterans in settled provinces to build local reserves, in exchange for 40% autonomy.' },
+      { name: 'Military Districts', icon: 'helmet', effects: { reinforceMult: 1.20 }, desc: '+20% army reinforcement speed. Give a colony a named commander and larger reserves. Districts cost upkeep; unpaid or alienated commanders can mutiny.' },
+      { name: 'The Common Command', icon: 'swords', effects: { maintMult: .85, forceLimitMult: 1.15 }, desc: '−15% army maintenance and +15% land force limit. Mobilize a district under its own general, or negotiate its return to central administration. Integrating an unwilling commander risks a rising.' },
     ] },
   subversion: { name: 'Subversion', icon: 'dagger', point: 'infl',
     desc: 'Develop contacts inside rival provinces and choose when to risk exposing them.',
     tiers: [
-      { name: 'Local Contacts', icon: 'quill', desc: 'Maintain up to three provincial networks. Strength grows with funding; counterintelligence and unpaid agents increase exposure.' },
-      { name: 'A Party in the Streets', icon: 'flame', desc: 'Prepare a six-month rising where unrest or a weak throne makes rebellion possible. The target can uncover and purge the operation.' },
-      { name: 'The Keys to the City', icon: 'tower', desc: 'Buy collaboration during a siege, or negotiate a disaffected frontier governor’s defection during war. Both require developed networks and preparation.' },
+      { name: 'Local Contacts', icon: 'quill', effects: { siegeMult: 1.10 }, desc: '+10% siege progress and +1 monthly strength for funded networks outside counterintelligence. Maintain up to three provincial networks. Strength grows with funding; counterintelligence and unpaid agents increase exposure.' },
+      { name: 'A Party in the Streets', icon: 'flame', effects: { siegeBonus: 1 }, desc: '+1 siegecraft, improving breach rolls and daily progress. Prepare a six-month rising where unrest or a weak throne makes rebellion possible. The target can uncover and purge the operation.' },
+      { name: 'The Keys to the City', icon: 'tower', effects: { siegeMult: 1.15 }, desc: 'A further +15% siege progress; funded operations gain 2 less exposure monthly outside counterintelligence. Buy collaboration during a siege, or negotiate a disaffected frontier governor’s defection during war. Both require developed networks and preparation.' },
     ] },
   federation: { name: 'Federated Rule', icon: 'scales', point: 'gov',
     desc: 'Charter self-governing cities, negotiate common service and decide whether to centralize.',
     tiers: [
-      { name: 'City Charters', icon: 'bricks', desc: 'Grant non-capital cities fiscal, levy or naval charters. Their councils retain autonomy and save money or recruits for agreed contributions.' },
-      { name: 'The Federal Council', icon: 'scales', desc: 'Two loyal chartered cities can pool their reserves for a common army. Cities with low loyalty refuse to contribute.' },
-      { name: 'One Commonwealth', icon: 'scroll', desc: 'Begin twelve-month negotiations to integrate a chartered city. Fund its supporters or renew its privileges if opposition threatens rebellion.' },
+      { name: 'City Charters', icon: 'bricks', effects: { incomeMult: 1.10 }, desc: '+10% provincial tax and production income across the realm. Grant non-capital cities fiscal, levy or naval charters. Their councils retain autonomy and save money or recruits for agreed contributions.' },
+      { name: 'The Federal Council', icon: 'scales', effects: { unrestAll: -.75 }, desc: '−0.75 unrest in every province. Two loyal chartered cities can pool their reserves for a common army. Cities with low loyalty refuse to contribute.' },
+      { name: 'One Commonwealth', icon: 'scroll', effects: { incomeMult: 1.10, integrateMult: 1.25 }, desc: 'A further +10% provincial tax and production income and +25% cultural integration speed. Begin twelve-month negotiations to integrate a chartered city. Fund its supporters or renew its privileges if opposition threatens rebellion.' },
     ] },
 };
 
 export const nationalIdeaCost = owned => [60, 100, 150][owned] || 0;
 export const nationalIdeaLevel = (tag, key) => Math.max(0, Math.min(3, tag?.nationalIdeas?.[key] | 0));
+// Pure aggregation is also used by military/economy resolution. Never write
+// these into tag.ideas or persistent modifiers: adoption, loading and monthly
+// processing can all occur repeatedly without duplicating an effect.
+export function nationalIdeaEffects(tag) {
+  const result = {};
+  for (const key of Object.keys(tag?.nationalIdeas || {})) {
+    const path = NATIONAL_IDEAS[key];
+    if (!Array.isArray(path?.tiers)) continue;
+    for (const tier of path.tiers.slice(0, nationalIdeaLevel(tag, key))) {
+      for (const [effect, value] of Object.entries(tier.effects || {})) {
+        if (!Number.isFinite(value)) continue;
+        if (effect.endsWith('Mult')) result[effect] = (result[effect] ?? 1) * value;
+        else result[effect] = (result[effect] ?? 0) + value;
+      }
+    }
+  }
+  return result;
+}
+
 export function nationalIdeaSlots(tag, bookmark) {
   return Math.max(tag?.nationalPathLegacySlots || 0,
     (tag?.tech?.gov || 0) >= (bookmark?.techBase || 0) + 3 ? 3 : 2);
@@ -67,7 +87,7 @@ export const NATIONAL_ACTIONS = {
   district_army: { group: 'colonies', tier: 3, name: 'Commission field command', icon: 'swords', target: 'colony', cost: { gold: 40, mar: 30 }, desc: 'Spend 2,000 stored recruits to raise a two-regiment host led by the district commander. That commander leaves the district for the field. Once every two years.' },
   integrate_district: { group: 'colonies', tier: 3, name: 'Integrate district', icon: 'scroll', target: 'colony', cost: { gold: 80, gov: 50 }, desc: 'A district with at least 70 loyalty accepts central administration: the colony closes, stored recruits join the manpower pool, and autonomy falls to 15%.' },
   support_colony: { group: 'colonies', tier: 1, name: 'Fund local supporters', icon: 'coins', target: 'colony', cost: { gold: 40, infl: 20 }, desc: 'Restore 20 loyalty. Once every six months at this colony.' },
-  contact: { group: 'subversion', tier: 1, name: 'Recruit contacts', icon: 'quill', target: 'foreign_province', cost: { gold: 60, infl: 25 }, desc: 'Build a provincial network for 2 talents monthly. Strength grows by five monthly, or three under a stable government. At most three networks. Human-controlled courts can only be targeted during war.' },
+  contact: { group: 'subversion', tier: 1, name: 'Recruit contacts', icon: 'quill', target: 'foreign_province', cost: { gold: 60, infl: 25 }, desc: 'Build a provincial network for 2 talents monthly. With Local Contacts, strength grows by six monthly, or four under a stable government. At most three networks. Human-controlled courts can only be targeted during war.' },
   rising: { group: 'subversion', tier: 2, name: 'Prepare a rising', icon: 'flame', target: 'network', cost: { gold: 100, infl: 40 }, desc: 'Requires 40 network strength and either 2 unrest or less than 50 legitimacy. After six months, local rebels rise if the conditions still hold. Preparation increases exposure.' },
   gates: { group: 'subversion', tier: 3, name: 'Buy the city’s keys', icon: 'tower', target: 'network', cost: { gold: 120, infl: 50 }, desc: 'Requires 70 network strength and your side actively besieging this enemy province. After three months, collaborators remove 75% of its garrison and add 25 siege progress.' },
   governor: { group: 'subversion', tier: 3, name: 'Negotiate governor defection', icon: 'dove', target: 'network', cost: { gold: 200, infl: 75 }, desc: 'Prepare six months of negotiations with a governor during war. Requires 80 network strength, a non-capital province on your border, 40% autonomy, unrest or a weak throne, at most 15 development and a level-one fort or less. Success transfers the province and adds aggression; a purge or improved local conditions can stop it.' },

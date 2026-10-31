@@ -6,6 +6,7 @@ const { chromium } = require('playwright');
 const browser = await chromium.launch({ executablePath: process.env.JU_CHROMIUM || '/usr/bin/chromium' });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  page.setDefaultTimeout(30000);
   const errors = []; page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   await page.route('**/favicon.ico', r => r.fulfill({ status: 204, body: '' }));
@@ -51,16 +52,19 @@ try {
   const before = await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl);
   await path('maritime').locator('[data-ni-buy]').click();
   assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl), before - 60);
+  assert.equal(await page.locator('#nation-panel > [data-tab="ideas"] [data-ni-act]').count(), 0, 'Ideas contains adoption only');
+  await page.evaluate(() => window.nationalTest.panel.open(null, 'trade'));
   assert.equal(await page.locator('[data-ni-act="warehouse"]').count(), 1);
-  assert.equal(await page.locator('[data-ni-act="harbor"]').count(), 0, 'future actions are genuinely locked');
-  const action = page.locator('[data-ni-open="action:warehouse"]');
-  await action.locator(':scope > summary').click();
-  const select = page.locator('[data-ni-target="warehouse"]');
+  assert(await page.locator('[data-ni-act="harbor"]').isDisabled(), 'future action remains visible and locked');
+  assert.match(await page.locator('[data-national-operation="harbor"]').textContent(), /Harbor Concessions/);
+  const action = page.locator('[data-national-operation="warehouse"]');
+  const select = page.locator('[data-na-target="warehouse"]');
   const selected = await select.inputValue(); await select.selectOption(selected); await select.focus();
-  await page.evaluate(() => { window.nationalControl = document.querySelector('[data-ni-target="warehouse"]'); window.nationalTest.panel.refresh(); });
-  assert.equal(await select.inputValue(), selected); assert(await action.evaluate(el => el.open));
-  assert(await page.evaluate(() => window.nationalControl === document.querySelector('[data-ni-target="warehouse"]')), 'unchanged refresh preserves the actual control');
-  assert.equal(await page.locator(':focus').getAttribute('data-ni-target'), 'warehouse');
+  await page.evaluate(() => { window.nationalControl = document.querySelector('[data-na-target="warehouse"]'); window.nationalTest.panel.refresh(); });
+  assert.equal(await select.inputValue(), selected);
+  assert(await page.evaluate(() => window.nationalControl === document.querySelector('[data-na-target="warehouse"]')), 'unchanged refresh preserves the actual control');
+  assert.equal(await page.locator(':focus').getAttribute('data-na-target'), 'warehouse');
+  assert(await page.locator('[data-ni-act="warehouse"]').isEnabled(), await action.textContent());
   await page.locator('[data-ni-act="warehouse"]').click();
   assert(await page.evaluate(id => !!window.nationalTest.ctx.game.tags.JUD.nationalStrategy.ports[id], selected));
   assert.equal(await page.locator('.ni-record').count(), 1);
@@ -102,12 +106,14 @@ try {
   await page.evaluate(() => {
     const { ctx, panel, provincePanel } = window.nationalTest;
     if (ctx.game.tags.JUD.nationalIdeas?.colonies) throw Error('Civilian investment unlocked Military Colonies');
-    provincePanel.close(); panel.open(null, 'ideas', 'colonies');
+    provincePanel.close(); panel.open(null, 'ideas');
   });
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await path('colonies').locator(':scope > summary').click();
   await path('colonies').locator('[data-ni-buy]').click();
   assert(!await page.evaluate(id => window.nationalTest.actions.getNationalStrategy().actions.find(a => a.key === 'settle').options.some(o => o.args.province === id), settlement));
   assert.equal(await path('colonies').locator('.ni-record progress').count(), 0);
+  await page.evaluate(() => window.nationalTest.panel.open(null, 'war', 'colonies'));
   await page.evaluate(() => {
     const { ctx, provincePanel } = window.nationalTest;
     const p = ctx.game.provinces.find(p => p?.owner === 'WASTE');
@@ -124,19 +130,20 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.evaluate(() => window.nationalTest.panel.open('ROM', 'court'));
   assert.equal(await page.locator('[data-intrigue="subvert"], [data-intrigue="pretender"]').count(), 0);
-  assert.equal(await page.locator('#nation-panel [data-open-ideas="subversion"]').count(), 1);
-  assert.equal(await page.locator('#nation-panel [data-open-ideas="dynasty"]').count(), 1);
+  assert.equal(await page.locator('#nation-panel [data-open-operations="subversion"]').count(), 1);
+  assert.equal(await page.locator('#nation-panel [data-open-operations="dynasty"]').count(), 1);
   console.log('PASS civilian investment works without ideas, live costs, desktop/mobile layout, no duplicate owned target; frontier camps remain in Military Colonies');
 
   await page.evaluate(() => window.loadNational('66ce'));
   await path('federation').locator(':scope > summary').click();
   await path('federation').locator('[data-ni-buy]').click();
-  await page.locator('[data-ni-open="action:charter"] > summary').click();
+  await page.evaluate(() => window.nationalTest.panel.open(null, 'court'));
+  assert.equal(await page.locator('#nation-panel > [data-tab="missions"] [data-cs-act], #nation-panel > [data-tab="ideas"] [data-ni-act]').count(), 0);
   const city = await page.evaluate(() => String(window.nationalTest.ctx.prov('Emmaus').id));
-  await page.locator('[data-ni-target="charter"]').selectOption(city);
-  await page.locator('[data-ni-service="charter"]').selectOption('naval');
+  await page.locator('[data-na-target="charter"]').selectOption(city);
+  await page.locator('[data-na-service="charter"]').selectOption('naval');
   assert(await page.locator('[data-ni-act="charter"]').isDisabled(), 'inland naval charters are refused');
-  await page.locator('[data-ni-service="charter"]').selectOption('levy');
+  await page.locator('[data-na-service="charter"]').selectOption('levy');
   assert(await page.locator('[data-ni-act="charter"]').isEnabled());
   await page.locator('[data-ni-act="charter"]').click();
   assert.equal(await page.evaluate(id => window.nationalTest.ctx.game.tags.JUD.nationalStrategy.cities[id].service, city), 'levy');
@@ -144,7 +151,7 @@ try {
   assert(await page.locator('[data-ni-act="charter"]').isDisabled());
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.locator('#nation-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
-  assert((await page.locator('.ni-tiers button:visible, .ni-controls button:visible, .ni-controls select:visible').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 44));
+  assert((await page.locator('.ni-tiers button:visible, .national-operation-controls button:visible, .national-operation-controls select:visible').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 44));
   if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/national-paths-mobile.png' });
   await page.evaluate(() => { const { panel, ctx } = window.nationalTest; const foreign = ctx.game.tags.ROM; foreign.nationalIdeas = { subversion: 3 }; panel.open('ROM', 'ideas'); });
   assert.equal(await page.locator('.ni-path').count(), 1);

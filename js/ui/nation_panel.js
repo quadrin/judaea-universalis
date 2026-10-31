@@ -14,6 +14,7 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 import { ideaCard, ideaTierIcon, ideaWallet } from './idea_cards.js';
 import { createChapterStrategyPanel } from './chapter_strategy.js';
 import { createNationalIdeasPanel } from './national_ideas.js';
+import { createNationalActionsPanel, createAlliedOrdersPanel, NATIONAL_ACTION_TAB } from './national_actions.js';
 import { createRoyalCommandPanel } from './royal_command.js';
 import { renderCourtIntentions, renderCourtOffers } from './court_intentions.js';
 
@@ -112,7 +113,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   let courtOfferFeedback = '';
   const ideaSelections = new Map();
   const refs = {};
-  let chapterStrategyPanel = null;
+  const chapterStrategyPanels = {}, nationalActionPanels = {};
+  let alliedOrdersPanel = null;
   let nationalIdeasPanel = null;
   let royalCommandPanel = null;
 
@@ -198,7 +200,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
-      <!-- Lead with the mission tree; supporting chapter actions follow it. -->
+      <!-- Mission rewards and chapter descriptions only. Operations live in context. -->
       <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
         <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
         <div class="np-mtree-host" data-ref="missions"></div>
@@ -207,11 +209,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
-      <div class="pp-build hidden" data-ref="chapterStrategyBlock" data-tab="missions">
-        <div class="pp-build-title">Chapter strategy</div>
-        <div class="chapter-strategy" data-ref="chapterStrategy"></div>
-      </div>
-
+      <section class="pp-build hidden" data-ref="chapterStrategyBlock_court" data-tab="court"><div class="pp-build-title">Administration and local government</div><div class="chapter-strategy" data-ref="chapterStrategy_court"></div></section>
+      <section class="pp-build hidden" data-ref="nationalActionsBlock_court" data-tab="court"><div class="national-actions" data-ref="nationalActions_court"></div></section>
+      <section class="pp-build hidden" data-ref="chapterStrategyBlock_war" data-tab="war"><div class="pp-build-title">Military decisions</div><div class="chapter-strategy" data-ref="chapterStrategy_war"></div></section>
+      <section class="pp-build hidden" data-ref="nationalActionsBlock_war" data-tab="war"><div class="national-actions" data-ref="nationalActions_war"></div></section>
+      <section class="pp-build hidden" data-ref="chapterStrategyBlock_trade" data-tab="trade"><div class="pp-build-title">Arms shipments</div><div class="chapter-strategy" data-ref="chapterStrategy_trade"></div></section>
+      <section class="pp-build hidden" data-ref="nationalActionsBlock_trade" data-tab="trade"><div class="national-actions" data-ref="nationalActions_trade"></div></section>
+      <section class="pp-build hidden" data-ref="chapterStrategyBlock_world" data-tab="world"><div class="pp-build-title">Patrons and foreign commitments</div><div class="chapter-strategy" data-ref="chapterStrategy_world"></div></section>
+      <section class="pp-build hidden" data-ref="nationalActionsBlock_world" data-tab="world"><div class="national-actions" data-ref="nationalActions_world"></div></section>
+      <section class="pp-build hidden" data-ref="alliedOrdersBlock" data-tab="world"><div class="pp-build-title">Allied coordination</div><div data-ref="alliedOrders"></div></section>
       <!-- ── THE COURT ─────────────────────────────────────────────────── -->
       <div class="pp-build hidden" data-ref="royalCommandBlock" data-tab="court">
         <div class="pp-build-title">Personal Command</div>
@@ -362,7 +368,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div data-ref="diploBody"></div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
-    chapterStrategyPanel = createChapterStrategyPanel(refs.chapterStrategy, () => actions);
+    for (const area of ['court','war','trade','world']) {
+      chapterStrategyPanels[area] = createChapterStrategyPanel(refs['chapterStrategy_' + area], () => actions, { tab: area, onChange: refresh });
+      nationalActionPanels[area] = createNationalActionsPanel(refs['nationalActions_' + area], () => actions, { tab: area, onChange: refresh });
+    }
+    alliedOrdersPanel = createAlliedOrdersPanel(refs.alliedOrders, () => actions, refresh);
     nationalIdeasPanel = createNationalIdeasPanel(refs.nationalIdeas, () => actions);
     royalCommandPanel = createRoyalCommandPanel(refs.royalCommands, () => actions);
     el.dataset.tab = tab;
@@ -452,6 +462,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         if (id && id !== tab) { tab = id; refresh(); el.scrollTop = 0; }
         return;
       }
+      const operationsLink = e.target.closest('[data-open-operations]');
+      if (operationsLink) { open(null, null, operationsLink.dataset.openOperations); return; }
       const courtOffer = e.target.closest('[data-court-offer]');
       if (courtOffer) {
         if (courtOffer.disabled || typeof actions?.resolveCourtOffer !== 'function') return;
@@ -769,7 +781,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.classList.remove('hidden');
     refresh();
     el.scrollTop = 0;
-    if (pathKey) nationalIdeasPanel?.focusPath(pathKey, provinceId);
+    if (pathKey && NATIONAL_ACTION_TAB[pathKey]) {
+      if (viewTag) { viewTag = null; }
+      tab = NATIONAL_ACTION_TAB[pathKey]; refresh();
+      nationalActionPanels[tab]?.focusGroup(pathKey, provinceId);
+    }
   }
   function close() { el.classList.add('hidden'); viewTag = null; }
   function isOpen() { return !el.classList.contains('hidden'); }
@@ -1125,7 +1141,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // The levers of state belong to the player alone.
     refs.acts.classList.toggle('hidden', !self);
     refs.missionsBlock.classList.toggle('hidden', !self);
-    refs.chapterStrategyBlock.classList.toggle('hidden', !self || !actions?.getChapterStrategy?.());
+    const chapterReport = self ? actions?.getChapterStrategy?.() : null;
+    const nationalReport = self ? actions?.getNationalStrategy?.() : null;
+    for (const area of ['court','war','trade','world']) {
+      const chapterVisible = self && chapterStrategyPanels[area].refresh(chapterReport);
+      refs['chapterStrategyBlock_' + area].classList.toggle('hidden', !chapterVisible);
+      refs['nationalActionsBlock_' + area].classList.toggle('hidden', !nationalActionPanels[area].refresh(self, nationalReport));
+    }
+    refs.alliedOrdersBlock.classList.toggle('hidden', !alliedOrdersPanel.refresh(self));
     // A foreign court owes us nothing (SPEC §229) — and refreshMissions, which
     // is what normally writes this, does not run for one.
     if (!self) readyClaims = 0;
@@ -1143,7 +1166,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!self) refs.chapterBlock.classList.add('hidden');
     if (!self) refs.doctrineBlock.classList.add('hidden');
     if (self) {
-      chapterStrategyPanel.refresh();
       refreshActions(t, g);
       refreshChapter();
       refreshDoctrine();
@@ -1770,7 +1792,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `</div>`;
     }).join('');
     setHtml(refs.foreignCourt, near + quiet + bars
-      + `<div class="np-dip-actions"><button class="pp-dip" data-open-ideas="subversion">${icon('dagger', 'icon-sm')} Subversion</button><button class="pp-dip" data-open-ideas="dynasty">${icon('laurel', 'icon-sm')} Dynastic Ambition</button></div>`);
+      + `<div class="np-dip-actions"><button class="pp-dip" data-open-operations="subversion">${icon('dagger', 'icon-sm')} Subversion</button><button class="pp-dip" data-open-operations="dynasty">${icon('laurel', 'icon-sm')} Dynastic Ambition</button></div>`);
   }
 
   // Renders the viewed nation's treaties and wars. `who` is the viewed tag;

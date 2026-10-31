@@ -1,4 +1,4 @@
-import { NATIONAL_IDEAS, NATIONAL_ACTIONS, nationalIdeaCost, nationalIdeaLevel, nationalIdeaSlots } from '../data/national_ideas.js';
+import { NATIONAL_IDEAS, NATIONAL_ACTIONS, nationalIdeaCost, nationalIdeaLevel, nationalIdeaSlots, nationalIdeaEffects } from '../data/national_ideas.js';
 import { num, clamp, devTotal, opinionOf, addOpinion, isHostile, sameSide, armiesOf, capitalProvince,
   isHumanChair, mechanicOn, govHas, clientForeignPolicyBar, truceActive, recognized, ceasefireHolds,
   declareWar, evaluatePeaceDeal, executePeaceDeal, clientOfferInfo, offerClientshipCore,
@@ -8,6 +8,8 @@ import { queueUnitRecruitment } from './recruitment.js';
 import { rollCourtier } from './realm.js';
 import { fireRevolt } from './unrest.js';
 import { settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore, habLevel } from './economy.js';
+
+export { nationalIdeaEffects } from '../data/national_ideas.js';
 
 const month = d => (d.y > 0 ? d.y - 1 : d.y) * 12 + d.m - 1;
 const now = ctx => month(ctx.game.date);
@@ -66,7 +68,7 @@ export function nationalIdeasInfo(ctx, tag = ctx.game.playerTag) {
   const t = ctx.game.tags[tag]; if (!t) return null;
   const slots = nationalIdeaSlots(t, ctx.bookmark);
   const used = Object.keys(NATIONAL_IDEAS).filter(k => nationalIdeaLevel(t, k)).length;
-  return { slots, used, nextSlotTech: (ctx.bookmark?.techBase || 0) + 3,
+  return { slots, used, effects: nationalIdeaEffects(t), nextSlotTech: (ctx.bookmark?.techBase || 0) + 3,
     groups: Object.entries(NATIONAL_IDEAS).map(([key, d]) => {
       const owned = nationalIdeaLevel(t, key), cost = nationalIdeaCost(owned);
       const whyNot = owned >= 3 ? 'Group complete.' : key === 'dynasty' && !mechanicOn(ctx, 'clientKingdoms')
@@ -87,11 +89,12 @@ export function buyNationalIdea(ctx, tag, key) {
 export function nationalActionInfo(ctx, tag, key, args = {}) {
   const d = NATIONAL_ACTIONS[key], t = ctx.game.tags[tag];
   if (!d || !t?.alive) return { ok: false, why: 'Unavailable action.', cost: {} };
+  if (nationalIdeaLevel(t, d.group) < d.tier) return { ok: false, why: `Requires ${NATIONAL_IDEAS[d.group].name}: ${NATIONAL_IDEAS[d.group].tiers[d.tier - 1].name} (tier ${d.tier}).`, cost: { ...d.cost } };
   if (['expedition', 'settle', 'annex_frontier'].includes(key)) {
     const probe = (key === 'expedition' ? expeditionInfo : key === 'settle' ? settlementInfo : annexInfo)(ctx, tag, Number(args.province));
     const cost = key === 'expedition' ? { gold: probe.cost, manpower: probe.men }
       : { [key === 'settle' ? 'infl' : 'gov']: probe.cost };
-    const why = nationalIdeaLevel(t, 'colonies') < 1 ? 'Requires Veterans on the Land.'
+    const why = nationalIdeaLevel(t, 'colonies') < 1 ? 'Requires Military Colonies: Veterans on the Land (tier 1).'
       : key === 'settle' && !(ctx.byId(Number(args.province))?.owner === 'WASTE' && ctx.byId(Number(args.province))?.expedition?.by === tag)
         ? 'Choose a frontier expedition camp. Invest in owned provinces from their development controls.'
         : probe.can ? '' : probe.why || 'Choose an eligible frontier province.';
@@ -100,7 +103,7 @@ export function nationalActionInfo(ctx, tag, key, args = {}) {
   const s = read(t), p = ctx.byId(Number(args.province)), target = String(args.target || p?.owner || '');
   const other = ctx.game.tags[target], port = s.ports[p?.id], colony = s.colonies[p?.id], city = s.cities[p?.id], network = s.networks[p?.id], c = s.claimants[target];
   const cost = key === 'protect_heir' ? { infl: clientOfferInfo(ctx, tag, target)?.cost || 100 } : { ...d.cost };
-  let why = nationalIdeaLevel(t, d.group) < d.tier ? `Requires ${NATIONAL_IDEAS[d.group].tiers[d.tier - 1].name}.` : costWhy(t, cost);
+  let why = nationalIdeaLevel(t, d.group) < d.tier ? `Requires ${NATIONAL_IDEAS[d.group].name}: ${NATIONAL_IDEAS[d.group].tiers[d.tier - 1].name} (tier ${d.tier}).` : costWhy(t, cost);
   const fail = text => { if (!why) why = text; };
   const foreignAct = ['foreign_port', 'rival_port', 'crown', 'claimant', 'foreign_province', 'network', 'warehouse'].includes(d.target);
   if (foreignAct && !['dismiss_claimant', 'recall_contact', 'close_warehouse'].includes(key) && clientForeignPolicyBar(ctx, tag)) fail('A client court needs an independent foreign policy to undertake this action.');
@@ -452,8 +455,10 @@ export function monthlyNationalIdeas(ctx) {
       if (!p || p.owner !== v.host || !foreign(ctx, tag, v.host) || (isHumanChair(g, v.host) && !isHostile(ctx, tag, v.host))) { delete s.networks[id]; continue; }
       const guarded = read(host).counterspyUntil > time, paid = num(t.treasury) >= 2;
       if (paid) { t.treasury -= 2; s.monthlyOut += 2; }
-      v.strength = clamp(v.strength + (paid ? guarded ? 1 : num(host.stability) >= 2 ? 3 : 5 : -10), 0, 100);
-      v.exposure = clamp(v.exposure + (!paid ? 10 : guarded ? 12 : v.op ? 8 : -3), 0, 100);
+      const contactBonus = nationalIdeaLevel(t, 'subversion') >= 1 ? 1 : 0;
+      v.strength = clamp(v.strength + (paid ? guarded ? 1 : (num(host.stability) >= 2 ? 3 : 5) + contactBonus : -10), 0, 100);
+      const discretion = nationalIdeaLevel(t, 'subversion') >= 3 ? 2 : 0;
+      v.exposure = clamp(v.exposure + (!paid ? 10 : guarded ? 12 : v.op ? 8 - discretion : -3), 0, 100);
       if (isHumanChair(g, v.host) && v.strength >= 20 && !v.warned) {
         v.warned = true; note(ctx, v.host, `Foreign agents are recruiting at ${p.name}. Counterintelligence can expose the network.`, true);
       }
@@ -554,8 +559,12 @@ function optionsFor(ctx, tag, d) {
 export function nationalStrategyView(ctx, tag = ctx.game.playerTag) {
   const t = ctx.game.tags[tag]; if (!t) return null;
   const s = read(t), info = nationalIdeasInfo(ctx, tag);
-  const actions = Object.entries(NATIONAL_ACTIONS).filter(([, d]) => nationalIdeaLevel(t, d.group) >= d.tier).map(([key, d]) => ({
-    ...d, key, options: optionsFor(ctx, tag, d).map(v => ({ ...v, ...nationalActionInfo(ctx, tag, key, { ...v.args, service: 'fiscal' }) })),
+  const contexts = { maritime: 'trade', dynasty: 'world', subversion: 'world', colonies: 'defense', federation: 'court' };
+  const actions = Object.entries(NATIONAL_ACTIONS).map(([key, d]) => ({
+    ...d, key, context: contexts[d.group], unlocked: nationalIdeaLevel(t, d.group) >= d.tier,
+    requirement: `${NATIONAL_IDEAS[d.group].name}: ${NATIONAL_IDEAS[d.group].tiers[d.tier - 1].name} (tier ${d.tier})`,
+    info: nationalActionInfo(ctx, tag, key),
+    options: optionsFor(ctx, tag, d).map(v => ({ ...v, ...nationalActionInfo(ctx, tag, key, { ...v.args, service: 'fiscal' }) })),
   }));
   const records = [];
   const add = (group, id, name, icon, stats, tip, progress) => records.push({ group, id, name, icon, stats, tip, progress });

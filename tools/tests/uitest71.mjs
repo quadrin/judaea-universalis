@@ -77,7 +77,7 @@ try {
   await page.locator('.ev-opt[data-idx="0"]').click();
   await page.evaluate(() => {
     const { ctx, game, events, panel } = window.turningTest;
-    events.fireEvent(ctx, ctx.events.find(e => e.id === 'ev1952_german_signature')); game.date = { y: 1953, m: 2, d: 1 }; panel.open(null, 'missions');
+    events.fireEvent(ctx, ctx.events.find(e => e.id === 'ev1952_german_signature')); game.date = { y: 1953, m: 2, d: 1 }; panel.open(null, 'court');
   });
   assert.equal(await page.locator('.political-investments').count(), 1);
   assert(await page.locator('[data-cs-invest]').isDisabled());
@@ -98,8 +98,8 @@ try {
   assert(await page.locator('[data-cs-compromise]').isDisabled());
   console.log('PASS real signature, persistent goods, selected province shipyard, exact investment costs and domestic compromise');
   await page.evaluate(() => window.turningTest.panel.open('JOR', 'missions'));
-  assert(!(await page.locator('[data-ref="chapterStrategyBlock"]').isVisible()));
-  await page.evaluate(() => window.turningTest.panel.open(null, 'missions'));
+  assert.equal(await page.locator('[data-ref^="chapterStrategyBlock_"]:visible').count(), 0);
+  await page.evaluate(() => window.turningTest.panel.open(null, 'court'));
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.locator('#nation-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
   assert((await page.locator('.political-investments button').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 44));

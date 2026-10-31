@@ -9,6 +9,7 @@ import { JEWISH_INTEGRATED_NAMES, SAMARITAN_INTEGRATED_NAMES, TAG_INTEGRATED_NAM
 // The works of one's own (SPEC §213): pure readers over t.programs, so the
 // §181 gate can ask whether this court builds the arm itself.
 import { ownWorksOf, selfSufficientWorks } from '../data/programs.js';
+import { nationalIdeaEffects } from '../data/national_ideas.js';
 // The land roster (SPEC §191): three arms, their faces, their gaits, and the
 // triangle they answer each other in. Pure data + pure functions.
 import {
@@ -144,6 +145,7 @@ export function resolveTagMult(ctx, tag, key) {
   if (!t) return 1;
   let m = num(t.ideas && t.ideas[key], 1);
   if (!(m > 0)) m = 1;
+  m *= num(nationalIdeaEffects(t)[key], 1);
   for (const mod of t.modifiers || []) {
     const e = mod && mod.effects ? mod.effects[key] : undefined;
     if (Number.isFinite(e) && e > 0) m *= e;
@@ -160,6 +162,7 @@ export function resolveTagAdd(ctx, tag, key) {
   const t = ctx.game.tags[tag];
   if (!t) return 0;
   let s = num(t.ideas && t.ideas[key], 0);
+  s += num(nationalIdeaEffects(t)[key], 0);
   for (const mod of t.modifiers || []) {
     const e = mod && mod.effects ? mod.effects[key] : undefined;
     if (Number.isFinite(e)) s += e;
@@ -2823,6 +2826,10 @@ export function switchTagCore(ctx, from, to) {
       for (const key of ['client', 'sponsor', 'lord']) if (pledge[key] === from) pledge[key] = to;
     }
     rekey(courtDiplomacy.cooldowns, '>', true);
+  }
+  for (const request of g.alliedOrders?.requests || []) {
+    if (request.requester === from) request.requester = to;
+    if (request.ally === from) request.ally = to;
   }
   for (const w of g.wars) {
     for (const p of w.promises || []) {

@@ -3,6 +3,20 @@
 Developer tooling. Plain Node, zero dependencies — none of this ships to the
 browser.
 
+## Idea unlocks and allied coordination
+
+`node tools/tests/national-idea-impact.mjs` exercises every national path and
+tier through the actual economy, combat, diplomacy, siege, unrest and
+intelligence systems, including old adopted saves and repeat-month behavior.
+`node tools/tests/allied-orders.mjs` checks requests, refusal reasons, costs,
+expiry, save/load and nation formation. `node tools/tests/allied-orders-war.mjs`
+checks actual army destinations, safe routing and urgent home-defense overrides.
+
+With the local server and Playwright configured, run
+`node tools/tests/uitest-contextual-actions.mjs` and `node tools/tests/uitest75.mjs`.
+These cover action placement, disabled controls before adoption, live execution
+after adoption, allied requests and mobile controls. Run browser suites serially.
+
 ## Court strategy checks
 
 From the repository root, run each of the five suites with

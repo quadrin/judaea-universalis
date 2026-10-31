@@ -17,13 +17,33 @@ const stat = (ico, value, label) => `<span class="chapter-stat" title="${esc(lab
 const costs = c => Object.entries(c).filter(([, v]) => v).map(([k, v]) => stat(RESOURCES[k]?.[0] || 'book', amount(v), `${v} ${RESOURCES[k]?.[1] || k}`)).join('') || stat('coins', '0', 'No upfront cost');
 const record = (ico, name, metrics, tip) => `<div class="chapter-agreement" title="${esc(tip)}" data-tt="${esc(tip)}"><span class="chapter-record-name">${icon(ico, 'icon-sm')}${esc(name)}</span><span class="chapter-stats">${metrics}</span></div>`;
 
-export function createChapterStrategyPanel(el, getActions) {
+const CHAPTER_TABS = {
+  tribute_cash:'world', tribute_troops:'world', earn_rights:'world', pledge:'world', rise:'world', patron_silver:'world', patron_troops:'world', patron_recognition:'world', end_patron:'world',
+  network:'war', regulars:'war', regional_command:'war', requisition:'war', unified_command:'war', depot:'war', draw_reserves:'war', mobilize_limited:'war', mobilize_full:'war', demobilize:'war', order_arms:'trade',
+};
+export const chapterActionTab = key => CHAPTER_TABS[key] || 'court';
+function contextualReport(source, tab) {
+  const report = { ...source, actions:source.actions.filter(a => chapterActionTab(a.key) === tab) };
+  for (const key of ['projects','charters']) report[key] = source[key].filter(v => chapterActionTab(v.key || v.kind) === tab);
+  for (const key of ['sites','commitments']) report[key] = tab === 'war' ? source[key] : [];
+  for (const key of ['pledges']) report[key] = tab === 'world' ? source[key] : [];
+  report.shipments = tab === 'trade' ? source.shipments : [];
+  report.political = tab === 'court' ? source.political : null;
+  report.patron = tab === 'world' ? source.patron : null;
+  report.monthlyOut = tab === 'world' ? source.monthlyOut : 0;
+  report.monthlyIn = tab === 'world' ? source.monthlyIn : 0;
+  report.log = tab === 'court' ? source.log : [];
+  return report;
+}
+
+export function createChapterStrategyPanel(el, getActions, { tab = 'court', onChange = () => {} } = {}) {
   const choices = {}, suppliers = {};
   let investment = '';
   let binding = null, lastHtml = '';
-  function refresh() {
-    const actions = getActions(), report = actions?.getChapterStrategy?.();
-    if (!report) { el.innerHTML = ''; lastHtml = ''; return false; }
+  function refresh(cachedReport) {
+    const actions = getActions(), source = cachedReport === undefined ? actions?.getChapterStrategy?.() : cachedReport;
+    const report = source ? contextualReport(source, tab) : null;
+    if (!report || ![report.actions,report.projects,report.charters,report.sites,report.commitments,report.pledges,report.shipments].some(v => v.length) && !report.political && !report.patron) { el.innerHTML = ''; lastHtml = ''; return false; }
     const actionIcons = Object.fromEntries(report.actions.map(a => [a.key, a.icon]));
     const expanded = new Set([...el.querySelectorAll('details[data-cs-info][open]')].map(d => d.dataset.csInfo));
     if (binding !== actions) { for (const key of Object.keys(choices)) delete choices[key]; investment = ''; binding = actions; expanded.clear(); }
@@ -60,8 +80,8 @@ export function createChapterStrategyPanel(el, getActions) {
       <button type="button" class="pp-build-btn chapter-compromise" data-cs-compromise title="${esc(political.compromise.why || 'Domestic compromise: 48 goods and 30 influence')}"${political.compromise.ok ? '' : ' disabled'}>${icon('dove', 'icon-sm')}Compromise ${costs({ goods: 48, infl: 30 })}</button>
       ${site?.why || political.why || political.compromise.why ? `<details class="chapter-investment-info" data-cs-info="reparations"${expanded.has('reparations') ? ' open' : ''}><summary>Details</summary><p>${esc([political.why, site?.why, political.compromise.why].filter(Boolean).join(' · '))}</p></details>` : ''}
     </article>` : '';
-    const html = `<details class="chapter-overview" data-cs-info="overview"${expanded.has('overview') ? ' open' : ''}><summary>${esc(report.title)}</summary><p>${esc(report.summary)}</p></details>
-      <div class="chapter-status chapter-stats">${stat(report.phase.startsWith('War') ? 'swords' : 'dove', report.phase.startsWith('War') ? 'War' : 'Peace', report.phase)}${report.actions.some(a => a.key === 'regulars') ? stat('helmet', report.reforms + '/3', report.reforms + ' of 3 army reforms completed') : ''}${report.mobilization ? stat('spears', report.mobilization, 'Mobilization level: ' + report.mobilization) : ''}${report.equipment ? stat('bricks', report.equipment, report.equipment + ' equipment sets') : ''}</div>
+    const html = (tab === 'court' ? `<details class="chapter-overview" data-cs-info="overview"${expanded.has('overview') ? ' open' : ''}><summary>${esc(report.title)}</summary><p>${esc(report.summary)}</p></details>
+      <div class="chapter-status chapter-stats">${stat(report.phase.startsWith('War') ? 'swords' : 'dove', report.phase.startsWith('War') ? 'War' : 'Peace', report.phase)}${report.actions.some(a => a.key === 'regulars') ? stat('helmet', report.reforms + '/3', report.reforms + ' of 3 army reforms completed') : ''}${report.mobilization ? stat('spears', report.mobilization, 'Mobilization level: ' + report.mobilization) : ''}${report.equipment ? stat('bricks', report.equipment, report.equipment + ' equipment sets') : ''}</div>` : '') + `
       ${investments}
       ${report.patron ? record('laurel', report.patron.name, stat('hourglass', report.patron.months + 'm', report.patron.months + ' patron agreement months remaining') + stat('coins', Math.round(report.patron.rate * 1000) / 10 + '%', Math.round(report.patron.rate * 1000) / 10 + '% of revenue paid to the patron') + stat('spears', report.patron.manpower + '/m', report.patron.manpower + ' manpower supplied monthly') + stat('scroll', report.rights + '/2', report.rights + '/2 autonomy guarantees') + stat('laurel', report.standing, report.standing + '/100 patron standing'), `${report.service} fulfilled months · ${report.rights}/2 autonomy guarantees · standing ${report.standing}/100 · missed service ${report.patron.arrears || 0}/3 months`) : ''}
       ${report.monthlyOut || report.monthlyIn ? `<div class="chapter-stats chapter-commitments">${stat('coins', '−' + report.monthlyOut.toFixed(1) + '/m', report.monthlyOut.toFixed(1) + ' talents paid monthly')}${stat('coins', '+' + report.monthlyIn.toFixed(1) + '/m', report.monthlyIn.toFixed(1) + ' talents received monthly')}</div>` : ''}
@@ -98,13 +118,13 @@ export function createChapterStrategyPanel(el, getActions) {
     if (invest || compromise) {
       const button = invest || compromise; if (button.disabled) return;
       if (invest) getActions().investReparations(Number(investment)); else getActions().compromiseReparations();
-      refresh(); return;
+      refresh(); onChange(); return;
     }
     const button = e.target.closest('[data-cs-act]'); if (!button || button.disabled) return;
     const actions = getActions(), report = actions.getChapterStrategy(), key = button.dataset.csAct;
     const action = report.actions.find(a => a.key === key), option = action?.options.find(v => v.id === choices[key]);
     actions.runChapterStrategy(key, { ...option?.args, ...(key === 'order_arms' ? { partner: suppliers[key] } : {}) });
-    refresh();
+    refresh(); onChange();
   });
   el.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') e.stopPropagation(); });
   return { refresh };

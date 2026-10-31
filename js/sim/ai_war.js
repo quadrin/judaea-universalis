@@ -43,6 +43,7 @@ import { combatFrontage, fieldStrength } from './frontage.js';
 import { landRoutes, fortControl } from './fort_control.js';
 import { seasonSiegeFactor } from './seasons.js';
 import { reservedForNavalOp } from './invasion.js';
+import { alliedOrderTasks } from './allied_orders.js';
 
 // How far ahead the planner looks, in days of march.
 const HORIZON = 45;
@@ -511,6 +512,56 @@ function battleTasks(ctx, W) {
   return out;
 }
 
+// An accepted council request changes the value of a military task, while
+// its route, force requirement and combat forecast remain the planner's.
+// Defending our own threatened capital takes precedence over foreign orders.
+function councilTasks(ctx, W, tasks, reach) {
+  const orders = alliedOrderTasks(ctx, W.tag);
+  const date = ctx.game.date;
+  const currentMonth = (date.y > 0 ? date.y - 1 : date.y) * 12 + date.m - 1;
+  const hasCouncilCommitment = (ctx.game.alliedOrders?.requests || []).some(r => r.ally === W.tag
+    && r.expires > currentMonth && ['accepted', 'marching', 'holding', 'suspended'].includes(r.status));
+  if (!orders.length && !hasCouncilCommitment) return tasks;
+  const capital = W.t.dynamicCapital || tagDef(ctx, W.tag).capital;
+  const capitalId = capital ? ctx.provId?.(capital) : null;
+  const capitalProvince = capitalId ? ctx.byId(capitalId) : null;
+  const capitalThreatened = capitalProvince && (isHostile(ctx, W.tag, capitalProvince.controller)
+    || capitalProvince.siege && isHostile(ctx, W.tag, capitalProvince.siege.by)
+    || W.groups.some(grp => !grp.inBattle
+      && (grp.prov === capitalId || reachOf(ctx, W, grp, capitalId, 25) <= 25)));
+  if (capitalThreatened) {
+    for (const task of tasks) {
+      const protects = task.prov === capitalId || task.kind === 'battle'
+        && (task.grp.prov === capitalId || reachOf(ctx, W, task.grp, capitalId, 25) <= 25);
+      if (protects) task.value += 160;
+    }
+  }
+  for (const order of orders) {
+    if (!reach.has(order.province)) continue;
+    const p = ctx.byId(order.province);
+    if (!p || p.impassable) continue;
+    const priority = clamp(num(order.priority, 45), 0, 80);
+    let matched = false;
+    for (const task of tasks) {
+      const relevant = task.kind === 'battle' ? task.spots.some(s => s.prov === order.province)
+        : task.prov === order.province;
+      if (!relevant) continue;
+      if (priority > num(task.councilPriority)) {
+        task.value += priority - num(task.councilPriority);
+        task.councilPriority = priority;
+        task.alliedOrder = order.id;
+      }
+      matched = true;
+    }
+    // A request to defend a safe allied town is a valid deployment even
+    // before an enemy enters the ordinary guard-task horizon.
+    if (!matched && order.kind !== 'offensive'
+      && (p.controller === W.tag || sameSide(ctx, W.tag, p.controller)))
+      tasks.push({ kind: 'guard', prov: p.id, value: priority, councilPriority: priority, alliedOrder: order.id });
+  }
+  return tasks;
+}
+
 // ------------------------------------------------------------ forces
 function arrivals(W, list, prov) {
   let latest = 0;
@@ -834,11 +885,11 @@ export function planWar(ctx, tag, opts) {
   // Only what some army of ours can actually reach is a task.
   const reach = new Set();
   for (const tr of W.travel.values()) for (const id of tr.dist.keys()) reach.add(id);
-  const tasks = [
+  const tasks = councilTasks(ctx, W, [
     ...battleTasks(ctx, W).filter((task) => task.spots.some((s) => reach.has(s.prov))),
     ...provinceTasks(ctx, W).filter((task) => reach.has(task.prov)),
     ...guardTasks(ctx, W).filter((task) => reach.has(task.prov)),
-  ];
+  ], reach);
   // The nearest and most valuable first; the tail cannot win an assignment.
   tasks.sort((x, y) => y.value - x.value);
   const pool = tasks.slice(0, 40);
@@ -851,7 +902,7 @@ export function planWar(ctx, tag, opts) {
         : task.kind === 'siege' ? planSiege(ctx, W, task, free)
           : planGuard(ctx, W, task, free);
       if (!plan) continue;
-      if (!pick || plan.score > pick.score) { pick = { ...plan, kind: task.kind }; pickIdx = i; }
+      if (!pick || plan.score > pick.score) { pick = { ...plan, kind: task.kind, alliedOrder: task.alliedOrder }; pickIdx = i; }
     }
     if (!pick) break;
     pool.splice(pickIdx, 1);
@@ -861,7 +912,7 @@ export function planWar(ctx, tag, opts) {
     execute(ctx, W, pick, pick.kind);
     plans.push(pick);
     if (opts && Array.isArray(opts.log)) {
-      opts.log.push({ kind: pick.kind, prov: pick.prov, score: pick.score, armies: pick.force.map((a) => a.id) });
+      opts.log.push({ kind: pick.kind, prov: pick.prov, score: pick.score, armies: pick.force.map((a) => a.id), ...(pick.alliedOrder ? { alliedOrder: pick.alliedOrder } : {}) });
     }
   }
   for (const a of free) idleOrders(ctx, W, a);

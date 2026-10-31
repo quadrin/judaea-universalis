@@ -4,6 +4,7 @@
 import { politicalCrisisInfo, choosePoliticalCrisis, politicalCrisisView, investReparations, canPoliticalIntervention } from './political_turning_points.js';
 import { courtIntentions } from './court_plans.js';
 import { courtOffers, resolveCourtOffer } from './court_diplomacy.js';
+import { alliedOrdersView, requestAlliedOrder, cancelAlliedOrder } from './allied_orders.js';
 import { historicalCrisisInfo, chooseHistoricalCrisis, canImperialIntervention } from './historical_crises.js';
 import { winChance } from './ai_war.js';
 import { createRng } from '../core/rng.js';
@@ -1900,6 +1901,9 @@ export function gameActions(ctx) {
   const actions = {
     getCourtIntentions(tag = g.playerTag) { return courtIntentions(ctx, tag, g.playerTag); },
     getCourtOffers() { return courtOffers(ctx, g.playerTag); },
+    getAlliedOrders() { return alliedOrdersView(ctx, g.playerTag); },
+    requestAlliedOrder(ally, kind, province) { return requestAlliedOrder(ctx, g.playerTag, ally, kind, province); },
+    cancelAlliedOrder(id) { return cancelAlliedOrder(ctx, g.playerTag, id); },
     resolveCourtOffer(id, accept) { return resolveCourtOffer(ctx, id, accept, g.playerTag); },
     setSpeed(n) {
       g.speed = clamp(Math.round(num(n, 2)), 1, 5);

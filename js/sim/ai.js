@@ -38,6 +38,7 @@ import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
 import { emptyQuarter, outlawsRisen } from './outlaws.js';
 import { monthlyCourtPlans, courtWarPlan, courtBudget } from './court_plans.js';
 import { monthlyCourtDiplomacy, courtIndependenceSupport, honorCourtIndependence } from './court_diplomacy.js';
+import { monthlyAlliedOrders } from './allied_orders.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -1811,6 +1812,7 @@ export function runMonthlyAI(ctx) {
   const g = ctx.game;
   monthlyCourtPlans(ctx);
   monthlyCourtDiplomacy(ctx);
+  monthlyAlliedOrders(ctx);
   for (const tag of Object.keys(g.tags)) {
     try {
       const t = g.tags[tag];

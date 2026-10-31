@@ -78,7 +78,7 @@ invitation and Jonathan’s ransom (143 BCE), Rome’s annexation of Nabataea
 (106 CE), the Lakhmid succession at Hira (602), the Roman–Persian peace
 (628), and the Luxembourg Agreement (1952). These can change wars, rulers,
 sovereignty and access. Reparations arrive as funded goods from March 1953;
-invest them in chosen provinces under Court → Objectives → Chapter strategy.
+invest them in chosen provinces under Court → Court → Administration and local government.
 
 The former 40 BCE bookmark remains loadable from existing saves. New succession
 campaigns start in 67 BCE; their later events follow the houses that survive.
@@ -126,8 +126,22 @@ the point balances and technology requirements are visible alongside the
 groups. Technology and institutions remain in **Technology**. Foreign courts
 show their ideas for inspection, with purchasing controls hidden.
 
-**Chapter strategy.** Open **Court → Objectives → Chapter strategy** for decisions
-specific to your bookmark. Each decision shows its location or partner, upfront
+**National paths.** Adopt ideas in **Court → Ideas**. Each tier adds lasting
+bonuses as well as unlocking actions. Use maritime concessions in **Trade**,
+military colonies in **Defense**, dynastic and covert operations in **World**,
+and city charters in **Court**. These controls are visible before adoption,
+with the required idea named beside each disabled action.
+
+**Allied coordination.** During a shared war, open **Court → World → Allied
+coordination** to request defense of a province, relief of a siege, or an
+offensive objective. Allies assess trust, interests, available armies, routes,
+and their own security. Accepted requests last up to six months and use the
+ordinary army planner; urgent home defense and unsafe battles take precedence.
+
+**Chapter strategy.** Decisions specific to your bookmark now appear in
+**Court**, **Defense**, **Trade**, or **World**, alongside the activity they
+affect. Missions retains the mission tree and chapter record.
+Each decision shows its location or partner, upfront
 cost, recurring obligations and current availability. Projects advance with the
 monthly clock and pause if funding or control is lost.
 
