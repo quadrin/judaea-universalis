@@ -2,13 +2,15 @@
 
 Modern courts display their actual national flags, including chapter dates and saved regime changes. Court portraits and coats of arms do not override the flags. `courtChip` and `flagChip` share the flag identity resolver, with support for legacy 1948 Oman saves.
 
-Ancient courts retain their established coin, relief, seal, architectural or regional motifs. Generated engraved images replace the geometric object and figure drawings. The approved Judah lion, Judaean menorah, Samaria calligraphy, Hasmonean master and Judaean coin/chapter variants remain intact. Formal historical signs and existing detailed reference artwork remain available.
+Ancient courts retain their coin, relief, seal, architectural or regional motifs as complete flat vector drawings. `court_standards.js`, `judaean_standards.js` and `court_revisions.js` supply the detailed masters. `flat_court_palette.js` applies solid heraldic inks: ivory animals and signs, olive foliage, red fruit, sandstone architecture, copper ingots, silver weapons, linen sails, timber hulls and silver/garnet fittings. These colours are game design choices, not claims about attested ancient flag palettes. Structural lines, anatomy, masonry, rigging, feathers and inscriptions remain in the source at every display size. No raster image, gradient, filter or metallic lighting enters the active ancient court art.
 
-`icons/court-generated/manifest.json` records each generated image's subject and court assignments. `js/ui/generated_court_assets_*.js` preserve the canonical image data as self-contained WebP data URLs. `tools/build_court_assets.py` can recover those WebP files locally and repack the modules; `generated_standards.js` installs them after the earlier vector enrichment passes. The complete image remains the same at every display size. No external image fetch is required, including in the portable HTML build.
+The approved Judah lion, Judaean menorah and Hasmonean master retain their complete contours with flat ivory inks. Samaria's supplied calligraphy and Galilee's established blue/beige zodiac remain intact. Judaean coin and chapter variants still inherit through the same identity resolver. Parthia and Syracuse use newly refined vector profiles; Rome has ivory SPQR lettering below its aquila.
+
+The earlier metallic images in `icons/court-generated/manifest.json`, `generated_standards.js` and `generated_court_assets_*.js` remain archived for provenance. They are not imported by the game or included in portable builds. `tools/tests/generated-court-art.mjs` remains a compatibility entry point for the new flat-vector regression check.
 
 `js/ui/authentic_national_flags.js` embeds 25 sourced flag vectors, including the full period devices for Yemen, Iran, Afghanistan, Ethiopia, Spain, Bulgaria, Romania and saved regime variants. `icons/source/national-flags/manifest.json` and `CREDITS.md` record their sources and rights. `tools/build_national_flags.py` sanitizes and fits each complete flag without changing its aspect ratio. The earlier six national-device repairs remain in `modern_standards.js`; its older portrait definitions remain unused. The United States retains its 48-star 1948 flag. Modern Greece uses the period land flag; occupation-era Germany is explicitly identified by its merchant C-pennant.
 
-Run court-art, generated-court-art, national-flags, smoke213, smoke215, smoke186, smoke-judaean-coins, offline-cache and app-install before publishing. Review the gallery at 14/24/34/52/160px and inspect the Compendium in the browser. Bump the release import-map version and service-worker cache, and rebuild both portable downloads.
+Run court-art, flat-court-art, national-flags, smoke213, smoke215, smoke186, smoke-judaean-coins, offline-cache and app-install before publishing. Review the gallery at 14/24/34/52/160px and inspect the Compendium in the browser. Bump the release import-map version and service-worker cache, and rebuild both portable downloads.
 
 ## Historical interpretation
 
@@ -25,7 +27,7 @@ meaning and dynastic attribution are uncertain. Do not present the Iron
 Crown's disputed early history as settled. Epigraphic texture on the Moabite
 stele is explicitly inscription-like drawing, not a fabricated transcription.
 
-The ancient Israel altar, Judaean menorah, Hasmonean cornucopias, gold Magen
+The ancient Israel altar, Judaean menorah, Hasmonean cornucopias, Magen
 David of the alternative Kingdom of Israel, and modern Israeli flag preserve
 their distinct identities. Runtime rebrands and chapter overrides must resolve
 notes and images through the same lookup (`flagInfo` and `flagChip`).
@@ -80,7 +82,7 @@ borrowed-flag saves, runtime rebrands and synthetic old-save courts.
 `node tools/tests/smoke215.mjs` checks retained SVG detail, distinct drawings,
 sources and identity-aware notes.
 `node tools/tests/smoke-judaean-coins.mjs` checks the approved Hasmonean
-master's checksum, coin identities, chapter lenses, old saves and formation
+master's contour checksum, coin identities, chapter lenses, old saves and formation
 into the Ethnarchy, Kingdom and Israel.
 `uitest72.mjs` checks the complete SVG gallery, bounds, real chip sizes,
 Compendium display, start-screen identities, Court headers and mobile layout.
@@ -89,4 +91,5 @@ Inspect the entire roster. Compare courts that appear together, especially
 related ships, bows, crowns, forts and torcs. Check recognisability, overlap,
 clipping, contrast and retained internal detail. Keep the historical note
 accurate when the subject changes.
+
 

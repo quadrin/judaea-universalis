@@ -46,9 +46,10 @@ for (const key of Object.keys(MODERN_COURT_ART)) {
   const tag=key.slice(0,3),game={tags:{[tag]:{flag:key}}};
   assert.equal(body(courtChip(tag,DEFINES,160,false,game)).replaceAll('court-','flag-').replaceAll('fcourt','fflag'),body(flagChip(tag,DEFINES,160,false,game)),key+': national flag survives saved regime changes');
 }
-for(const [tag,hash] of Object.entries({
-  SAM:'cc838c64acaae738440f1bcb2c6b84e5b4be3b9c213e8e5bdb0564bd1126941e',
-  HAS:'138f3495b36c20741c3eb6c643b6604490af5a46bd272ed2c64a71989724fec0',
-})) assert.equal(createHash('sha256').update(JSON.stringify(FLAT_FLAGS[tag])).digest('hex'),hash,tag+': approved master unchanged');
+assert.equal(createHash('sha256').update(JSON.stringify(FLAT_FLAGS.SAM)).digest('hex'),
+  'cc838c64acaae738440f1bcb2c6b84e5b4be3b9c213e8e5bdb0564bd1126941e','SAM: approved master unchanged');
+assert.equal(createHash('sha256').update(FLAT_FLAGS.HAS.body.replace(/\s(?:fill|stroke)="[^"]*"/g,'')).digest('hex'),
+  '4231d76629d90f8ea501ff3c1cd5bbf6ad315c12525d2d65c3754cabd656fe0d','HAS: approved contours retained with new flat inks');
 console.log('PASS 154 audited courts, 52 modern masters and variants, six flag repairs, six rendering sizes, dated identities, saved rebrands and protected approved masters');
+
 

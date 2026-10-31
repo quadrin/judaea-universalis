@@ -106,23 +106,30 @@ function fireAltar() {
     +r(72,94,48,4,G)+rep(6,i=>l(`M${77+i*7} 98v7`,D,.7));
 }
 function seatedArcher() {
-  return p('M95 104H133V113H126V154H119V116H105V157H98V114Z',B)+l('M95 110H133M102 119V148M123 118V150',I,1)
-    +p('M95 97 110 95 119 104 110 116 96 117 87 136 79 151 68 155 66 149 74 143 81 119Z',G)
-    +p('M101 104 118 109 118 133 130 150 129 157 118 158 112 151 105 133 104 118 93 114Z',I)
-    +p('M96 61 109 68 111 93 118 103 94 113 78 104 81 81 72 86 62 105 55 102 65 74 82 67Z',I)
-    +p('M89 61 80 51 82 36 95 27 108 34 111 47 104 58 103 67Z',G)
-    +p('M78 36 84 22 104 19 116 30 111 38 97 33Z',I)+l('M84 25 105 24M90 41 99 39M99 49 105 47M88 51 94 58M85 69 84 94M92 70 90 103M100 73 101 101M88 122 82 138M111 120 112 133',B,1.4)
-    +c(101,41,1.3,D)+p('M104 44 115 47 106 50Z',I)
-    +p('M88 74 75 66 62 65 49 69 45 75 52 79 65 74 81 85Z',G)
-    +l('M45 40Q17 71 44 107M45 40 51 73 44 107M23 73H79',G,2.3)
-    +p('M50 72 57 69 63 71 61 77 54 79Z',I)+l('M67 159H134',G,2);
+  return p('M96 104H136V113H129L126 158H121V114H105L102 158H97Z','#b98c68')
+    +l('M100 117H125M101 139H123M98 108H134',D,1.1)
+    +p('M91 102C101 97 113 100 119 107C123 112 120 121 117 127L113 143L128 153Q133 158 128 161H114Q109 159 108 153L102 131L99 119L88 119Z',I)
+    +p('M93 105C91 112 88 121 83 132L73 150L64 154Q58 160 65 162H80L89 148C100 135 103 126 105 116Z',I)
+    +l('M96 119Q92 133 83 145M111 119Q108 130 114 145M85 130L92 125M108 133L114 138M67 156H77M118 155L125 157',B,1.2)
+    +p('M89 62C96 59 106 63 111 71Q115 82 111 92L120 104Q112 113 94 114L79 108Q83 97 81 86L75 82L62 101Q59 106 54 102L63 79Q68 69 83 67Z',G)
+    +l('M89 70Q86 84 87 102M96 70L95 106M104 73Q108 86 104 101M84 107Q100 102 115 105M81 81L90 77M64 91L69 94',B,1.2)
+    +p('M93 28C104 24 112 30 112 39L111 43L116 48Q116 50 110 51L110 55Q107 60 103 61L104 67Q96 73 89 65L91 56C83 52 81 44 84 37Q86 31 93 28Z',I)
+    +p('M84 37C80 31 87 23 97 22Q112 20 116 32L111 38L101 31Q91 33 84 37Z',G)
+    +l('M85 31Q100 24 111 31M94 38Q101 35 108 39M101 42H108M106 51H110M91 46Q89 52 96 56M97 56L103 59',B,1)
+    +c(106,41,1.1,D)+p('M88 32L80 47L82 57L87 43Z',I)
+    +p('M87 73Q78 69 69 68L55 72L49 78Q45 81 43 77L46 70Q48 66 53 66L68 63Q79 62 91 67Z',I)
+    +l('M49 69L57 69M48 73L55 72M48 76L54 75M75 69L82 73',B,.8)
+    +l('M43 36C23 47 23 61 31 72C23 86 25 101 43 113M43 36L48 74L43 113M22 74H81',I,2)
+    +p('M79 71L87 74L79 77Z',I)+l('M44 69L48 72M44 74L48 76M44 79L48 80',B,.8);
 }
 function arethusa() {
-  const head=p('M112 37C129 45 133 63 125 76L126 88 137 99 133 104 124 106 126 113 121 117 123 125 116 133 101 134 98 148 118 157 107 165 80 159 69 149 75 127C57 113 57 91 60 73C60 50 77 32 98 32Z',I)
-    +p('M60 85C43 67 57 43 75 36C91 20 120 28 128 46L117 63 99 69 84 65 75 92Z',G)
-    +rep(13,i=>{const x=62+(i%5)*12,y=46+Math.floor(i/5)*13;return l(`M${x} ${y}q-8-8-11 0q0 9 9 6q4-3-1-6`,B,1);})
-    +l('M82 68Q98 79 115 66M81 75Q96 87 116 75M90 112Q88 132 81 143M103 130 99 140M120 92 127 94M121 110 128 110M112 86 121 84M110 82 118 80',B,1.1)
-    +c(119,87,1.5,D)+ring(93,112,4,G,1.5)+l('M96 114 96 125',G,1.4);
+  const head=p('M106 37C121 40 130 51 128 67L126 79Q125 85 130 91L137 99Q139 103 132 105L126 106Q124 108 128 111Q131 114 124 116Q129 121 124 127Q119 135 104 135L102 146Q110 153 122 157Q123 164 113 166L86 162L70 151Q78 139 78 124C62 116 56 103 57 86L62 63Q73 35 106 37Z',I)
+    +p('M60 96C45 85 46 65 55 52C61 43 67 40 74 36C86 23 110 25 123 35Q135 43 130 57L123 67Q110 65 99 73L86 82Q78 89 79 104L72 110Z',G)
+    +rep(18,i=>{const x=58+(i%6)*11,y=45+Math.floor(i/6)*13;return l(`M${x} ${y}c-8-6-12 0-9 6c3 5 10 2 8-2q-2-4-5-1`,B,.95);})
+    +l('M56 78Q57 87 64 92M58 85Q59 95 67 99M64 76Q63 85 71 91M72 77Q70 85 76 90M80 77Q100 59 122 60M83 81Q105 67 123 67',B,1.1)
+    +l('M110 81Q119 77 125 82M112 87Q118 84 123 87M114 88Q119 91 123 87M124 91L126 98M127 103L131 102M124 113H128M116 129Q108 132 101 127M95 130Q92 145 86 150M100 143L99 151',B,1)
+    +c(120,87,1.2,D)+l('M83 95Q76 90 76 99Q76 108 83 105M81 98Q77 99 81 102',B,1)
+    +ring(83,110,4.6,G,1.7)+c(83,121,2.5,G)+l('M83 114V119M77 152Q93 158 110 159',G,1.2);
   const dolphin=referenceAnimal('dolphin',I,B);
   return head+g(dolphin,'translate(9 20) scale(.22) rotate(-45 96 96)')+g(dolphin,'translate(141 8) scale(.22) rotate(65 96 96)')
     +g(dolphin,'translate(140 134) scale(.22) rotate(135 96 96)')+g(dolphin,'translate(12 139) scale(.22) rotate(220 96 96)');
@@ -319,8 +326,8 @@ export function reviseCourtStandards(flags) {
     MIZ:p('M63 112V81C63 62 78 62 78 41C78 9 110 8 114 37C119 60 109 76 126 104L130 115Z',I)
       +p('M55 101H123L133 67H150V151Q96 174 55 151Z',G)+l('M59 112H124L139 76H146M60 149Q96 165 145 149M82 28Q96 16 107 31M80 49V74',B,1.5)
       +l('M58 114C30 115 29 76 50 78C66 78 66 96 55 96',I,5),
-    PAS:winged(false), ROM:g(eagle({raised:true}),'translate(20 0) scale(.8)')+p('M48 144H144V166H48Z',G)
-      +g(flags.ROM.body.match(/<path d="([^"]+)"/)[0]+' fill="'+D+'"/>','translate(11 103) scale(1.7 .95)'),
+    PAS:winged(false), ROM:g(eagle({raised:true}),'translate(20 0) scale(.8)')
+      +g(flags.ROM.body.match(/<path d="([^"]+)"/)[0]+' fill="'+I+'"/>','translate(11 103) scale(1.7 .95)'),
     JUD:menorah(), SEL:anchor('stock','#6c217b'), PTO:eagle({raised:true})+p('M42 162H150L139 169H112L121 176H79L87 169H53Z',G),
     CYZ:g(anchor('curved'),'translate(7 -4) scale(.93)')+g(crown('laurel'),'translate(50 2) scale(.48)'),
     BAL:g(anchor(),'translate(15 13) scale(.84)')+g(crown(),'translate(44 -2) scale(.54)'),
@@ -367,7 +374,7 @@ export function reviseCourtStandards(flags) {
     SYC:'An Arethusa-inspired profile with dressed hair, earring and four dolphins; the portrait is an original drawing after the recorded coin motif.',
     CRT:'A seven-circuit labyrinth with an open entrance and connected curved walls, replacing the square spiral.',
     JDH:'A rampant lion with articulated paws, a curling tufted tail, separate mane locks and an open mouth, engraved in gold and ivory.',
-    ROM:'A raised-wing aquila above the retained outlined SPQR inscription on its own crossbar. Feather groups, head, claws and tail remain separate contours.',
+    ROM:'A raised-wing aquila above outlined SPQR lettering, in flat ivory. Feather groups, head, claws and tail remain separate contours.',
     MOA:'A weathered round-headed stele with varied surviving incision fragments and cracks. The marks supply surface texture, not a transcription.',
     MOB:'A round-headed Mesha-stele-inspired stone with irregular worn incision fragments. No readable inscription or invented transcription is asserted.',
     ELM:'A coiled serpent with a separate open head, scales and intertwined body contours. This is a heraldic game adaptation of the existing Elamite snake association, not a copy of an Elamite seal.',
@@ -397,3 +404,4 @@ export function reviseCourtStandards(flags) {
     flags[tag]={...old,viewBox:'0 0 192 192',body:r(0,0,192,192,old.fieldColor)+frame+flags.JUD.body.slice(flags.JUD.body.indexOf('<g data-emblem=')),note:flags.JUD.note};
   }
 }
+

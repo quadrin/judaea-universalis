@@ -12,7 +12,7 @@
 // plus every module reachable from main.js, found by reading the import
 // statements. There is no build step and no file list to keep in step with
 // the code; a new module is found the day it is imported.
-const CACHE = 'ju-v10-authentic-flags';
+const CACHE = 'ju-v11-flat-court-inks';
 
 // Files no import statement names.
 const SHELL = [
@@ -131,4 +131,5 @@ self.addEventListener('fetch', (event) => {
     }
   })());
 });
+
 

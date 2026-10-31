@@ -9,10 +9,9 @@ import { FLAT_FLAGS } from '../../js/ui/flag_art.js';
 import { FLAGS, flagChip, flagInfo } from '../../js/ui/icons.js';
 import { JUDAEAN_COIN_SOURCES } from '../../js/ui/judaean_standards.js';
 
-// User constraint: the entire Hasmonean master, including its palette,
-// transforms and note, must remain identical to the approved version.
-assert.equal(createHash('sha256').update(JSON.stringify(FLAT_FLAGS.HAS)).digest('hex'),
-  '138f3495b36c20741c3eb6c643b6604490af5a46bd272ed2c64a71989724fec0');
+// Preserve the approved Hasmonean geometry; the user requested new flat inks.
+assert.equal(createHash('sha256').update(FLAT_FLAGS.HAS.body.replace(/\s(?:fill|stroke)="[^"]*"/g,'')).digest('hex'),
+  '4231d76629d90f8ea501ff3c1cd5bbf6ad315c12525d2d65c3754cabd656fe0d');
 
 for (const [tag, emblem] of Object.entries({
   HER: 'herodian-helmet', ATG: 'antigonus-coin-menorah',
@@ -82,4 +81,5 @@ const w = boot('132ce');
 w.game.tags.JUD.flag = 'ISR';
 assert.equal(flagInfo('JUD', DEFINES, w.game).key, 'ISR', 'saved rebrands retain precedence');
 assert.equal(flagInfo('JUD', DEFINES, w.game).note, FLAGS.ISR.note);
-console.log('PASS unchanged Hasmonean master, nine coin devices, chapter and save identities, founding motifs and formation transitions');
+console.log('PASS preserved Hasmonean contours, nine coin devices, chapter and save identities, founding motifs and formation transitions');
+

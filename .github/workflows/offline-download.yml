@@ -32,7 +32,7 @@ jobs:
       - name: Check court artwork and offline support
         run: |
           node tools/tests/court-art.mjs
-          node tools/tests/generated-court-art.mjs
+          node tools/tests/flat-court-art.mjs
           node tools/tests/national-flags.mjs
           node tools/tests/smoke213.mjs
           node tools/tests/smoke215.mjs
@@ -50,3 +50,4 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Rebuild the offline game from the current source'
           git push origin HEAD:main
+
