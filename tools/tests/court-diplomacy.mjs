@@ -117,4 +117,46 @@ function awaitOffer(ctx) { for (let i = 0; i < 3; i++) { monthlyCourtDiplomacy(c
   assert(truceActive(ctx, 'HAS', 'SEL'));
   console.log('PASS actual bookmark payment peace transfers gold, ends war and writes the ordinary truce');
 }
+{
+  const ctx = fixture();
+  // A and B both border C, but C spans the intervening land and grants no passage.
+  ctx.geom.neighbors[1] = new Set([3]); ctx.geom.neighbors[2] = new Set([3]);
+  for (let i = 0; i < 12; i++) { monthlyCourtDiplomacy(ctx); next(ctx); }
+  assert(!ctx.game.courtDiplomacy.offers.some(o => o.from === 'A' && o.to === 'B'),
+    'opposite ends of the same empire do not generate protection or replacement alliance requests');
+  console.log('PASS distant courts sharing an imperial neighbor cannot solicit an unreachable protector');
+}
+{
+  const ctx = fixture(), o = awaitOffer(ctx);
+  ctx.geom.neighbors[2] = new Set();
+  const snapshot = JSON.stringify(ctx.game);
+  assert.equal(courtOffers(ctx).length, 0, 'old geographically invalid petitions disappear immediately');
+  assert.equal(JSON.stringify(ctx.game), snapshot, 'filtering old offers is a pure read');
+  assert(!resolveCourtOffer(ctx, o.id, true).ok, 'an old offer cannot bypass the new reach check');
+  next(ctx); monthlyCourtDiplomacy(ctx);
+  assert.equal(ctx.game.courtDiplomacy.offers.find(row => row.id === o.id).status, 'expired');
+  console.log('PASS existing saved petitions are hidden and retired when the protector cannot reach them');
+}
+{
+  const ctx = fixture();
+  ctx.game.tags.D = { ...ctx.game.tags.A, name:'D', opinion:{ B:40, C:-100 }, allies:[], guarantees:[] };
+  ctx.game.provinces.push({ id:4, name:'D', owner:'D', controller:'D', dev:{tax:1,prod:1,mp:1} });
+  ctx.geom.neighbors[4] = new Set([2,3]); ctx.geom.neighbors[2].add(4); ctx.geom.neighbors[3].add(4);
+  let count = 0;
+  for (let i = 0; i < 12; i++) {
+    monthlyCourtDiplomacy(ctx);
+    for (const o of courtOffers(ctx).filter(o => o.kind === 'protection')) {
+      count++; assert(resolveCourtOffer(ctx, o.id, false).ok);
+      const current = (ctx.game.date.y > 0 ? ctx.game.date.y - 1 : ctx.game.date.y) * 12 + ctx.game.date.m - 1;
+      assert.equal(ctx.game.courtDiplomacy.cooldowns[[o.from,o.to].sort().join('>')], current + 72);
+    }
+    next(ctx);
+  }
+  assert.equal(count, 1, 'multiple neighboring petitioners share one annual recipient budget');
+  const cooldown = JSON.parse(JSON.stringify(ctx.game.courtDiplomacy)).protectionRequests.B;
+  assert(Number.isFinite(cooldown), 'recipient suppression survives save serialization');
+  for (let i = 0; i < 3; i++) { monthlyCourtDiplomacy(ctx); next(ctx); }
+  assert(courtOffers(ctx).some(o => o.kind === 'protection'), 'a different viable petitioner may ask after the annual interval');
+  console.log('PASS annual recipient limit, six-year refusal cooldown and saved suppression across multiple petitioners');
+}
 console.log('court-diplomacy: ALL PASS');

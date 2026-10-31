@@ -12,7 +12,7 @@
 // plus every module reachable from main.js, found by reading the import
 // statements. There is no build step and no file list to keep in step with
 // the code; a new module is found the day it is imported.
-const CACHE = 'ju-v17-court-art-operations';
+const CACHE = 'ju-v18-regional-protection';
 
 // Files no import statement names.
 const SHELL = [

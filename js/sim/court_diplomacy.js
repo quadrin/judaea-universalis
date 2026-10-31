@@ -1,7 +1,7 @@
 // Autonomous negotiations. Offers are saved facts; readers never spend or roll.
 import { isHumanChair, isHostile, isOffmapTag, allianceBarred, clientForeignPolicyBar,
   chanceryFullWhy, liveGrudge, reconciled, addOpinion, chronicle, joinWar,
-  truceActive, recognized, allyAnswersCall, evaluatePeaceDeal, executePeaceDeal } from './military.js';
+  truceActive, recognized, allyAnswersCall, evaluatePeaceDeal, executePeaceDeal, militaryPassage } from './military.js';
 import { courtAttitude, rememberCourtEvent, courtBudget } from './court_plans.js';
 import { offensiveCall, commitAllyCall, strategicInterests } from './strategy.js';
 
@@ -27,6 +27,35 @@ function commonThreat(ctx, a, b) {
       && ((ctx.game.tags[b].atWarWith || []).includes(k) || bordering(ctx, b, k))
       && (opinion(ctx, a, k) < -25 || opinion(ctx, b, k) < -25)
       && strength(ctx, k) > Math.min(strength(ctx, a), strength(ctx, b)) * 1.2);
+}
+// A shared border with a sprawling empire does not make two distant courts
+// plausible partners. Protection needs a short corridor the protector can use.
+function protectionReach(ctx, requester, protector) {
+  const seen = new Set(), queue = [];
+  for (const p of ctx.game.provinces) if (p && !p.impassable && p.owner === protector && p.controller === protector) {
+    seen.add(p.id); queue.push([p.id, 0]);
+  }
+  for (let i = 0; i < queue.length; i++) {
+    const [id, distance] = queue[i];
+    if (distance >= 4) continue;
+    for (const next of ctx.geom?.neighbors?.[id] || []) {
+      const p = ctx.byId(next);
+      if (!p || p.impassable || seen.has(next)) continue;
+      if (p.owner === requester) return true;
+      const controller = p.controller || p.owner;
+      if (isHostile(ctx, protector, controller) || !(controller === protector
+        || (ctx.game.tags[protector]?.allies || []).includes(controller)
+        || militaryPassage(ctx, protector, controller))) continue;
+      seen.add(next); queue.push([next, distance + 1]);
+    }
+  }
+  return false;
+}
+function protectionWhy(ctx, from, to) {
+  if (!protectionReach(ctx, from, to)) return 'The proposed protector has no nearby military route to this court.';
+  if (!commonThreat(ctx, from, to)) return 'There is no shared regional threat requiring protection.';
+  if (strength(ctx, to) <= strength(ctx, from) * 1.5) return 'The proposed protector lacks the strength to offer meaningful protection.';
+  return '';
 }
 function baseGate(ctx, offer) {
   const { from, to } = offer, a = ctx.game.tags[from], b = ctx.game.tags[to];
@@ -77,6 +106,7 @@ function gate(ctx, offer) {
     return chanceryFullWhy(ctx, from, true) || chanceryFullWhy(ctx, to, false);
   }
   if (kind === 'protection') {
+    const why = protectionWhy(ctx, from, to); if (why) return why;
     if ((b.guarantees || []).includes(from)) return 'Protection has already been promised.';
     if (n(b.points?.infl) < 50) return 'The protector needs 50 influence.';
     return chanceryFullWhy(ctx, to, true);
@@ -104,6 +134,7 @@ function text(ctx, o) {
 }
 export function courtOffers(ctx, viewer = ctx.game.playerTag) {
   return (ctx.game.courtDiplomacy?.offers || []).filter(o => o.status === 'pending' && o.to === viewer && o.expires > month(ctx))
+    .filter(o => o.kind !== 'protection' || !protectionWhy(ctx, o.from, o.to))
     .map(o => { const why = gate(ctx, o); return { ...o, ...text(ctx, o), canAccept: !why, why }; });
 }
 function close(ctx, o, status) {
@@ -116,6 +147,7 @@ export function resolveCourtOffer(ctx, id, accept, actor = ctx.game.playerTag) {
   if (!o || o.to !== actor) return { ok: false, why: 'This offer is not addressed to this court.' };
   if (o.expires <= month(ctx)) { close(ctx, o, 'expired'); return { ok: false, why: 'The offer has expired.' }; }
   if (!accept) {
+    if (o.kind === 'protection') ledger(ctx).cooldowns[pair(o.from, o.to)] = month(ctx) + 72;
     close(ctx, o, 'declined'); rememberCourtEvent(ctx, o.from, o.to, 'refused', { text: `Declined our ${o.kind} proposal` });
     return { ok: true, why: 'The offer was declined.' };
   }
@@ -172,10 +204,15 @@ function aiAccepts(ctx, o) {
 }
 function propose(ctx, from, to, kind, reason, cost = 0, terms = {}) {
   const s = ledger(ctx), key = pair(from, to), now = month(ctx);
+  if (kind === 'protection' && isHumanChair(ctx.game, to)) {
+    if (Number.isFinite(s.protectionRequests?.[to]) && now - s.protectionRequests[to] < 12) return false;
+    if (s.offers.some(o => o.kind === 'protection' && o.to === to && o.status === 'pending' && o.expires > now)) return false;
+  }
   if (Number.isFinite(s.cooldowns[key]) && s.cooldowns[key] > now || s.offers.some(o => o.status === 'pending' && pair(o.from, o.to) === key)) return false;
   const o = { ...terms, id: `court-${s.nextId++}`, from, to, kind, reason, cost, created: now, expires: now + 6, status: 'pending' };
   if (gate(ctx, o)) return false;
   s.offers.push(o); s.cooldowns[key] = now + 36;
+  if (kind === 'protection' && isHumanChair(ctx.game, to)) { s.protectionRequests ||= {}; s.protectionRequests[to] = now; }
   if (isHumanChair(ctx.game, to)) {
     ctx.bus?.emit('notify', { title: text(ctx, o).title, text: `${text(ctx, o).description} Respond in Court → World.`, type: 'info' });
   } else if (autonomous(ctx, to)) resolveCourtOffer(ctx, o.id, aiAccepts(ctx, o), to);
@@ -196,7 +233,8 @@ export function monthlyCourtDiplomacy(ctx) {
   try {
   s.support = s.support.filter(p => p.until > now && ctx.game.tags[p.client]?.alive && ctx.game.tags[p.sponsor]?.alive && ctx.game.tags[p.lord]?.alive);
   for (const w of ctx.game.wars || []) if (w.cb === 'independence') honorCourtIndependence(ctx, w.attackers[0], w);
-  for (const o of s.offers) if (o.status === 'pending' && (o.expires <= now || baseGate(ctx, o))) close(ctx, o, 'expired');
+  for (const o of s.offers) if (o.status === 'pending' && (o.expires <= now || baseGate(ctx, o)
+    || o.kind === 'protection' && protectionWhy(ctx, o.from, o.to))) close(ctx, o, 'expired');
   s.offers = s.offers.filter(o => o.status === 'pending' || n(o.closed) > now - 12).slice(-160);
   for (const key of Object.keys(s.cooldowns)) if (s.cooldowns[key] <= now) delete s.cooldowns[key];
   // Stagger councils across months. Every court gets a quarterly diplomatic turn.
@@ -229,14 +267,16 @@ export function monthlyCourtDiplomacy(ctx) {
     }
     if (sent) continue;
     const candidates = tags.filter(to => to !== from && to !== 'REB' && ctx.game.tags[to]?.alive
-      && !baseGate(ctx, { from, to }) && (bordering(ctx, from, to) || commonThreat(ctx, from, to)))
+      && !baseGate(ctx, { from, to }) && (bordering(ctx, from, to) || commonThreat(ctx, from, to) && protectionReach(ctx, from, to)))
       .sort((a, b) => opinion(ctx, from, b) - opinion(ctx, from, a) || a.localeCompare(b));
     for (const to of candidates) {
       const threat = commonThreat(ctx, from, to), regard = opinion(ctx, from, to), attitude = courtAttitude(ctx, from, to);
       if (['rival', 'hostile', 'threat'].includes(attitude.kind) || regard < -25) continue;
       const reason = threat ? `Both courts are concerned by ${name(ctx, threat)}.` : 'A stable frontier would support the court’s plans.';
-      if (threat && strength(ctx, to) > strength(ctx, from) * 1.5 && !(t.allies || []).includes(to)
-        && propose(ctx, from, to, 'protection', reason)) break;
+      if (threat && strength(ctx, to) > strength(ctx, from) * 1.5 && !(t.allies || []).includes(to)) {
+        if (propose(ctx, from, to, 'protection', reason)) break;
+        continue; // A deferred petition must not become a replacement alliance popup.
+      }
       if ((threat || regard >= 100) && !(t.allies || []).includes(to)
         && propose(ctx, from, to, 'alliance', reason)) break;
       if (threat && n(t.treasury) > Math.max(150, courtBudget(ctx, from).reserve + 50) && strength(ctx, from) > strength(ctx, to) * 1.3

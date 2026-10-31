@@ -2826,6 +2826,10 @@ export function switchTagCore(ctx, from, to) {
       for (const key of ['client', 'sponsor', 'lord']) if (pledge[key] === from) pledge[key] = to;
     }
     rekey(courtDiplomacy.cooldowns, '>', true);
+    if (courtDiplomacy.protectionRequests && Object.hasOwn(courtDiplomacy.protectionRequests, from)) {
+      courtDiplomacy.protectionRequests[to] = courtDiplomacy.protectionRequests[from];
+      delete courtDiplomacy.protectionRequests[from];
+    }
   }
   for (const request of g.alliedOrders?.requests || []) {
     if (request.requester === from) request.requester = to;

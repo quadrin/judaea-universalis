@@ -54,7 +54,7 @@ assert(target, 'fixture needs an available formation');
 game.tags.ROM.courtPlan = { goals: [{ kind: 'recover', target: 'JUD', province: province.id }],
   memories: [{ kind: 'attacked', other: 'JUD', at: 0 }], attitudes: { JUD: { kind: 'rival' } } };
 game.courtDiplomacy = { offers: [{ id: 'formation', from: 'ROM', to: 'JUD', enemy: 'JUD' }],
-  history: [{ from: 'JUD', to: 'ROM' }], cooldowns: { 'JUD>ROM': 100 } };
+  history: [{ from: 'JUD', to: 'ROM' }], cooldowns: { 'JUD>ROM': 100 }, protectionRequests: { JUD: -300 } };
 assert(switchTagCore(ctx, 'JUD', target));
 assert.equal(game.tags.ROM.courtPlan.goals[0].target, target);
 assert.equal(game.tags.ROM.courtPlan.memories[0].other, target);
@@ -63,5 +63,7 @@ assert.equal(game.courtDiplomacy.offers[0].to, target);
 assert.equal(game.courtDiplomacy.offers[0].enemy, target);
 assert.equal(game.courtDiplomacy.history[0].from, target);
 assert(Object.keys(game.courtDiplomacy.cooldowns).some(key => key.split('>').includes(target)));
+assert.equal(game.courtDiplomacy.protectionRequests[target], -300);
+assert(!Object.hasOwn(game.courtDiplomacy.protectionRequests, 'JUD'));
 console.log('PASS goals, memories, attitudes, offers, and cooldowns follow a formed nation');
 console.log('court-memory: ALL PASS');
