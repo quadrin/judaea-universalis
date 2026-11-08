@@ -1,4 +1,5 @@
-// Ideas panel: reforms and era groups share one tab; technology keeps its ladders.
+// Ideas panel: reforms, national paths and era groups share one EU4-style
+// board on their own tab; technology keeps its ladders.
 // The existing purchase probes and every bookmark's point/unlock contracts hold.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { readFileSync } = await import('fs');
@@ -32,15 +33,18 @@ function blockTitleAbove(marker) {
 }
 
 // ---------------------------------------------------------------------------
-console.log('== reforms and era ideas share the Ideas tab ==');
+console.log('== reforms, national paths and era ideas share the Ideas board ==');
 {
-  ok(tabOf('data-ref="reforms"') === 'ideas', 'reforms are on Ideas');
-  ok(tabOf('data-ref="eraIdeas"') === 'ideas', 'era groups are on Ideas');
+  const BOARD = readFileSync(R + '/js/ui/ideas_board.js', 'utf8');
+  ok(tabOf('data-ref="ideasBoard"') === 'ideas', 'the board is on Ideas');
   ok(tabOf('class="np-techs"') === 'tech', 'ladders stay on Technology');
-  ok(blockTitleAbove('data-ref="reforms"') === 'Reforms', 'reforms keep their heading');
-  ok(blockTitleAbove('data-ref="eraIdeas"') === 'Ideas of the Age', 'era groups keep their heading');
+  ok(/\bIdeas$/.test(blockTitleAbove('data-ref="ideasBoard"') || ''), 'under the Ideas heading');
+  ok(/IDEA_TREES/.test(BOARD) && /eraIdeaGroupsFor/.test(BOARD) && /NATIONAL_IDEAS/.test(BOARD),
+    'the board collects reforms, era groups and national paths');
+  ok(/gov: \{ name: 'Government'/.test(BOARD) && /infl: \{ name: 'Influence'/.test(BOARD) && /mar: \{ name: 'Martial'/.test(BOARD),
+    'in one column for each kind of point');
   const ideasTT = (PANEL.match(/id: 'ideas',[^\n]*tt: '([^']*)'/) || [])[1] || '';
-  ok(/reform/i.test(ideasTT) && /idea/i.test(ideasTT), 'Ideas describes both kinds of group');
+  ok(/reform/i.test(ideasTT) && /path/i.test(ideasTT) && /idea/i.test(ideasTT), 'Ideas describes every kind of group');
 }
 
 // ---------------------------------------------------------------------------
@@ -67,6 +71,8 @@ console.log('== §198: nothing else moved ==');
     'the reform buy path is untouched');
   ok(/closest\('\[data-eraidea\]'\)/.test(clickBody) && /actions\.buyEraIdea/.test(clickBody),
     'and so is the era-idea buy path');
+  ok(/closest\('\[data-ni-buy\]'\)/.test(clickBody) && /actions\.buyNationalIdea/.test(clickBody),
+    'and national paths are adopted through the same delegation');
   ok(/closest\('\[data-tech\]'\)/.test(clickBody) && /actions\.buyTech/.test(clickBody),
     'and the ladders the era ideas sit under still buy');
   ok(/data-tab-go/.test(clickBody.slice(0, clickBody.indexOf("closest('[data-act]"))),

@@ -40,7 +40,8 @@ function note(ctx, tag, text, bad = false) {
 function costWhy(t, cost) {
   if (num(t.treasury) < num(cost.gold)) return `Requires ${cost.gold} talents.`;
   if (num(t.manpower) < num(cost.manpower)) return `Requires ${cost.manpower} manpower.`;
-  for (const k of ['gov', 'infl', 'mar']) if (num(t.points?.[k]) < num(cost[k])) return `Requires ${cost[k]} ${k} points.`;
+  const names = { gov: 'government', infl: 'influence', mar: 'martial' };
+  for (const k of ['gov', 'infl', 'mar']) if (num(t.points?.[k]) < num(cost[k])) return `Requires ${cost[k]} ${names[k]} points.`;
   return '';
 }
 function pay(t, cost) {
@@ -71,9 +72,8 @@ export function nationalIdeasInfo(ctx, tag = ctx.game.playerTag) {
   return { slots, used, effects: nationalIdeaEffects(t), nextSlotTech: (ctx.bookmark?.techBase || 0) + 3,
     groups: Object.entries(NATIONAL_IDEAS).map(([key, d]) => {
       const owned = nationalIdeaLevel(t, key), cost = nationalIdeaCost(owned);
-      const whyNot = owned >= 3 ? 'Group complete.' : key === 'dynasty' && !mechanicOn(ctx, 'clientKingdoms')
-        ? 'This age has no client crowns.' : !owned && used >= slots ? 'All national path slots are occupied.'
-          : costWhy(t, { [d.point]: cost });
+      const whyNot = owned >= 3 ? 'Group complete.' : !owned && used >= slots ? 'All national path slots are occupied.'
+        : costWhy(t, { [d.point]: cost });
       return { ...d, key, owned, cost, canBuy: !whyNot, whyNot };
     }) };
 }
@@ -384,6 +384,39 @@ function mutiny(ctx, tag, p, commander, label) {
   if (ctx.game.armies[id]) engageIfNeeded(ctx, ctx.game.armies[id]);
   p.unrest = num(p.unrest) + 3;
   note(ctx, tag, `${p.name} has risen against us after local loyalty collapsed.`, true);
+}
+
+// The player-facing Operations were retired: national paths are now passive
+// idea groups. A save from before may hold a human court's concessions,
+// claimants, colonies, networks or city charters, which the interface can no
+// longer manage. Wind them down once on load, returning what they stored, so
+// no hidden upkeep continues. AI courts keep theirs; they use the same rules.
+export function retireNationalOperations(ctx) {
+  const g = ctx.game;
+  g.flags ||= {};
+  if (g.flags.nationalOperationsRetired) return;
+  g.flags.nationalOperationsRetired = true;
+  for (const [tag, t] of Object.entries(g.tags || {})) {
+    const s = t?.nationalStrategy;
+    if (!s || !isHumanChair(g, tag)) continue;
+    let closed = 0, gold = 0, men = 0;
+    for (const id of Object.keys(s.ports || {})) { delete s.ports[id]; closed++; }
+    for (const target of Object.keys(s.claimants || {})) {
+      const o = g.tags[target];
+      if (o?.heir?.nationalSponsor === tag) o.heir = null;
+      delete s.claimants[target]; closed++;
+    }
+    for (const [id, v] of Object.entries(s.colonies || {})) { men += num(v.reserves); delete s.colonies[id]; closed++; }
+    for (const id of Object.keys(s.networks || {})) { delete s.networks[id]; closed++; }
+    for (const [id, v] of Object.entries(s.cities || {})) {
+      clearModifier(ctx.byId(Number(id)), 'national_city', tag);
+      gold += num(v.funds); men += num(v.reserves); delete s.cities[id]; closed++;
+    }
+    if (!closed) continue;
+    t.treasury = num(t.treasury) + Math.floor(gold); t.manpower = num(t.manpower) + Math.floor(men);
+    note(ctx, tag, `National operations have ended: ${closed} holding${closed === 1 ? '' : 's'} closed`
+      + (gold || men ? `, returning ${Math.floor(gold)} talents and ${Math.floor(men)} recruits.` : '.'));
+  }
 }
 
 // Plain records live on tags and survive ordinary saves and formed nations.

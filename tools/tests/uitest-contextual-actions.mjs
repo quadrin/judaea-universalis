@@ -1,4 +1,5 @@
-// National paths use the real panel and simulation, without rasterizing the map.
+// Contextual decisions and allied coordination use the real panel and
+// simulation, without rasterizing the map. National paths have no Operations.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
@@ -38,23 +39,14 @@ try {
     };
     window.loadNational('66ce');
   });
-  // Every operation has a stable contextual home before its idea is adopted.
-  const tabs = { maritime:'trade', colonies:'war', subversion:'world', dynasty:'world', federation:'court' };
-  for (const [group,tab] of Object.entries(tabs)) {
-    await page.evaluate(tab => window.nationalTest.panel.open(null, tab), tab);
-    assert.equal(await page.locator('.national-operation:visible').count(), 0, 'tabs show no operation forms by default');
-    await page.evaluate(group => window.nationalTest.panel.open(null, null, group), group);
-    assert(await page.locator(`[data-national-group="${group}"]`).isVisible());
-    assert((await page.locator(`[data-national-group="${group}"] [data-ni-act]`).count()) > 0);
-    assert((await page.locator(`[data-national-group="${group}"] [data-ni-act]`).evaluateAll(xs => xs.every(x => x.disabled))));
-    assert.match(await page.locator(`[data-national-group="${group}"]`).textContent(), /Requires .*tier 1/);
-    await page.keyboard.press('Escape');
-    assert.equal(await page.locator('dialog[open]').count(), 0);
+  // National paths are passive ideas: no tab offers Operations, before or after adoption.
+  for (const adopt of [false, true]) {
+    if (adopt) await page.evaluate(() => { const { actions } = window.nationalTest; actions.buyNationalIdea('maritime'); actions.buyNationalIdea('subversion'); });
+    for (const tab of ['court', 'war', 'trade', 'world']) {
+      await page.evaluate(tab => window.nationalTest.panel.open(null, tab), tab);
+      assert.equal(await page.locator('[data-na-open], [data-ni-act], .national-operation, dialog').count(), 0, tab);
+    }
   }
-  await page.evaluate(() => window.nationalTest.panel.open(null, 'court'));
-  assert.equal(await page.locator('.national-operation:visible').count(), 0);
-  await page.evaluate(() => window.nationalTest.panel.open(null, 'world'));
-  assert.equal(await page.locator('.national-operation:visible').count(), 0);
   await page.evaluate(() => window.nationalTest.panel.open(null, 'missions'));
   assert.equal(await page.locator('#nation-panel > [data-tab="missions"] [data-cs-act], #nation-panel > [data-tab="missions"] [data-ni-act]').count(), 0);
   await page.evaluate(() => window.nationalTest.panel.open(null, 'war'));
@@ -64,7 +56,7 @@ try {
   await reform.click();
   assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.treasury), before - 220);
   assert(await page.evaluate(() => window.nationalTest.actions.getChapterStrategy().projects.some(p => p.key === 'regulars')));
-  console.log('PASS all five paths expose locked operations in context; Missions has no operational controls; military reform executes in Defense');
+  console.log('PASS no tab offers national Operations before or after adoption; Missions has no operational controls; military reform executes in Defense');
 
   await page.evaluate(async () => {
     const { ctx, actions, panel } = window.nationalTest, g = ctx.game;

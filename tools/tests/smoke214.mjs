@@ -216,7 +216,8 @@ function target(s, key) {
     const ch = scene(e.bookmark.id); const report = ch.actions.getNationalStrategy();
     assert.equal(report.groups.length, 5); assert.equal(report.actions.length, Object.keys(NATIONAL_ACTIONS).length);
   assert(report.actions.every(a => !a.unlocked && !a.info.ok && /Requires .*tier [123]/.test(a.info.why)), 'old saves discover contextual actions while their missing tiers remain locked');
-    assert.equal(report.groups.find(g => g.key === 'dynasty').canBuy, e.bookmark.mechanics?.clientKingdoms === false ? false : true);
+    // Dynastic Ambition is a passive idea group now, open in every age.
+    assert.equal(report.groups.find(g => g.key === 'dynasty').canBuy, true);
   }
   console.log('PASS old saves, JSON round trip of active construction, real tick and every bookmark’s idea menu');
 }

@@ -1,40 +1,43 @@
-// National paths grant permanent capabilities and contextual actions. Effects
-// are derived from adopted tiers, so restored saves gain them without migration.
+// National paths are idea groups that take a slot: two at the start, a third
+// at government technology base + 3. Each tier is a permanent passive bonus.
+// Effects are derived from adopted tiers, so restored saves gain them without
+// migration. (The player-facing Operations that once came with these paths
+// were retired; NATIONAL_ACTIONS below remains the rule book AI courts use.)
 export const NATIONAL_IDEAS = {
   maritime: { name: 'Maritime Leagues', icon: 'ship', point: 'infl',
-    desc: 'Build a network of foreign ports, protect its privileges and assemble a league fleet.',
+    desc: 'Factors in foreign markets, privileges in their harbors and a fleet paid for by the trade it guards.',
     tiers: [
-      { name: 'Overseas Factors', icon: 'amphora', effects: { tradeMult: 1.15 }, desc: '+15% trade income throughout your markets. Negotiate up to four foreign warehouses. Pay the host rent; collect trade at their markets. Blockades suspend the privilege.' },
-      { name: 'Harbor Concessions', icon: 'anchor', effects: { navalMult: 1.10 }, desc: '+10% naval combat strength. Upgrade warehouses into supply bases. Friendly concession ports can supply expeditions by sea; hostility, occupation or blockade closes them.' },
-      { name: 'The Maritime League', icon: 'ship', effects: { tradeMult: 1.15, navalMult: 1.10 }, desc: 'A further +15% trade income and +10% naval combat strength. Invite smaller port courts into a league, commission their ships and contest disloyal rival concessions. Members can withdraw.' },
+      { name: 'Overseas Factors', icon: 'amphora', effects: { tradeMult: 1.15 }, desc: 'Agents in foreign markets buy cheap and sell dear: +15% trade income.' },
+      { name: 'Harbor Concessions', icon: 'anchor', effects: { navalMult: 1.10 }, desc: 'Friendly harbors refit our ships on our terms: +10% naval combat strength.' },
+      { name: 'The Maritime League', icon: 'ship', effects: { tradeMult: 1.15, navalMult: 1.10 }, desc: 'Smaller ports sail under our protection: a further +15% trade income and +10% naval combat strength.' },
     ] },
   dynasty: { name: 'Dynastic Ambition', icon: 'laurel', point: 'infl',
-    desc: 'Shelter a claimant, negotiate an inheritance or fight to install a dependent crown.',
+    desc: 'A house that outlives its head: a secure succession and a wider web of royal correspondence.',
     tiers: [
-      { name: 'A Court in Exile', icon: 'laurel', effects: { legitimacyAdd: .15 }, desc: '+0.15 legitimacy each month. Shelter up to two named claimants to reachable hereditary courts. Their households require monthly funding.' },
-      { name: 'Succession Compacts', icon: 'scroll', effects: { diploSeats: 1 }, desc: '+1 diplomatic relationship capacity. A friendly heirless crown may accept your claimant as heir. The agreement ends if its terms are broken; accession opens a protection offer.' },
-      { name: 'The War for the Crown', icon: 'swords', effects: { legitimacyAdd: .15, diploSeats: 1 }, desc: 'A further +1 diplomatic relationship capacity and +0.15 monthly legitimacy. Press a claimant’s cause in a succession war. An accepted client settlement installs the claimant. A restored ruler can grow strong enough to defy you.' },
+      { name: 'A Court in Exile', icon: 'laurel', effects: { legitimacyAdd: .15 }, desc: 'Displaced princes wait on our throne and praise it: +0.15 legitimacy each month.' },
+      { name: 'Succession Compacts', icon: 'scroll', effects: { diploSeats: 1 }, desc: 'Marriages and inheritance treaties with neighboring crowns: +1 diplomatic relationship capacity.' },
+      { name: 'The War for the Crown', icon: 'swords', effects: { legitimacyAdd: .15, diploSeats: 1 }, desc: 'A dynasty other crowns must reckon with: a further +0.15 legitimacy each month and +1 diplomatic relationship capacity.' },
     ] },
   colonies: { name: 'Military Colonies', icon: 'helmet', point: 'mar',
-    desc: 'Settle soldiers, build local reserves and decide how much power their commanders should keep.',
+    desc: 'Soldiers settled on the land they defend: deeper reserves, faster reinforcement and a cheaper army.',
     tiers: [
-      { name: 'Veterans on the Land', icon: 'grain', effects: { manpowerMult: 1.15 }, desc: '+15% national manpower capacity and recovery. Unlock frontier expeditions, frontier settlement and annexation. Station veterans in settled provinces to build local reserves, in exchange for 40% autonomy.' },
-      { name: 'Military Districts', icon: 'helmet', effects: { reinforceMult: 1.20 }, desc: '+20% army reinforcement speed. Give a colony a named commander and larger reserves. Districts cost upkeep; unpaid or alienated commanders can mutiny.' },
-      { name: 'The Common Command', icon: 'swords', effects: { maintMult: .85, forceLimitMult: 1.15 }, desc: '−15% army maintenance and +15% land force limit. Mobilize a district under its own general, or negotiate its return to central administration. Integrating an unwilling commander risks a rising.' },
+      { name: 'Veterans on the Land', icon: 'grain', effects: { manpowerMult: 1.15 }, desc: 'Discharged soldiers farm the frontier: +15% national manpower capacity and recovery. Unlocks expeditions into unclaimed waste: send, settle and annex them from the province panel.' },
+      { name: 'Military Districts', icon: 'helmet', effects: { reinforceMult: 1.20 }, desc: 'Each region keeps its own depot and drill ground: +20% army reinforcement speed.' },
+      { name: 'The Common Command', icon: 'swords', effects: { maintMult: .85, forceLimitMult: 1.15 }, desc: 'The districts answer to one staff: −15% army maintenance and +15% land force limit.' },
     ] },
   subversion: { name: 'Subversion', icon: 'dagger', point: 'infl',
-    desc: 'Develop contacts inside rival provinces and choose when to risk exposing them.',
+    desc: 'Friends inside the walls of rival cities: sieges end sooner when someone opens a door.',
     tiers: [
-      { name: 'Local Contacts', icon: 'quill', effects: { siegeMult: 1.10 }, desc: '+10% siege progress and +1 monthly strength for funded networks outside counterintelligence. Maintain up to three provincial networks. Strength grows with funding; counterintelligence and unpaid agents increase exposure.' },
-      { name: 'A Party in the Streets', icon: 'flame', effects: { siegeBonus: 1 }, desc: '+1 siegecraft, improving breach rolls and daily progress. Prepare a six-month rising where unrest or a weak throne makes rebellion possible. The target can uncover and purge the operation.' },
-      { name: 'The Keys to the City', icon: 'tower', effects: { siegeMult: 1.15 }, desc: 'A further +15% siege progress; funded operations gain 2 less exposure monthly outside counterintelligence. Buy collaboration during a siege, or negotiate a disaffected frontier governor’s defection during war. Both require developed networks and preparation.' },
+      { name: 'Local Contacts', icon: 'quill', effects: { siegeMult: 1.10 }, desc: 'Informers inside the town report its stores and its quarrels: +10% siege progress.' },
+      { name: 'A Party in the Streets', icon: 'flame', effects: { siegeBonus: 1 }, desc: 'Our partisans start fires and spread despair: +1 siegecraft, improving breach rolls and daily siege progress.' },
+      { name: 'The Keys to the City', icon: 'tower', effects: { siegeMult: 1.15 }, desc: 'A paid gatekeeper is worth a siege engine: a further +15% siege progress.' },
     ] },
   federation: { name: 'Federated Rule', icon: 'scales', point: 'gov',
-    desc: 'Charter self-governing cities, negotiate common service and decide whether to centralize.',
+    desc: 'Self-governing cities bound into one commonwealth: richer towns, calmer provinces and faster integration.',
     tiers: [
-      { name: 'City Charters', icon: 'bricks', effects: { incomeMult: 1.10 }, desc: '+10% provincial tax and production income across the realm. Grant non-capital cities fiscal, levy or naval charters. Their councils retain autonomy and save money or recruits for agreed contributions.' },
-      { name: 'The Federal Council', icon: 'scales', effects: { unrestAll: -.75 }, desc: '−0.75 unrest in every province. Two loyal chartered cities can pool their reserves for a common army. Cities with low loyalty refuse to contribute.' },
-      { name: 'One Commonwealth', icon: 'scroll', effects: { incomeMult: 1.10, integrateMult: 1.25 }, desc: 'A further +10% provincial tax and production income and +25% cultural integration speed. Begin twelve-month negotiations to integrate a chartered city. Fund its supporters or renew its privileges if opposition threatens rebellion.' },
+      { name: 'City Charters', icon: 'bricks', effects: { incomeMult: 1.10 }, desc: 'Councils that keep a share of their taxes collect the rest willingly: +10% provincial tax and production income.' },
+      { name: 'The Federal Council', icon: 'scales', effects: { unrestAll: -.75 }, desc: 'Every city has a voice at the common table: −0.75 unrest in every province.' },
+      { name: 'One Commonwealth', icon: 'scroll', effects: { incomeMult: 1.10, integrateMult: 1.25 }, desc: 'Many cities, one citizenship: a further +10% provincial tax and production income and +25% cultural integration speed.' },
     ] },
 };
 
@@ -64,7 +67,7 @@ export function nationalIdeaSlots(tag, bookmark) {
     (tag?.tech?.gov || 0) >= (bookmark?.techBase || 0) + 3 ? 3 : 2);
 }
 
-// Costs are paid only after live validation; the same definitions drive the UI.
+// AI courts' national actions. Costs are paid only after live validation.
 export const NATIONAL_ACTIONS = {
   expedition: { group: 'colonies', tier: 1, name: 'Frontier expedition', icon: 'flag', target: 'frontier', cost: {}, desc: 'Detach soldiers from an adjacent army to establish a supplied frontier camp. The camp needs a controlled border province to survive.' },
   settle: { group: 'colonies', tier: 1, name: 'Settle frontier camp', icon: 'bricks', target: 'settlement', cost: {}, desc: 'Raise an expedition camp by one habitation tier over six months, gaining development before annexation. Invest in owned provinces from their development controls.' },
