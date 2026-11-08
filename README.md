@@ -118,21 +118,28 @@ rally province and merge. A manual movement order takes over from the rally.
 Selections and live updates preserve the dialog's scroll position and keyboard
 focus, and the opening animation runs only when the dialog opens.
 
-**Ideas.** Open your court with the topbar flag, then select **Ideas**.
-National reforms and the era's idea groups now share this panel.
-Each idea has an icon: select it to read its effect and see whether it is
-completed, next, or locked. The adoption button shows the next idea's cost;
-the point balances and technology requirements are visible alongside the
-groups. Technology and institutions remain in **Technology**. Foreign courts
-show their ideas for inspection, with purchasing controls hidden.
+**Ideas.** Open your court with the topbar flag, then select **Ideas**. The tab
+is laid out like EU4's idea screen: three columns, **Government**, **Influence**
+and **Martial**, each with that point's balance in its header. Every idea group
+is one card: an emblem, its name, a row of idea icons (lit when adopted) and an
+adopt button that shows the next idea's cost. A tag on each card names its kind:
+**Reform** (open to every realm), **Path** (a national path; it takes a slot) or
+**Age** (an idea of the age; a lock shows the technology level that opens it).
+Hover over an idea to read it, or select it to show its effect inside the card.
+On a wide screen the panel widens to hold all three columns; on a phone they
+stack. Technology and institutions remain in **Technology**. Foreign courts
+show the groups they have adopted, with purchasing controls hidden.
 
-**National paths.** Adopt ideas in **Court → Ideas**. Each tier adds lasting
-bonuses as well as unlocking actions. Use maritime concessions in **Trade**,
-military colonies in **Defense**, and diplomatic or covert operations in **World**.
-Each tab has a compact **Operations** button that opens the relevant actions
-in a separate dialog; city charters are available from Court's Operations.
-Actions remain disabled until the required idea is adopted. Escape or Close
-returns to the tab without expanding its layout.
+**National paths.** Maritime Leagues, Dynastic Ambition, Military Colonies,
+Subversion and Federated Rule are idea groups with three tiers of permanent
+bonuses. The first idea of a path takes one of your **national path slots**:
+two at the start and a third at government technology base + 3; the slot bar
+above the columns shows them. Paths no longer come with Operations dialogs.
+Veterans on the Land (Military Colonies) also lets you send expeditions into
+unclaimed waste, settle the camp and annex it: select the waste province and
+use the buttons in its panel. Saves from earlier versions close any old
+concessions, claimants, colonies, networks and city charters once on load and
+return their stored talents and recruits.
 
 **Allied coordination.** During a shared war, open **Court → World → Allied
 coordination** to request defense of a province, relief of a siege, or an

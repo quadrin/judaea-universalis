@@ -103,7 +103,7 @@ console.log('== the chapter is with the missions, not with the realm\'s facts ==
   // blocks it keeps render for anyone.
   ok(TEMPLATE.indexOf('<div class="pp-grid" data-tab="crown">') > 0,
     'Crown still opens with its unhidden vitals grid');
-  ok(tabOf('data-ref="reforms"') === 'ideas' && tabOf('data-ref="doctrineBlock"') === 'crown',
+  ok(tabOf('data-ref="ideasBoard"') === 'ideas' && tabOf('data-ref="doctrineBlock"') === 'crown',
     '  and keeps its character while reforms move to Ideas');
 }
 

@@ -91,25 +91,24 @@ console.log('== a tab shows its own sections and hides the rest ==');
 
 console.log('== ideas have a dedicated panel ==');
 {
-  const reforms = page.locator('#nation-panel [data-ref="reforms"]');
-  const eras = page.locator('#nation-panel [data-ref="eraIdeasBlock"]');
+  const board = page.locator('#nation-panel [data-ref="ideasBoard"]');
   const tech = page.locator('#nation-panel [data-ref="tech"]');
   await page.locator('#nation-panel .np-tab[data-tab-go="ideas"]').click();
-  ok(await reforms.isVisible() && await eras.isVisible(), 'Ideas shows reforms and era groups together');
-  ok(!(await tech.isVisible()), 'technology has its own tab');
-  ok(await page.locator('#nation-panel [data-ref="reforms"] .np-idea-step').count() === 15,
+  ok(await board.isVisible(), 'Ideas shows the idea board');
+  ok(await page.locator('#nation-panel .ib-col').count() === 3, 'in three columns: government, influence and martial');
+  ok(await page.locator('#nation-panel [data-idea-group^="reform:"] .ib-idea').count() === 15,
     'the three universal groups show all fifteen idea icons');
+  ok(await page.locator('#nation-panel [data-idea-group^="path:"]').count() === 5, 'the five national paths sit beside them');
   const inspect = page.locator('[data-idea-inspect="reform:civ"][data-tier="4"]');
   const pausedBefore = await page.evaluate(() => window._ctx.game.paused);
   await inspect.focus(); await page.keyboard.press('Space');
   ok(await page.evaluate(() => window._ctx.game.paused) === pausedBefore, 'keyboard inspection leaves the game clock alone');
-  ok((await page.locator('[data-idea-group="reform:civ"] .np-idea-detail').textContent()).includes('The Higher Law'),
+  ok((await page.locator('[data-idea-group="reform:civ"] .ib-detail').textContent()).includes('The Higher Law'),
     'selecting an icon shows its name and effect');
   await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
-  ok(await tech.isVisible() && !(await reforms.isVisible()) && !(await eras.isVisible()),
-    'Technology hides both idea sections');
+  ok(await tech.isVisible() && !(await board.isVisible()), 'Technology hides the idea board');
   await page.locator('#nation-panel .np-tab[data-tab-go="crown"]').click();
-  ok(!(await reforms.isVisible()), 'Crown no longer duplicates reforms');
+  ok(!(await board.isVisible()), 'Crown no longer duplicates reforms');
 }
 
 console.log('== the last three sections are filed by what they are (SPEC §203) ==');
@@ -182,7 +181,7 @@ console.log('== the chapter and the patterns follow the same rule (SPEC §204) =
   await page.waitForTimeout(150);
   ok(!(await chapter.isVisible()), 'Crown no longer carries The Chapters');
   ok(await page.locator('#nation-panel [data-ref="religion"]').isVisible()
-    && !(await page.locator('#nation-panel [data-ref="reforms"]').isVisible()),
+    && !(await page.locator('#nation-panel [data-ref="ideasBoard"]').isVisible()),
     '  and keeps its facts while reforms live on Ideas');
 
   await page.locator('#nation-panel .np-tab[data-tab-go="missions"]').click();

@@ -46,7 +46,7 @@ import { ARMS, armGenName, unitMoveCue, dominantArm as dominantArmOf } from '../
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { eraIdeaGroupsFor, eraIdeaUnlocked, eraIdeaCost, ERA_IDEA_TIERS } from '../data/era_ideas.js';
-import { nationalIdeasInfo, buyNationalIdea, nationalStrategyView, nationalActionInfo, runNationalAction, consolidateNationalPaths } from './national_ideas.js';
+import { nationalIdeasInfo, buyNationalIdea, nationalStrategyView, nationalActionInfo, runNationalAction, consolidateNationalPaths, retireNationalOperations } from './national_ideas.js';
 import { initializeRoyalCommands, linkNamedRoyalCommands, syncRoyalCommands, royalPersonFields,
   royalCommandsView, commissionRoyalCommand, recallRoyalCommand } from './royal_command.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName, computeTechEffects, DOCTRINES, techLevelName } from '../data/tech.js';
@@ -581,6 +581,7 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
   } catch (e) { console.warn('[sim/init] modifier rebuild failed:', e); }
   initializeRoyalCommands(ctx, isNewCampaign);
   consolidateNationalPaths(ctx);
+  retireNationalOperations(ctx);
   return ctx;
 }
 

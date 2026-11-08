@@ -135,7 +135,9 @@ const RISING_LABELS = {
         <div class="pp-build-title">The Unclaimed Waste</div>
         <div class="pp-constr hidden" data-ref="wasteCampRow"></div>
         <div class="pp-build-grid">
-          <button class="pp-build-btn" data-open-ideas="colonies" data-ref="wasteIdeas">${icon('grain')}<span>Military Colonies</span></button>
+          <button class="pp-build-btn hidden" data-waste="expedition" data-ref="wasteExpedition">${icon('flag')}<span>Send an Expedition</span></button>
+          <button class="pp-build-btn hidden" data-waste="settle" data-ref="wasteSettle">${icon('bricks')}<span>Plant a Settlement</span></button>
+          <button class="pp-build-btn hidden" data-waste="annex" data-ref="wasteAnnex">${icon('scales')}<span>Annex the Land</span></button>
         </div>
       </div>
       <div class="pp-unrest" data-ref="unrestRow">
@@ -311,6 +313,15 @@ const RISING_LABELS = {
       }
       cedeArmed = 0;
       try { actions.cedeProvince(provId, to); } catch (err) { warnOnce('cede-province', err); }
+      refresh();
+    });
+    refs.wasteBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-waste]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      const fn = b.dataset.waste === 'expedition' ? 'sendExpedition'
+        : b.dataset.waste === 'settle' ? 'settleProvince' : 'annexWasteland';
+      try { if (typeof actions[fn] === 'function') actions[fn](provId); }
+      catch (err) { warnOnce('waste-' + b.dataset.waste, err); }
       refresh();
     });
     // Mothball the fort, or man it again (SPEC §293).
@@ -844,8 +855,25 @@ const RISING_LABELS = {
         `${icon('flag')}<span class="pp-constr-name">${esc(label)}</span>`
         + `<span class="pp-constr-left">${esc(right)}</span>`);
     }
-    refs.wasteIdeas.dataset.ideasProvince = String(provId);
-    refs.wasteIdeas.dataset.tt = 'Frontier expeditions, settlement development and annexation are managed in Ideas → Military Colonies.';
+    // Each step is done here, on the land itself. The sim gates all three on
+    // Military Colonies: Veterans on the Land, and says so in `why`.
+    const step = (btn, d, terms) => {
+      btn.classList.toggle('hidden', !(d && d.show));
+      if (!(d && d.show)) return;
+      btn.classList.toggle('disabled', !d.can);
+      btn.dataset.tt = d.can ? terms : `${d.why || 'Not possible now.'}\n――――――\n${terms}`;
+    };
+    const exp = info.expedition || {};
+    step(refs.wasteExpedition, exp, `Send an Expedition — ${fmtInt(exp.men || 0)} men and ${exp.cost} talents\n`
+      + 'Soldiers from an adjacent army march into the waste and pitch camp. '
+      + 'Plant a settlement there and the land can be annexed.');
+    const st = info.settle;
+    step(refs.wasteSettle, st, `Plant a Settlement — ${st ? st.cost : 0} influence points\n`
+      + `Over a few months the camp grows into a ${String((st && st.toName) || 'frontier').toLowerCase()} `
+      + 'of our own people — the step annexation waits on.');
+    const ax = info.annex || {};
+    step(refs.wasteAnnex, ax, `Annex the Land — ${ax.cost} governance points\n`
+      + 'The planted waste enters the realm: owned, passable (though still harsh), and counted.');
   }
 
   // 'Assault the walls' — shown while our side besieges; enabled when the sim

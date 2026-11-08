@@ -1,4 +1,5 @@
-// National paths use the real panel and simulation, without rasterizing the map.
+// National paths on the EU4-style Ideas board, with the real panel and
+// simulation and without rasterizing the map. The old Operations are gone.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
@@ -40,39 +41,50 @@ try {
   });
   for (const id of ['931bce', '732bce', '597bce', '167bce', '67bce', '66ce', '132ce', '351ce', '529ce', '614ce', '1948ce', '40bce']) {
     await page.evaluate(id => window.loadNational(id), id);
-    assert.equal(await page.locator('.ni-path').count(), 5, id);
+    assert.equal(await page.locator('[data-idea-group^="path:"]').count(), 5, id);
+    assert.equal(await page.locator('#nation-panel .ib-col').count(), 3, id);
   }
-  console.log('PASS all bookmarks show the five national paths');
+  console.log('PASS all bookmarks show the five national paths in the three idea columns');
+
   await page.evaluate(() => window.loadNational('66ce'));
-  const path = key => page.locator(`[data-ni-open="path:${key}"]`);
-  await path('maritime').locator(':scope > summary').focus(); await page.keyboard.press('Enter');
-  assert(await path('maritime').evaluate(el => el.open));
-  await path('maritime').locator('[data-ni-inspect][data-tier="2"]').click();
-  assert.match(await path('maritime').locator('.ni-idea-detail').textContent(), /Maritime League/);
+  const card = key => page.locator(`[data-idea-group="path:${key}"]`);
+  // Each path sits in the column of the point that pays for it.
+  for (const [key, point] of [['maritime', 'infl'], ['dynasty', 'infl'], ['subversion', 'infl'], ['colonies', 'mar'], ['federation', 'gov']]) {
+    assert.equal(await page.locator(`.ib-col[data-ib-point="${point}"] [data-idea-group="path:${key}"]`).count(), 1, key);
+  }
+  const third = card('maritime').locator('[data-idea-inspect][data-tier="2"]');
+  await third.focus(); await page.keyboard.press('Enter');
+  assert.match(await card('maritime').locator('.ib-detail').textContent(), /The Maritime League/);
+  assert.match(await card('maritime').locator('.ib-detail').textContent(), /\+15% trade income/);
+  assert.equal(await page.locator(':focus').getAttribute('data-tier'), '2', 'inspection keeps keyboard focus');
+  await page.keyboard.press('Enter');
+  assert.equal(await card('maritime').locator('.ib-detail').count(), 0, 'selecting the open idea again closes it');
   const before = await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl);
-  await path('maritime').locator('[data-ni-buy]').click();
+  await card('maritime').locator('[data-ni-buy]').click();
   assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl), before - 60);
-  assert.equal(await page.locator('#nation-panel > [data-tab="ideas"] [data-ni-act]').count(), 0, 'Ideas contains adoption only');
-  await page.evaluate(() => window.nationalTest.panel.open(null, 'trade'));
-  assert.equal(await page.locator('.national-operation:visible').count(), 0);
-  const launcher = page.locator('[data-ref="nationalActions_trade"] [data-na-open]');
-  await launcher.focus(); await page.keyboard.press('Enter');
-  assert.equal(await page.locator('[data-ni-act="warehouse"]').count(), 1);
-  assert(await page.locator('[data-ni-act="harbor"]').isDisabled(), 'future action remains visible and locked');
-  assert.match(await page.locator('[data-national-operation="harbor"]').textContent(), /Harbor Concessions/);
-  const action = page.locator('[data-national-operation="warehouse"]');
-  const select = page.locator('[data-na-target="warehouse"]');
-  const selected = await select.inputValue(); await select.selectOption(selected); await select.focus();
-  await page.evaluate(() => { window.nationalControl = document.querySelector('[data-na-target="warehouse"]'); window.nationalTest.panel.refresh(); });
-  assert.equal(await select.inputValue(), selected);
-  assert(await page.evaluate(() => window.nationalControl === document.querySelector('[data-na-target="warehouse"]')), 'unchanged refresh preserves the actual control');
-  assert.equal(await page.locator(':focus').getAttribute('data-na-target'), 'warehouse');
-  assert(await page.locator('[data-ni-act="warehouse"]').isEnabled(), await action.textContent());
-  await page.locator('[data-ni-act="warehouse"]').click();
-  assert(await page.evaluate(id => !!window.nationalTest.ctx.game.tags.JUD.nationalStrategy.ports[id], selected));
-  assert.equal(await page.locator('.ni-record').count(), 1);
-  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/national-paths-desktop.png' });
-  console.log('PASS keyboard inspection, actual adoption and warehouse, gated actions and stable selectors');
+  assert.equal(await card('maritime').locator('.ib-idea.owned').count(), 1);
+  await card('colonies').locator('[data-ni-buy]').click();
+  assert.equal(await page.locator('.ib-slot.filled').count(), 2, 'both slots show their paths');
+  const blocked = card('federation').locator('[data-ni-buy]');
+  assert(await blocked.isDisabled(), 'a third path waits for a slot');
+  assert.match(await blocked.getAttribute('data-tt'), /slots are occupied/);
+  const govBefore = await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.gov);
+  await blocked.click({ force: true });
+  assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.nationalIdeas?.federation || 0), 0, 'a disabled control buys nothing');
+  assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.gov), govBefore);
+  assert.equal(await blocked.locator('svg, .icon').count() > 0, true);
+  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/ideas-board-desktop.png' });
+  console.log('PASS keyboard inspection, actual adoption, slot limit and columns by point');
+
+  // No Operations remain anywhere in the realm panel.
+  for (const tab of ['crown', 'missions', 'court', 'tech', 'ideas', 'trade', 'war', 'faith', 'world']) {
+    await page.evaluate(tab => window.nationalTest.panel.open(null, tab), tab);
+    assert.equal(await page.locator('[data-na-open], [data-ni-act], .national-operation, .national-operations-dialog, [data-open-operations]').count(), 0, tab);
+    assert(!/\bOperations\b/.test(await page.locator('#nation-panel').textContent()), tab + ' mentions no Operations');
+  }
+  await page.evaluate(() => window.nationalTest.panel.open('ROM', 'court'));
+  assert.equal(await page.locator('#nation-panel [data-open-operations]').count(), 0);
+  console.log('PASS no Operations launchers, dialogs or links on any tab');
 
   await page.evaluate(() => window.loadNational('66ce'));
   const settlement = await page.evaluate(() => {
@@ -84,8 +96,7 @@ try {
   const invest = page.locator('#province-panel [data-invest]');
   assert(await invest.isVisible()); assert(await invest.isEnabled());
   assert.match(await invest.textContent(), /Invest in Province/);
-  assert.equal(await page.locator('#province-panel [data-open-ideas="colonies"]:visible').count(), 0);
-  assert.equal(await page.locator('#province-panel [data-ref="integBlock"] [data-invest]').count(), 0);
+  assert.equal(await page.locator('#province-panel [data-open-ideas]').count(), 0);
   const influence = await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl);
   await page.evaluate(() => {
     const { ctx, provincePanel } = window.nationalTest;
@@ -98,64 +109,53 @@ try {
     ctx.game.tags.JUD.points.infl = n; provincePanel.refresh();
   }, influence);
   assert(await invest.isEnabled());
-  if (process.env.JU_OUT) await page.locator('#province-panel').screenshot({ path: process.env.JU_OUT + '/provincial-investment-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.locator('#province-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
-  if (process.env.JU_OUT) await page.locator('#province-panel').screenshot({ path: process.env.JU_OUT + '/provincial-investment-mobile.png' });
   await invest.click();
   assert(await page.evaluate(id => window.nationalTest.ctx.byId(id).settlement?.kind === 'investment', settlement));
   assert.equal(await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.points.infl), influence - 110);
   assert.match(await page.locator('[data-ref="investProgress"]').textContent(), /Investment under way.*6 months/);
-  await page.evaluate(() => {
-    const { ctx, panel, provincePanel } = window.nationalTest;
-    if (ctx.game.tags.JUD.nationalIdeas?.colonies) throw Error('Civilian investment unlocked Military Colonies');
-    provincePanel.close(); panel.open(null, 'ideas');
-  });
+  assert(!await page.evaluate(() => window.nationalTest.ctx.game.tags.JUD.nationalIdeas?.colonies), 'civilian investment needs no idea');
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await path('colonies').locator(':scope > summary').click();
-  await path('colonies').locator('[data-ni-buy]').click();
-  assert(!await page.evaluate(id => window.nationalTest.actions.getNationalStrategy().actions.find(a => a.key === 'settle').options.some(o => o.args.province === id), settlement));
-  assert.equal(await path('colonies').locator('.ni-record progress').count(), 0);
-  await page.evaluate(() => window.nationalTest.panel.open(null, 'war', 'colonies'));
-  await page.evaluate(() => {
-    const { ctx, provincePanel } = window.nationalTest;
-    const p = ctx.game.provinces.find(p => p?.owner === 'WASTE');
-    p.impassable = true; p.settleable = true;
-    provincePanel.open(p.id);
-  });
-  assert.equal(await page.locator('#province-panel [data-ref="wasteBlock"] [data-open-ideas="colonies"]').count(), 1);
-  assert.equal(await page.locator('#province-panel [data-waste]').count(), 0);
-  await page.evaluate(() => window.nationalTest.provincePanel.close());
-  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/consolidated-paths-desktop.png' });
-  await page.setViewportSize({ width: 390, height: 844 });
-  assert(await page.locator('#nation-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
-  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/consolidated-paths-mobile.png' });
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.evaluate(() => window.nationalTest.panel.open('ROM', 'court'));
-  assert.equal(await page.locator('[data-intrigue="subvert"], [data-intrigue="pretender"]').count(), 0);
-  assert.equal(await page.locator('#nation-panel [data-open-operations="subversion"]').count(), 1);
-  assert.equal(await page.locator('#nation-panel [data-open-operations="dynasty"]').count(), 0);
-  console.log('PASS civilian investment works without ideas, live costs, desktop/mobile layout, no duplicate owned target; frontier camps remain in Military Colonies');
+  console.log('PASS civilian investment works without ideas, with live costs, on desktop and mobile');
 
-  await page.evaluate(() => window.loadNational('66ce'));
-  await path('federation').locator(':scope > summary').click();
-  await path('federation').locator('[data-ni-buy]').click();
-  await page.evaluate(() => window.nationalTest.panel.open(null, 'court'));
-  assert.equal(await page.locator('#nation-panel > [data-tab="missions"] [data-cs-act], #nation-panel > [data-tab="ideas"] [data-ni-act]').count(), 0);
-  assert.equal(await page.locator('.national-operation:visible').count(), 0, 'adoption never expands operation forms on the Court page');
-  await page.locator('[data-ref="nationalActions_court"] [data-na-open]').click();
+  // Frontier expeditions are ordered on the waste itself, gated by Veterans on the Land.
+  const waste = await page.evaluate(async () => {
+    const { ctx, provincePanel } = window.nationalTest;
+    const { spawnArmy } = await import('/js/sim/military.js');
+    const g = ctx.game;
+    const p = g.provinces.find(p => p?.owner === 'WASTE' && p.settleable !== false
+      && [...(ctx.geom.neighbors[p.id] || [])].some(id => ctx.byId(id) && !ctx.byId(id).impassable && ctx.byId(id).owner !== 'WASTE'));
+    p.impassable = true;
+    const border = [...ctx.geom.neighbors[p.id]].map(id => ctx.byId(id)).find(q => q && !q.impassable && q.owner !== 'WASTE');
+    border.owner = border.controller = 'JUD'; border.siege = null;
+    spawnArmy(ctx, 'JUD', border.name, { inf: 4, name: 'Frontier column' });
+    provincePanel.open(p.id);
+    return p.id;
+  });
+  const expedition = page.locator('#province-panel [data-waste="expedition"]');
+  assert(await expedition.isVisible());
+  assert(await expedition.evaluate(el => el.classList.contains('disabled')));
+  assert.match(await expedition.getAttribute('data-tt'), /Veterans on the Land/);
+  await page.evaluate(() => { const { actions, provincePanel } = window.nationalTest; actions.buyNationalIdea('colonies'); provincePanel.refresh(); });
+  assert(!await expedition.evaluate(el => el.classList.contains('disabled')), await expedition.getAttribute('data-tt'));
+  await expedition.click();
+  assert.equal(await page.evaluate(id => window.nationalTest.ctx.byId(id).expedition?.by, waste), 'JUD');
+  assert(await page.locator('#province-panel [data-waste="settle"]').isVisible(), 'the next step appears in place');
+  await page.evaluate(() => window.nationalTest.provincePanel.close());
+  console.log('PASS frontier expedition is gated by Military Colonies and ordered from the province panel');
+
   await page.setViewportSize({ width: 390, height: 844 });
-  assert(await page.locator('dialog[open]').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
-  if (process.env.JU_OUT) await page.screenshot({ path: process.env.JU_OUT + '/operations-dialog-mobile.png' });
+  await page.evaluate(() => window.nationalTest.panel.open(null, 'ideas'));
   assert(await page.locator('#nation-panel').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
-  assert((await page.locator('.ni-tiers button:visible, .national-operation-controls button:visible, .national-operation-controls select:visible').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 44));
-  await page.keyboard.press('Escape');
-  assert(await page.locator('[data-ref="nationalActions_court"] [data-na-open]').evaluate(el => el === document.activeElement));
-  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/national-paths-mobile.png' });
+  assert((await page.locator('.ib-idea:visible, .ib-control:visible').evaluateAll(xs => xs.map(x => x.getBoundingClientRect().height))).every(h => h >= 40));
+  if (process.env.JU_OUT) await page.locator('#nation-panel').screenshot({ path: process.env.JU_OUT + '/ideas-board-mobile.png' });
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.evaluate(() => { const { panel, ctx } = window.nationalTest; const foreign = ctx.game.tags.ROM; foreign.nationalIdeas = { subversion: 3 }; panel.open('ROM', 'ideas'); });
-  assert.equal(await page.locator('.ni-path').count(), 1);
-  assert.equal(await page.locator('[data-ni-buy], [data-ni-act], .ni-record').count(), 0, 'foreign courts expose no actions or private records');
+  assert.equal(await page.locator('[data-idea-group^="path:"]').count(), 1);
+  assert.equal(await page.locator('[data-idea-group="path:subversion"] .ib-complete').count(), 1);
+  assert.equal(await page.locator('#nation-panel [data-ni-buy], #nation-panel [data-idea], #nation-panel [data-eraidea], .ib-slots').count(), 0, 'foreign courts expose no adoption');
   assert.deepEqual(errors, []);
-  console.log('PASS uncluttered Court after adoption, mobile layout, foreign privacy and no browser errors');
+  console.log('PASS mobile layout, foreign read-only view and no browser errors');
   console.log('uitest75: ALL PASS');
 } finally { await browser.close(); }

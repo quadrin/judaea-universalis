@@ -906,18 +906,6 @@ export function initUI(staticCtx) {
     try { return flagChip(tag, DEFINES, 15, !!link, state.ctx && state.ctx.game); } catch (e) { return ''; }
   }
 
-  // Context links lead to the place where an unlocked action is performed.
-  document.addEventListener('click', e => {
-    const link = e.target instanceof Element && e.target.closest('[data-open-ideas]');
-    if (!link || !state.ctx) return;
-    e.preventDefault(); e.stopPropagation();
-    const group = link.dataset.openIdeas, province = Number(link.dataset.ideasProvince) || null;
-    closeLedger(); closeWarOverview(); closeBattleWindow();
-    setSelectedProv(0); fleetPanel.close();
-    const tab = { maritime: 'trade', dynasty: 'world', colonies: 'war', subversion: 'world', federation: 'court' }[group] || 'court';
-    nationPanel.open(null, tab, group, province);
-  }, true);
-
   // Any linked flag chip, anywhere (ledger, war overview, battle window,
   // province panel, outliner, the realm panel's own diplomacy rows), opens
   // that nation's court. Capture phase so the chip wins over whatever row

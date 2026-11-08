@@ -12,10 +12,17 @@ intelligence systems, including old adopted saves and repeat-month behavior.
 expiry, save/load and nation formation. `node tools/tests/allied-orders-war.mjs`
 checks actual army destinations, safe routing and urgent home-defense overrides.
 
+`node tools/tests/smoke221.mjs` checks that national paths are passive idea
+groups: the texts promise no operations, old saves wind down a human court's
+holdings once and return what they stored, AI courts keep theirs, and the
+slot limit and point names in refusal reasons hold.
+
 With the local server and Playwright configured, run
 `node tools/tests/uitest-contextual-actions.mjs` and `node tools/tests/uitest75.mjs`.
-These cover action placement, disabled controls before adoption, live execution
-after adoption, allied requests and mobile controls. Run browser suites serially.
+These cover the EU4-style Ideas board (three point columns, keyboard
+inspection, adoption, slot limit, foreign read-only view, mobile layout), the
+absence of Operations on every tab, frontier expeditions in the province panel,
+contextual chapter decisions and allied requests. Run browser suites serially.
 
 ## Court strategy checks
 

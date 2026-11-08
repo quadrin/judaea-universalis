@@ -9,12 +9,9 @@ import { icon, flagChip, courtChip, unitIcon } from './icons.js';
 import { unlockedGen, cappedGen, doctrinesFor, techLevelName } from '../data/tech.js';
 import { armGenName } from '../data/units.js';
 import { forceLimitOf, regCount, reservesTerms } from '../sim/military.js';
-import { IDEA_TREES } from '../data/ideas.js';
-import { eraIdeaGroupsFor } from '../data/era_ideas.js';
-import { ideaCard, ideaTierIcon, ideaWallet } from './idea_cards.js';
+import { collectIdeaGroups, ideasBoardHtml } from './ideas_board.js';
 import { createChapterStrategyPanel } from './chapter_strategy.js';
-import { createNationalIdeasPanel } from './national_ideas.js';
-import { createNationalActionsPanel, createAlliedOrdersPanel, NATIONAL_ACTION_TAB } from './national_actions.js';
+import { createAlliedOrdersPanel } from './allied_orders.js';
 import { createRoyalCommandPanel } from './royal_command.js';
 import { renderCourtIntentions, renderCourtOffers } from './court_intentions.js';
 
@@ -51,9 +48,10 @@ import { renderCourtIntentions, renderCourtOffers } from './court_intentions.js'
 // is living through and the tree of what the era offers — and steps aside at
 // a foreign court, and when a chapter has neither to show.
 //
-// Ideas has its own tab: universal reforms and the chapter's idea groups
-// share one place to inspect and adopt them. Technology retains its ladders
-// and institutions, including the named technology requirements for ideas.
+// Ideas has its own tab, laid out like EU4's idea screen: reforms, national
+// paths and the chapter's ideas of the age share three columns, one for each
+// kind of point. Technology retains its ladders and institutions, including
+// the named technology requirements for ideas.
 // The realm's character stays on Crown; patterns and arms programs on Defense.
 //
 // §204 carried the same question through the last two: THE CHAPTERS is what
@@ -66,7 +64,7 @@ const TABS = [
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'What history asks of this realm: the chapter it is living through, and the mission tree branch by branch with what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, their favor and their ground, the advisors, what is brewing, and the decisions in your gift.' },
   { id: 'tech', label: 'Technology', term: 'tabTech', tt: 'The ladders and the silver that buys them: treasury, debt, the three levels, the world’s way of doing things, and the institutions that affect their costs.' },
-  { id: 'ideas', label: 'Ideas', term: 'tabIdeas', tt: 'National reforms and ideas of the age: inspect each idea, its effect, its progress and the points needed to adopt it.' },
+  { id: 'ideas', label: 'Ideas', term: 'tabIdeas', tt: 'Reforms, national paths and ideas of the age in three columns — government, influence and martial: inspect each idea, its effect and the points needed to adopt it.' },
   // The markets (SPEC §292): our share of the world's trade, the merchants we
   // post to collect it or steer it home, and the squadrons on the lanes.
   { id: 'trade', label: 'Trade', term: 'tabTrade', tt: 'The markets of the world: what each is worth, our share, the merchants we post to collect or steer it, and the squadrons that guard or raid the lanes.' },
@@ -111,12 +109,17 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   let readyTech = 0;
   let pendingCourtOffers = 0;
   let courtOfferFeedback = '';
-  const ideaSelections = new Map();
+  // The idea selected on the Ideas tab: { group: 'kind:key', tier } or null.
+  let ideaPick = null;
   const refs = {};
-  const chapterStrategyPanels = {}, nationalActionPanels = {};
+  const chapterStrategyPanels = {};
   let alliedOrdersPanel = null;
-  let nationalIdeasPanel = null;
   let royalCommandPanel = null;
+
+  // build() runs on every bind(); the root element survives it. Its own
+  // listeners replace the previous ones, so a second campaign in the same
+  // page (or a test that binds many) never answers one click twice.
+  const rootHandlers = {};
 
   function setText(node, s) {
     if (node && node.textContent !== s) node.textContent = s;
@@ -180,27 +183,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="characterTitle">The Character of the Realm</div>
         <div class="np-doctrine" data-ref="doctrine"></div>
       </div>
-      <!-- Ideas: a single home for reforms and era idea groups. -->
+      <!-- Ideas: reforms, national paths and ideas of the age on one
+           EU4-style board — a column for each kind of point. -->
       <div class="pp-build" data-tab="ideas">
         <div class="pp-build-title">${icon('book', 'icon-sm')} Ideas</div>
-        <div class="np-idea-wallet" data-ref="ideaWallet"></div>
-        <p class="np-idea-intro">Choose national paths to unlock new actions. Select an idea icon to inspect it.</p>
-      </div>
-      <div class="pp-build" data-tab="ideas">
-        <div class="pp-build-title">National Paths</div>
-        <div data-ref="nationalIdeas" class="national-ideas"></div>
-      </div>
-      <div class="pp-build" data-tab="ideas">
-        <div class="pp-build-title">Reforms</div>
-        <div class="np-reforms" data-ref="reforms"></div>
-      </div>
-      <div class="pp-build hidden" data-ref="eraIdeasBlock" data-tab="ideas">
-        <div class="pp-build-title" data-ref="eraIdeasTitle">Ideas of the Age</div>
-        <div class="np-reforms" data-ref="eraIdeas"></div>
+        <div class="ideas-board" data-ref="ideasBoard"></div>
       </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
-      <!-- Mission rewards and chapter descriptions only. Operations live in context. -->
+      <!-- Mission rewards and chapter descriptions only. -->
       <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
         <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
         <div class="np-mtree-host" data-ref="missions"></div>
@@ -210,13 +201,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
       <section class="pp-build hidden" data-ref="chapterStrategyBlock_court" data-tab="court"><div class="pp-build-title">Administration and local government</div><div class="chapter-strategy" data-ref="chapterStrategy_court"></div></section>
-      <section class="pp-build hidden" data-ref="nationalActionsBlock_court" data-tab="court"><div class="national-actions" data-ref="nationalActions_court"></div></section>
       <section class="pp-build hidden" data-ref="chapterStrategyBlock_war" data-tab="war"><div class="pp-build-title">Military decisions</div><div class="chapter-strategy" data-ref="chapterStrategy_war"></div></section>
-      <section class="pp-build hidden" data-ref="nationalActionsBlock_war" data-tab="war"><div class="national-actions" data-ref="nationalActions_war"></div></section>
       <section class="pp-build hidden" data-ref="chapterStrategyBlock_trade" data-tab="trade"><div class="pp-build-title">Arms shipments</div><div class="chapter-strategy" data-ref="chapterStrategy_trade"></div></section>
-      <section class="pp-build hidden" data-ref="nationalActionsBlock_trade" data-tab="trade"><div class="national-actions" data-ref="nationalActions_trade"></div></section>
       <section class="pp-build hidden" data-ref="chapterStrategyBlock_world" data-tab="world"><div class="pp-build-title">Patrons and foreign commitments</div><div class="chapter-strategy" data-ref="chapterStrategy_world"></div></section>
-      <section class="pp-build hidden" data-ref="nationalActionsBlock_world" data-tab="world"><div class="national-actions" data-ref="nationalActions_world"></div></section>
       <section class="pp-build hidden" data-ref="alliedOrdersBlock" data-tab="world"><div class="pp-build-title">Allied coordination</div><div data-ref="alliedOrders"></div></section>
       <!-- ── THE COURT ─────────────────────────────────────────────────── -->
       <div class="pp-build hidden" data-ref="royalCommandBlock" data-tab="court">
@@ -370,10 +357,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
     for (const area of ['court','war','trade','world']) {
       chapterStrategyPanels[area] = createChapterStrategyPanel(refs['chapterStrategy_' + area], () => actions, { tab: area, onChange: refresh });
-      nationalActionPanels[area] = createNationalActionsPanel(refs['nationalActions_' + area], () => actions, { tab: area, onChange: refresh });
     }
     alliedOrdersPanel = createAlliedOrdersPanel(refs.alliedOrders, () => actions, refresh);
-    nationalIdeasPanel = createNationalIdeasPanel(refs.nationalIdeas, () => actions);
     royalCommandPanel = createRoyalCommandPanel(refs.royalCommands, () => actions);
     el.dataset.tab = tab;
 
@@ -434,10 +419,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // grid-column/grid-row on divs. So a claimable one carries role/tabindex
     // and this turns the two keys a role="button" promises into the click the
     // delegation below already knows how to answer (SPEC §229).
-    el.addEventListener('keydown', (e) => {
+    if (rootHandlers.keydown) el.removeEventListener('keydown', rootHandlers.keydown);
+    el.addEventListener('keydown', rootHandlers.keydown = (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       if (!(e.target instanceof Element)) return;
-      if (e.target.closest('[data-idea-inspect], [data-idea], [data-eraidea], [data-tab-go]')) {
+      if (e.target.closest('[data-idea-inspect], [data-idea], [data-eraidea], [data-ni-buy], [data-tab-go]')) {
         // Native buttons handle activation; keep Space away from the game's
         // pause shortcut while the player is using the Ideas panel or tabs.
         e.stopPropagation();
@@ -448,7 +434,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       e.preventDefault();
       c.click();
     });
-    el.addEventListener('click', (e) => {
+    if (rootHandlers.click) el.removeEventListener('click', rootHandlers.click);
+    el.addEventListener('click', rootHandlers.click = (e) => {
       if (!(e.target instanceof Element)) return;
       // The tab strip is matched FIRST and returns immediately (SPEC §175).
       // The chain below falls through sixteen closest() probes and ends at the
@@ -462,8 +449,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         if (id && id !== tab) { tab = id; refresh(); el.scrollTop = 0; }
         return;
       }
-      const operationsLink = e.target.closest('[data-open-operations]');
-      if (operationsLink) { open(null, null, operationsLink.dataset.openOperations); return; }
       const courtOffer = e.target.closest('[data-court-offer]');
       if (courtOffer) {
         if (courtOffer.disabled || typeof actions?.resolveCourtOffer !== 'function') return;
@@ -674,7 +659,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       }
       const inspectIdea = e.target.closest('[data-idea-inspect]');
       if (inspectIdea) {
-        ideaSelections.set(inspectIdea.dataset.ideaInspect, Number(inspectIdea.dataset.tier));
+        // Selecting the open idea again closes it, as on EU4's board.
+        const pick = { group: inspectIdea.dataset.ideaInspect, tier: Number(inspectIdea.dataset.tier) };
+        ideaPick = ideaPick && ideaPick.group === pick.group && ideaPick.tier === pick.tier ? null : pick;
         refresh();
         // Refresh replaces the card's controls. Keep keyboard focus on the
         // same idea so inspecting a tier does not send the player to the page.
@@ -695,6 +682,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (eraIdea) {
         if (eraIdea.classList.contains('disabled') || !actions || typeof actions.buyEraIdea !== 'function') return;
         try { actions.buyEraIdea(eraIdea.dataset.eraidea); } catch (err) { warnOnce('np-eraidea', err); }
+        refresh();
+        return;
+      }
+      const pathIdea = e.target.closest('[data-ni-buy]');
+      if (pathIdea) {
+        if (pathIdea.classList.contains('disabled') || !actions || typeof actions.buyNationalIdea !== 'function') return;
+        try { actions.buyNationalIdea(pathIdea.dataset.niBuy); } catch (err) { warnOnce('np-national-idea', err); }
         refresh();
         return;
       }
@@ -772,9 +766,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // open() shows the player's own realm; open('ROM') shows Rome's court
   // read-only. viewing() reports the foreign tag (null when it's our own).
   // `tabId` opens straight onto a tab — the topbar's tech bell (SPEC §286).
-  function open(tag, tabId, pathKey, provinceId) {
+  function open(tag, tabId) {
     if (!ctx) return;
-    for (const panel of Object.values(nationalActionPanels)) panel.close();
     const g = ctx.game;
     courtOfferFeedback = '';
     viewTag = (tag && tag !== g.playerTag && g.tags && g.tags[tag]) ? tag : null;
@@ -782,13 +775,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.classList.remove('hidden');
     refresh();
     el.scrollTop = 0;
-    if (pathKey && NATIONAL_ACTION_TAB[pathKey]) {
-      if (viewTag) { viewTag = null; }
-      tab = NATIONAL_ACTION_TAB[pathKey]; refresh();
-      nationalActionPanels[tab]?.focusGroup(pathKey, provinceId);
-    }
   }
-  function close() { for (const panel of Object.values(nationalActionPanels)) panel.close(); el.classList.add('hidden'); viewTag = null; }
+  function close() { el.classList.add('hidden'); viewTag = null; }
   function isOpen() { return !el.classList.contains('hidden'); }
   function viewing() { return viewTag; }
 
@@ -1143,11 +1131,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refs.acts.classList.toggle('hidden', !self);
     refs.missionsBlock.classList.toggle('hidden', !self);
     const chapterReport = self ? actions?.getChapterStrategy?.() : null;
-    const nationalReport = self ? actions?.getNationalStrategy?.() : null;
     for (const area of ['court','war','trade','world']) {
       const chapterVisible = self && chapterStrategyPanels[area].refresh(chapterReport);
       refs['chapterStrategyBlock_' + area].classList.toggle('hidden', !chapterVisible);
-      refs['nationalActionsBlock_' + area].classList.toggle('hidden', !nationalActionPanels[area].refresh(self, nationalReport));
     }
     refs.alliedOrdersBlock.classList.toggle('hidden', !alliedOrdersPanel.refresh(self));
     // A foreign court owes us nothing (SPEC §229) — and refreshMissions, which
@@ -1188,12 +1174,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshOrders(self);
     refreshLedger(self);
     refreshTrade(self);
-    refreshReforms(t, self);
-    refreshEraIdeas(t, self);
-    if (tab === 'ideas') nationalIdeasPanel.refresh(t, self);
+    refreshIdeasBoard(t, tag, self);
     refs.ageBlock.classList.toggle('hidden', refs.instBlock.classList.contains('hidden'));
-    refs.ideaWallet.classList.toggle('hidden', !self);
-    setHtml(refs.ideaWallet, self ? ideaWallet(t.points) : '');
     refreshCourt(t, self);
     refs.royalCommandBlock.classList.toggle('hidden', !self);
     if (self) royalCommandPanel.refresh();
@@ -1792,8 +1774,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${f.state}" style="width:${Math.max(2, Math.min(100, f.approval))}%"></div></div>`
         + `</div>`;
     }).join('');
-    setHtml(refs.foreignCourt, near + quiet + bars
-      + `<div class="np-dip-actions"><button class="pp-dip" data-open-operations="subversion">${icon('dagger', 'icon-sm')} Subversion</button></div>`);
+    setHtml(refs.foreignCourt, near + quiet + bars);
   }
 
   // Renders the viewed nation's treaties and wars. `who` is the viewed tag;
@@ -2791,46 +2772,24 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.trade, h);
   }
 
-  // Both kinds of idea group use the same inspection cards on Ideas.
-  function refreshReforms(t, self) {
-    if (!refs.reforms) return;
-    let trees;
-    if (self) {
-      try { trees = actions?.getIdeas?.(); } catch (e) { warnOnce('np-getIdeas', e); }
-    } else {
-      trees = Object.entries(IDEA_TREES).map(([key, tree]) => ({
-        ...tree, key, owned: (t.reforms || {})[key] | 0,
-      }));
+  // The Ideas board (EU4's idea screen): every idea group the realm can
+  // adopt, or a foreign court has adopted, in a column per kind of point.
+  // Rebuilt only while the tab is open; setHtml skips an unchanged board, so
+  // the daily refresh does not replace a control under the cursor.
+  function refreshIdeasBoard(t, tag, self) {
+    if (!refs.ideasBoard || tab !== 'ideas') return;
+    const info = collectIdeaGroups({ ctx, actions, t, tag, self, warn: warnOnce });
+    if (ideaPick && !info.groups.some((g) => g.kind + ':' + g.key === ideaPick.group)) ideaPick = null;
+    const focus = document.activeElement && refs.ideasBoard.contains(document.activeElement)
+      ? [...document.activeElement.attributes].filter((a) => /^data-(idea|eraidea|ni-buy|tier)/.test(a.name)) : null;
+    const before = refs.ideasBoard.__html;
+    setHtml(refs.ideasBoard, ideasBoardHtml(info, { self, points: t.points, picked: ideaPick }));
+    // A rebuild replaces the controls; keep keyboard focus on the same one.
+    if (focus && focus.length && before !== refs.ideasBoard.__html) {
+      const same = [...refs.ideasBoard.querySelectorAll('button')]
+        .find((b) => focus.every((a) => b.getAttribute(a.name) === a.value));
+      if (same) same.focus({ preventScroll: true });
     }
-    setHtml(refs.reforms, (trees || []).map(tr => {
-      const def = IDEA_TREES[tr.key];
-      const group = { ...tr, icon: def.icon, tiers: tr.tiers.map((ti, i) => ({
-        ...ti, icon: ideaTierIcon(def.tiers[i], def.icon),
-      })) };
-      return ideaCard(group, { kind: 'reform', self, selected: ideaSelections.get('reform:' + tr.key) });
-    }).join(''));
-  }
-
-  function refreshEraIdeas(t, self) {
-    if (!refs.eraIdeas) return;
-    const defs = eraIdeaGroupsFor(ctx.bookmark, t.tag, t);
-    let groups;
-    if (self) {
-      try { groups = actions?.getEraIdeas?.(); } catch (e) { warnOnce('np-getEraIdeas', e); }
-    } else {
-      groups = defs.filter(gd => ((t.eraIdeas || {})[gd.key] | 0) > 0).map(gd => ({
-        ...gd, owned: (t.eraIdeas || {})[gd.key] | 0,
-      }));
-    }
-    const html = (groups || []).map(group => {
-      const def = defs.find(gd => gd.key === group.key);
-      const card = { ...group, tiers: group.tiers.map((ti, i) => ({
-        ...ti, icon: ideaTierIcon(def?.tiers[i] || ti, group.icon),
-      })) };
-      return ideaCard(card, { kind: 'era', self, selected: ideaSelections.get('era:' + group.key) });
-    }).join('');
-    refs.eraIdeasBlock.classList.toggle('hidden', !html);
-    setHtml(refs.eraIdeas, html);
   }
 
   function refreshDecisions() {

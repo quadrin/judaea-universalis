@@ -1,5 +1,5 @@
 // Panel organization: Crown retains the realm's character; Technology keeps
-// ladders and institutions; Ideas hosts reforms and era idea groups.
+// ladders and institutions; Ideas hosts the idea board.
 // Section ownership, institutional actions and nonempty tabs remain checked.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { readFileSync } = await import('fs');
@@ -85,9 +85,8 @@ console.log('== the character of the realm is on Crown ==');
   // facts above them and the constitution below them.
   const facts = TEMPLATE.indexOf('data-ref="religion"');
   const needles = TEMPLATE.indexOf('data-ref="doctrineBlock"');
-  const reforms = TEMPLATE.indexOf('data-ref="reforms"');
-  ok(facts > 0 && needles > facts && tabOf('data-ref="reforms"') === 'ideas',
-    'drawn after the realm\'s facts, with reforms on Ideas');
+  ok(facts > 0 && needles > facts && tabOf('data-ref="ideasBoard"') === 'ideas',
+    'drawn after the realm\'s facts, with the idea board on Ideas');
 
   // A foreign court's convictions are its business — the block is templated
   // hidden and the refresh hides it again for anyone but us.
@@ -104,11 +103,9 @@ console.log('== the world\'s way of doing things folds in under the ladders ==')
     'the institutions host resolves to the technology tab: ' + tabOf('data-ref="instBlock"'));
   const ladders = TEMPLATE.indexOf('class="np-techs"');
   const inst = TEMPLATE.indexOf('data-ref="instBlock"');
-  const eras = TEMPLATE.indexOf('data-ref="eraIdeasBlock"');
   ok(ladders > 0 && inst > ladders, 'templated BELOW the ladders it surcharges');
-  ok(tabOf('data-ref="eraIdeas"') === 'ideas', 'era groups have their own Ideas tab');
+  ok(tabOf('data-ref="ideasBoard"') === 'ideas', 'era groups have their own Ideas tab, on the idea board');
   ok(blockTitleAbove('data-ref="institutions"') === 'Institutions', 'the ladder surcharge is titled Institutions');
-  ok(blockTitleAbove('data-ref="eraIdeas"') === 'Ideas of the Age', 'era groups retain their own heading');
   ok(/data-ref="instTitle">The World’s Way of Doing Things</.test(TEMPLATE), 'institutions retain their subhead');
 
   // The World keeps the treaties and loses the ladder tax.
@@ -149,8 +146,8 @@ console.log('== nothing went blank ==');
   const toggleAt = PANEL.indexOf("refs.ageBlock.classList.toggle('hidden'");
   const toggle = PANEL.slice(toggleAt, PANEL.indexOf(';', toggleAt));
   ok(/refs\.instBlock\.classList\.contains\('hidden'\)/.test(toggle)
-    && !/eraIdeasBlock/.test(toggle), 'Technology hides its institutions block solely on institutional content');
-  ok(tabOf('data-ref="reforms"') === 'ideas', 'universal ideas moved with the era groups');
+    && !/ideasBoard/.test(toggle), 'Technology hides its institutions block solely on institutional content');
+  ok(tabOf('data-ref="ideasBoard"') === 'ideas', 'universal ideas moved with the era groups');
 
 }
 
